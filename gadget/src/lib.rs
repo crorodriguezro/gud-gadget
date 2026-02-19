@@ -180,8 +180,12 @@ struct DisplayDescriptor {
 
 pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
     match event {
-        custom::Event::Enable => {}
-        custom::Event::Bind => {}
+        custom::Event::Enable => {
+            debug!("Enable event received");
+        }
+        custom::Event::Bind => {
+            debug!("Bind event received");
+        }
         custom::Event::SetupDeviceToHost(req) => {
             let ctrl_req = req.ctrl_req();
             match ctrl_req.request {
@@ -227,8 +231,9 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                     )));
                 }
                 GUD_REQ_GET_CONNECTOR_EDID => {
-                    req.send(&[0]).context("send EDIDs")?;
-                    debug!("sent EDIDs");
+                    // No EDID available - return empty response
+                    req.send(&[]).context("send EDID")?;
+                    debug!("sent empty EDID (no EDID available)");
                 }
                 GUD_REQ_GET_CONNECTOR_STATUS => {
                     req.send(&[GUD_CONNECTOR_STATUS_CONNECTED])
@@ -276,6 +281,15 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 }
             }
         }
+        custom::Event::Suspend => {
+            debug!("Suspend event received");
+        }
+        custom::Event::Resume => {
+            debug!("Resume event received");
+        }
+        custom::Event::Disable => {
+            debug!("Disable event received");
+        }
         event => {
             warn!("unhandled event {:?}", event);
         }
@@ -307,6 +321,8 @@ impl PixelDataEndpoint {
     ) -> anyhow::Result<()> {
         let start = Instant::now();
         let max_packet_size = self.ep_rx.max_packet_size().unwrap();
+        debug!("recv_buffer: max_packet_size={}, fb_pitch={}, bpp={}, fb_len={}", 
+            max_packet_size, fb_pitch, bpp, fb.len());
 
         let len = if info.compression > 0 {
             info.compressed_length
@@ -322,6 +338,7 @@ impl PixelDataEndpoint {
 
         // Read the incoming data fully into the buffer.
         let read_start = Instant::now();
+        let mut packets = 0usize;
         while self.buf.len() < len {
             let buf = self
                 .ep_buf
@@ -333,10 +350,12 @@ impl PixelDataEndpoint {
             }
             let mut buf = buf.unwrap();
             self.buf.extend_from_slice(&buf);
+            packets += 1;
             buf.clear();
             self.ep_buf.push(buf);
         }
-        trace!("read buffer took {}ms", read_start.elapsed().as_millis());
+        debug!("read {} bytes in {} packets, took {}ms", 
+            self.buf.len(), packets, read_start.elapsed().as_millis());
 
         if self.buf.len() != len {
             // TODO: proper Err
@@ -349,21 +368,20 @@ impl PixelDataEndpoint {
                 self.compress_buf
                     .resize(info.length as usize - self.compress_buf.capacity(), 0);
             }
-            lz4::block::decompress_to_buffer(
+            let decompressed = lz4::block::decompress_to_buffer(
                 &self.buf,
                 Some(info.length as i32),
                 &mut self.compress_buf,
             )
             .context("lz4 decompress")?;
-            trace!(
-                "decompress buffer took {}ms",
-                decompress_start.elapsed().as_millis()
-            );
+            debug!("decompressed {} -> {} bytes, took {}ms", 
+                self.buf.len(), decompressed, decompress_start.elapsed().as_millis());
             &self.compress_buf
         } else {
             &self.buf
         };
 
+        let copy_start = Instant::now();
         let mut y = info.y as usize;
         let end_y = (info.y + info.height) as usize;
 
@@ -378,8 +396,10 @@ impl PixelDataEndpoint {
             buf_pos += line_len;
             y += 1;
         }
+        debug!("copied {} lines ({} bytes), took {}ms", 
+            end_y - info.y as usize, buf_pos, copy_start.elapsed().as_millis());
 
-        trace!("recv_buffer took {}ms", start.elapsed().as_millis());
+        debug!("recv_buffer total took {}ms", start.elapsed().as_millis());
 
         Ok(())
     }

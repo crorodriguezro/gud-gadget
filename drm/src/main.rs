@@ -1,10 +1,11 @@
 use drm::buffer::Buffer;
-use drm::control::Device;
+use drm::control::{ClipRect, Device};
 use gud_gadget::{DisplayMode, Event};
 use std::env::args;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+use tracing::{debug, error, info, trace, warn};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use usb_gadget::function::custom::{Custom, Interface};
 use usb_gadget::{default_udc, Class, Config, Gadget, Strings};
@@ -46,12 +47,16 @@ fn main() -> anyhow::Result<()> {
         .with(EnvFilter::from_default_env())
         .init();
 
+    info!("gud-drm starting (op6 branch)");
+
     let card_path = args()
         .skip(1)
         .next()
         .expect("specify full path to /dev/dri/cardN as program argument");
+    info!("Opening DRM device: {}", card_path);
     let card = Card::open(&card_path);
     let udc = default_udc().expect("no UDC found");
+    info!("Using UDC: {:?}", udc);
 
     let resources = card.resource_handles().expect("load drm resources failed");
 
@@ -95,14 +100,18 @@ fn main() -> anyhow::Result<()> {
     }
 
     usb_gadget::remove_all().expect("UDC init failed");
+    info!("USB gadgets removed");
 
     let (mut gud_data, gud_data_ep) = gud_gadget::PixelDataEndpoint::new();
+    info!("Created pixel data endpoint");
+
     let (mut gud, gud_handle) = Custom::builder()
         .with_interface(
             Interface::new(Class::vendor_specific(Class::VENDOR_SPECIFIC, 0), "GUD")
                 .with_endpoint(gud_data_ep),
         )
         .build();
+    info!("Built USB gadget");
 
     let _reg = Gadget::new(
         Class::interface_specific(),
@@ -112,6 +121,7 @@ fn main() -> anyhow::Result<()> {
     .with_config(Config::new("gud").with_function(gud_handle))
     .bind(&udc)
     .expect("UDC binding failed");
+    info!("USB gadget bound to UDC");
 
     let running = Arc::new(AtomicBool::new(true));
 
@@ -123,11 +133,11 @@ fn main() -> anyhow::Result<()> {
 
     let mode = connector.modes().first().unwrap();
 
-    println!("picked mode {:?}", mode);
+    info!("picked mode {:?}", mode);
 
     let (width, height) = mode.size();
+    debug!("Creating dumb buffer {}x{} (RGB565)", width, height);
     let mut db = card
-        // .create_dumb_buffer((width.into(), height.into()), drm::buffer::DrmFourcc::Xrgb8888, 32)
         .create_dumb_buffer(
             (width.into(), height.into()),
             drm::buffer::DrmFourcc::Rgb565,
@@ -138,6 +148,8 @@ fn main() -> anyhow::Result<()> {
     let fb = card
         .add_framebuffer(&db, 16, 16)
         .expect("Could not create FB");
+    debug!("Framebuffer created (RGB565, 16bpp)");
+    
     card.set_crtc(
         crtc.handle(),
         Some(fb),
@@ -146,64 +158,108 @@ fn main() -> anyhow::Result<()> {
         Some(*mode),
     )
     .expect("Could not set CRTC");
+    info!("CRTC set, display should be active");
 
     let pitch = db.pitch();
 
     let mut mapping = card
         .map_dumb_buffer(&mut db)
         .expect("map_dumb_buffer failed");
+    debug!("Dumb buffer mapped, pitch={}", pitch);
+
+    tracing::info!("Entering main event loop");
 
     while running.load(Ordering::Relaxed) {
-        let event = gud
-            .event_timeout(Duration::from_millis(100))
-            .expect("read GUD event");
+        let event = match gud.event_timeout(Duration::from_millis(100)) {
+            Ok(e) => e,
+            Err(e) => {
+                tracing::error!("Failed to read GUD event: {}", e);
+                continue;
+            }
+        };
         if event.is_none() {
             continue;
         }
         let event = event.unwrap();
+        tracing::debug!("Received event: {:?}", event);
 
-        if let Ok(Some(gud_event)) = gud_gadget::event(event) {
-            match gud_event {
-                Event::GetDescriptor(req) => {
-                    req.send_descriptor(min_width, min_height, max_width, max_height)
-                        .expect("failed to send descriptor");
-                }
-                Event::GetPixelFormats(req) => {
-                    req.send_pixel_formats(&[gud_gadget::GUD_PIXEL_FORMAT_RGB565]).unwrap()
-                }
-                Event::GetDisplayModes(req) => {
-                    let modes = card
-                        .get_modes(connector.handle())
-                        .unwrap()
-                        .iter()
-                        .map(|mode| {
-                            let (hdisplay, vdisplay) = mode.size();
-                            let (hsync_start, hsync_end, htotal) = mode.hsync();
-                            let (vsync_start, vsync_end, vtotal) = mode.vsync();
-                            DisplayMode {
-                                clock: mode.clock(),
-                                hdisplay,
-                                htotal,
-                                hsync_end,
-                                hsync_start,
-                                vtotal,
-                                vdisplay,
-                                vsync_end,
-                                vsync_start,
-                                flags: 0,
+        match gud_gadget::event(event) {
+            Ok(Some(gud_event)) => {
+                tracing::debug!("GUD event: {:?}", gud_event);
+                match gud_event {
+                    Event::GetDescriptor(req) => {
+                        if let Err(e) = req.send_descriptor(min_width, min_height, max_width, max_height) {
+                            tracing::error!("Failed to send descriptor: {}", e);
+                        } else {
+                            tracing::debug!("Sent descriptor");
+                        }
+                    }
+                    Event::GetPixelFormats(req) => {
+                        if let Err(e) = req.send_pixel_formats(&[gud_gadget::GUD_PIXEL_FORMAT_RGB565]) {
+                            tracing::error!("Failed to send pixel formats: {}", e);
+                        } else {
+                            tracing::debug!("Sent pixel formats: RGB565");
+                        }
+                    }
+                    Event::GetDisplayModes(req) => {
+                        let modes = card
+                            .get_modes(connector.handle())
+                            .unwrap()
+                            .iter()
+                            .map(|mode| {
+                                let (hdisplay, vdisplay) = mode.size();
+                                let (hsync_start, hsync_end, htotal) = mode.hsync();
+                                let (vsync_start, vsync_end, vtotal) = mode.vsync();
+                                DisplayMode {
+                                    clock: mode.clock(),
+                                    hdisplay,
+                                    htotal,
+                                    hsync_end,
+                                    hsync_start,
+                                    vtotal,
+                                    vdisplay,
+                                    vsync_end,
+                                    vsync_start,
+                                    flags: 0,
+                                }
+                            })
+                            .collect::<Vec<DisplayMode>>();
+                        tracing::debug!("Sending {} display modes", modes.len());
+                        if let Err(e) = req.send_modes(&modes) {
+                            tracing::error!("Failed to send modes: {}", e);
+                        } else {
+                            tracing::debug!("Sent display modes");
+                        }
+                    }
+                    Event::Buffer(info) => {
+                        tracing::debug!("Buffer: x={} y={} {}x{} len={} compression={}", 
+                            info.x, info.y, info.width, info.height, info.length, info.compression);
+                        let clip = ClipRect::new(
+                            info.x as u16,
+                            info.y as u16,
+                            (info.x + info.width) as u16,
+                            (info.y + info.height) as u16,
+                        );
+                        if let Err(e) = gud_data.recv_buffer(info, mapping.as_mut(), pitch as usize, 2) {
+                            tracing::error!("Failed to receive buffer: {}", e);
+                        } else {
+                            // Flush the framebuffer to notify the display controller
+                            match card.dirty_framebuffer(fb, &[clip]) {
+                                Ok(()) => tracing::debug!("Framebuffer flushed"),
+                                Err(e) => tracing::debug!("dirty_framebuffer not supported or failed: {}", e),
                             }
-                        })
-                        .collect::<Vec<DisplayMode>>();
-                    req.send_modes(&modes).expect("failed to send modes");
+                        }
+                    }
                 }
-                Event::Buffer(info) => {
-                    gud_data
-                        .recv_buffer(info, mapping.as_mut(), pitch as usize, 2)
-                        .expect("recv_buffer failed");
-                }
+            }
+            Ok(None) => {}
+            Err(e) => {
+                tracing::warn!("Failed to parse GUD event: {}", e);
             }
         }
     }
+
+    tracing::info!("Shutting down");
 
     Ok(())
 }
