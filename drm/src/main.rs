@@ -145,14 +145,14 @@ fn main() -> anyhow::Result<()> {
         )
         .expect("Could not create dumb buffer");
 
-    let fb = card
+    let fb_handle = card
         .add_framebuffer(&db, 16, 16)
         .expect("Could not create FB");
     debug!("Framebuffer created (RGB565, 16bpp)");
     
     card.set_crtc(
         crtc.handle(),
-        Some(fb),
+        Some(fb_handle),
         (0, 0),
         &[connector.handle()],
         Some(*mode),
@@ -166,6 +166,24 @@ fn main() -> anyhow::Result<()> {
         .map_dumb_buffer(&mut db)
         .expect("map_dumb_buffer failed");
     debug!("Dumb buffer mapped, pitch={}", pitch);
+    
+    // Fill with green test pattern to verify display works
+    let fb_data = mapping.as_mut();
+    for y in 0..height as usize {
+        for x in 0..width as usize {
+            let offset = y * pitch as usize + x * 2;
+            // RGB565 green: 0x07E0
+            fb_data[offset] = 0xE0;
+            fb_data[offset + 1] = 0x07;
+        }
+    }
+    // Flush the test pattern
+    let test_clip = ClipRect::new(0, 0, width as u16, height as u16);
+    match card.dirty_framebuffer(fb_handle, &[test_clip]) {
+        Ok(()) => info!("Test pattern flushed to display"),
+        Err(e) => warn!("Failed to flush test pattern: {}", e),
+    }
+    info!("Filled framebuffer with green test pattern");
 
     tracing::info!("Entering main event loop");
 
@@ -244,7 +262,7 @@ fn main() -> anyhow::Result<()> {
                             tracing::error!("Failed to receive buffer: {}", e);
                         } else {
                             // Flush the framebuffer to notify the display controller
-                            match card.dirty_framebuffer(fb, &[clip]) {
+                            match card.dirty_framebuffer(fb_handle, &[clip]) {
                                 Ok(()) => tracing::debug!("Framebuffer flushed"),
                                 Err(e) => tracing::debug!("dirty_framebuffer not supported or failed: {}", e),
                             }
