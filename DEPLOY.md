@@ -94,18 +94,50 @@ cat /sys/class/udc/a600000.usb/state
 
 ### 4. Run gud-drm
 
+**Important:** On postmarketOS with `doas`, environment variables are not passed through by default. Use `doas env` to pass `RUST_LOG`.
+
 ```bash
-# Run in foreground (for testing)
-RUST_LOG=debug doas ~/gud-drm /dev/dri/card0
+# Run in foreground (for testing, see logs directly)
+doas env RUST_LOG=debug ~/gud-drm /dev/dri/card0
 
-# Or run in background with logging
-RUST_LOG=info doas nohup ~/gud-drm /dev/dri/card0 > /tmp/gud-drm.log 2>&1 &
+# Run in background with logging to file
+nohup doas env RUST_LOG=debug ~/gud-drm /dev/dri/card0 > ~/gud.log 2>&1 &
 
-# Check logs
-tail -f /tmp/gud-drm.log
+# Check if running
+ps aux | grep gud-drm
+
+# View logs
+tail -f ~/gud.log
 
 # Check kernel messages for USB/gadget issues
-doas dmesg -w | grep -E 'usb|gadget|dwc3|ffs'
+doas dmesg | grep -E 'usb|gadget|dwc3|ffs'
+```
+
+#### Log Levels
+
+Set `RUST_LOG` to control verbosity:
+- `RUST_LOG=error` - Only errors
+- `RUST_LOG=warn` - Warnings and errors
+- `RUST_LOG=info` - General information (recommended for normal use)
+- `RUST_LOG=debug` - Detailed debug info (recommended for troubleshooting)
+- `RUST_LOG=trace` - Very verbose (per-packet details)
+
+#### Log File Location
+
+When running in background, logs are written to `~/gud.log` (home directory) or wherever you redirect output.
+
+#### Alternative: Run with nohup in a script
+
+Create a startup script `~/start-gud.sh`:
+```bash
+#!/bin/sh
+nohup doas env RUST_LOG=debug ~/gud-drm /dev/dri/card0 > ~/gud.log 2>&1 &
+```
+
+Then run:
+```bash
+chmod +x ~/start-gud.sh
+./start-gud.sh
 ```
 
 ## Troubleshooting
