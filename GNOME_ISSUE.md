@@ -63,6 +63,23 @@ Both show GUD device initialized:
 gud 1-1:1.0: [drm] fb1: guddrmfb frame buffer device
 ```
 
+## Additional Observation: Refresh Rate Change
+
+When the GUD driver starts, users may notice the primary monitor's refresh rate change (e.g., from 60.00Hz to 59.94Hz). This indicates:
+
+1. **Mutter IS detecting the GUD device** - The DRM subsystem notifies all compositors when devices change
+2. **Mutter re-probes modes** - This causes the primary monitor to recalculate timing
+3. **But Mutter doesn't render to GUD** - The device is detected but not used as an output
+
+The 59.94Hz vs 60.00Hz are both valid modes (NTSC timing vs exact 60Hz), both available in the mode list:
+
+```
+#1 1920x1080 60.00  ... 148500 flags: phsync, pvsync
+#2 1920x1080 59.94  ... 148352 flags: phsync, pvsync
+```
+
+The monitors.xml configuration file (`~/.config/monitors.xml`) only supports connectors on the same GPU. Since GUD is on a separate DRM device (card0 vs card1 for the primary GPU), it cannot be configured through this file.
+
 ## Root Cause
 
 **Mutter on Wayland doesn't support rendering to multiple DRM devices.**
