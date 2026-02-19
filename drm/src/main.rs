@@ -98,6 +98,12 @@ fn main() -> anyhow::Result<()> {
             max_height = height
         }
     }
+    
+    // Include standard mode ranges for descriptor
+    min_width = min_width.min(640);
+    min_height = min_height.min(480);
+    max_width = max_width.max(1920);
+    max_height = max_height.max(1080);
 
     usb_gadget::remove_all().expect("UDC init failed");
     info!("USB gadgets removed");
@@ -220,7 +226,7 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                     Event::GetDisplayModes(req) => {
-                        let modes = card
+                        let mut modes: Vec<DisplayMode> = card
                             .get_modes(connector.handle())
                             .unwrap()
                             .iter()
@@ -241,7 +247,31 @@ fn main() -> anyhow::Result<()> {
                                     flags: 0,
                                 }
                             })
-                            .collect::<Vec<DisplayMode>>();
+                            .collect();
+                        
+                        // Add standard modes if not present (for better compositor compatibility)
+                        let standard_modes = [
+                            (1024, 768, 65000, 1040, 1184, 1344, 771, 777, 806),
+                            (800, 600, 40000, 832, 960, 1056, 601, 604, 628),
+                            (640, 480, 25175, 656, 752, 800, 490, 492, 525),
+                        ];
+                        for (w, h, clock, hss, hse, ht, vss, vse, vt) in standard_modes {
+                            if !modes.iter().any(|m| m.hdisplay == w && m.vdisplay == h) {
+                                modes.push(DisplayMode {
+                                    clock,
+                                    hdisplay: w,
+                                    htotal: ht,
+                                    hsync_end: hse,
+                                    hsync_start: hss,
+                                    vtotal: vt,
+                                    vdisplay: h,
+                                    vsync_end: vse,
+                                    vsync_start: vss,
+                                    flags: 0,
+                                });
+                            }
+                        }
+                        
                         tracing::debug!("Sending {} display modes", modes.len());
                         if let Err(e) = req.send_modes(&modes) {
                             tracing::error!("Failed to send modes: {}", e);
