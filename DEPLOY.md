@@ -2,6 +2,19 @@
 
 This guide covers building, deploying, and running the GUD gadget driver on a postmarketOS device.
 
+For the current OnePlus target in this workspace, use:
+
+- SSH target: `cristian@172.16.42.1`
+- Hostname: `oneplus-enchilada`
+- DRM node: `/dev/dri/card0`
+- UDC: `a600000.usb`
+
+Project helper scripts:
+
+- `scripts/oneplus-status.sh`
+- `scripts/deploy-oneplus.sh`
+- `scripts/run-oneplus-gud.sh`
+
 ## Prerequisites
 
 ### On the build machine (Fedora)
@@ -49,11 +62,14 @@ The binary will be at: `target/aarch64-unknown-linux-musl/release/gud-drm`
 ## Deploy to Device
 
 ```bash
-# Copy binary to device (adjust IP as needed)
-scp target/aarch64-unknown-linux-musl/release/gud-drm user@192.168.1.115:~/
+# Copy binary to device
+scp target/aarch64-unknown-linux-musl/release/gud-drm cristian@172.16.42.1:~/
 
 # Make it executable
-ssh user@192.168.1.115 "chmod +x ~/gud-drm"
+ssh cristian@172.16.42.1 "chmod +x ~/gud-drm"
+
+# Or use the project helper
+./scripts/deploy-oneplus.sh
 ```
 
 ## Run on Device
@@ -64,7 +80,7 @@ postmarketOS uses `greetd` which runs `phoc` (Wayland compositor). This holds th
 
 ```bash
 # SSH into the device
-ssh user@192.168.1.115
+ssh -tt cristian@172.16.42.1
 
 # Stop the greeter/display manager
 doas systemctl stop greetd
@@ -96,6 +112,11 @@ cat /sys/class/udc/a600000.usb/state
 
 **Important:** On postmarketOS with `doas`, environment variables are not passed through by default. Use `doas env` to pass `RUST_LOG`.
 
+The current OnePlus setup requires `doas` authentication. You can either run
+the commands manually over an interactive SSH session, or provide
+`DOAS_PASSWORD` to the helper script so it can authenticate once and then stop
+`greetd` before launching `gud-drm`.
+
 ```bash
 # Run in foreground (for testing, see logs directly)
 doas env RUST_LOG=debug ~/gud-drm /dev/dri/card0
@@ -111,6 +132,12 @@ tail -f ~/gud.log
 
 # Check kernel messages for USB/gadget issues
 doas dmesg | grep -E 'usb|gadget|dwc3|ffs'
+
+# Or use the project helper from the repo root on the build machine
+./scripts/run-oneplus-gud.sh
+
+# Or let the helper authenticate once for you
+DOAS_PASSWORD=123 ./scripts/run-oneplus-gud.sh
 ```
 
 #### Log Levels
@@ -125,6 +152,29 @@ Set `RUST_LOG` to control verbosity:
 #### Log File Location
 
 When running in background, logs are written to `~/gud.log` (home directory) or wherever you redirect output.
+
+#### Framebuffer Dumps For Debugging
+
+You can make `gud-drm` write the current framebuffer to a PPM image file after
+the initial test pattern and after each frame update.
+
+```bash
+doas env RUST_LOG=debug \
+  GUD_DUMP_FB_PATH=/home/cristian/gud-framebuffer.ppm \
+  ~/gud-drm /dev/dri/card0
+```
+
+Useful when the panel image looks wrong but the USB gadget is otherwise alive:
+
+```bash
+# Copy the dump back to the host for inspection
+scp cristian@192.168.1.115:/home/cristian/gud-framebuffer.ppm /tmp/gud-framebuffer.ppm
+```
+
+This shows what `gud-drm` thinks it rendered, which helps separate:
+- protocol / buffer bugs
+- framebuffer pitch or geometry bugs
+- panel / compositor / scanout issues
 
 #### Alternative: Run with nohup in a script
 
