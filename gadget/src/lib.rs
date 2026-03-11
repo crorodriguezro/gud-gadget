@@ -217,17 +217,7 @@ impl<'a> GetDescriptor<'a> {
         max_width: u32,
         max_height: u32,
     ) -> anyhow::Result<()> {
-        let descriptor = DisplayDescriptor {
-            magic: GUD_DISPLAY_MAGIC,
-            version: 1,
-            flags: GUD_DISPLAY_FLAG_FULL_UPDATE,
-            compression: 0,
-            max_height,
-            max_width,
-            min_height,
-            min_width,
-            max_buffer_size: max_height * max_width * 4,
-        };
+        let descriptor = build_display_descriptor(min_width, min_height, max_width, max_height);
 
         let mut buf: [u8; 30] = [0; 30];
         ssmarshal::serialize(&mut buf, &descriptor).context("serialize display descriptor")?;
@@ -278,14 +268,45 @@ struct DisplayDescriptor {
     max_height: u32,
 }
 
+fn build_display_descriptor(
+    min_width: u32,
+    min_height: u32,
+    max_width: u32,
+    max_height: u32,
+) -> DisplayDescriptor {
+    DisplayDescriptor {
+        magic: GUD_DISPLAY_MAGIC,
+        version: 1,
+        flags: GUD_DISPLAY_FLAG_FULL_UPDATE,
+        compression: 0,
+        max_height,
+        max_width,
+        min_height,
+        min_width,
+        max_buffer_size: max_height * max_width * 4,
+    }
+}
+
+fn reset_connector_status_changed() {
+    CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+}
+
+fn next_connector_status() -> u8 {
+    let mut status = GUD_CONNECTOR_STATUS_CONNECTED;
+    if CONNECTOR_STATUS_CHANGED_ONCE.swap(false, Ordering::SeqCst) {
+        status |= GUD_CONNECTOR_STATUS_CHANGED;
+    }
+    status
+}
+
 pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
     match event {
         custom::Event::Enable => {
-            CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+            reset_connector_status_changed();
             debug!("Enable event received");
         }
         custom::Event::Bind => {
-            CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+            reset_connector_status_changed();
             debug!("Bind event received");
         }
         custom::Event::SetupDeviceToHost(req) => {
@@ -332,10 +353,7 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                     debug!("sent empty EDID (no EDID available)");
                 }
                 GUD_REQ_GET_CONNECTOR_STATUS => {
-                    let mut status = GUD_CONNECTOR_STATUS_CONNECTED;
-                    if CONNECTOR_STATUS_CHANGED_ONCE.swap(false, Ordering::SeqCst) {
-                        status |= GUD_CONNECTOR_STATUS_CHANGED;
-                    }
+                    let status = next_connector_status();
                     req.send(&[status]).context("send connector status")?;
                     debug!("sent connector status {:#x}", status);
                 }
@@ -350,7 +368,7 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 GUD_REQ_SET_CONNECTOR_FORCE_DETECT => {
                     debug!("connector set to {}", ctrl_req.value);
                     req.recv_all().context("recv set connector")?;
-                    CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+                    reset_connector_status_changed();
                 }
                 GUD_REQ_SET_STATE_CHECK => {
                     debug!("received state check");
@@ -385,7 +403,7 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
             debug!("Suspend event received");
         }
         custom::Event::Resume => {
-            CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+            reset_connector_status_changed();
             debug!("Resume event received");
         }
         custom::Event::Disable => {
@@ -538,7 +556,40 @@ impl PixelDataEndpoint {
 
 #[cfg(test)]
 mod tests {
-    use super::{PixelDataEndpoint, SetBuffer};
+    use super::{
+        build_display_descriptor, next_connector_status, reset_connector_status_changed,
+        PixelDataEndpoint, SetBuffer, GUD_CONNECTOR_STATUS_CHANGED,
+        GUD_CONNECTOR_STATUS_CONNECTED, GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC,
+    };
+
+    #[test]
+    fn build_display_descriptor_sets_expected_fields() {
+        let descriptor = build_display_descriptor(640, 480, 1080, 2280);
+
+        assert_eq!(descriptor.magic, GUD_DISPLAY_MAGIC);
+        assert_eq!(descriptor.version, 1);
+        assert_eq!(descriptor.flags, GUD_DISPLAY_FLAG_FULL_UPDATE);
+        assert_eq!(descriptor.compression, 0);
+        assert_eq!(descriptor.min_width, 640);
+        assert_eq!(descriptor.min_height, 480);
+        assert_eq!(descriptor.max_width, 1080);
+        assert_eq!(descriptor.max_height, 2280);
+        assert_eq!(descriptor.max_buffer_size, 1080 * 2280 * 4);
+    }
+
+    #[test]
+    fn connector_status_reports_changed_only_once() {
+        reset_connector_status_changed();
+
+        let first = next_connector_status();
+        let second = next_connector_status();
+
+        assert_eq!(
+            first,
+            GUD_CONNECTOR_STATUS_CONNECTED | GUD_CONNECTOR_STATUS_CHANGED
+        );
+        assert_eq!(second, GUD_CONNECTOR_STATUS_CONNECTED);
+    }
 
     #[test]
     fn copy_buffer_to_framebuffer_copies_full_frame() {
