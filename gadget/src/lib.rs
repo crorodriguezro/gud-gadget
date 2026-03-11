@@ -372,6 +372,17 @@ fn reset_protocol_state() {
     state.committed_state = None;
 }
 
+fn handle_suspend_transition() {
+    reset_protocol_state();
+    reset_status();
+}
+
+fn handle_resume_transition() {
+    reset_connector_status_changed();
+    reset_protocol_state();
+    reset_status();
+}
+
 fn latch_status(status: u8) {
     STATUS_VALUE.store(status, Ordering::SeqCst);
     CLEAR_STATUS_ON_NEXT_SUCCESS.store(status != GUD_STATUS_OK, Ordering::SeqCst);
@@ -703,13 +714,15 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
             }
         }
         custom::Event::Suspend => {
+            handle_suspend_transition();
             debug!("Suspend event received");
         }
         custom::Event::Resume => {
-            reset_connector_status_changed();
+            handle_resume_transition();
             debug!("Resume event received");
         }
         custom::Event::Disable => {
+            handle_suspend_transition();
             debug!("Disable event received");
         }
         other_event => {
@@ -870,14 +883,14 @@ impl PixelDataEndpoint {
 mod tests {
     use super::{
         build_display_descriptor, commit_pending_state, configure_state_check_validation,
-        current_status, latch_status, mark_success, next_connector_status,
-        reset_connector_status_changed, reset_protocol_state, reset_status,
-        serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
-        store_pending_state, validate_buffer_request, validate_state_check_payload,
-        ConnectorDescriptor, DisplayMode, DisplayState, PixelDataEndpoint, SetBuffer,
-        GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL,
-        GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC, GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK,
-        GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        current_status, handle_resume_transition, handle_suspend_transition, latch_status,
+        mark_success, next_connector_status, reset_connector_status_changed, reset_protocol_state,
+        reset_status, serialize_connector_descriptors, serialize_display_descriptor,
+        serialize_display_modes, store_pending_state, validate_buffer_request,
+        validate_state_check_payload, ConnectorDescriptor, DisplayMode, DisplayState,
+        PixelDataEndpoint, SetBuffer, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
+        GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC,
+        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
     use serde::Serialize;
 
@@ -1208,5 +1221,46 @@ mod tests {
         let err = validate_buffer_request(&info).unwrap_err();
 
         assert!(err.to_string().contains("buffer length"));
+    }
+
+    #[test]
+    fn suspend_transition_clears_committed_state() {
+        reset_protocol_state();
+        store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        });
+        commit_pending_state().unwrap();
+
+        handle_suspend_transition();
+
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1080,
+            height: 2280,
+            length: 1080 * 2280 * 2,
+            compression: 0,
+            compressed_length: 0,
+        };
+        let err = validate_buffer_request(&info).unwrap_err();
+
+        assert!(err.to_string().contains("no committed state available"));
+        assert_eq!(current_status(), GUD_STATUS_OK);
+    }
+
+    #[test]
+    fn resume_transition_reports_connector_changed_again() {
+        reset_connector_status_changed();
+        let _ = next_connector_status();
+
+        handle_resume_transition();
+
+        let status = next_connector_status();
+        assert_eq!(
+            status,
+            GUD_CONNECTOR_STATUS_CONNECTED | GUD_CONNECTOR_STATUS_CHANGED
+        );
     }
 }
