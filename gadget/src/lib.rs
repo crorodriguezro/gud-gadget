@@ -34,6 +34,7 @@ const GUD_REQ_SET_CONTROLLER_ENABLE: u8 = 0x63;
 const GUD_REQ_SET_DISPLAY_ENABLE: u8 = 0x64;
 
 const GUD_DISPLAY_FLAG_FULL_UPDATE: u32 = 0x02;
+pub const GUD_COMPRESSION_LZ4: u8 = 0x01;
 
 const GUD_CONNECTOR_STATUS_CONNECTED: u8 = 0x01;
 const GUD_CONNECTOR_STATUS_CHANGED: u8 = 0x80;
@@ -255,8 +256,15 @@ impl<'a> GetDescriptor<'a> {
         min_height: u32,
         max_width: u32,
         max_height: u32,
+        compression: u8,
     ) -> anyhow::Result<()> {
-        let descriptor = build_display_descriptor(min_width, min_height, max_width, max_height);
+        let descriptor = build_display_descriptor(
+            min_width,
+            min_height,
+            max_width,
+            max_height,
+            compression,
+        );
         let buf = serialize_display_descriptor(&descriptor)?;
 
         self.sender.send(&buf).context("send display descriptor")?;
@@ -307,12 +315,17 @@ fn build_display_descriptor(
     min_height: u32,
     max_width: u32,
     max_height: u32,
+    compression: u8,
 ) -> DisplayDescriptor {
     DisplayDescriptor {
         magic: GUD_DISPLAY_MAGIC,
         version: 1,
-        flags: GUD_DISPLAY_FLAG_FULL_UPDATE,
-        compression: 0,
+        flags: if compression == 0 {
+            GUD_DISPLAY_FLAG_FULL_UPDATE
+        } else {
+            0
+        },
+        compression,
         max_height,
         max_width,
         min_height,
@@ -610,8 +623,19 @@ fn validate_buffer_request(info: &SetBuffer) -> anyhow::Result<()> {
         );
     } else {
         ensure!(
+            info.compression == GUD_COMPRESSION_LZ4,
+            "unsupported compression {}",
+            info.compression
+        );
+        ensure!(
             info.compressed_length > 0,
             "compressed buffer must set compressed_length"
+        );
+        ensure!(
+            info.compressed_length <= info.length,
+            "compressed buffer length {} exceeds uncompressed length {}",
+            info.compressed_length,
+            info.length
         );
     }
 
@@ -959,9 +983,10 @@ mod tests {
         serialize_display_descriptor, serialize_display_modes, store_pending_state,
         update_controller_enabled, update_display_enabled, validate_buffer_request,
         validate_state_check_payload, ConnectorDescriptor, DisplayMode, DisplayState,
-        PixelDataEndpoint, SetBuffer, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
-        GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC,
-        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        PixelDataEndpoint, SetBuffer, GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED,
+        GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL,
+        GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC, GUD_PIXEL_FORMAT_RGB565,
+        GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
     use serde::Serialize;
 
@@ -1001,7 +1026,7 @@ mod tests {
 
     #[test]
     fn build_display_descriptor_sets_expected_fields() {
-        let descriptor = build_display_descriptor(640, 480, 1080, 2280);
+        let descriptor = build_display_descriptor(640, 480, 1080, 2280, 0);
 
         assert_eq!(descriptor.magic, GUD_DISPLAY_MAGIC);
         assert_eq!(descriptor.version, 1);
@@ -1012,6 +1037,14 @@ mod tests {
         assert_eq!(descriptor.max_width, 1080);
         assert_eq!(descriptor.max_height, 2280);
         assert_eq!(descriptor.max_buffer_size, 1080 * 2280 * 4);
+    }
+
+    #[test]
+    fn build_display_descriptor_clears_full_update_when_compression_enabled() {
+        let descriptor = build_display_descriptor(640, 480, 1080, 2280, GUD_COMPRESSION_LZ4);
+
+        assert_eq!(descriptor.flags, 0);
+        assert_eq!(descriptor.compression, GUD_COMPRESSION_LZ4);
     }
 
     #[test]
@@ -1042,7 +1075,7 @@ mod tests {
 
     #[test]
     fn serialize_display_descriptor_matches_expected_size_and_header() {
-        let descriptor = build_display_descriptor(640, 480, 1080, 2280);
+        let descriptor = build_display_descriptor(640, 480, 1080, 2280, 0);
 
         let buf = serialize_display_descriptor(&descriptor).unwrap();
 
@@ -1231,6 +1264,31 @@ mod tests {
     }
 
     #[test]
+    fn validate_buffer_request_accepts_lz4_metadata() {
+        reset_protocol_state();
+        store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        });
+        commit_pending_state().unwrap();
+        update_controller_enabled(true);
+        update_display_enabled(true).unwrap();
+
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1080,
+            height: 2280,
+            length: 1080 * 2280 * 2,
+            compression: GUD_COMPRESSION_LZ4,
+            compressed_length: (1080 * 2280 * 2) - 128,
+        };
+
+        validate_buffer_request(&info).unwrap();
+    }
+
+    #[test]
     fn validate_buffer_request_rejects_without_committed_state() {
         reset_protocol_state();
 
@@ -1298,6 +1356,58 @@ mod tests {
         let err = validate_buffer_request(&info).unwrap_err();
 
         assert!(err.to_string().contains("buffer length"));
+    }
+
+    #[test]
+    fn validate_buffer_request_rejects_unknown_compression() {
+        reset_protocol_state();
+        store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        });
+        commit_pending_state().unwrap();
+        update_controller_enabled(true);
+        update_display_enabled(true).unwrap();
+
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1080,
+            height: 2280,
+            length: 1080 * 2280 * 2,
+            compression: 0x7f,
+            compressed_length: 1024,
+        };
+        let err = validate_buffer_request(&info).unwrap_err();
+
+        assert!(err.to_string().contains("unsupported compression"));
+    }
+
+    #[test]
+    fn validate_buffer_request_rejects_compressed_length_larger_than_payload() {
+        reset_protocol_state();
+        store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        });
+        commit_pending_state().unwrap();
+        update_controller_enabled(true);
+        update_display_enabled(true).unwrap();
+
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1080,
+            height: 2280,
+            length: 1080 * 2280 * 2,
+            compression: GUD_COMPRESSION_LZ4,
+            compressed_length: (1080 * 2280 * 2) + 1,
+        };
+        let err = validate_buffer_request(&info).unwrap_err();
+
+        assert!(err.to_string().contains("exceeds uncompressed length"));
     }
 
     #[test]

@@ -1,7 +1,7 @@
 use anyhow::ensure;
 use drm::buffer::Buffer;
 use drm::control::{ClipRect, Device, Mode, ModeTypeFlags};
-use gud_gadget::{DisplayMode, Event};
+use gud_gadget::{DisplayMode, Event, GUD_COMPRESSION_LZ4};
 use std::env::{args, var_os};
 use std::fs::{rename, File};
 use std::io::{BufWriter, Write};
@@ -640,8 +640,13 @@ fn main() -> anyhow::Result<()> {
                 tracing::debug!("GUD event: {:?}", gud_event);
                 match gud_event {
                     Event::GetDescriptor(req) => {
-                        if let Err(err) =
-                            req.send_descriptor(min_width, min_height, max_width, max_height)
+                        if let Err(err) = req.send_descriptor(
+                            min_width,
+                            min_height,
+                            max_width,
+                            max_height,
+                            GUD_COMPRESSION_LZ4,
+                        )
                         {
                             tracing::error!("Failed to send descriptor: {}", err);
                         } else {
