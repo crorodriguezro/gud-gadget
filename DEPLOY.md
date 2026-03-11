@@ -168,7 +168,10 @@ Useful when the panel image looks wrong but the USB gadget is otherwise alive:
 
 ```bash
 # Copy the dump back to the host for inspection
-scp cristian@192.168.1.115:/home/cristian/gud-framebuffer.ppm /tmp/gud-framebuffer.ppm
+# On this phone, plain scp can stall. This gzip-over-ssh path is reliable.
+ssh cristian@192.168.1.115 'gzip -1 -c /home/cristian/gud-framebuffer.ppm' \
+  > /tmp/gud-framebuffer.ppm.gz
+gunzip -f /tmp/gud-framebuffer.ppm.gz
 ```
 
 This shows what `gud-drm` thinks it rendered, which helps separate:

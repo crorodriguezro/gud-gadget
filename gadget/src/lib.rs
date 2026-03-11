@@ -1,15 +1,16 @@
-use anyhow::Context;
+use anyhow::{ensure, Context};
 use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::env::var_os;
+use std::fs::{rename, File};
+use std::io::{BufWriter, Write};
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 use tracing::{debug, warn};
 
 use bytes::BytesMut;
 use usb_gadget::function::custom;
-use usb_gadget::function::custom::{
-    CtrlReceiver, CtrlSender, Endpoint, EndpointDirection, EndpointReceiver,
-};
+use usb_gadget::function::custom::{CtrlSender, Endpoint, EndpointDirection, EndpointReceiver};
 use usb_gadget::Id;
 
 const GUD_DISPLAY_MAGIC: u32 = 0x1d50614d;
@@ -31,11 +32,12 @@ const GUD_REQ_SET_STATE_COMMIT: u8 = 0x62;
 const GUD_REQ_SET_CONTROLLER_ENABLE: u8 = 0x63;
 const GUD_REQ_SET_DISPLAY_ENABLE: u8 = 0x64;
 
-const GUD_DISPLAY_FLAG_STATUS_ON_SET: u32 = 0x01;
+const GUD_DISPLAY_FLAG_FULL_UPDATE: u32 = 0x02;
+
 const GUD_CONNECTOR_STATUS_CONNECTED: u8 = 0x01;
 const GUD_CONNECTOR_STATUS_CHANGED: u8 = 0x80;
-pub const GUD_DISPLAY_MODE_FLAG_PREFERRED: u32 = 1 << 10;
 
+pub const GUD_DISPLAY_MODE_FLAG_PREFERRED: u32 = 1 << 10;
 pub const GUD_PIXEL_FORMAT_RGB565: u8 = 0x40;
 pub const GUD_PIXEL_FORMAT_RGB888: u8 = 0x50;
 pub const GUD_PIXEL_FORMAT_XRGB8888: u8 = 0x80;
@@ -43,13 +45,8 @@ pub const GUD_PIXEL_FORMAT_XRGB8888: u8 = 0x80;
 const GUD_CONNECTOR_TYPE_PANEL: u8 = 0;
 
 const GUD_STATUS_OK: u8 = 0;
-const GUD_STATUS_REQUEST_NOT_SUPPORTED: u8 = 0x02;
-const GUD_STATUS_INVALID_PARAMETER: u8 = 0x04;
 
-const GUD_COMPRESSION_LZ4: u8 = 0x01;
-
-const GUD_SET_STATE_HEADER_LENGTH: usize = 26;
-const GUD_SET_BUFFER_LENGTH: usize = 25;
+static CONNECTOR_STATUS_CHANGED_ONCE: AtomicBool = AtomicBool::new(true);
 
 // https://github.com/openmoko/openmoko-usb-oui/commit/73bdf541b6f9840b70219626b4088d4e3f164904
 pub const OPENMOKO_GUD_ID: Id = Id::new(0x1d50, 0x614d);
@@ -70,7 +67,101 @@ pub struct PixelDataEndpoint {
     compress_buf: BytesMut,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+fn dump_pixel_buffer_ppm(
+    path: &Path,
+    buf: &[u8],
+    pitch: usize,
+    width: u32,
+    height: u32,
+    bpp: usize,
+) -> anyhow::Result<()> {
+    let width = width as usize;
+    let height = height as usize;
+    let file_name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("gud-rx.ppm");
+    let tmp_path = path.with_file_name(format!(".{}.tmp", file_name));
+    let mut writer = BufWriter::new(File::create(&tmp_path)?);
+    write!(writer, "P6\n{} {}\n255\n", width, height)?;
+
+    for y in 0..height {
+        let row = &buf[(y * pitch)..(y * pitch + width * bpp)];
+        for x in 0..width {
+            let offset = x * bpp;
+            let rgb = match bpp {
+                2 => {
+                    let pixel = u16::from_le_bytes([row[offset], row[offset + 1]]);
+                    let red = ((pixel >> 11) & 0x1f) as u8;
+                    let green = ((pixel >> 5) & 0x3f) as u8;
+                    let blue = (pixel & 0x1f) as u8;
+                    [
+                        (red << 3) | (red >> 2),
+                        (green << 2) | (green >> 4),
+                        (blue << 3) | (blue >> 2),
+                    ]
+                }
+                3 => [row[offset], row[offset + 1], row[offset + 2]],
+                4 => [row[offset + 2], row[offset + 1], row[offset]],
+                _ => anyhow::bail!("unsupported bytes-per-pixel for dump: {}", bpp),
+            };
+            writer.write_all(&rgb)?;
+        }
+    }
+
+    writer.flush()?;
+    drop(writer);
+    rename(&tmp_path, path)?;
+    Ok(())
+}
+
+fn dump_raw_buffer(path: &Path, buf: &[u8]) -> anyhow::Result<()> {
+    let file_name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("gud-rx.raw");
+    let tmp_path = path.with_file_name(format!(".{}.tmp", file_name));
+    std::fs::write(&tmp_path, buf)?;
+    rename(&tmp_path, path)?;
+    Ok(())
+}
+
+fn dump_pixel_buffer_if_enabled(
+    var_name: &str,
+    buf: &[u8],
+    pitch: usize,
+    width: u32,
+    height: u32,
+    bpp: usize,
+) {
+    let Some(path) = var_os(var_name).map(PathBuf::from) else {
+        return;
+    };
+
+    if let Err(err) = dump_pixel_buffer_ppm(&path, buf, pitch, width, height, bpp) {
+        warn!("Failed to dump pixel data to {}: {}", path.display(), err);
+    } else {
+        debug!("Wrote pixel dump to {}", path.display());
+    }
+}
+
+fn dump_raw_buffer_if_enabled(var_name: &str, buf: &[u8]) {
+    let Some(path) = var_os(var_name).map(PathBuf::from) else {
+        return;
+    };
+
+    if let Err(err) = dump_raw_buffer(&path, buf) {
+        warn!(
+            "Failed to dump raw pixel data to {}: {}",
+            path.display(),
+            err
+        );
+    } else {
+        debug!("Wrote raw pixel dump to {}", path.display());
+    }
+}
+
+#[derive(Debug, Serialize)]
 pub struct DisplayMode {
     pub clock: u32,
     pub hdisplay: u16,
@@ -82,30 +173,6 @@ pub struct DisplayMode {
     pub vsync_end: u16,
     pub vtotal: u16,
     pub flags: u32,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct SetStateHeader {
-    mode: DisplayMode,
-    format: u8,
-    connector: u8,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CheckedState {
-    pub mode: DisplayMode,
-    pub format: u8,
-    pub connector: u8,
-}
-
-impl From<SetStateHeader> for CheckedState {
-    fn from(value: SetStateHeader) -> Self {
-        Self {
-            mode: value.mode,
-            format: value.format,
-            connector: value.connector,
-        }
-    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -130,63 +197,16 @@ pub enum Event<'a> {
 #[derive(Debug)]
 pub struct GetDescriptor<'a> {
     sender: CtrlSender<'a>,
-    status: SharedStatus,
 }
 
 #[derive(Debug)]
 pub struct GetDisplayModes<'a> {
     sender: CtrlSender<'a>,
-    status: SharedStatus,
 }
 
 #[derive(Debug)]
 pub struct GetPixelFormats<'a> {
     sender: CtrlSender<'a>,
-    status: SharedStatus,
-}
-
-type SharedStatus = Rc<RefCell<StatusTracker>>;
-
-#[derive(Debug, Default)]
-struct StatusTracker {
-    value: u8,
-    clear_on_next_success: bool,
-}
-
-impl StatusTracker {
-    fn current(&self) -> u8 {
-        self.value
-    }
-
-    fn latch(&mut self, status: u8) {
-        self.value = status;
-        self.clear_on_next_success = status != GUD_STATUS_OK;
-    }
-
-    fn mark_success(&mut self) {
-        if self.clear_on_next_success {
-            self.value = GUD_STATUS_OK;
-            self.clear_on_next_success = false;
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct ProtocolHandler {
-    status: SharedStatus,
-    supported_modes: Vec<DisplayMode>,
-    supported_formats: Vec<u8>,
-    pending_state: Option<CheckedState>,
-    committed_state: Option<CheckedState>,
-    controller_enabled: bool,
-    display_enabled: bool,
-    connector_status_changed: bool,
-}
-
-impl Default for ProtocolHandler {
-    fn default() -> Self {
-        Self::new(Vec::new(), Vec::new())
-    }
 }
 
 impl<'a> GetDescriptor<'a> {
@@ -200,8 +220,8 @@ impl<'a> GetDescriptor<'a> {
         let descriptor = DisplayDescriptor {
             magic: GUD_DISPLAY_MAGIC,
             version: 1,
-            flags: GUD_DISPLAY_FLAG_STATUS_ON_SET,
-            compression: GUD_COMPRESSION_LZ4,
+            flags: GUD_DISPLAY_FLAG_FULL_UPDATE,
+            compression: 0,
             max_height,
             max_width,
             min_height,
@@ -213,7 +233,6 @@ impl<'a> GetDescriptor<'a> {
         ssmarshal::serialize(&mut buf, &descriptor).context("serialize display descriptor")?;
 
         self.sender.send(&buf).context("send display descriptor")?;
-        self.status.borrow_mut().mark_success();
         debug!("sent display descriptor {:?}", descriptor);
         Ok(())
     }
@@ -223,7 +242,6 @@ impl<'a> GetDisplayModes<'a> {
     pub fn send_modes(self, modes: &[DisplayMode]) -> anyhow::Result<()> {
         let size = 24 * modes.len();
         if size > self.sender.len() {
-            // TODO: proper Err
             panic!("too many display modes provided");
         }
 
@@ -234,7 +252,6 @@ impl<'a> GetDisplayModes<'a> {
         }
 
         self.sender.send(&buf).context("send modes")?;
-        self.status.borrow_mut().mark_success();
 
         Ok(())
     }
@@ -243,7 +260,6 @@ impl<'a> GetDisplayModes<'a> {
 impl<'a> GetPixelFormats<'a> {
     pub fn send_pixel_formats(self, formats: &[u8]) -> anyhow::Result<()> {
         self.sender.send(formats).context("send pixel formats")?;
-        self.status.borrow_mut().mark_success();
         debug!("sent pixel formats: {:?}", formats);
         Ok(())
     }
@@ -262,521 +278,124 @@ struct DisplayDescriptor {
     max_height: u32,
 }
 
-impl ProtocolHandler {
-    pub fn new(supported_modes: Vec<DisplayMode>, supported_formats: Vec<u8>) -> Self {
-        Self {
-            status: Rc::new(RefCell::new(StatusTracker::default())),
-            supported_modes,
-            supported_formats,
-            pending_state: None,
-            committed_state: None,
-            controller_enabled: false,
-            display_enabled: false,
-            connector_status_changed: true,
+pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
+    match event {
+        custom::Event::Enable => {
+            CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+            debug!("Enable event received");
         }
-    }
+        custom::Event::Bind => {
+            CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+            debug!("Bind event received");
+        }
+        custom::Event::SetupDeviceToHost(req) => {
+            let ctrl_req = req.ctrl_req();
+            match ctrl_req.request {
+                GUD_REQ_GET_STATUS => {
+                    req.send(&[GUD_STATUS_OK]).context("send status")?;
+                    debug!("sent status");
+                }
+                GUD_REQ_GET_DESCRIPTOR => {
+                    return Ok(Some(Event::GetDescriptor(GetDescriptor { sender: req })));
+                }
+                GUD_REQ_GET_FORMATS => {
+                    return Ok(Some(Event::GetPixelFormats(GetPixelFormats {
+                        sender: req,
+                    })));
+                }
+                GUD_REQ_GET_PROPERTIES => {
+                    let sent = req.send(&[]).context("send properties")?;
+                    debug!("sent properties {}", sent);
+                }
+                GUD_REQ_GET_CONNECTORS => {
+                    let connectors = [ConnectorDescriptor {
+                        connector_type: GUD_CONNECTOR_TYPE_PANEL,
+                        flags: 0,
+                    }];
 
-    pub fn can_scanout(&self) -> bool {
-        self.controller_enabled && self.display_enabled && self.committed_state.is_some()
-    }
-
-    pub fn controller_enabled(&self) -> bool {
-        self.controller_enabled
-    }
-
-    pub fn display_enabled(&self) -> bool {
-        self.display_enabled
-    }
-
-    pub fn committed_state(&self) -> Option<&CheckedState> {
-        self.committed_state.as_ref()
-    }
-
-    pub fn event<'a>(&mut self, event: custom::Event<'a>) -> anyhow::Result<Option<Event<'a>>> {
-        match event {
-            custom::Event::Enable => {
-                self.reset_runtime_state();
-                debug!("Enable event received");
-            }
-            custom::Event::Bind => {
-                self.reset_runtime_state();
-                debug!("Bind event received");
-            }
-            custom::Event::SetupDeviceToHost(req) => {
-                let ctrl_req = req.ctrl_req();
-                match ctrl_req.request {
-                    GUD_REQ_GET_STATUS => {
-                        let status = self.status.borrow().current();
-                        req.send(&[status]).context("send status")?;
-                        debug!("sent status {}", status);
+                    let mut buf: [u8; 5] = [0; 5];
+                    ssmarshal::serialize(&mut buf, &connectors).context("serialize connectors")?;
+                    req.send(&buf).context("send connectors")?;
+                    debug!("sent connectors");
+                }
+                GUD_REQ_GET_CONNECTOR_PROPERTIES => {
+                    req.send(&[]).context("send connector properties")?;
+                    debug!("sent connector properties");
+                }
+                GUD_REQ_GET_CONNECTOR_MODES => {
+                    return Ok(Some(Event::GetDisplayModes(GetDisplayModes {
+                        sender: req,
+                    })));
+                }
+                GUD_REQ_GET_CONNECTOR_EDID => {
+                    req.send(&[]).context("send EDID")?;
+                    debug!("sent empty EDID (no EDID available)");
+                }
+                GUD_REQ_GET_CONNECTOR_STATUS => {
+                    let mut status = GUD_CONNECTOR_STATUS_CONNECTED;
+                    if CONNECTOR_STATUS_CHANGED_ONCE.swap(false, Ordering::SeqCst) {
+                        status |= GUD_CONNECTOR_STATUS_CHANGED;
                     }
-                    GUD_REQ_GET_DESCRIPTOR => {
-                        return Ok(Some(Event::GetDescriptor(GetDescriptor {
-                            sender: req,
-                            status: Rc::clone(&self.status),
-                        })));
-                    }
-                    GUD_REQ_GET_FORMATS => {
-                        return Ok(Some(Event::GetPixelFormats(GetPixelFormats {
-                            sender: req,
-                            status: Rc::clone(&self.status),
-                        })));
-                    }
-                    GUD_REQ_GET_PROPERTIES => {
-                        let sent = req.send(&[]).context("send properties")?;
-                        self.mark_success();
-                        debug!("sent properties {}", sent);
-                    }
-                    GUD_REQ_GET_CONNECTORS => {
-                        let connectors = [ConnectorDescriptor {
-                            connector_type: GUD_CONNECTOR_TYPE_PANEL,
-                            flags: 0,
-                        }];
-
-                        let mut buf: [u8; 5] = [0; 5];
-                        ssmarshal::serialize(&mut buf, &connectors)
-                            .context("serialize connectors")?;
-                        req.send(&buf).context("send connectors")?;
-                        self.mark_success();
-                        debug!("sent connectors");
-                    }
-                    GUD_REQ_GET_CONNECTOR_PROPERTIES => {
-                        if ctrl_req.value != 0 {
-                            return self.reject_sender(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject get connector properties",
-                            );
-                        }
-                        req.send(&[]).context("send connector properties")?;
-                        self.mark_success();
-                        debug!("sent connector properties");
-                    }
-                    GUD_REQ_GET_CONNECTOR_MODES => {
-                        if ctrl_req.value != 0 {
-                            return self.reject_sender(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject get connector modes",
-                            );
-                        }
-                        return Ok(Some(Event::GetDisplayModes(GetDisplayModes {
-                            sender: req,
-                            status: Rc::clone(&self.status),
-                        })));
-                    }
-                    GUD_REQ_GET_CONNECTOR_EDID => {
-                        if ctrl_req.value != 0 {
-                            return self.reject_sender(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject get connector EDID",
-                            );
-                        }
-                        req.send(&[]).context("send EDID")?;
-                        self.mark_success();
-                        debug!("sent empty EDID (no EDID available)");
-                    }
-                    GUD_REQ_GET_CONNECTOR_STATUS => {
-                        if ctrl_req.value != 0 {
-                            return self.reject_sender(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject get connector status",
-                            );
-                        }
-                        let status = if self.connector_status_changed {
-                            GUD_CONNECTOR_STATUS_CONNECTED | GUD_CONNECTOR_STATUS_CHANGED
-                        } else {
-                            GUD_CONNECTOR_STATUS_CONNECTED
-                        };
-                        req.send(&[status])
-                            .context("send connector status")?;
-                        self.connector_status_changed = false;
-                        self.mark_success();
-                        debug!("sent connector status 0x{:02x}", status);
-                    }
-                    request => {
-                        warn!("unsupported SetupDeviceToHost request {:x}", request);
-                        return self.reject_sender(
-                            req,
-                            GUD_STATUS_REQUEST_NOT_SUPPORTED,
-                            "reject unsupported device-to-host request",
-                        );
-                    }
+                    req.send(&[status]).context("send connector status")?;
+                    debug!("sent connector status {:#x}", status);
+                }
+                request => {
+                    warn!("unhandled SetupDeviceToHost request {:x}", request);
                 }
             }
-            custom::Event::SetupHostToDevice(req) => {
-                let ctrl_req = req.ctrl_req();
-                match ctrl_req.request {
-                    GUD_REQ_SET_CONNECTOR_FORCE_DETECT => {
-                        if ctrl_req.value != 0 || ctrl_req.length != 0 {
-                            return self.reject_receiver(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject set connector force detect",
-                            );
-                        }
-                        debug!("connector force detect for connector {}", ctrl_req.value);
-                        req.recv_all().context("recv set connector")?;
-                        self.connector_status_changed = true;
-                        self.mark_success();
-                    }
-                    GUD_REQ_SET_STATE_CHECK => {
-                        if ctrl_req.length as usize != GUD_SET_STATE_HEADER_LENGTH {
-                            return self.reject_receiver(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject set state check",
-                            );
-                        }
-                        let req = req.recv_all().context("recv set state check")?;
-                        match self.validate_set_state_check(req.as_slice()) {
-                            Ok(state) => {
-                                debug!("received valid state check: {:?}", state);
-                                self.pending_state = Some(state);
-                                self.mark_success();
-                            }
-                            Err(err) => {
-                                warn!("rejecting state check: {}", err);
-                                self.latch_status(GUD_STATUS_INVALID_PARAMETER);
-                                return Ok(None);
-                            }
-                        }
-                    }
-                    GUD_REQ_SET_CONTROLLER_ENABLE => {
-                        if ctrl_req.length != 1 {
-                            return self.reject_receiver(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject set controller enable",
-                            );
-                        }
-                        let req = req.recv_all().context("recv set controller enable")?;
-                        if !matches!(req.first(), Some(0 | 1)) {
-                            warn!("rejecting controller enable payload: {:?}", req);
-                            self.latch_status(GUD_STATUS_INVALID_PARAMETER);
-                            return Ok(None);
-                        }
-                        self.controller_enabled = req[0] != 0;
-                        if !self.controller_enabled {
-                            self.display_enabled = false;
-                        }
-                        self.mark_success();
-                        debug!("received controller enable: {}", self.controller_enabled);
-                    }
-                    GUD_REQ_SET_DISPLAY_ENABLE => {
-                        if ctrl_req.length != 1 {
-                            return self.reject_receiver(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject set display enable",
-                            );
-                        }
-                        let req = req.recv_all().context("recv set display enable")?;
-                        if !matches!(req.first(), Some(0 | 1)) {
-                            warn!("rejecting display enable payload: {:?}", req);
-                            self.latch_status(GUD_STATUS_INVALID_PARAMETER);
-                            return Ok(None);
-                        }
-                        self.display_enabled = req[0] != 0;
-                        self.mark_success();
-                        debug!("received display enable: {}", self.display_enabled);
-                    }
-                    GUD_REQ_SET_STATE_COMMIT => {
-                        if ctrl_req.length != 0 {
-                            return self.reject_receiver(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject set state commit",
-                            );
-                        }
-                        if self.pending_state.is_none() {
-                            return self.reject_receiver(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject set state commit without pending state",
-                            );
-                        }
-                        req.recv_all().context("recv set state commit")?;
-                        self.committed_state = self.pending_state.take();
-                        self.mark_success();
-                        debug!("received state commit: {:?}", self.committed_state);
-                    }
-                    GUD_REQ_SET_BUFFER => {
-                        if ctrl_req.length != GUD_SET_BUFFER_LENGTH as u16 {
-                            return self.reject_receiver(
-                                req,
-                                GUD_STATUS_INVALID_PARAMETER,
-                                "reject set buffer",
-                            );
-                        }
-                        let req = req.recv_all().context("recv set buffer")?;
-                        let v: SetBuffer;
-                        (v, _) = ssmarshal::deserialize(req.as_slice())
-                            .context("deserialize set buffer")?;
-                        if v.compression != 0 && v.compression != GUD_COMPRESSION_LZ4 {
-                            warn!("rejecting set buffer compression: {}", v.compression);
-                            self.latch_status(GUD_STATUS_INVALID_PARAMETER);
-                            return Ok(None);
-                        }
-                        if let Err(err) = self.validate_set_buffer(&v) {
-                            warn!("rejecting set buffer: {}", err);
-                            self.latch_status(GUD_STATUS_INVALID_PARAMETER);
-                            return Ok(None);
-                        }
-                        self.mark_success();
-                        debug!("received set buffer: {:?}", v);
-                        return Ok(Some(Event::Buffer(v)));
-                    }
-                    request => {
-                        warn!("unsupported set request {:x}", request);
-                        return self.reject_receiver(
-                            req,
-                            GUD_STATUS_REQUEST_NOT_SUPPORTED,
-                            "reject unsupported host-to-device request",
-                        );
-                    }
+        }
+        custom::Event::SetupHostToDevice(req) => {
+            let ctrl_req = req.ctrl_req();
+            match ctrl_req.request {
+                GUD_REQ_SET_CONNECTOR_FORCE_DETECT => {
+                    debug!("connector set to {}", ctrl_req.value);
+                    req.recv_all().context("recv set connector")?;
+                    CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+                }
+                GUD_REQ_SET_STATE_CHECK => {
+                    debug!("received state check");
+                    req.recv_all().context("recv set state check")?;
+                }
+                GUD_REQ_SET_CONTROLLER_ENABLE => {
+                    let req = req.recv_all().context("recv set controller enable")?;
+                    debug!("received controller enable: {:?}", req);
+                }
+                GUD_REQ_SET_DISPLAY_ENABLE => {
+                    let req = req.recv_all().context("recv set display enable")?;
+                    debug!("received display enable: {:?}", req);
+                }
+                GUD_REQ_SET_STATE_COMMIT => {
+                    req.recv_all().context("recv set state commit")?;
+                    debug!("received state commit");
+                }
+                GUD_REQ_SET_BUFFER => {
+                    let req = req.recv_all().context("recv set buffer")?;
+                    let v: SetBuffer;
+                    (v, _) =
+                        ssmarshal::deserialize(req.as_slice()).context("deserialize set buffer")?;
+                    debug!("received set buffer: {:?}", v);
+                    return Ok(Some(Event::Buffer(v)));
+                }
+                value => {
+                    warn!("unhandled set request {:x}", value);
                 }
             }
-            custom::Event::Suspend => {
-                self.display_enabled = false;
-                debug!("Suspend event received");
-            }
-            custom::Event::Resume => {
-                debug!("Resume event received");
-            }
-            custom::Event::Disable => {
-                self.reset_runtime_state();
-                debug!("Disable event received");
-            }
-            event => {
-                warn!("unhandled event {:?}", event);
-            }
         }
-        Ok(None)
-    }
-
-    fn mark_success(&mut self) {
-        self.status.borrow_mut().mark_success();
-    }
-
-    fn latch_status(&mut self, status: u8) {
-        self.status.borrow_mut().latch(status);
-    }
-
-    fn reset_runtime_state(&mut self) {
-        self.pending_state = None;
-        self.committed_state = None;
-        self.controller_enabled = false;
-        self.display_enabled = false;
-        self.connector_status_changed = true;
-    }
-
-    fn reject_sender<'a>(
-        &mut self,
-        req: CtrlSender<'a>,
-        status: u8,
-        context: &str,
-    ) -> anyhow::Result<Option<Event<'a>>> {
-        self.latch_status(status);
-        req.halt().with_context(|| context.to_owned())?;
-        Ok(None)
-    }
-
-    fn reject_receiver<'a>(
-        &mut self,
-        req: CtrlReceiver<'a>,
-        status: u8,
-        context: &str,
-    ) -> anyhow::Result<Option<Event<'a>>> {
-        self.latch_status(status);
-        req.halt().with_context(|| context.to_owned())?;
-        Ok(None)
-    }
-
-    fn validate_set_state_check(&self, data: &[u8]) -> anyhow::Result<CheckedState> {
-        if data.len() != GUD_SET_STATE_HEADER_LENGTH {
-            anyhow::bail!("unexpected state check length: {}", data.len());
+        custom::Event::Suspend => {
+            debug!("Suspend event received");
         }
-
-        let (state, used): (SetStateHeader, usize) =
-            ssmarshal::deserialize(data).context("deserialize set state header")?;
-        if used != GUD_SET_STATE_HEADER_LENGTH {
-            anyhow::bail!("unexpected state check header length: {}", used);
+        custom::Event::Resume => {
+            CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+            debug!("Resume event received");
         }
-        if state.connector != 0 {
-            anyhow::bail!("unsupported connector index {}", state.connector);
+        custom::Event::Disable => {
+            debug!("Disable event received");
         }
-        if !self.supported_formats.contains(&state.format) {
-            anyhow::bail!("unsupported pixel format 0x{:02x}", state.format);
-        }
-        if state.mode.hdisplay == 0 || state.mode.vdisplay == 0 {
-            anyhow::bail!("display mode must have non-zero dimensions");
-        }
-        if !self.supported_modes.contains(&state.mode) {
-            anyhow::bail!("unsupported display mode {:?}", state.mode);
-        }
-
-        Ok(state.into())
-    }
-
-    fn validate_set_buffer(&self, info: &SetBuffer) -> anyhow::Result<()> {
-        let state = self
-            .committed_state
-            .as_ref()
-            .context("no committed state for buffer transfer")?;
-        let bytes_per_pixel = bytes_per_pixel(state.format)
-            .with_context(|| format!("unsupported format 0x{:02x}", state.format))?;
-        let max_width = u32::from(state.mode.hdisplay);
-        let max_height = u32::from(state.mode.vdisplay);
-
-        if info.width == 0 || info.height == 0 {
-            anyhow::bail!("buffer dimensions must be non-zero");
-        }
-        if info.x.checked_add(info.width).is_none() || info.x + info.width > max_width {
-            anyhow::bail!("buffer width out of bounds");
-        }
-        if info.y.checked_add(info.height).is_none() || info.y + info.height > max_height {
-            anyhow::bail!("buffer height out of bounds");
-        }
-
-        let expected_length = info
-            .width
-            .checked_mul(info.height)
-            .and_then(|pixels| pixels.checked_mul(bytes_per_pixel as u32))
-            .context("buffer length overflow")?;
-        if info.length != expected_length {
-            anyhow::bail!(
-                "unexpected buffer length {} (expected {})",
-                info.length,
-                expected_length
-            );
-        }
-        if info.compression == 0 && info.compressed_length != 0 {
-            anyhow::bail!("compressed_length must be zero for uncompressed buffers");
-        }
-        if info.compression == GUD_COMPRESSION_LZ4 && info.compressed_length == 0 {
-            anyhow::bail!("compressed buffer length must be non-zero");
-        }
-
-        Ok(())
-    }
-}
-
-fn bytes_per_pixel(format: u8) -> Option<usize> {
-    match format {
-        GUD_PIXEL_FORMAT_RGB565 => Some(2),
-        GUD_PIXEL_FORMAT_RGB888 => Some(3),
-        GUD_PIXEL_FORMAT_XRGB8888 => Some(4),
-        _ => None,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{
-        bytes_per_pixel, CheckedState, DisplayMode, ProtocolHandler, SetBuffer, SetStateHeader,
-        StatusTracker, GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
-    };
-
-    fn sample_mode() -> DisplayMode {
-        DisplayMode {
-            clock: 65_000,
-            hdisplay: 1024,
-            hsync_start: 1040,
-            hsync_end: 1184,
-            htotal: 1344,
-            vdisplay: 768,
-            vsync_start: 771,
-            vsync_end: 777,
-            vtotal: 806,
-            flags: 0,
+        other_event => {
+            warn!("unhandled event {:?}", other_event);
         }
     }
-
-    fn sample_state() -> CheckedState {
-        CheckedState {
-            mode: sample_mode(),
-            format: GUD_PIXEL_FORMAT_RGB565,
-            connector: 0,
-        }
-    }
-
-    fn serialize_state_header(header: &SetStateHeader) -> Vec<u8> {
-        let mut buf = vec![0; super::GUD_SET_STATE_HEADER_LENGTH];
-        let used = ssmarshal::serialize(&mut buf, header).expect("serialize test state header");
-        assert_eq!(used, super::GUD_SET_STATE_HEADER_LENGTH);
-        buf
-    }
-
-    #[test]
-    fn error_status_stays_latched_until_success() {
-        let mut status = StatusTracker::default();
-
-        status.latch(GUD_STATUS_REQUEST_NOT_SUPPORTED);
-        assert_eq!(status.current(), GUD_STATUS_REQUEST_NOT_SUPPORTED);
-
-        status.mark_success();
-        assert_eq!(status.current(), GUD_STATUS_OK);
-    }
-
-    #[test]
-    fn success_without_error_keeps_status_ok() {
-        let mut status = StatusTracker::default();
-
-        status.mark_success();
-        assert_eq!(status.current(), GUD_STATUS_OK);
-    }
-
-    #[test]
-    fn validate_state_check_rejects_unknown_mode() {
-        let protocol = ProtocolHandler::new(vec![sample_mode()], vec![GUD_PIXEL_FORMAT_RGB565]);
-        let invalid_mode = DisplayMode {
-            hdisplay: 800,
-            vdisplay: 600,
-            ..sample_mode()
-        };
-        let payload = serialize_state_header(&SetStateHeader {
-            mode: invalid_mode,
-            format: GUD_PIXEL_FORMAT_RGB565,
-            connector: 0,
-        });
-
-        let err = protocol.validate_set_state_check(&payload).unwrap_err();
-        assert!(err.to_string().contains("unsupported display mode"));
-    }
-
-    #[test]
-    fn validate_set_buffer_requires_committed_state_and_bounds() {
-        let mut protocol = ProtocolHandler::new(vec![sample_mode()], vec![GUD_PIXEL_FORMAT_RGB565]);
-        let missing_state_err = protocol
-            .validate_set_buffer(&SetBuffer {
-                x: 0,
-                y: 0,
-                width: 16,
-                height: 16,
-                length: 16 * 16 * bytes_per_pixel(GUD_PIXEL_FORMAT_RGB565).unwrap() as u32,
-                compression: 0,
-                compressed_length: 0,
-            })
-            .unwrap_err();
-        assert!(missing_state_err.to_string().contains("no committed state"));
-
-        protocol.committed_state = Some(sample_state());
-        let err = protocol
-            .validate_set_buffer(&SetBuffer {
-                x: 1000,
-                y: 760,
-                width: 32,
-                height: 32,
-                length: 32 * 32 * bytes_per_pixel(GUD_PIXEL_FORMAT_RGB565).unwrap() as u32,
-                compression: 0,
-                compressed_length: 0,
-            })
-            .unwrap_err();
-        assert!(err.to_string().contains("out of bounds"));
-    }
+    Ok(None)
 }
 
 impl PixelDataEndpoint {
@@ -794,21 +413,12 @@ impl PixelDataEndpoint {
         )
     }
 
-    pub fn recv_buffer(
-        &mut self,
-        info: SetBuffer,
-        fb: &mut [u8],
-        fb_pitch: usize,
-        bpp: usize,
-    ) -> anyhow::Result<()> {
+    pub fn recv_payload(&mut self, info: &SetBuffer, bpp: usize) -> anyhow::Result<&[u8]> {
         let start = Instant::now();
         let max_packet_size = self.ep_rx.max_packet_size().unwrap();
         debug!(
-            "recv_buffer: max_packet_size={}, fb_pitch={}, bpp={}, fb_len={}",
-            max_packet_size,
-            fb_pitch,
-            bpp,
-            fb.len()
+            "recv_payload: max_packet_size={}, bpp={}",
+            max_packet_size, bpp
         );
 
         let len = if info.compression > 0 {
@@ -818,12 +428,10 @@ impl PixelDataEndpoint {
         } as usize;
         self.buf.clear();
 
-        // Ensure the buffer is large enough to fit all incoming data.
         if self.buf.capacity() < len {
             self.buf.reserve(len - self.buf.capacity());
         }
 
-        // Read the incoming data fully into the buffer.
         let read_start = Instant::now();
         let mut packets = 0usize;
         while self.buf.len() < len {
@@ -849,15 +457,13 @@ impl PixelDataEndpoint {
         );
 
         if self.buf.len() != len {
-            // TODO: proper Err
             panic!("expected buf len {}, got {}", len, self.buf.len());
         }
 
         let buf = if info.compression > 0 {
             let decompress_start = Instant::now();
             if self.compress_buf.len() < info.length as usize {
-                self.compress_buf
-                    .resize(info.length as usize - self.compress_buf.capacity(), 0);
+                self.compress_buf.resize(info.length as usize, 0);
             }
             let decompressed = lz4::block::decompress_to_buffer(
                 &self.buf,
@@ -876,12 +482,40 @@ impl PixelDataEndpoint {
             &self.buf
         };
 
+        dump_pixel_buffer_if_enabled(
+            "GUD_DUMP_RX_PATH",
+            buf,
+            info.width as usize * bpp,
+            info.width,
+            info.height,
+            bpp,
+        );
+        dump_raw_buffer_if_enabled("GUD_DUMP_RX_RAW_PATH", buf);
+        debug!("recv_payload total took {}ms", start.elapsed().as_millis());
+
+        Ok(buf)
+    }
+
+    pub fn copy_buffer_to_framebuffer(
+        info: &SetBuffer,
+        buf: &[u8],
+        fb: &mut [u8],
+        fb_pitch: usize,
+        bpp: usize,
+    ) -> anyhow::Result<()> {
         let copy_start = Instant::now();
         let mut y = info.y as usize;
         let end_y = (info.y + info.height) as usize;
 
         let line_len = info.width as usize * bpp;
         let line_start = info.x as usize * bpp;
+        let expected_len = info.width as usize * info.height as usize * bpp;
+        ensure!(
+            buf.len() >= expected_len,
+            "payload too short: got {} bytes, expected at least {}",
+            buf.len(),
+            expected_len
+        );
 
         let mut buf_pos = 0usize;
         while y < end_y {
@@ -897,8 +531,6 @@ impl PixelDataEndpoint {
             buf_pos,
             copy_start.elapsed().as_millis()
         );
-
-        debug!("recv_buffer total took {}ms", start.elapsed().as_millis());
 
         Ok(())
     }
