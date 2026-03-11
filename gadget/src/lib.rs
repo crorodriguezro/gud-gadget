@@ -4,7 +4,7 @@ use std::env::var_os;
 use std::fs::{rename, File};
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::time::Instant;
 use tracing::{debug, warn};
 
@@ -45,8 +45,11 @@ pub const GUD_PIXEL_FORMAT_XRGB8888: u8 = 0x80;
 const GUD_CONNECTOR_TYPE_PANEL: u8 = 0;
 
 const GUD_STATUS_OK: u8 = 0;
+const GUD_STATUS_REQUEST_NOT_SUPPORTED: u8 = 0x02;
 
 static CONNECTOR_STATUS_CHANGED_ONCE: AtomicBool = AtomicBool::new(true);
+static STATUS_VALUE: AtomicU8 = AtomicU8::new(GUD_STATUS_OK);
+static CLEAR_STATUS_ON_NEXT_SUCCESS: AtomicBool = AtomicBool::new(false);
 
 // https://github.com/openmoko/openmoko-usb-oui/commit/73bdf541b6f9840b70219626b4088d4e3f164904
 pub const OPENMOKO_GUD_ID: Id = Id::new(0x1d50, 0x614d);
@@ -221,6 +224,7 @@ impl<'a> GetDescriptor<'a> {
         let buf = serialize_display_descriptor(&descriptor)?;
 
         self.sender.send(&buf).context("send display descriptor")?;
+        mark_success();
         debug!("sent display descriptor {:?}", descriptor);
         Ok(())
     }
@@ -234,6 +238,7 @@ impl<'a> GetDisplayModes<'a> {
         }
 
         self.sender.send(&buf).context("send modes")?;
+        mark_success();
 
         Ok(())
     }
@@ -242,6 +247,7 @@ impl<'a> GetDisplayModes<'a> {
 impl<'a> GetPixelFormats<'a> {
     pub fn send_pixel_formats(self, formats: &[u8]) -> anyhow::Result<()> {
         self.sender.send(formats).context("send pixel formats")?;
+        mark_success();
         debug!("sent pixel formats: {:?}", formats);
         Ok(())
     }
@@ -309,6 +315,26 @@ fn reset_connector_status_changed() {
     CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
 }
 
+fn current_status() -> u8 {
+    STATUS_VALUE.load(Ordering::SeqCst)
+}
+
+fn reset_status() {
+    STATUS_VALUE.store(GUD_STATUS_OK, Ordering::SeqCst);
+    CLEAR_STATUS_ON_NEXT_SUCCESS.store(false, Ordering::SeqCst);
+}
+
+fn latch_status(status: u8) {
+    STATUS_VALUE.store(status, Ordering::SeqCst);
+    CLEAR_STATUS_ON_NEXT_SUCCESS.store(status != GUD_STATUS_OK, Ordering::SeqCst);
+}
+
+fn mark_success() {
+    if CLEAR_STATUS_ON_NEXT_SUCCESS.swap(false, Ordering::SeqCst) {
+        STATUS_VALUE.store(GUD_STATUS_OK, Ordering::SeqCst);
+    }
+}
+
 fn next_connector_status() -> u8 {
     let mut status = GUD_CONNECTOR_STATUS_CONNECTED;
     if CONNECTOR_STATUS_CHANGED_ONCE.swap(false, Ordering::SeqCst) {
@@ -321,18 +347,21 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
     match event {
         custom::Event::Enable => {
             reset_connector_status_changed();
+            reset_status();
             debug!("Enable event received");
         }
         custom::Event::Bind => {
             reset_connector_status_changed();
+            reset_status();
             debug!("Bind event received");
         }
         custom::Event::SetupDeviceToHost(req) => {
             let ctrl_req = req.ctrl_req();
             match ctrl_req.request {
                 GUD_REQ_GET_STATUS => {
-                    req.send(&[GUD_STATUS_OK]).context("send status")?;
-                    debug!("sent status");
+                    let status = current_status();
+                    req.send(&[status]).context("send status")?;
+                    debug!("sent status {}", status);
                 }
                 GUD_REQ_GET_DESCRIPTOR => {
                     return Ok(Some(Event::GetDescriptor(GetDescriptor { sender: req })));
@@ -344,6 +373,7 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 }
                 GUD_REQ_GET_PROPERTIES => {
                     let sent = req.send(&[]).context("send properties")?;
+                    mark_success();
                     debug!("sent properties {}", sent);
                 }
                 GUD_REQ_GET_CONNECTORS => {
@@ -353,10 +383,12 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                     }];
                     let buf = serialize_connector_descriptors(&connectors)?;
                     req.send(&buf).context("send connectors")?;
+                    mark_success();
                     debug!("sent connectors");
                 }
                 GUD_REQ_GET_CONNECTOR_PROPERTIES => {
                     req.send(&[]).context("send connector properties")?;
+                    mark_success();
                     debug!("sent connector properties");
                 }
                 GUD_REQ_GET_CONNECTOR_MODES => {
@@ -366,14 +398,17 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 }
                 GUD_REQ_GET_CONNECTOR_EDID => {
                     req.send(&[]).context("send EDID")?;
+                    mark_success();
                     debug!("sent empty EDID (no EDID available)");
                 }
                 GUD_REQ_GET_CONNECTOR_STATUS => {
                     let status = next_connector_status();
                     req.send(&[status]).context("send connector status")?;
+                    mark_success();
                     debug!("sent connector status {:#x}", status);
                 }
                 request => {
+                    latch_status(GUD_STATUS_REQUEST_NOT_SUPPORTED);
                     warn!("unhandled SetupDeviceToHost request {:x}", request);
                 }
             }
@@ -385,22 +420,27 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                     debug!("connector set to {}", ctrl_req.value);
                     req.recv_all().context("recv set connector")?;
                     reset_connector_status_changed();
+                    mark_success();
                 }
                 GUD_REQ_SET_STATE_CHECK => {
                     debug!("received state check");
                     req.recv_all().context("recv set state check")?;
+                    mark_success();
                 }
                 GUD_REQ_SET_CONTROLLER_ENABLE => {
                     let req = req.recv_all().context("recv set controller enable")?;
                     debug!("received controller enable: {:?}", req);
+                    mark_success();
                 }
                 GUD_REQ_SET_DISPLAY_ENABLE => {
                     let req = req.recv_all().context("recv set display enable")?;
                     debug!("received display enable: {:?}", req);
+                    mark_success();
                 }
                 GUD_REQ_SET_STATE_COMMIT => {
                     req.recv_all().context("recv set state commit")?;
                     debug!("received state commit");
+                    mark_success();
                 }
                 GUD_REQ_SET_BUFFER => {
                     let req = req.recv_all().context("recv set buffer")?;
@@ -408,9 +448,11 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                     (v, _) =
                         ssmarshal::deserialize(req.as_slice()).context("deserialize set buffer")?;
                     debug!("received set buffer: {:?}", v);
+                    mark_success();
                     return Ok(Some(Event::Buffer(v)));
                 }
                 value => {
+                    latch_status(GUD_STATUS_REQUEST_NOT_SUPPORTED);
                     warn!("unhandled set request {:x}", value);
                 }
             }
@@ -490,8 +532,17 @@ impl PixelDataEndpoint {
             read_start.elapsed().as_millis()
         );
 
-        if self.buf.len() != len {
-            panic!("expected buf len {}, got {}", len, self.buf.len());
+        if self.buf.len() < len {
+            panic!("expected buf len at least {}, got {}", len, self.buf.len());
+        }
+        if self.buf.len() > len {
+            warn!(
+                "bulk read overshot expected payload length: got {} bytes, expected {}. Truncating trailing {} bytes",
+                self.buf.len(),
+                len,
+                self.buf.len() - len
+            );
+            self.buf.truncate(len);
         }
 
         let buf = if info.compression > 0 {
@@ -573,11 +624,13 @@ impl PixelDataEndpoint {
 #[cfg(test)]
 mod tests {
     use super::{
-        build_display_descriptor, next_connector_status, reset_connector_status_changed,
+        build_display_descriptor, current_status, latch_status, mark_success,
+        next_connector_status, reset_connector_status_changed, reset_status,
         serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
         ConnectorDescriptor, DisplayMode, PixelDataEndpoint, SetBuffer,
         GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
         GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC,
+        GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
 
     #[test]
@@ -607,6 +660,18 @@ mod tests {
             GUD_CONNECTOR_STATUS_CONNECTED | GUD_CONNECTOR_STATUS_CHANGED
         );
         assert_eq!(second, GUD_CONNECTOR_STATUS_CONNECTED);
+    }
+
+    #[test]
+    fn status_latches_until_next_success() {
+        reset_status();
+
+        latch_status(GUD_STATUS_REQUEST_NOT_SUPPORTED);
+        assert_eq!(current_status(), GUD_STATUS_REQUEST_NOT_SUPPORTED);
+        assert_eq!(current_status(), GUD_STATUS_REQUEST_NOT_SUPPORTED);
+
+        mark_success();
+        assert_eq!(current_status(), GUD_STATUS_OK);
     }
 
     #[test]
