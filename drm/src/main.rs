@@ -175,7 +175,7 @@ impl PatternMode {
     }
 
     fn uses_startup_pattern(self) -> bool {
-        !matches!(self, Self::Off)
+        matches!(self, Self::Startup | Self::Hold | Self::Usb)
     }
 }
 
@@ -461,12 +461,12 @@ fn main() -> anyhow::Result<()> {
     let (mut gud_data, gud_data_ep) = gud_gadget::PixelDataEndpoint::new();
     info!("Created pixel data endpoint");
 
-    let (mut gud, gud_handle) = Custom::builder()
-        .with_interface(
-            Interface::new(Class::vendor_specific(Class::VENDOR_SPECIFIC, 0), "GUD")
-                .with_endpoint(gud_data_ep),
-        )
-        .build();
+    let mut builder = Custom::builder().with_interface(
+        Interface::new(Class::vendor_specific(Class::VENDOR_SPECIFIC, 0), "GUD")
+            .with_endpoint(gud_data_ep),
+    );
+    builder.ffs_no_disconnect = true;
+    let (mut gud, gud_handle) = builder.build();
     info!("Built USB gadget");
 
     let _reg = Gadget::new(
@@ -646,8 +646,7 @@ fn main() -> anyhow::Result<()> {
                             max_width,
                             max_height,
                             GUD_COMPRESSION_LZ4,
-                        )
-                        {
+                        ) {
                             tracing::error!("Failed to send descriptor: {}", err);
                         } else {
                             tracing::debug!("Sent descriptor");

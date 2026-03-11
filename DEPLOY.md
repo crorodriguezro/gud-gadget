@@ -4,7 +4,7 @@ This guide covers building, deploying, and running the GUD gadget driver on a po
 
 For the current OnePlus target in this workspace, use:
 
-- SSH target: `cristian@172.16.42.1`
+- SSH target: `cristian@192.168.1.106`
 - Hostname: `oneplus-enchilada`
 - DRM node: `/dev/dri/card0`
 - UDC: `a600000.usb`
@@ -63,10 +63,10 @@ The binary will be at: `target/aarch64-unknown-linux-musl/release/gud-drm`
 
 ```bash
 # Copy binary to device
-scp target/aarch64-unknown-linux-musl/release/gud-drm cristian@172.16.42.1:~/
+scp target/aarch64-unknown-linux-musl/release/gud-drm cristian@192.168.1.106:~/
 
 # Make it executable
-ssh cristian@172.16.42.1 "chmod +x ~/gud-drm"
+ssh cristian@192.168.1.106 "chmod +x ~/gud-drm"
 
 # Or use the project helper
 ./scripts/deploy-oneplus.sh
@@ -77,13 +77,27 @@ ssh cristian@172.16.42.1 "chmod +x ~/gud-drm"
 ### 1. Stop the UI service
 
 postmarketOS uses `greetd` which runs `phoc` (Wayland compositor). This holds the DRM device.
+On newer images, `usb-moded` may also be active and will fight the userspace
+gadget by reprogramming USB mode back to NCM/mass-storage. Stop it for the GUD
+session.
 
 ```bash
 # SSH into the device
-ssh -tt cristian@172.16.42.1
+ssh -tt cristian@192.168.1.106
 
 # Stop the greeter/display manager
 doas systemctl stop greetd
+
+# Stop the phone USB-mode manager for this boot/session
+doas systemctl stop usb-moded.service || true
+doas systemctl mask --runtime usb-moded.service || true
+
+# Stop the local tty login from reclaiming/blanking the panel
+doas systemctl stop getty@tty1.service || true
+doas systemctl mask --runtime getty@tty1.service || true
+doas pkill agetty || true
+doas sh -lc 'echo 0 > /sys/class/vtconsole/vtcon1/bind || true'
+doas sh -lc 'echo 0 > /sys/class/graphics/fb0/blank || true'
 ```
 
 ### 2. Verify DRM device is free
@@ -115,7 +129,7 @@ cat /sys/class/udc/a600000.usb/state
 The current OnePlus setup requires `doas` authentication. You can either run
 the commands manually over an interactive SSH session, or provide
 `DOAS_PASSWORD` to the helper script so it can authenticate once and then stop
-`greetd` before launching `gud-drm`.
+`greetd` and `usb-moded` before launching `gud-drm`.
 
 ```bash
 # Run in foreground (for testing, see logs directly)

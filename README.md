@@ -11,3 +11,10 @@ An official [gadget implementation](https://github.com/notro/gud/wiki/Linux-Gadg
 The [`gud-function`](./gadget) crate implements a GUD gadget as a [FunctionFS](https://docs.kernel.org/usb/functionfs.html) function, for use with the [usb-gadget](https://crates.io/crates/usb-gadget) crate.
 
 The [`gud-drm`](./drm) crate is a simple implementation that configures a GUD gadget with the `gud-function` implementation, and renders the pixel data directly to a [drm](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) framebuffer.
+
+Current project docs:
+
+- [Deploy Guide](./DEPLOY.md)
+- [Working Driver Execution Plan](./WORKING_DRIVER_EXECUTION_PLAN.md)
+- [Checkpoint](./CHECKPOINT_2026-03-10.md)
+- [Known Issues](./KNOWN_ISSUES.md)

@@ -33,7 +33,6 @@ const GUD_REQ_SET_STATE_COMMIT: u8 = 0x62;
 const GUD_REQ_SET_CONTROLLER_ENABLE: u8 = 0x63;
 const GUD_REQ_SET_DISPLAY_ENABLE: u8 = 0x64;
 
-const GUD_DISPLAY_FLAG_FULL_UPDATE: u32 = 0x02;
 pub const GUD_COMPRESSION_LZ4: u8 = 0x01;
 
 const GUD_CONNECTOR_STATUS_CONNECTED: u8 = 0x01;
@@ -258,13 +257,8 @@ impl<'a> GetDescriptor<'a> {
         max_height: u32,
         compression: u8,
     ) -> anyhow::Result<()> {
-        let descriptor = build_display_descriptor(
-            min_width,
-            min_height,
-            max_width,
-            max_height,
-            compression,
-        );
+        let descriptor =
+            build_display_descriptor(min_width, min_height, max_width, max_height, compression);
         let buf = serialize_display_descriptor(&descriptor)?;
 
         self.sender.send(&buf).context("send display descriptor")?;
@@ -320,11 +314,7 @@ fn build_display_descriptor(
     DisplayDescriptor {
         magic: GUD_DISPLAY_MAGIC,
         version: 1,
-        flags: if compression == 0 {
-            GUD_DISPLAY_FLAG_FULL_UPDATE
-        } else {
-            0
-        },
+        flags: 0,
         compression,
         max_height,
         max_width,
@@ -720,7 +710,6 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 GUD_REQ_SET_CONNECTOR_FORCE_DETECT => {
                     debug!("connector set to {}", ctrl_req.value);
                     req.recv_all().context("recv set connector")?;
-                    reset_connector_status_changed();
                     mark_success();
                 }
                 GUD_REQ_SET_STATE_CHECK => {
@@ -984,9 +973,8 @@ mod tests {
         update_controller_enabled, update_display_enabled, validate_buffer_request,
         validate_state_check_payload, ConnectorDescriptor, DisplayMode, DisplayState,
         PixelDataEndpoint, SetBuffer, GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED,
-        GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL,
-        GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC, GUD_PIXEL_FORMAT_RGB565,
-        GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_MAGIC,
+        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
     use serde::Serialize;
 
@@ -1030,7 +1018,7 @@ mod tests {
 
         assert_eq!(descriptor.magic, GUD_DISPLAY_MAGIC);
         assert_eq!(descriptor.version, 1);
-        assert_eq!(descriptor.flags, GUD_DISPLAY_FLAG_FULL_UPDATE);
+        assert_eq!(descriptor.flags, 0);
         assert_eq!(descriptor.compression, 0);
         assert_eq!(descriptor.min_width, 640);
         assert_eq!(descriptor.min_height, 480);
@@ -1040,7 +1028,7 @@ mod tests {
     }
 
     #[test]
-    fn build_display_descriptor_clears_full_update_when_compression_enabled() {
+    fn build_display_descriptor_preserves_zero_flags_with_compression_enabled() {
         let descriptor = build_display_descriptor(640, 480, 1080, 2280, GUD_COMPRESSION_LZ4);
 
         assert_eq!(descriptor.flags, 0);
