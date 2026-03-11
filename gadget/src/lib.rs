@@ -5,6 +5,7 @@ use std::fs::{rename, File};
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
+use std::sync::{Mutex, OnceLock};
 use std::time::Instant;
 use tracing::{debug, warn};
 
@@ -46,10 +47,15 @@ const GUD_CONNECTOR_TYPE_PANEL: u8 = 0;
 
 const GUD_STATUS_OK: u8 = 0;
 const GUD_STATUS_REQUEST_NOT_SUPPORTED: u8 = 0x02;
+const GUD_STATUS_INVALID_PARAMETER: u8 = 0x04;
+
+const GUD_STATE_CHECK_HEADER_LEN: usize = 26;
+const GUD_PROPERTY_SIZE: usize = 10;
 
 static CONNECTOR_STATUS_CHANGED_ONCE: AtomicBool = AtomicBool::new(true);
 static STATUS_VALUE: AtomicU8 = AtomicU8::new(GUD_STATUS_OK);
 static CLEAR_STATUS_ON_NEXT_SUCCESS: AtomicBool = AtomicBool::new(false);
+static STATE_CHECK_VALIDATION: OnceLock<Mutex<StateCheckValidation>> = OnceLock::new();
 
 // https://github.com/openmoko/openmoko-usb-oui/commit/73bdf541b6f9840b70219626b4088d4e3f164904
 pub const OPENMOKO_GUD_ID: Id = Id::new(0x1d50, 0x614d);
@@ -164,7 +170,7 @@ fn dump_raw_buffer_if_enabled(var_name: &str, buf: &[u8]) {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 pub struct DisplayMode {
     pub clock: u32,
     pub hdisplay: u16,
@@ -176,6 +182,20 @@ pub struct DisplayMode {
     pub vsync_end: u16,
     pub vtotal: u16,
     pub flags: u32,
+}
+
+#[derive(Debug, Deserialize)]
+struct StateCheckHeader {
+    mode: DisplayMode,
+    format: u8,
+    connector: u8,
+}
+
+#[derive(Clone, Debug, Default)]
+struct StateCheckValidation {
+    connector_count: u8,
+    formats: Vec<u8>,
+    modes: Vec<DisplayMode>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -291,9 +311,7 @@ fn serialize_display_descriptor(descriptor: &DisplayDescriptor) -> anyhow::Resul
     Ok(buf)
 }
 
-fn serialize_connector_descriptors(
-    connectors: &[ConnectorDescriptor],
-) -> anyhow::Result<Vec<u8>> {
+fn serialize_connector_descriptors(connectors: &[ConnectorDescriptor]) -> anyhow::Result<Vec<u8>> {
     let mut buf = vec![0_u8; 5 * connectors.len()];
     let mut pos = 0;
     for connector in connectors {
@@ -313,6 +331,10 @@ fn serialize_display_modes(modes: &[DisplayMode]) -> anyhow::Result<Vec<u8>> {
 
 fn reset_connector_status_changed() {
     CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+}
+
+fn state_check_validation() -> &'static Mutex<StateCheckValidation> {
+    STATE_CHECK_VALIDATION.get_or_init(|| Mutex::new(StateCheckValidation::default()))
 }
 
 fn current_status() -> u8 {
@@ -341,6 +363,67 @@ fn next_connector_status() -> u8 {
         status |= GUD_CONNECTOR_STATUS_CHANGED;
     }
     status
+}
+
+pub fn configure_state_check_validation(
+    connector_count: u8,
+    formats: &[u8],
+    modes: &[DisplayMode],
+) {
+    let mut validation = state_check_validation()
+        .lock()
+        .expect("state check validation lock poisoned");
+    validation.connector_count = connector_count;
+    validation.formats = formats.to_vec();
+    validation.modes = modes.to_vec();
+}
+
+fn validate_state_check_payload(payload: &[u8]) -> anyhow::Result<()> {
+    ensure!(
+        payload.len() >= GUD_STATE_CHECK_HEADER_LEN,
+        "state check payload too short: got {} bytes, expected at least {}",
+        payload.len(),
+        GUD_STATE_CHECK_HEADER_LEN
+    );
+    ensure!(
+        (payload.len() - GUD_STATE_CHECK_HEADER_LEN).is_multiple_of(GUD_PROPERTY_SIZE),
+        "state check property data has invalid length {}",
+        payload.len() - GUD_STATE_CHECK_HEADER_LEN
+    );
+
+    let (header, consumed): (StateCheckHeader, usize) =
+        ssmarshal::deserialize(payload).context("deserialize state check header")?;
+    ensure!(
+        consumed == GUD_STATE_CHECK_HEADER_LEN,
+        "unexpected state check header size {}",
+        consumed
+    );
+
+    let validation = state_check_validation()
+        .lock()
+        .expect("state check validation lock poisoned");
+    ensure!(
+        validation.connector_count > 0,
+        "state check validation is not configured"
+    );
+    ensure!(
+        header.connector < validation.connector_count,
+        "unsupported connector {}",
+        header.connector
+    );
+    ensure!(
+        validation.formats.contains(&header.format),
+        "unsupported pixel format {:#x}",
+        header.format
+    );
+    ensure!(
+        validation.modes.contains(&header.mode),
+        "unsupported mode {}x{}",
+        header.mode.hdisplay,
+        header.mode.vdisplay
+    );
+
+    Ok(())
 }
 
 pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
@@ -423,9 +506,17 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                     mark_success();
                 }
                 GUD_REQ_SET_STATE_CHECK => {
-                    debug!("received state check");
-                    req.recv_all().context("recv set state check")?;
-                    mark_success();
+                    let payload = req.recv_all().context("recv set state check")?;
+                    match validate_state_check_payload(payload.as_slice()) {
+                        Ok(()) => {
+                            debug!("received valid state check");
+                            mark_success();
+                        }
+                        Err(err) => {
+                            latch_status(GUD_STATUS_INVALID_PARAMETER);
+                            warn!("rejected state check: {}", err);
+                        }
+                    }
                 }
                 GUD_REQ_SET_CONTROLLER_ENABLE => {
                     let req = req.recv_all().context("recv set controller enable")?;
@@ -624,14 +715,49 @@ impl PixelDataEndpoint {
 #[cfg(test)]
 mod tests {
     use super::{
-        build_display_descriptor, current_status, latch_status, mark_success,
-        next_connector_status, reset_connector_status_changed, reset_status,
+        build_display_descriptor, configure_state_check_validation, current_status, latch_status,
+        mark_success, next_connector_status, reset_connector_status_changed, reset_status,
         serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
-        ConnectorDescriptor, DisplayMode, PixelDataEndpoint, SetBuffer,
-        GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
+        validate_state_check_payload, ConnectorDescriptor, DisplayMode, PixelDataEndpoint,
+        SetBuffer, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
         GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC,
-        GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
+    use serde::Serialize;
+
+    #[derive(Serialize)]
+    struct StateCheckRequest {
+        mode: DisplayMode,
+        format: u8,
+        connector: u8,
+    }
+
+    fn sample_mode() -> DisplayMode {
+        DisplayMode {
+            clock: 174_359,
+            hdisplay: 1080,
+            hsync_start: 1192,
+            hsync_end: 1208,
+            htotal: 1244,
+            vdisplay: 2280,
+            vsync_start: 2316,
+            vsync_end: 2324,
+            vtotal: 2336,
+            flags: 0,
+        }
+    }
+
+    fn serialize_state_check_request(mode: DisplayMode, format: u8, connector: u8) -> Vec<u8> {
+        let req = StateCheckRequest {
+            mode,
+            format,
+            connector,
+        };
+        let mut buf = vec![0_u8; 26];
+        let written = ssmarshal::serialize(&mut buf, &req).unwrap();
+        assert_eq!(written, 26);
+        buf
+    }
 
     #[test]
     fn build_display_descriptor_sets_expected_fields() {
@@ -701,18 +827,7 @@ mod tests {
 
     #[test]
     fn serialize_single_display_mode_is_twenty_four_bytes() {
-        let modes = [DisplayMode {
-            clock: 174_359,
-            hdisplay: 1080,
-            hsync_start: 1192,
-            hsync_end: 1208,
-            htotal: 1244,
-            vdisplay: 2280,
-            vsync_start: 2316,
-            vsync_end: 2324,
-            vtotal: 2336,
-            flags: 0,
-        }];
+        let modes = [sample_mode()];
 
         let buf = serialize_display_modes(&modes).unwrap();
 
@@ -783,5 +898,49 @@ mod tests {
             err.to_string().contains("payload too short"),
             "unexpected error: {err}"
         );
+    }
+
+    #[test]
+    fn validate_state_check_accepts_advertised_mode_and_format() {
+        let mode = sample_mode();
+        configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+
+        let payload = serialize_state_check_request(mode, GUD_PIXEL_FORMAT_RGB565, 0);
+
+        validate_state_check_payload(&payload).unwrap();
+    }
+
+    #[test]
+    fn validate_state_check_rejects_unknown_format() {
+        let mode = sample_mode();
+        configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+
+        let payload = serialize_state_check_request(mode, 0x80, 0);
+        let err = validate_state_check_payload(&payload).unwrap_err();
+
+        assert!(err.to_string().contains("unsupported pixel format"));
+    }
+
+    #[test]
+    fn validate_state_check_rejects_unknown_connector() {
+        let mode = sample_mode();
+        configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+
+        let payload = serialize_state_check_request(mode, GUD_PIXEL_FORMAT_RGB565, 1);
+        let err = validate_state_check_payload(&payload).unwrap_err();
+
+        assert!(err.to_string().contains("unsupported connector"));
+    }
+
+    #[test]
+    fn validate_state_check_rejects_unknown_mode() {
+        let mut mode = sample_mode();
+        configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+        mode.vdisplay = 2400;
+
+        let payload = serialize_state_check_request(mode, GUD_PIXEL_FORMAT_RGB565, 0);
+        let err = validate_state_check_payload(&payload).unwrap_err();
+
+        assert!(err.to_string().contains("unsupported mode"));
     }
 }

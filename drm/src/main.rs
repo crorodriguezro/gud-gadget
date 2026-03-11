@@ -495,6 +495,56 @@ fn main() -> anyhow::Result<()> {
         .unwrap_or(mode)
         .name()
         .to_owned();
+    let mut advertised_modes: Vec<DisplayMode> = connector_modes
+        .iter()
+        .map(|mode| {
+            let (hdisplay, vdisplay) = mode.size();
+            let (hsync_start, hsync_end, htotal) = mode.hsync();
+            let (vsync_start, vsync_end, vtotal) = mode.vsync();
+            DisplayMode {
+                clock: mode.clock(),
+                hdisplay,
+                htotal,
+                hsync_end,
+                hsync_start,
+                vtotal,
+                vdisplay,
+                vsync_end,
+                vsync_start,
+                flags: gud_flags_for_mode(mode, preferred_mode_name.as_c_str()),
+            }
+        })
+        .collect();
+
+    let standard_modes = [
+        (1024, 768, 65000, 1040, 1184, 1344, 771, 777, 806),
+        (800, 600, 40000, 832, 960, 1056, 601, 604, 628),
+        (640, 480, 25175, 656, 752, 800, 490, 492, 525),
+    ];
+    for (w, h, clock, hss, hse, ht, vss, vse, vt) in standard_modes {
+        if !advertised_modes
+            .iter()
+            .any(|candidate| candidate.hdisplay == w && candidate.vdisplay == h)
+        {
+            advertised_modes.push(DisplayMode {
+                clock,
+                hdisplay: w,
+                htotal: ht,
+                hsync_end: hse,
+                hsync_start: hss,
+                vtotal: vt,
+                vdisplay: h,
+                vsync_end: vse,
+                vsync_start: vss,
+                flags: 0,
+            });
+        }
+    }
+    gud_gadget::configure_state_check_validation(
+        1,
+        &[transfer_format.gud_pixel_format()],
+        &advertised_modes,
+    );
 
     info!("picked mode {:?}", mode);
 
@@ -608,54 +658,8 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                     Event::GetDisplayModes(req) => {
-                        let mut modes: Vec<DisplayMode> = connector_modes
-                            .iter()
-                            .map(|mode| {
-                                let (hdisplay, vdisplay) = mode.size();
-                                let (hsync_start, hsync_end, htotal) = mode.hsync();
-                                let (vsync_start, vsync_end, vtotal) = mode.vsync();
-                                DisplayMode {
-                                    clock: mode.clock(),
-                                    hdisplay,
-                                    htotal,
-                                    hsync_end,
-                                    hsync_start,
-                                    vtotal,
-                                    vdisplay,
-                                    vsync_end,
-                                    vsync_start,
-                                    flags: gud_flags_for_mode(mode, preferred_mode_name.as_c_str()),
-                                }
-                            })
-                            .collect();
-
-                        let standard_modes = [
-                            (1024, 768, 65000, 1040, 1184, 1344, 771, 777, 806),
-                            (800, 600, 40000, 832, 960, 1056, 601, 604, 628),
-                            (640, 480, 25175, 656, 752, 800, 490, 492, 525),
-                        ];
-                        for (w, h, clock, hss, hse, ht, vss, vse, vt) in standard_modes {
-                            if !modes
-                                .iter()
-                                .any(|candidate| candidate.hdisplay == w && candidate.vdisplay == h)
-                            {
-                                modes.push(DisplayMode {
-                                    clock,
-                                    hdisplay: w,
-                                    htotal: ht,
-                                    hsync_end: hse,
-                                    hsync_start: hss,
-                                    vtotal: vt,
-                                    vdisplay: h,
-                                    vsync_end: vse,
-                                    vsync_start: vss,
-                                    flags: 0,
-                                });
-                            }
-                        }
-
-                        tracing::debug!("Sending {} display modes", modes.len());
-                        if let Err(err) = req.send_modes(&modes) {
+                        tracing::debug!("Sending {} display modes", advertised_modes.len());
+                        if let Err(err) = req.send_modes(&advertised_modes) {
                             tracing::error!("Failed to send modes: {}", err);
                         } else {
                             tracing::debug!("Sent display modes");
