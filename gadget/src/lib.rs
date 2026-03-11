@@ -535,3 +535,71 @@ impl PixelDataEndpoint {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{PixelDataEndpoint, SetBuffer};
+
+    #[test]
+    fn copy_buffer_to_framebuffer_copies_full_frame() {
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 2,
+            height: 2,
+            length: 8,
+            compression: 0,
+            compressed_length: 0,
+        };
+        let src = [1_u8, 2, 3, 4, 5, 6, 7, 8];
+        let mut fb = [0_u8; 8];
+
+        PixelDataEndpoint::copy_buffer_to_framebuffer(&info, &src, &mut fb, 4, 2).unwrap();
+
+        assert_eq!(fb, src);
+    }
+
+    #[test]
+    fn copy_buffer_to_framebuffer_honors_offsets_and_pitch() {
+        let info = SetBuffer {
+            x: 1,
+            y: 1,
+            width: 2,
+            height: 2,
+            length: 8,
+            compression: 0,
+            compressed_length: 0,
+        };
+        let src = [10_u8, 11, 12, 13, 20, 21, 22, 23];
+        let mut fb = [0xaa_u8; 24];
+
+        PixelDataEndpoint::copy_buffer_to_framebuffer(&info, &src, &mut fb, 8, 2).unwrap();
+
+        assert_eq!(&fb[0..8], &[0xaa; 8]);
+        assert_eq!(&fb[8..16], &[0xaa, 0xaa, 10, 11, 12, 13, 0xaa, 0xaa]);
+        assert_eq!(&fb[16..24], &[0xaa, 0xaa, 20, 21, 22, 23, 0xaa, 0xaa]);
+    }
+
+    #[test]
+    fn copy_buffer_to_framebuffer_rejects_short_payload() {
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 2,
+            height: 2,
+            length: 8,
+            compression: 0,
+            compressed_length: 0,
+        };
+        let src = [1_u8, 2, 3, 4, 5, 6];
+        let mut fb = [0_u8; 8];
+
+        let err =
+            PixelDataEndpoint::copy_buffer_to_framebuffer(&info, &src, &mut fb, 4, 2).unwrap_err();
+
+        assert!(
+            err.to_string().contains("payload too short"),
+            "unexpected error: {err}"
+        );
+    }
+}
