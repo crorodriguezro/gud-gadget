@@ -218,9 +218,7 @@ impl<'a> GetDescriptor<'a> {
         max_height: u32,
     ) -> anyhow::Result<()> {
         let descriptor = build_display_descriptor(min_width, min_height, max_width, max_height);
-
-        let mut buf: [u8; 30] = [0; 30];
-        ssmarshal::serialize(&mut buf, &descriptor).context("serialize display descriptor")?;
+        let buf = serialize_display_descriptor(&descriptor)?;
 
         self.sender.send(&buf).context("send display descriptor")?;
         debug!("sent display descriptor {:?}", descriptor);
@@ -230,15 +228,9 @@ impl<'a> GetDescriptor<'a> {
 
 impl<'a> GetDisplayModes<'a> {
     pub fn send_modes(self, modes: &[DisplayMode]) -> anyhow::Result<()> {
-        let size = 24 * modes.len();
-        if size > self.sender.len() {
+        let buf = serialize_display_modes(modes)?;
+        if buf.len() > self.sender.len() {
             panic!("too many display modes provided");
-        }
-
-        let mut buf = vec![0; size];
-        let mut pos = 0;
-        for mode in modes {
-            pos = pos + ssmarshal::serialize(&mut buf[pos..], mode).context("serialize mode")?;
         }
 
         self.sender.send(&buf).context("send modes")?;
@@ -287,6 +279,32 @@ fn build_display_descriptor(
     }
 }
 
+fn serialize_display_descriptor(descriptor: &DisplayDescriptor) -> anyhow::Result<[u8; 30]> {
+    let mut buf = [0_u8; 30];
+    ssmarshal::serialize(&mut buf, descriptor).context("serialize display descriptor")?;
+    Ok(buf)
+}
+
+fn serialize_connector_descriptors(
+    connectors: &[ConnectorDescriptor],
+) -> anyhow::Result<Vec<u8>> {
+    let mut buf = vec![0_u8; 5 * connectors.len()];
+    let mut pos = 0;
+    for connector in connectors {
+        pos += ssmarshal::serialize(&mut buf[pos..], connector).context("serialize connector")?;
+    }
+    Ok(buf)
+}
+
+fn serialize_display_modes(modes: &[DisplayMode]) -> anyhow::Result<Vec<u8>> {
+    let mut buf = vec![0_u8; 24 * modes.len()];
+    let mut pos = 0;
+    for mode in modes {
+        pos += ssmarshal::serialize(&mut buf[pos..], mode).context("serialize mode")?;
+    }
+    Ok(buf)
+}
+
 fn reset_connector_status_changed() {
     CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
 }
@@ -333,9 +351,7 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                         connector_type: GUD_CONNECTOR_TYPE_PANEL,
                         flags: 0,
                     }];
-
-                    let mut buf: [u8; 5] = [0; 5];
-                    ssmarshal::serialize(&mut buf, &connectors).context("serialize connectors")?;
+                    let buf = serialize_connector_descriptors(&connectors)?;
                     req.send(&buf).context("send connectors")?;
                     debug!("sent connectors");
                 }
@@ -558,8 +574,10 @@ impl PixelDataEndpoint {
 mod tests {
     use super::{
         build_display_descriptor, next_connector_status, reset_connector_status_changed,
-        PixelDataEndpoint, SetBuffer, GUD_CONNECTOR_STATUS_CHANGED,
-        GUD_CONNECTOR_STATUS_CONNECTED, GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC,
+        serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
+        ConnectorDescriptor, DisplayMode, PixelDataEndpoint, SetBuffer,
+        GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
+        GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC,
     };
 
     #[test]
@@ -589,6 +607,54 @@ mod tests {
             GUD_CONNECTOR_STATUS_CONNECTED | GUD_CONNECTOR_STATUS_CHANGED
         );
         assert_eq!(second, GUD_CONNECTOR_STATUS_CONNECTED);
+    }
+
+    #[test]
+    fn serialize_display_descriptor_matches_expected_size_and_header() {
+        let descriptor = build_display_descriptor(640, 480, 1080, 2280);
+
+        let buf = serialize_display_descriptor(&descriptor).unwrap();
+
+        assert_eq!(buf.len(), 30);
+        assert_eq!(&buf[0..4], &GUD_DISPLAY_MAGIC.to_le_bytes());
+        assert_eq!(buf[4], 1);
+    }
+
+    #[test]
+    fn serialize_single_connector_descriptor_is_five_bytes() {
+        let connectors = [ConnectorDescriptor {
+            connector_type: GUD_CONNECTOR_TYPE_PANEL,
+            flags: 0,
+        }];
+
+        let buf = serialize_connector_descriptors(&connectors).unwrap();
+
+        assert_eq!(buf.len(), 5);
+        assert_eq!(buf[0], GUD_CONNECTOR_TYPE_PANEL);
+        assert_eq!(&buf[1..5], &[0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn serialize_single_display_mode_is_twenty_four_bytes() {
+        let modes = [DisplayMode {
+            clock: 174_359,
+            hdisplay: 1080,
+            hsync_start: 1192,
+            hsync_end: 1208,
+            htotal: 1244,
+            vdisplay: 2280,
+            vsync_start: 2316,
+            vsync_end: 2324,
+            vtotal: 2336,
+            flags: 0,
+        }];
+
+        let buf = serialize_display_modes(&modes).unwrap();
+
+        assert_eq!(buf.len(), 24);
+        assert_eq!(&buf[0..4], &174_359_u32.to_le_bytes());
+        assert_eq!(&buf[4..6], &1080_u16.to_le_bytes());
+        assert_eq!(&buf[12..14], &2280_u16.to_le_bytes());
     }
 
     #[test]
