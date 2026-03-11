@@ -210,6 +210,8 @@ struct DisplayState {
 struct ProtocolState {
     pending_state: Option<DisplayState>,
     committed_state: Option<DisplayState>,
+    controller_enabled: bool,
+    display_enabled: bool,
 }
 
 #[derive(Deserialize, Debug)]
@@ -370,6 +372,8 @@ fn reset_protocol_state() {
         .expect("protocol state lock poisoned");
     state.pending_state = None;
     state.committed_state = None;
+    state.controller_enabled = false;
+    state.display_enabled = false;
 }
 
 fn handle_suspend_transition() {
@@ -490,6 +494,47 @@ fn clear_pending_state() {
     protocol.pending_state = None;
 }
 
+fn update_controller_enabled(enable: bool) {
+    let mut protocol = protocol_state()
+        .lock()
+        .expect("protocol state lock poisoned");
+    protocol.controller_enabled = enable;
+    if !enable {
+        protocol.display_enabled = false;
+    }
+}
+
+fn update_display_enabled(enable: bool) -> anyhow::Result<()> {
+    let mut protocol = protocol_state()
+        .lock()
+        .expect("protocol state lock poisoned");
+    if enable {
+        ensure!(
+            protocol.controller_enabled,
+            "display cannot be enabled while controller is disabled"
+        );
+        ensure!(
+            protocol.committed_state.is_some(),
+            "display cannot be enabled before state commit"
+        );
+    }
+    protocol.display_enabled = enable;
+    Ok(())
+}
+
+fn parse_enable_request(payload: &[u8], request_name: &str) -> anyhow::Result<bool> {
+    ensure!(
+        payload.len() == 1,
+        "{request_name} payload length {} is invalid",
+        payload.len()
+    );
+    match payload[0] {
+        0 => Ok(false),
+        1 => Ok(true),
+        value => anyhow::bail!("{request_name} value {} is invalid", value),
+    }
+}
+
 fn commit_pending_state() -> anyhow::Result<()> {
     let mut protocol = protocol_state()
         .lock()
@@ -510,6 +555,8 @@ fn validate_buffer_request(info: &SetBuffer) -> anyhow::Result<()> {
         .committed_state
         .as_ref()
         .context("no committed state available for buffer upload")?;
+    ensure!(protocol.controller_enabled, "controller is disabled");
+    ensure!(protocol.display_enabled, "display is disabled");
     let bpp = bytes_per_pixel(state.format)?;
     let width = info.width as usize;
     let height = info.height as usize;
@@ -668,14 +715,37 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                     }
                 }
                 GUD_REQ_SET_CONTROLLER_ENABLE => {
-                    let req = req.recv_all().context("recv set controller enable")?;
-                    debug!("received controller enable: {:?}", req);
-                    mark_success();
+                    let payload = req.recv_all().context("recv set controller enable")?;
+                    match parse_enable_request(payload.as_slice(), "controller enable") {
+                        Ok(enable) => {
+                            update_controller_enabled(enable);
+                            debug!("received controller enable: {}", enable);
+                            mark_success();
+                        }
+                        Err(err) => {
+                            latch_status(GUD_STATUS_INVALID_PARAMETER);
+                            warn!("rejected controller enable: {}", err);
+                        }
+                    }
                 }
                 GUD_REQ_SET_DISPLAY_ENABLE => {
-                    let req = req.recv_all().context("recv set display enable")?;
-                    debug!("received display enable: {:?}", req);
-                    mark_success();
+                    let payload = req.recv_all().context("recv set display enable")?;
+                    match parse_enable_request(payload.as_slice(), "display enable") {
+                        Ok(enable) => match update_display_enabled(enable) {
+                            Ok(()) => {
+                                debug!("received display enable: {}", enable);
+                                mark_success();
+                            }
+                            Err(err) => {
+                                latch_status(GUD_STATUS_INVALID_PARAMETER);
+                                warn!("rejected display enable: {}", err);
+                            }
+                        },
+                        Err(err) => {
+                            latch_status(GUD_STATUS_INVALID_PARAMETER);
+                            warn!("rejected display enable payload: {}", err);
+                        }
+                    }
                 }
                 GUD_REQ_SET_STATE_COMMIT => {
                     req.recv_all().context("recv set state commit")?;
@@ -884,9 +954,10 @@ mod tests {
     use super::{
         build_display_descriptor, commit_pending_state, configure_state_check_validation,
         current_status, handle_resume_transition, handle_suspend_transition, latch_status,
-        mark_success, next_connector_status, reset_connector_status_changed, reset_protocol_state,
-        reset_status, serialize_connector_descriptors, serialize_display_descriptor,
-        serialize_display_modes, store_pending_state, validate_buffer_request,
+        mark_success, next_connector_status, parse_enable_request, reset_connector_status_changed,
+        reset_protocol_state, reset_status, serialize_connector_descriptors,
+        serialize_display_descriptor, serialize_display_modes, store_pending_state,
+        update_controller_enabled, update_display_enabled, validate_buffer_request,
         validate_state_check_payload, ConnectorDescriptor, DisplayMode, DisplayState,
         PixelDataEndpoint, SetBuffer, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
         GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC,
@@ -1143,6 +1214,8 @@ mod tests {
             connector: 0,
         });
         commit_pending_state().unwrap();
+        update_controller_enabled(true);
+        update_display_enabled(true).unwrap();
 
         let info = SetBuffer {
             x: 0,
@@ -1184,6 +1257,8 @@ mod tests {
             connector: 0,
         });
         commit_pending_state().unwrap();
+        update_controller_enabled(true);
+        update_display_enabled(true).unwrap();
 
         let info = SetBuffer {
             x: 1000,
@@ -1208,6 +1283,8 @@ mod tests {
             connector: 0,
         });
         commit_pending_state().unwrap();
+        update_controller_enabled(true);
+        update_display_enabled(true).unwrap();
 
         let info = SetBuffer {
             x: 0,
@@ -1221,6 +1298,78 @@ mod tests {
         let err = validate_buffer_request(&info).unwrap_err();
 
         assert!(err.to_string().contains("buffer length"));
+    }
+
+    #[test]
+    fn display_enable_requires_controller_and_commit() {
+        reset_protocol_state();
+
+        let err = update_display_enabled(true).unwrap_err();
+        assert!(err.to_string().contains("controller is disabled"));
+
+        update_controller_enabled(true);
+        let err = update_display_enabled(true).unwrap_err();
+        assert!(err.to_string().contains("before state commit"));
+    }
+
+    #[test]
+    fn controller_disable_turns_off_display() {
+        reset_protocol_state();
+        store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        });
+        commit_pending_state().unwrap();
+        update_controller_enabled(true);
+        update_display_enabled(true).unwrap();
+        update_controller_enabled(false);
+
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1080,
+            height: 2280,
+            length: 1080 * 2280 * 2,
+            compression: 0,
+            compressed_length: 0,
+        };
+        let err = validate_buffer_request(&info).unwrap_err();
+
+        assert!(err.to_string().contains("controller is disabled"));
+    }
+
+    #[test]
+    fn buffer_rejected_when_display_disabled() {
+        reset_protocol_state();
+        store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        });
+        commit_pending_state().unwrap();
+        update_controller_enabled(true);
+
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1080,
+            height: 2280,
+            length: 1080 * 2280 * 2,
+            compression: 0,
+            compressed_length: 0,
+        };
+        let err = validate_buffer_request(&info).unwrap_err();
+
+        assert!(err.to_string().contains("display is disabled"));
+    }
+
+    #[test]
+    fn parse_enable_request_accepts_only_zero_or_one() {
+        assert!(!parse_enable_request(&[0], "test").unwrap());
+        assert!(parse_enable_request(&[1], "test").unwrap());
+        assert!(parse_enable_request(&[], "test").is_err());
+        assert!(parse_enable_request(&[2], "test").is_err());
     }
 
     #[test]
