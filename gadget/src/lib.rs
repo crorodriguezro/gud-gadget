@@ -56,6 +56,7 @@ static CONNECTOR_STATUS_CHANGED_ONCE: AtomicBool = AtomicBool::new(true);
 static STATUS_VALUE: AtomicU8 = AtomicU8::new(GUD_STATUS_OK);
 static CLEAR_STATUS_ON_NEXT_SUCCESS: AtomicBool = AtomicBool::new(false);
 static STATE_CHECK_VALIDATION: OnceLock<Mutex<StateCheckValidation>> = OnceLock::new();
+static PROTOCOL_STATE: OnceLock<Mutex<ProtocolState>> = OnceLock::new();
 
 // https://github.com/openmoko/openmoko-usb-oui/commit/73bdf541b6f9840b70219626b4088d4e3f164904
 pub const OPENMOKO_GUD_ID: Id = Id::new(0x1d50, 0x614d);
@@ -198,6 +199,19 @@ struct StateCheckValidation {
     modes: Vec<DisplayMode>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct DisplayState {
+    mode: DisplayMode,
+    format: u8,
+    connector: u8,
+}
+
+#[derive(Debug, Default)]
+struct ProtocolState {
+    pending_state: Option<DisplayState>,
+    committed_state: Option<DisplayState>,
+}
+
 #[derive(Deserialize, Debug)]
 pub struct SetBuffer {
     pub x: u32,
@@ -337,6 +351,10 @@ fn state_check_validation() -> &'static Mutex<StateCheckValidation> {
     STATE_CHECK_VALIDATION.get_or_init(|| Mutex::new(StateCheckValidation::default()))
 }
 
+fn protocol_state() -> &'static Mutex<ProtocolState> {
+    PROTOCOL_STATE.get_or_init(|| Mutex::new(ProtocolState::default()))
+}
+
 fn current_status() -> u8 {
     STATUS_VALUE.load(Ordering::SeqCst)
 }
@@ -344,6 +362,14 @@ fn current_status() -> u8 {
 fn reset_status() {
     STATUS_VALUE.store(GUD_STATUS_OK, Ordering::SeqCst);
     CLEAR_STATUS_ON_NEXT_SUCCESS.store(false, Ordering::SeqCst);
+}
+
+fn reset_protocol_state() {
+    let mut state = protocol_state()
+        .lock()
+        .expect("protocol state lock poisoned");
+    state.pending_state = None;
+    state.committed_state = None;
 }
 
 fn latch_status(status: u8) {
@@ -378,7 +404,16 @@ pub fn configure_state_check_validation(
     validation.modes = modes.to_vec();
 }
 
-fn validate_state_check_payload(payload: &[u8]) -> anyhow::Result<()> {
+fn bytes_per_pixel(format: u8) -> anyhow::Result<usize> {
+    match format {
+        GUD_PIXEL_FORMAT_RGB565 => Ok(2),
+        GUD_PIXEL_FORMAT_RGB888 => Ok(3),
+        GUD_PIXEL_FORMAT_XRGB8888 => Ok(4),
+        _ => anyhow::bail!("unsupported pixel format {:#x}", format),
+    }
+}
+
+fn validate_state_check_payload(payload: &[u8]) -> anyhow::Result<DisplayState> {
     ensure!(
         payload.len() >= GUD_STATE_CHECK_HEADER_LEN,
         "state check payload too short: got {} bytes, expected at least {}",
@@ -423,6 +458,105 @@ fn validate_state_check_payload(payload: &[u8]) -> anyhow::Result<()> {
         header.mode.vdisplay
     );
 
+    Ok(DisplayState {
+        mode: header.mode,
+        format: header.format,
+        connector: header.connector,
+    })
+}
+
+fn store_pending_state(state: DisplayState) {
+    let mut protocol = protocol_state()
+        .lock()
+        .expect("protocol state lock poisoned");
+    protocol.pending_state = Some(state);
+}
+
+fn clear_pending_state() {
+    let mut protocol = protocol_state()
+        .lock()
+        .expect("protocol state lock poisoned");
+    protocol.pending_state = None;
+}
+
+fn commit_pending_state() -> anyhow::Result<()> {
+    let mut protocol = protocol_state()
+        .lock()
+        .expect("protocol state lock poisoned");
+    let pending = protocol
+        .pending_state
+        .take()
+        .context("no checked state available to commit")?;
+    protocol.committed_state = Some(pending);
+    Ok(())
+}
+
+fn validate_buffer_request(info: &SetBuffer) -> anyhow::Result<()> {
+    let protocol = protocol_state()
+        .lock()
+        .expect("protocol state lock poisoned");
+    let state = protocol
+        .committed_state
+        .as_ref()
+        .context("no committed state available for buffer upload")?;
+    let bpp = bytes_per_pixel(state.format)?;
+    let width = info.width as usize;
+    let height = info.height as usize;
+
+    ensure!(width > 0, "buffer width must be greater than zero");
+    ensure!(height > 0, "buffer height must be greater than zero");
+    ensure!(
+        info.x <= state.mode.hdisplay as u32,
+        "buffer x {} exceeds mode width {}",
+        info.x,
+        state.mode.hdisplay
+    );
+    ensure!(
+        info.y <= state.mode.vdisplay as u32,
+        "buffer y {} exceeds mode height {}",
+        info.y,
+        state.mode.vdisplay
+    );
+    ensure!(
+        info.x + info.width <= state.mode.hdisplay as u32,
+        "buffer rect {}x{} at x {} exceeds mode width {}",
+        info.width,
+        info.height,
+        info.x,
+        state.mode.hdisplay
+    );
+    ensure!(
+        info.y + info.height <= state.mode.vdisplay as u32,
+        "buffer rect {}x{} at y {} exceeds mode height {}",
+        info.width,
+        info.height,
+        info.y,
+        state.mode.vdisplay
+    );
+
+    let expected_len = width
+        .checked_mul(height)
+        .and_then(|pixels| pixels.checked_mul(bpp))
+        .context("buffer dimensions overflowed expected payload length")?;
+    ensure!(
+        info.length as usize == expected_len,
+        "buffer length {} does not match expected {}",
+        info.length,
+        expected_len
+    );
+    if info.compression == 0 {
+        ensure!(
+            info.compressed_length == 0 || info.compressed_length == info.length,
+            "uncompressed buffer has unexpected compressed_length {}",
+            info.compressed_length
+        );
+    } else {
+        ensure!(
+            info.compressed_length > 0,
+            "compressed buffer must set compressed_length"
+        );
+    }
+
     Ok(())
 }
 
@@ -431,11 +565,13 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
         custom::Event::Enable => {
             reset_connector_status_changed();
             reset_status();
+            reset_protocol_state();
             debug!("Enable event received");
         }
         custom::Event::Bind => {
             reset_connector_status_changed();
             reset_status();
+            reset_protocol_state();
             debug!("Bind event received");
         }
         custom::Event::SetupDeviceToHost(req) => {
@@ -508,11 +644,13 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 GUD_REQ_SET_STATE_CHECK => {
                     let payload = req.recv_all().context("recv set state check")?;
                     match validate_state_check_payload(payload.as_slice()) {
-                        Ok(()) => {
+                        Ok(state) => {
+                            store_pending_state(state);
                             debug!("received valid state check");
                             mark_success();
                         }
                         Err(err) => {
+                            clear_pending_state();
                             latch_status(GUD_STATUS_INVALID_PARAMETER);
                             warn!("rejected state check: {}", err);
                         }
@@ -530,17 +668,33 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 }
                 GUD_REQ_SET_STATE_COMMIT => {
                     req.recv_all().context("recv set state commit")?;
-                    debug!("received state commit");
-                    mark_success();
+                    match commit_pending_state() {
+                        Ok(()) => {
+                            debug!("committed checked state");
+                            mark_success();
+                        }
+                        Err(err) => {
+                            latch_status(GUD_STATUS_INVALID_PARAMETER);
+                            warn!("rejected state commit: {}", err);
+                        }
+                    }
                 }
                 GUD_REQ_SET_BUFFER => {
                     let req = req.recv_all().context("recv set buffer")?;
                     let v: SetBuffer;
                     (v, _) =
                         ssmarshal::deserialize(req.as_slice()).context("deserialize set buffer")?;
-                    debug!("received set buffer: {:?}", v);
-                    mark_success();
-                    return Ok(Some(Event::Buffer(v)));
+                    match validate_buffer_request(&v) {
+                        Ok(()) => {
+                            debug!("validated set buffer: {:?}", v);
+                            mark_success();
+                            return Ok(Some(Event::Buffer(v)));
+                        }
+                        Err(err) => {
+                            latch_status(GUD_STATUS_INVALID_PARAMETER);
+                            warn!("rejected set buffer {:?}: {}", v, err);
+                        }
+                    }
                 }
                 value => {
                     latch_status(GUD_STATUS_REQUEST_NOT_SUPPORTED);
@@ -715,13 +869,15 @@ impl PixelDataEndpoint {
 #[cfg(test)]
 mod tests {
     use super::{
-        build_display_descriptor, configure_state_check_validation, current_status, latch_status,
-        mark_success, next_connector_status, reset_connector_status_changed, reset_status,
+        build_display_descriptor, commit_pending_state, configure_state_check_validation,
+        current_status, latch_status, mark_success, next_connector_status,
+        reset_connector_status_changed, reset_protocol_state, reset_status,
         serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
-        validate_state_check_payload, ConnectorDescriptor, DisplayMode, PixelDataEndpoint,
-        SetBuffer, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
-        GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC,
-        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        store_pending_state, validate_buffer_request, validate_state_check_payload,
+        ConnectorDescriptor, DisplayMode, DisplayState, PixelDataEndpoint, SetBuffer,
+        GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL,
+        GUD_DISPLAY_FLAG_FULL_UPDATE, GUD_DISPLAY_MAGIC, GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK,
+        GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
     use serde::Serialize;
 
@@ -904,16 +1060,26 @@ mod tests {
     fn validate_state_check_accepts_advertised_mode_and_format() {
         let mode = sample_mode();
         configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+        reset_protocol_state();
 
         let payload = serialize_state_check_request(mode, GUD_PIXEL_FORMAT_RGB565, 0);
 
-        validate_state_check_payload(&payload).unwrap();
+        let state = validate_state_check_payload(&payload).unwrap();
+        assert_eq!(
+            state,
+            DisplayState {
+                mode: sample_mode(),
+                format: GUD_PIXEL_FORMAT_RGB565,
+                connector: 0,
+            }
+        );
     }
 
     #[test]
     fn validate_state_check_rejects_unknown_format() {
         let mode = sample_mode();
         configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+        reset_protocol_state();
 
         let payload = serialize_state_check_request(mode, 0x80, 0);
         let err = validate_state_check_payload(&payload).unwrap_err();
@@ -925,6 +1091,7 @@ mod tests {
     fn validate_state_check_rejects_unknown_connector() {
         let mode = sample_mode();
         configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+        reset_protocol_state();
 
         let payload = serialize_state_check_request(mode, GUD_PIXEL_FORMAT_RGB565, 1);
         let err = validate_state_check_payload(&payload).unwrap_err();
@@ -936,11 +1103,110 @@ mod tests {
     fn validate_state_check_rejects_unknown_mode() {
         let mut mode = sample_mode();
         configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+        reset_protocol_state();
         mode.vdisplay = 2400;
 
         let payload = serialize_state_check_request(mode, GUD_PIXEL_FORMAT_RGB565, 0);
         let err = validate_state_check_payload(&payload).unwrap_err();
 
         assert!(err.to_string().contains("unsupported mode"));
+    }
+
+    #[test]
+    fn state_commit_requires_pending_state() {
+        reset_protocol_state();
+
+        let err = commit_pending_state().unwrap_err();
+
+        assert!(err.to_string().contains("no checked state available"));
+    }
+
+    #[test]
+    fn validate_buffer_request_accepts_committed_full_frame() {
+        reset_protocol_state();
+        store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        });
+        commit_pending_state().unwrap();
+
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1080,
+            height: 2280,
+            length: 1080 * 2280 * 2,
+            compression: 0,
+            compressed_length: 0,
+        };
+
+        validate_buffer_request(&info).unwrap();
+    }
+
+    #[test]
+    fn validate_buffer_request_rejects_without_committed_state() {
+        reset_protocol_state();
+
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1080,
+            height: 2280,
+            length: 1080 * 2280 * 2,
+            compression: 0,
+            compressed_length: 0,
+        };
+        let err = validate_buffer_request(&info).unwrap_err();
+
+        assert!(err.to_string().contains("no committed state available"));
+    }
+
+    #[test]
+    fn validate_buffer_request_rejects_out_of_bounds_rect() {
+        reset_protocol_state();
+        store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        });
+        commit_pending_state().unwrap();
+
+        let info = SetBuffer {
+            x: 1000,
+            y: 2200,
+            width: 200,
+            height: 100,
+            length: 200 * 100 * 2,
+            compression: 0,
+            compressed_length: 0,
+        };
+        let err = validate_buffer_request(&info).unwrap_err();
+
+        assert!(err.to_string().contains("exceeds mode"));
+    }
+
+    #[test]
+    fn validate_buffer_request_rejects_length_mismatch() {
+        reset_protocol_state();
+        store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        });
+        commit_pending_state().unwrap();
+
+        let info = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1080,
+            height: 2280,
+            length: 16,
+            compression: 0,
+            compressed_length: 0,
+        };
+        let err = validate_buffer_request(&info).unwrap_err();
+
+        assert!(err.to_string().contains("buffer length"));
     }
 }
