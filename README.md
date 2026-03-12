@@ -18,3 +18,4 @@ Current project docs:
 - [Working Driver Execution Plan](./WORKING_DRIVER_EXECUTION_PLAN.md)
 - [Checkpoint](./CHECKPOINT_2026-03-10.md)
 - [Known Issues](./KNOWN_ISSUES.md)
+- [Performance Instrumentation](./PERFORMANCE_INSTRUMENTATION.md)

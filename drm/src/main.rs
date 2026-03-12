@@ -137,6 +137,71 @@ fn gud_flags_for_mode(mode: &Mode, preferred_mode_name: &std::ffi::CStr) -> u32 
     flags
 }
 
+fn derive_mode_from_native(
+    native: &DisplayMode,
+    target_width: u16,
+    target_height: u16,
+) -> DisplayMode {
+    let scale_dimension = |delta: u16, native_active: u16, target_active: u16| -> u16 {
+        let scaled = (delta as u32 * target_active as u32) / native_active as u32;
+        scaled.max(1) as u16
+    };
+
+    let h_front = scale_dimension(
+        native.hsync_start - native.hdisplay,
+        native.hdisplay,
+        target_width,
+    );
+    let h_sync = scale_dimension(
+        native.hsync_end - native.hsync_start,
+        native.hdisplay,
+        target_width,
+    );
+    let h_back = scale_dimension(
+        native.htotal - native.hsync_end,
+        native.hdisplay,
+        target_width,
+    );
+    let v_front = scale_dimension(
+        native.vsync_start - native.vdisplay,
+        native.vdisplay,
+        target_height,
+    );
+    let v_sync = scale_dimension(
+        native.vsync_end - native.vsync_start,
+        native.vdisplay,
+        target_height,
+    );
+    let v_back = scale_dimension(
+        native.vtotal - native.vsync_end,
+        native.vdisplay,
+        target_height,
+    );
+
+    let hsync_start = target_width + h_front;
+    let hsync_end = hsync_start + h_sync;
+    let htotal = hsync_end + h_back;
+    let vsync_start = target_height + v_front;
+    let vsync_end = vsync_start + v_sync;
+    let vtotal = vsync_end + v_back;
+    let clock = (native.clock as u64 * htotal as u64 * vtotal as u64
+        / native.htotal as u64
+        / native.vtotal as u64) as u32;
+
+    DisplayMode {
+        clock,
+        hdisplay: target_width,
+        hsync_start,
+        hsync_end,
+        htotal,
+        vdisplay: target_height,
+        vsync_start,
+        vsync_end,
+        vtotal,
+        flags: 0,
+    }
+}
+
 const RGB565_BLUE: u16 = 0x001f;
 const RGB565_GREEN: u16 = 0x07e0;
 const RGB565_CYAN: u16 = 0x07ff;
@@ -376,6 +441,102 @@ fn copy_rgb888_to_rgb565_framebuffer(
     Ok(())
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct ScaledLayout {
+    dst_x: usize,
+    dst_y: usize,
+    dst_width: usize,
+    dst_height: usize,
+}
+
+#[derive(Debug, Default)]
+struct ShadowFramebuffer {
+    width: u32,
+    height: u32,
+    pitch: usize,
+    pixels: Vec<u8>,
+}
+
+impl ShadowFramebuffer {
+    fn ensure_size(&mut self, width: u32, height: u32) {
+        let pitch = width as usize * 2;
+        let len = pitch * height as usize;
+        if self.width != width || self.height != height || self.pixels.len() != len {
+            self.width = width;
+            self.height = height;
+            self.pitch = pitch;
+            self.pixels = vec![0; len];
+        }
+    }
+}
+
+fn compute_scaled_layout(
+    src_width: u32,
+    src_height: u32,
+    dst_width: u32,
+    dst_height: u32,
+) -> anyhow::Result<ScaledLayout> {
+    ensure!(src_width > 0, "source width must be greater than zero");
+    ensure!(src_height > 0, "source height must be greater than zero");
+    ensure!(dst_width > 0, "destination width must be greater than zero");
+    ensure!(
+        dst_height > 0,
+        "destination height must be greater than zero"
+    );
+
+    let width_limited_height = (dst_width as u64 * src_height as u64) / src_width as u64;
+    let (scaled_width, scaled_height) = if width_limited_height <= dst_height as u64 {
+        (dst_width as usize, width_limited_height.max(1) as usize)
+    } else {
+        let width = (dst_height as u64 * src_width as u64) / src_height as u64;
+        (width.max(1) as usize, dst_height as usize)
+    };
+
+    let dst_width = dst_width as usize;
+    let dst_height = dst_height as usize;
+
+    Ok(ScaledLayout {
+        dst_x: (dst_width - scaled_width) / 2,
+        dst_y: (dst_height - scaled_height) / 2,
+        dst_width: scaled_width,
+        dst_height: scaled_height,
+    })
+}
+
+fn scale_rgb565_to_fit(
+    src: &[u8],
+    src_pitch: usize,
+    src_width: u32,
+    src_height: u32,
+    dst: &mut [u8],
+    dst_pitch: usize,
+    dst_width: u32,
+    dst_height: u32,
+) -> anyhow::Result<(ScaledLayout, u128)> {
+    let start = std::time::Instant::now();
+    let layout = compute_scaled_layout(src_width, src_height, dst_width, dst_height)?;
+
+    fill_rgb565_solid(dst, dst_pitch, dst_width as usize, dst_height as usize, 0);
+
+    let src_width = src_width as usize;
+    let src_height = src_height as usize;
+    for dst_y_rel in 0..layout.dst_height {
+        let src_y = dst_y_rel * src_height / layout.dst_height;
+        let dst_y = layout.dst_y + dst_y_rel;
+        let src_row = src_y * src_pitch;
+        let dst_row = dst_y * dst_pitch;
+        for dst_x_rel in 0..layout.dst_width {
+            let src_x = dst_x_rel * src_width / layout.dst_width;
+            let src_off = src_row + src_x * 2;
+            let dst_off = dst_row + (layout.dst_x + dst_x_rel) * 2;
+            dst[dst_off] = src[src_off];
+            dst[dst_off + 1] = src[src_off + 1];
+        }
+    }
+
+    Ok((layout, start.elapsed().as_millis()))
+}
+
 fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(fmt::layer())
@@ -516,28 +677,23 @@ fn main() -> anyhow::Result<()> {
         })
         .collect();
 
-    let standard_modes = [
-        (1024, 768, 65000, 1040, 1184, 1344, 771, 777, 806),
-        (800, 600, 40000, 832, 960, 1056, 601, 604, 628),
-        (640, 480, 25175, 656, 752, 800, 490, 492, 525),
+    let native_mode = advertised_modes
+        .iter()
+        .find(|candidate| candidate.flags & gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED != 0)
+        .cloned()
+        .unwrap_or_else(|| advertised_modes[0].clone());
+
+    let portrait_modes = [
+        (900_u16, 1900_u16),
+        (810_u16, 1710_u16),
+        (720_u16, 1520_u16),
     ];
-    for (w, h, clock, hss, hse, ht, vss, vse, vt) in standard_modes {
+    for (w, h) in portrait_modes {
         if !advertised_modes
             .iter()
             .any(|candidate| candidate.hdisplay == w && candidate.vdisplay == h)
         {
-            advertised_modes.push(DisplayMode {
-                clock,
-                hdisplay: w,
-                htotal: ht,
-                hsync_end: hse,
-                hsync_start: hss,
-                vtotal: vt,
-                vdisplay: h,
-                vsync_end: vse,
-                vsync_start: vss,
-                flags: 0,
-            });
+            advertised_modes.push(derive_mode_from_native(&native_mode, w, h));
         }
     }
     gud_gadget::configure_state_check_validation(
@@ -579,6 +735,9 @@ fn main() -> anyhow::Result<()> {
         .map_dumb_buffer(&mut db)
         .expect("map_dumb_buffer failed");
     debug!("Dumb buffer mapped, pitch={}", pitch);
+    let panel_width = width as u32;
+    let panel_height = height as u32;
+    let mut shadow = ShadowFramebuffer::default();
 
     let fb_data = mapping.as_mut();
     if pattern_mode.uses_startup_pattern() {
@@ -670,6 +829,7 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                     Event::Buffer(info) => {
+                        let frame_start = std::time::Instant::now();
                         tracing::debug!(
                             "Buffer: x={} y={} {}x{} len={} compression={}",
                             info.x,
@@ -685,42 +845,124 @@ fn main() -> anyhow::Result<()> {
                             (info.x + info.width) as u16,
                             (info.y + info.height) as u16,
                         );
-                        let payload =
+                        let (payload, payload_stats) =
                             match gud_data.recv_payload(&info, transfer_format.bytes_per_pixel()) {
-                                Ok(payload) => payload,
+                                Ok(result) => result,
                                 Err(err) => {
                                     tracing::error!("Failed to receive buffer payload: {}", err);
                                     continue;
                                 }
                             };
 
+                        let active_state = gud_gadget::active_scanout_state();
+                        let source_width =
+                            active_state.map(|state| state.width).unwrap_or(panel_width);
+                        let source_height = active_state
+                            .map(|state| state.height)
+                            .unwrap_or(panel_height);
+                        let scaled_mode =
+                            source_width != panel_width || source_height != panel_height;
+                        let mut copy_ms = 0u128;
+                        let mut scale_ms = 0u128;
                         let framebuffer_changed = match pattern_mode {
                             PatternMode::Off | PatternMode::Startup => {
-                                let copy_result = match transfer_format {
-                                    TransferFormat::Rgb565 => {
-                                        gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer(
+                                if scaled_mode {
+                                    shadow.ensure_size(source_width, source_height);
+                                    let copy_result = match transfer_format {
+                                        TransferFormat::Rgb565 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
+                                            &info,
+                                            payload,
+                                            shadow.pixels.as_mut_slice(),
+                                            shadow.pitch,
+                                            2,
+                                        ) {
+                                            Ok(stats) => {
+                                                copy_ms = stats.copy_ms;
+                                                Ok(())
+                                            }
+                                            Err(err) => Err(err),
+                                        },
+                                        TransferFormat::Rgb888 => {
+                                            let copy_start = std::time::Instant::now();
+                                            let result = copy_rgb888_to_rgb565_framebuffer(
+                                                &info,
+                                                payload,
+                                                shadow.pixels.as_mut_slice(),
+                                                shadow.pitch,
+                                            );
+                                            copy_ms = copy_start.elapsed().as_millis();
+                                            result
+                                        }
+                                    };
+                                    match copy_result {
+                                        Ok(()) => {}
+                                        Err(err) => {
+                                            tracing::error!(
+                                                "Failed to copy buffer to shadow framebuffer: {}",
+                                                err
+                                            );
+                                            continue;
+                                        }
+                                    }
+
+                                    match scale_rgb565_to_fit(
+                                        shadow.pixels.as_slice(),
+                                        shadow.pitch,
+                                        source_width,
+                                        source_height,
+                                        mapping.as_mut(),
+                                        pitch as usize,
+                                        panel_width,
+                                        panel_height,
+                                    ) {
+                                        Ok((_layout, elapsed_ms)) => {
+                                            scale_ms = elapsed_ms;
+                                            true
+                                        }
+                                        Err(err) => {
+                                            tracing::error!(
+                                                "Failed to scale shadow framebuffer to panel: {}",
+                                                err
+                                            );
+                                            continue;
+                                        }
+                                    }
+                                } else {
+                                    let copy_result = match transfer_format {
+                                        TransferFormat::Rgb565 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
                                             &info,
                                             payload,
                                             mapping.as_mut(),
                                             pitch as usize,
                                             2,
-                                        )
-                                    }
-                                    TransferFormat::Rgb888 => copy_rgb888_to_rgb565_framebuffer(
-                                        &info,
-                                        payload,
-                                        mapping.as_mut(),
-                                        pitch as usize,
-                                    ),
-                                };
-                                match copy_result {
-                                    Ok(()) => true,
-                                    Err(err) => {
-                                        tracing::error!(
-                                            "Failed to copy buffer to framebuffer: {}",
-                                            err
-                                        );
-                                        continue;
+                                        ) {
+                                            Ok(stats) => {
+                                                copy_ms = stats.copy_ms;
+                                                Ok(())
+                                            }
+                                            Err(err) => Err(err),
+                                        },
+                                        TransferFormat::Rgb888 => {
+                                            let copy_start = std::time::Instant::now();
+                                            let result = copy_rgb888_to_rgb565_framebuffer(
+                                                &info,
+                                                payload,
+                                                mapping.as_mut(),
+                                                pitch as usize,
+                                            );
+                                            copy_ms = copy_start.elapsed().as_millis();
+                                            result
+                                        }
+                                    };
+                                    match copy_result {
+                                        Ok(()) => true,
+                                        Err(err) => {
+                                            tracing::error!(
+                                                "Failed to copy buffer to framebuffer: {}",
+                                                err
+                                            );
+                                            continue;
+                                        }
                                     }
                                 }
                             }
@@ -751,10 +993,23 @@ fn main() -> anyhow::Result<()> {
                             }
                         };
 
+                        let mut flush_ms = 0u128;
                         if framebuffer_changed {
-                            match card.dirty_framebuffer(fb_handle, &[clip]) {
-                                Ok(()) => tracing::debug!("Framebuffer flushed"),
+                            let flush_start = std::time::Instant::now();
+                            let flush_clip = if scaled_mode
+                                && matches!(pattern_mode, PatternMode::Off | PatternMode::Startup)
+                            {
+                                ClipRect::new(0, 0, panel_width as u16, panel_height as u16)
+                            } else {
+                                clip
+                            };
+                            match card.dirty_framebuffer(fb_handle, &[flush_clip]) {
+                                Ok(()) => {
+                                    flush_ms = flush_start.elapsed().as_millis();
+                                    tracing::debug!("Framebuffer flushed")
+                                }
                                 Err(err) => {
+                                    flush_ms = flush_start.elapsed().as_millis();
                                     tracing::debug!(
                                         "dirty_framebuffer not supported or failed: {}",
                                         err
@@ -764,6 +1019,41 @@ fn main() -> anyhow::Result<()> {
                         } else {
                             tracing::debug!("Framebuffer unchanged for current buffer event");
                         }
+
+                        let total_ms = frame_start.elapsed().as_millis();
+                        let compression_ratio = if payload_stats.transfer_bytes > 0 {
+                            payload_stats.output_bytes as f64 / payload_stats.transfer_bytes as f64
+                        } else {
+                            0.0
+                        };
+                        let usb_mib_per_s = if payload_stats.read_ms > 0 {
+                            (payload_stats.transfer_bytes as f64 / (1024.0 * 1024.0))
+                                / (payload_stats.read_ms as f64 / 1000.0)
+                        } else {
+                            0.0
+                        };
+                        tracing::info!(
+                            "frame_stats rect={}x{}+{},{} source={}x{} scaled={} transfer_bytes={} output_bytes={} packets={} compression={} ratio={:.2} recv_ms={} decompress_ms={} copy_ms={} scale_ms={} flush_ms={} total_ms={} usb_mib_s={:.2}",
+                            info.width,
+                            info.height,
+                            info.x,
+                            info.y,
+                            source_width,
+                            source_height,
+                            scaled_mode,
+                            payload_stats.transfer_bytes,
+                            payload_stats.output_bytes,
+                            payload_stats.packets,
+                            info.compression,
+                            compression_ratio,
+                            payload_stats.read_ms,
+                            payload_stats.decompress_ms,
+                            copy_ms,
+                            scale_ms,
+                            flush_ms,
+                            total_ms,
+                            usb_mib_per_s
+                        );
 
                         dump_framebuffer_if_enabled(
                             dump_path.as_deref(),
@@ -787,4 +1077,79 @@ fn main() -> anyhow::Result<()> {
     tracing::info!("Shutting down");
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{compute_scaled_layout, derive_mode_from_native, ScaledLayout};
+    use gud_gadget::{DisplayMode, GUD_DISPLAY_MODE_FLAG_PREFERRED};
+
+    fn native_mode() -> DisplayMode {
+        DisplayMode {
+            clock: 174_359,
+            hdisplay: 1080,
+            hsync_start: 1192,
+            hsync_end: 1208,
+            htotal: 1244,
+            vdisplay: 2280,
+            vsync_start: 2316,
+            vsync_end: 2324,
+            vtotal: 2336,
+            flags: GUD_DISPLAY_MODE_FLAG_PREFERRED,
+        }
+    }
+
+    #[test]
+    fn compute_scaled_layout_preserves_aspect_ratio_for_4_3_mode() {
+        assert_eq!(
+            compute_scaled_layout(1024, 768, 1080, 2280).unwrap(),
+            ScaledLayout {
+                dst_x: 0,
+                dst_y: 735,
+                dst_width: 1080,
+                dst_height: 810,
+            }
+        );
+    }
+
+    #[test]
+    fn compute_scaled_layout_keeps_native_mode_fullscreen() {
+        assert_eq!(
+            compute_scaled_layout(1080, 2280, 1080, 2280).unwrap(),
+            ScaledLayout {
+                dst_x: 0,
+                dst_y: 0,
+                dst_width: 1080,
+                dst_height: 2280,
+            }
+        );
+    }
+
+    #[test]
+    fn compute_scaled_layout_centers_tall_source() {
+        assert_eq!(
+            compute_scaled_layout(720, 2280, 1080, 2280).unwrap(),
+            ScaledLayout {
+                dst_x: 180,
+                dst_y: 0,
+                dst_width: 720,
+                dst_height: 2280,
+            }
+        );
+    }
+
+    #[test]
+    fn derive_mode_from_native_preserves_portrait_shape() {
+        let derived = derive_mode_from_native(&native_mode(), 720, 1520);
+
+        assert_eq!(derived.hdisplay, 720);
+        assert_eq!(derived.vdisplay, 1520);
+        assert!(derived.hsync_start > derived.hdisplay);
+        assert!(derived.hsync_end > derived.hsync_start);
+        assert!(derived.htotal > derived.hsync_end);
+        assert!(derived.vsync_start > derived.vdisplay);
+        assert!(derived.vsync_end > derived.vsync_start);
+        assert!(derived.vtotal > derived.vsync_end);
+        assert_eq!(derived.flags, 0);
+    }
 }

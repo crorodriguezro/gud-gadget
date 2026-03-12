@@ -206,6 +206,14 @@ struct DisplayState {
     connector: u8,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ActiveScanoutState {
+    pub width: u32,
+    pub height: u32,
+    pub format: u8,
+    pub connector: u8,
+}
+
 #[derive(Debug, Default)]
 struct ProtocolState {
     pending_state: Option<DisplayState>,
@@ -223,6 +231,21 @@ pub struct SetBuffer {
     pub length: u32,
     pub compression: u8,
     pub compressed_length: u32,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct PayloadStats {
+    pub transfer_bytes: usize,
+    pub output_bytes: usize,
+    pub packets: usize,
+    pub read_ms: u128,
+    pub decompress_ms: u128,
+    pub total_ms: u128,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct CopyStats {
+    pub copy_ms: u128,
 }
 
 #[derive(Debug)]
@@ -550,6 +573,21 @@ fn commit_pending_state() -> anyhow::Result<()> {
     Ok(())
 }
 
+pub fn active_scanout_state() -> Option<ActiveScanoutState> {
+    let protocol = protocol_state()
+        .lock()
+        .expect("protocol state lock poisoned");
+    protocol
+        .committed_state
+        .as_ref()
+        .map(|state| ActiveScanoutState {
+            width: state.mode.hdisplay as u32,
+            height: state.mode.vdisplay as u32,
+            format: state.format,
+            connector: state.connector,
+        })
+}
+
 fn validate_buffer_request(info: &SetBuffer) -> anyhow::Result<()> {
     let protocol = protocol_state()
         .lock()
@@ -830,7 +868,11 @@ impl PixelDataEndpoint {
         )
     }
 
-    pub fn recv_payload(&mut self, info: &SetBuffer, bpp: usize) -> anyhow::Result<&[u8]> {
+    pub fn recv_payload(
+        &mut self,
+        info: &SetBuffer,
+        bpp: usize,
+    ) -> anyhow::Result<(&[u8], PayloadStats)> {
         let start = Instant::now();
         let max_packet_size = self.ep_rx.max_packet_size().unwrap();
         debug!(
@@ -866,11 +908,12 @@ impl PixelDataEndpoint {
             buf.clear();
             self.ep_buf.push(buf);
         }
+        let read_ms = read_start.elapsed().as_millis();
         debug!(
             "read {} bytes in {} packets, took {}ms",
             self.buf.len(),
             packets,
-            read_start.elapsed().as_millis()
+            read_ms
         );
 
         if self.buf.len() < len {
@@ -885,6 +928,14 @@ impl PixelDataEndpoint {
             );
             self.buf.truncate(len);
         }
+
+        let mut stats = PayloadStats {
+            transfer_bytes: len,
+            output_bytes: info.length as usize,
+            packets,
+            read_ms,
+            ..PayloadStats::default()
+        };
 
         let buf = if info.compression > 0 {
             let decompress_start = Instant::now();
@@ -903,6 +954,7 @@ impl PixelDataEndpoint {
                 decompressed,
                 decompress_start.elapsed().as_millis()
             );
+            stats.decompress_ms = decompress_start.elapsed().as_millis();
             &self.compress_buf
         } else {
             &self.buf
@@ -917,9 +969,10 @@ impl PixelDataEndpoint {
             bpp,
         );
         dump_raw_buffer_if_enabled("GUD_DUMP_RX_RAW_PATH", buf);
-        debug!("recv_payload total took {}ms", start.elapsed().as_millis());
+        stats.total_ms = start.elapsed().as_millis();
+        debug!("recv_payload total took {}ms", stats.total_ms);
 
-        Ok(buf)
+        Ok((buf, stats))
     }
 
     pub fn copy_buffer_to_framebuffer(
@@ -929,6 +982,16 @@ impl PixelDataEndpoint {
         fb_pitch: usize,
         bpp: usize,
     ) -> anyhow::Result<()> {
+        Self::copy_buffer_to_framebuffer_with_stats(info, buf, fb, fb_pitch, bpp).map(|_| ())
+    }
+
+    pub fn copy_buffer_to_framebuffer_with_stats(
+        info: &SetBuffer,
+        buf: &[u8],
+        fb: &mut [u8],
+        fb_pitch: usize,
+        bpp: usize,
+    ) -> anyhow::Result<CopyStats> {
         let copy_start = Instant::now();
         let mut y = info.y as usize;
         let end_y = (info.y + info.height) as usize;
@@ -958,23 +1021,26 @@ impl PixelDataEndpoint {
             copy_start.elapsed().as_millis()
         );
 
-        Ok(())
+        Ok(CopyStats {
+            copy_ms: copy_start.elapsed().as_millis(),
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        build_display_descriptor, commit_pending_state, configure_state_check_validation,
-        current_status, handle_resume_transition, handle_suspend_transition, latch_status,
-        mark_success, next_connector_status, parse_enable_request, reset_connector_status_changed,
-        reset_protocol_state, reset_status, serialize_connector_descriptors,
-        serialize_display_descriptor, serialize_display_modes, store_pending_state,
-        update_controller_enabled, update_display_enabled, validate_buffer_request,
-        validate_state_check_payload, ConnectorDescriptor, DisplayMode, DisplayState,
-        PixelDataEndpoint, SetBuffer, GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED,
-        GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_MAGIC,
-        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        active_scanout_state, build_display_descriptor, commit_pending_state,
+        configure_state_check_validation, current_status, handle_resume_transition,
+        handle_suspend_transition, latch_status, mark_success, next_connector_status,
+        parse_enable_request, reset_connector_status_changed, reset_protocol_state, reset_status,
+        serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
+        store_pending_state, update_controller_enabled, update_display_enabled,
+        validate_buffer_request, validate_state_check_payload, ActiveScanoutState,
+        ConnectorDescriptor, DisplayMode, DisplayState, PixelDataEndpoint, SetBuffer,
+        GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
+        GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_MAGIC, GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK,
+        GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
     use serde::Serialize;
 
@@ -1224,6 +1290,27 @@ mod tests {
         let err = commit_pending_state().unwrap_err();
 
         assert!(err.to_string().contains("no checked state available"));
+    }
+
+    #[test]
+    fn active_scanout_state_reports_committed_mode() {
+        reset_protocol_state();
+        store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        });
+        commit_pending_state().unwrap();
+
+        assert_eq!(
+            active_scanout_state(),
+            Some(ActiveScanoutState {
+                width: 1080,
+                height: 2280,
+                format: GUD_PIXEL_FORMAT_RGB565,
+                connector: 0,
+            })
+        );
     }
 
     #[test]
