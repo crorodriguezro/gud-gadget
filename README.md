@@ -12,6 +12,17 @@ The [`gud-function`](./gadget) crate implements a GUD gadget as a [FunctionFS](h
 
 The [`gud-drm`](./drm) crate is a simple implementation that configures a GUD gadget with the `gud-function` implementation, and renders the pixel data directly to a [drm](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) framebuffer.
 
+The workspace also includes an experimental windowed viewer path:
+
+- [`viewer-ipc`](./viewer-ipc) defines the shared IPC messages and default runtime paths.
+- [`viewerd`](./viewerd) is a privileged daemon that owns the USB gadget and publishes frames to shared memory instead of taking over KMS.
+- [`viewer-gtk`](./viewer-gtk) is a GTK4/libadwaita phone app that displays those frames in a normal desktop window.
+
+Build notes:
+
+- `cargo build` and `cargo test` cover the existing fullscreen path plus `viewer-ipc` and `viewerd`.
+- `viewer-gtk` is opt-in and requires GTK4/libadwaita development packages. Build it explicitly with `cargo build -p gud-viewer-gtk --features gtk-runtime`.
+
 Current project docs:
 
 - [Docs Index](./docs/README.md)
@@ -20,5 +31,6 @@ Current project docs:
 - [Checkpoint](./docs/CHECKPOINT_2026-03-10.md)
 - [Known Issues](./docs/KNOWN_ISSUES.md)
 - [Performance Instrumentation](./docs/PERFORMANCE_INSTRUMENTATION.md)
+- [Viewer Demo](./docs/VIEWER_DEMO.md)
 - [Scaled-Mode Presentation Options](./docs/features/SCALING_PRESENTATION_OPTIONS.md)
 - [Scaled-Mode CPU Cost and Optimization Options](./docs/features/SCALING_PERFORMANCE_OPTIONS.md)
