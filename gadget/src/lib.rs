@@ -1031,7 +1031,6 @@ impl PixelDataEndpoint {
 
 #[cfg(test)]
 mod tests {
-    use crate::{event, Event};
     use super::{
         active_scanout_state, build_display_descriptor, commit_pending_state,
         configure_state_check_validation, current_status, handle_resume_transition,
@@ -1045,6 +1044,7 @@ mod tests {
         GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_MAGIC, GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK,
         GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
+    use crate::{event, Event};
     use serde::Serialize;
     use usb_gadget::function::custom;
 

@@ -17,11 +17,17 @@ systemctl mask --runtime getty@tty1.service >/dev/null 2>&1 || true
 pkill agetty >/dev/null 2>&1 || true
 echo 0 > /sys/class/vtconsole/vtcon1/bind 2>/dev/null || true
 echo 0 > /sys/class/graphics/fb0/blank 2>/dev/null || true
+systemctl stop gud-userspace.service >/dev/null 2>&1 || true
 pkill -f gud-drm >/dev/null 2>&1 || true
-nohup env RUST_LOG=${RUST_LOG_LEVEL} /home/cristian/gud-drm ${DRM_CARD} > /home/cristian/gud.log 2>&1 < /dev/null &
+systemd-run --unit gud-userspace --collect --same-dir \
+  --property=Restart=on-failure \
+  --property=RestartSec=1s \
+  --property=StartLimitIntervalSec=0 \
+  --setenv=RUST_LOG=${RUST_LOG_LEVEL} \
+  /home/cristian/gud-drm ${DRM_CARD}
 sleep 1
-pgrep -af gud-drm || true
-tail -n 40 /home/cristian/gud.log 2>/dev/null || true
+systemctl status gud-userspace.service --no-pager --full || true
+journalctl -u gud-userspace.service --no-pager -n 40 || true
 '
 EOF
 )

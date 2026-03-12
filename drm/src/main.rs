@@ -1,6 +1,8 @@
 use anyhow::{ensure, Context};
 use drm::buffer::Buffer;
-use drm::control::{ClipRect, Device, Mode, ModeTypeFlags, PageFlipFlags};
+use drm::control::{
+    dumbbuffer::DumbMapping, framebuffer, ClipRect, Device, Mode, ModeTypeFlags, PageFlipFlags,
+};
 use gud_gadget::{DisplayMode, Event, GUD_COMPRESSION_LZ4};
 use std::env::{args, var_os};
 use std::fs::{rename, File};
@@ -12,7 +14,7 @@ use std::time::Duration;
 use tracing::{debug, info, warn};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use usb_gadget::function::custom::{Custom, Interface};
-use usb_gadget::{default_udc, Class, Config, Gadget, Strings};
+use usb_gadget::{default_udc, Class, Config, Gadget, Strings, Udc, UdcState};
 
 #[derive(Debug)]
 pub struct Card(std::fs::File);
@@ -462,6 +464,51 @@ fn render_waiting_screen(
     Ok(())
 }
 
+fn present_waiting_screen(
+    card: &mut Card,
+    mappings: &mut [DumbMapping<'_>; 2],
+    pitch: usize,
+    width: u32,
+    height: u32,
+    fb_handles: &[framebuffer::Handle; 2],
+    front_buffer_index: usize,
+    dump_path: Option<&Path>,
+    dump_raw_path: Option<&Path>,
+) -> anyhow::Result<()> {
+    for mapping in mappings.iter_mut() {
+        render_waiting_screen(mapping.as_mut(), pitch, width, height)?;
+    }
+
+    let full_panel = ClipRect::new(0, 0, width as u16, height as u16);
+    match card.dirty_framebuffer(fb_handles[front_buffer_index], &[full_panel]) {
+        Ok(()) => tracing::debug!("Waiting screen flushed"),
+        Err(err) => tracing::debug!("dirty_framebuffer for waiting screen failed: {}", err),
+    }
+
+    dump_framebuffer_if_enabled(
+        dump_path,
+        mappings[front_buffer_index].as_mut(),
+        pitch,
+        width,
+        height,
+        2,
+    );
+    dump_framebuffer_raw_if_enabled(dump_raw_path, mappings[front_buffer_index].as_mut());
+
+    Ok(())
+}
+
+fn udc_is_detached(udc: &Udc) -> bool {
+    match udc.state() {
+        Ok(UdcState::Configured) => false,
+        Ok(_) => true,
+        Err(err) => {
+            tracing::debug!("Failed to read UDC state: {}", err);
+            false
+        }
+    }
+}
+
 fn diagnostic_pattern_color(x: usize, y: usize, width: usize, height: usize) -> u16 {
     const BORDER: usize = 48;
     const CORNER: usize = 128;
@@ -732,7 +779,7 @@ fn main() -> anyhow::Result<()> {
         transfer_format.bytes_per_pixel()
     );
     info!("Opening DRM device: {}", card_path);
-    let card = Card::open(&card_path);
+    let mut card = Card::open(&card_path);
     let udc = default_udc().expect("no UDC found");
     info!("Using UDC: {:?}", udc);
 
@@ -804,6 +851,9 @@ fn main() -> anyhow::Result<()> {
     .with_config(Config::new("gud").with_function(gud_handle))
     .bind(&udc)
     .expect("UDC binding failed");
+    if let Err(err) = udc.set_soft_connect(true) {
+        warn!("Failed to assert USB soft-connect: {}", err);
+    }
     info!("USB gadget bound to UDC");
 
     let running = Arc::new(AtomicBool::new(true));
@@ -948,6 +998,7 @@ fn main() -> anyhow::Result<()> {
     } else {
         info!("Filled both framebuffers with waiting screen");
     }
+    let mut waiting_screen_visible = matches!(pattern_mode, PatternMode::Off);
 
     let test_clip = ClipRect::new(0, 0, width as u16, height as u16);
     match card.dirty_framebuffer(fb_handles[front_buffer_index], &[test_clip]) {
@@ -968,24 +1019,116 @@ fn main() -> anyhow::Result<()> {
     );
 
     tracing::info!("Entering main event loop");
+    let mut had_host_session = false;
+    let mut restart_requested = false;
 
-    while running.load(Ordering::Relaxed) {
+    'event_loop: while running.load(Ordering::Relaxed) {
         let event = match gud.event_timeout(Duration::from_millis(100)) {
             Ok(event) => event,
             Err(err) => {
                 tracing::error!("Failed to read GUD event: {}", err);
+                if waiting_screen_visible || !matches!(pattern_mode, PatternMode::Off) {
+                    continue;
+                }
+                if udc_is_detached(&udc) {
+                    tracing::info!("Rendering waiting screen after event read failure");
+                    if let Err(wait_err) = present_waiting_screen(
+                        &mut card,
+                        &mut mappings,
+                        pitch as usize,
+                        width.into(),
+                        height.into(),
+                        &fb_handles,
+                        front_buffer_index,
+                        dump_path.as_deref(),
+                        dump_raw_path.as_deref(),
+                    ) {
+                        tracing::error!(
+                            "Failed to render waiting screen after event read failure: {}",
+                            wait_err
+                        );
+                    } else {
+                        waiting_screen_visible = true;
+                        if had_host_session {
+                            tracing::info!(
+                                "Restarting gadget after event read failure on detached UDC"
+                            );
+                            restart_requested = true;
+                            break 'event_loop;
+                        }
+                    }
+                }
                 continue;
             }
         };
         if event.is_none() {
+            if !waiting_screen_visible
+                && matches!(pattern_mode, PatternMode::Off)
+                && udc_is_detached(&udc)
+            {
+                tracing::info!("Rendering waiting screen after detach");
+                if let Err(err) = present_waiting_screen(
+                    &mut card,
+                    &mut mappings,
+                    pitch as usize,
+                    width.into(),
+                    height.into(),
+                    &fb_handles,
+                    front_buffer_index,
+                    dump_path.as_deref(),
+                    dump_raw_path.as_deref(),
+                ) {
+                    tracing::error!("Failed to render waiting screen after detach: {}", err);
+                } else {
+                    waiting_screen_visible = true;
+                    if had_host_session {
+                        tracing::info!("Restarting gadget after detach");
+                        restart_requested = true;
+                        break 'event_loop;
+                    }
+                }
+            }
             continue;
         }
         let event = event.unwrap();
         tracing::debug!("Received event: {:?}", event);
+        if !waiting_screen_visible
+            && matches!(pattern_mode, PatternMode::Off)
+            && udc_is_detached(&udc)
+        {
+            tracing::info!("Rendering waiting screen before processing stale queued event");
+            if let Err(err) = present_waiting_screen(
+                &mut card,
+                &mut mappings,
+                pitch as usize,
+                width.into(),
+                height.into(),
+                &fb_handles,
+                front_buffer_index,
+                dump_path.as_deref(),
+                dump_raw_path.as_deref(),
+            ) {
+                tracing::error!(
+                    "Failed to render waiting screen before processing queued event: {}",
+                    err
+                );
+            } else {
+                waiting_screen_visible = true;
+                if had_host_session {
+                    tracing::info!("Restarting gadget after stale queued event on detached UDC");
+                    restart_requested = true;
+                    break 'event_loop;
+                }
+            }
+            continue;
+        }
 
         match gud_gadget::event(event) {
             Ok(Some(gud_event)) => {
                 tracing::debug!("GUD event: {:?}", gud_event);
+                if !matches!(gud_event, Event::Disconnected) {
+                    had_host_session = true;
+                }
                 match gud_event {
                     Event::GetDescriptor(req) => {
                         if let Err(err) = req.send_descriptor(
@@ -1020,47 +1163,29 @@ fn main() -> anyhow::Result<()> {
                     Event::Disconnected => {
                         tracing::info!("Host disconnected");
                         if matches!(pattern_mode, PatternMode::Off) {
-                            for mapping in mappings.iter_mut() {
-                                if let Err(err) = render_waiting_screen(
-                                    mapping.as_mut(),
-                                    pitch as usize,
-                                    width.into(),
-                                    height.into(),
-                                ) {
-                                    tracing::error!(
-                                        "Failed to render waiting screen after disconnect: {}",
-                                        err
-                                    );
-                                    continue;
-                                }
-                            }
-
-                            let full_panel =
-                                ClipRect::new(0, 0, panel_width as u16, panel_height as u16);
-                            match card
-                                .dirty_framebuffer(fb_handles[front_buffer_index], &[full_panel])
-                            {
-                                Ok(()) => {
-                                    tracing::debug!("Waiting screen flushed after disconnect")
-                                }
-                                Err(err) => tracing::debug!(
-                                    "dirty_framebuffer for waiting screen failed: {}",
-                                    err
-                                ),
-                            }
-
-                            dump_framebuffer_if_enabled(
-                                dump_path.as_deref(),
-                                mappings[front_buffer_index].as_mut(),
+                            if let Err(err) = present_waiting_screen(
+                                &mut card,
+                                &mut mappings,
                                 pitch as usize,
                                 width.into(),
                                 height.into(),
-                                2,
-                            );
-                            dump_framebuffer_raw_if_enabled(
+                                &fb_handles,
+                                front_buffer_index,
+                                dump_path.as_deref(),
                                 dump_raw_path.as_deref(),
-                                mappings[front_buffer_index].as_mut(),
-                            );
+                            ) {
+                                tracing::error!(
+                                    "Failed to render waiting screen after disconnect: {}",
+                                    err
+                                );
+                            } else {
+                                waiting_screen_visible = true;
+                                if had_host_session {
+                                    tracing::info!("Restarting gadget after host disconnect");
+                                    restart_requested = true;
+                                    break 'event_loop;
+                                }
+                            }
                         }
                     }
                     Event::Buffer(info) => {
@@ -1080,14 +1205,48 @@ fn main() -> anyhow::Result<()> {
                             (info.x + info.width) as u16,
                             (info.y + info.height) as u16,
                         );
-                        let (payload, payload_stats) =
-                            match gud_data.recv_payload(&info, transfer_format.bytes_per_pixel()) {
-                                Ok(result) => result,
-                                Err(err) => {
-                                    tracing::error!("Failed to receive buffer payload: {}", err);
-                                    continue;
+                        let (payload, payload_stats) = match gud_data
+                            .recv_payload(&info, transfer_format.bytes_per_pixel())
+                        {
+                            Ok(result) => result,
+                            Err(err) => {
+                                tracing::error!("Failed to receive buffer payload: {}", err);
+                                if !waiting_screen_visible
+                                    && matches!(pattern_mode, PatternMode::Off)
+                                    && udc_is_detached(&udc)
+                                {
+                                    tracing::info!(
+                                        "Rendering waiting screen after bulk receive failure"
+                                    );
+                                    if let Err(wait_err) = present_waiting_screen(
+                                        &mut card,
+                                        &mut mappings,
+                                        pitch as usize,
+                                        width.into(),
+                                        height.into(),
+                                        &fb_handles,
+                                        front_buffer_index,
+                                        dump_path.as_deref(),
+                                        dump_raw_path.as_deref(),
+                                    ) {
+                                        tracing::error!(
+                                                "Failed to render waiting screen after bulk receive failure: {}",
+                                                wait_err
+                                            );
+                                    } else {
+                                        waiting_screen_visible = true;
+                                        if had_host_session {
+                                            tracing::info!(
+                                                "Restarting gadget after bulk receive failure on detached UDC"
+                                            );
+                                            restart_requested = true;
+                                            break 'event_loop;
+                                        }
+                                    }
                                 }
-                            };
+                                continue;
+                            }
+                        };
 
                         let active_state = gud_gadget::active_scanout_state();
                         let source_width =
@@ -1352,17 +1511,55 @@ fn main() -> anyhow::Result<()> {
                             dump_raw_path.as_deref(),
                             mappings[front_buffer_index].as_mut(),
                         );
+                        if matches!(pattern_mode, PatternMode::Off) {
+                            waiting_screen_visible = false;
+                        }
                     }
                 }
             }
             Ok(None) => {}
             Err(err) => {
                 tracing::warn!("Failed to parse GUD event: {}", err);
+                if !waiting_screen_visible
+                    && matches!(pattern_mode, PatternMode::Off)
+                    && udc_is_detached(&udc)
+                {
+                    tracing::info!("Rendering waiting screen after control-path failure");
+                    if let Err(wait_err) = present_waiting_screen(
+                        &mut card,
+                        &mut mappings,
+                        pitch as usize,
+                        width.into(),
+                        height.into(),
+                        &fb_handles,
+                        front_buffer_index,
+                        dump_path.as_deref(),
+                        dump_raw_path.as_deref(),
+                    ) {
+                        tracing::error!(
+                            "Failed to render waiting screen after control-path failure: {}",
+                            wait_err
+                        );
+                    } else {
+                        waiting_screen_visible = true;
+                        if had_host_session {
+                            tracing::info!("Restarting gadget after control-path failure");
+                            restart_requested = true;
+                            break 'event_loop;
+                        }
+                    }
+                }
             }
         }
     }
 
     tracing::info!("Shutting down");
+
+    if restart_requested {
+        return Err(anyhow::anyhow!(
+            "USB detached after active host session; restart to recreate gadget"
+        ));
+    }
 
     Ok(())
 }
