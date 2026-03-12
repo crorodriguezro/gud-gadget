@@ -13,7 +13,7 @@ doas sh -lc '
 systemctl stop usb-moded.service >/dev/null 2>&1 || true
 systemctl mask --runtime usb-moded.service >/dev/null 2>&1 || true
 systemctl stop gud-viewerd.service >/dev/null 2>&1 || true
-pkill -f gud-viewerd >/dev/null 2>&1 || true
+pkill -x gud-viewerd >/dev/null 2>&1 || true
 systemd-run --unit gud-viewerd --collect --same-dir \
   --property=Restart=on-failure \
   --property=RestartSec=1s \

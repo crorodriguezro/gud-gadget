@@ -3,9 +3,11 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
+use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
+use adw::prelude::*;
 use anyhow::{Context, Result};
 use gtk::gdk;
 use gtk::glib;
@@ -76,7 +78,7 @@ fn open_shared_framebuffer(
     })
 }
 
-fn start_socket_thread(sender: glib::Sender<UiEvent>, socket_path: PathBuf) {
+fn start_socket_thread(sender: mpsc::Sender<UiEvent>, socket_path: PathBuf) {
     thread::spawn(move || {
         let mut waiting_sent = false;
         loop {
@@ -198,7 +200,7 @@ fn build_ui(app: &adw::Application) {
     picture.set_hexpand(true);
     picture.set_vexpand(true);
     picture.set_can_shrink(true);
-    picture.set_content_fit(gtk::ContentFit::Contain);
+    picture.set_keep_aspect_ratio(true);
 
     let placeholder = gtk::Box::new(gtk::Orientation::Vertical, 12);
     placeholder.set_valign(gtk::Align::Center);
@@ -228,11 +230,11 @@ fn build_ui(app: &adw::Application) {
     window.set_content(Some(&layout));
 
     let socket_path = viewer_socket_path();
-    let (sender, receiver) = glib::MainContext::channel(glib::Priority::default());
+    let (sender, receiver) = mpsc::channel();
     start_socket_thread(sender, socket_path);
 
-    receiver.attach(
-        None,
+    glib::timeout_add_local(
+        Duration::from_millis(16),
         glib::clone!(
             #[weak]
             picture,
@@ -242,29 +244,31 @@ fn build_ui(app: &adw::Application) {
             window,
             #[upgrade_or]
             glib::ControlFlow::Break,
-            move |event| {
-                match event {
-                    UiEvent::Frame {
-                        width,
-                        height,
-                        rgba,
-                    } => {
-                        let stride = width as usize * 4;
-                        let bytes = glib::Bytes::from_owned(rgba);
-                        let texture = gdk::MemoryTexture::new(
-                            width as i32,
-                            height as i32,
-                            gdk::MemoryFormat::R8g8b8a8,
-                            &bytes,
-                            stride,
-                        );
-                        picture.set_paintable(Some(&texture));
-                        stack.set_visible_child_name("viewer");
-                    }
-                    UiEvent::Waiting => stack.set_visible_child_name("waiting"),
-                    UiEvent::Shutdown => {
-                        window.close();
-                        return glib::ControlFlow::Break;
+            move || {
+                while let Ok(event) = receiver.try_recv() {
+                    match event {
+                        UiEvent::Frame {
+                            width,
+                            height,
+                            rgba,
+                        } => {
+                            let stride = width as usize * 4;
+                            let bytes = glib::Bytes::from_owned(rgba);
+                            let texture = gdk::MemoryTexture::new(
+                                width as i32,
+                                height as i32,
+                                gdk::MemoryFormat::R8g8b8a8,
+                                &bytes,
+                                stride,
+                            );
+                            picture.set_paintable(Some(&texture));
+                            stack.set_visible_child_name("viewer");
+                        }
+                        UiEvent::Waiting => stack.set_visible_child_name("waiting"),
+                        UiEvent::Shutdown => {
+                            window.close();
+                            return glib::ControlFlow::Break;
+                        }
                     }
                 }
                 glib::ControlFlow::Continue
