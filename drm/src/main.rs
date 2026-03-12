@@ -1,6 +1,6 @@
 use anyhow::ensure;
 use drm::buffer::Buffer;
-use drm::control::{ClipRect, Device, Mode, ModeTypeFlags};
+use drm::control::{ClipRect, Device, Mode, ModeTypeFlags, PageFlipFlags};
 use gud_gadget::{DisplayMode, Event, GUD_COMPRESSION_LZ4};
 use std::env::{args, var_os};
 use std::fs::{rename, File};
@@ -705,23 +705,33 @@ fn main() -> anyhow::Result<()> {
     info!("picked mode {:?}", mode);
 
     let (width, height) = mode.size();
-    debug!("Creating dumb buffer {}x{} (RGB565)", width, height);
-    let mut db = card
-        .create_dumb_buffer(
+    debug!("Creating double dumb buffers {}x{} (RGB565)", width, height);
+    let mut dumb_buffers = [
+        card.create_dumb_buffer(
             (width.into(), height.into()),
             drm::buffer::DrmFourcc::Rgb565,
             16,
         )
-        .expect("Could not create dumb buffer");
+        .expect("Could not create primary dumb buffer"),
+        card.create_dumb_buffer(
+            (width.into(), height.into()),
+            drm::buffer::DrmFourcc::Rgb565,
+            16,
+        )
+        .expect("Could not create secondary dumb buffer"),
+    ];
 
-    let fb_handle = card
-        .add_framebuffer(&db, 16, 16)
-        .expect("Could not create FB");
-    debug!("Framebuffer created (RGB565, 16bpp)");
+    let fb_handles = [
+        card.add_framebuffer(&dumb_buffers[0], 16, 16)
+            .expect("Could not create primary FB"),
+        card.add_framebuffer(&dumb_buffers[1], 16, 16)
+            .expect("Could not create secondary FB"),
+    ];
+    debug!("Framebuffers created (RGB565, 16bpp)");
 
     card.set_crtc(
         crtc.handle(),
-        Some(fb_handle),
+        Some(fb_handles[0]),
         (0, 0),
         &[connector.handle()],
         Some(*mode),
@@ -729,54 +739,73 @@ fn main() -> anyhow::Result<()> {
     .expect("Could not set CRTC");
     info!("CRTC set, display should be active");
 
-    let pitch = db.pitch();
+    let pitch = dumb_buffers[0].pitch();
+    ensure!(
+        dumb_buffers[1].pitch() == pitch,
+        "dumb buffer pitches differ: {} vs {}",
+        pitch,
+        dumb_buffers[1].pitch()
+    );
 
-    let mut mapping = card
-        .map_dumb_buffer(&mut db)
-        .expect("map_dumb_buffer failed");
+    let (primary_buffer, secondary_buffer) = dumb_buffers.split_at_mut(1);
+    let mut mappings = [
+        card.map_dumb_buffer(&mut primary_buffer[0])
+            .expect("map_dumb_buffer for primary failed"),
+        card.map_dumb_buffer(&mut secondary_buffer[0])
+            .expect("map_dumb_buffer for secondary failed"),
+    ];
     debug!("Dumb buffer mapped, pitch={}", pitch);
     let panel_width = width as u32;
     let panel_height = height as u32;
     let mut shadow = ShadowFramebuffer::default();
+    let mut front_buffer_index = 0usize;
 
-    let fb_data = mapping.as_mut();
+    for mapping in mappings.iter_mut() {
+        let fb_data = mapping.as_mut();
+        if pattern_mode.uses_startup_pattern() {
+            fill_diagnostic_pattern_rect(
+                fb_data,
+                pitch as usize,
+                width.into(),
+                height.into(),
+                0,
+                0,
+                width.into(),
+                height.into(),
+            )?;
+        } else {
+            fill_rgb565_solid(
+                fb_data,
+                pitch as usize,
+                width.into(),
+                height.into(),
+                RGB565_GREEN,
+            );
+        }
+    }
     if pattern_mode.uses_startup_pattern() {
-        fill_diagnostic_pattern_rect(
-            fb_data,
-            pitch as usize,
-            width.into(),
-            height.into(),
-            0,
-            0,
-            width.into(),
-            height.into(),
-        )?;
-        info!("Filled framebuffer with diagnostic startup pattern");
+        info!("Filled both framebuffers with diagnostic startup pattern");
     } else {
-        fill_rgb565_solid(
-            fb_data,
-            pitch as usize,
-            width.into(),
-            height.into(),
-            RGB565_GREEN,
-        );
-        info!("Filled framebuffer with green test pattern");
+        info!("Filled both framebuffers with green test pattern");
     }
 
     let test_clip = ClipRect::new(0, 0, width as u16, height as u16);
-    match card.dirty_framebuffer(fb_handle, &[test_clip]) {
+    match card.dirty_framebuffer(fb_handles[front_buffer_index], &[test_clip]) {
         Ok(()) => info!("Test pattern flushed to display"),
         Err(err) => warn!("Failed to flush test pattern: {}", err),
     }
     dump_framebuffer_if_enabled(
         dump_path.as_deref(),
-        mapping.as_mut(),
+        mappings[front_buffer_index].as_mut(),
         pitch as usize,
         width.into(),
         height.into(),
         2,
     );
-    dump_framebuffer_raw_if_enabled(dump_raw_path.as_deref(), mapping.as_mut());
+    dump_framebuffer_raw_if_enabled(
+        dump_raw_path.as_deref(),
+        mappings[front_buffer_index].as_mut(),
+    );
 
     tracing::info!("Entering main event loop");
 
@@ -862,6 +891,7 @@ fn main() -> anyhow::Result<()> {
                             .unwrap_or(panel_height);
                         let scaled_mode =
                             source_width != panel_width || source_height != panel_height;
+                        let back_buffer_index = front_buffer_index ^ 1;
                         let mut copy_ms = 0u128;
                         let mut scale_ms = 0u128;
                         let framebuffer_changed = match pattern_mode {
@@ -910,7 +940,7 @@ fn main() -> anyhow::Result<()> {
                                         shadow.pitch,
                                         source_width,
                                         source_height,
-                                        mapping.as_mut(),
+                                        mappings[back_buffer_index].as_mut(),
                                         pitch as usize,
                                         panel_width,
                                         panel_height,
@@ -932,7 +962,7 @@ fn main() -> anyhow::Result<()> {
                                         TransferFormat::Rgb565 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
                                             &info,
                                             payload,
-                                            mapping.as_mut(),
+                                            mappings[front_buffer_index].as_mut(),
                                             pitch as usize,
                                             2,
                                         ) {
@@ -947,7 +977,7 @@ fn main() -> anyhow::Result<()> {
                                             let result = copy_rgb888_to_rgb565_framebuffer(
                                                 &info,
                                                 payload,
-                                                mapping.as_mut(),
+                                                mappings[front_buffer_index].as_mut(),
                                                 pitch as usize,
                                             );
                                             copy_ms = copy_start.elapsed().as_millis();
@@ -972,7 +1002,7 @@ fn main() -> anyhow::Result<()> {
                             }
                             PatternMode::Usb => {
                                 match fill_diagnostic_pattern_rect(
-                                    mapping.as_mut(),
+                                    mappings[front_buffer_index].as_mut(),
                                     pitch as usize,
                                     width.into(),
                                     height.into(),
@@ -996,24 +1026,73 @@ fn main() -> anyhow::Result<()> {
                         let mut flush_ms = 0u128;
                         if framebuffer_changed {
                             let flush_start = std::time::Instant::now();
-                            let flush_clip = if scaled_mode
+                            if scaled_mode
                                 && matches!(pattern_mode, PatternMode::Off | PatternMode::Startup)
                             {
-                                ClipRect::new(0, 0, panel_width as u16, panel_height as u16)
-                            } else {
-                                clip
-                            };
-                            match card.dirty_framebuffer(fb_handle, &[flush_clip]) {
-                                Ok(()) => {
-                                    flush_ms = flush_start.elapsed().as_millis();
-                                    tracing::debug!("Framebuffer flushed")
-                                }
-                                Err(err) => {
-                                    flush_ms = flush_start.elapsed().as_millis();
-                                    tracing::debug!(
-                                        "dirty_framebuffer not supported or failed: {}",
+                                let full_panel =
+                                    ClipRect::new(0, 0, panel_width as u16, panel_height as u16);
+                                match card
+                                    .dirty_framebuffer(fb_handles[back_buffer_index], &[full_panel])
+                                {
+                                    Ok(()) => tracing::debug!("Back buffer flushed before flip"),
+                                    Err(err) => tracing::debug!(
+                                        "dirty_framebuffer on back buffer not supported or failed: {}",
                                         err
+                                    ),
+                                }
+
+                                let present_result = card
+                                    .page_flip(
+                                        crtc.handle(),
+                                        fb_handles[back_buffer_index],
+                                        PageFlipFlags::empty(),
+                                        None,
                                     )
+                                    .or_else(|page_flip_err| {
+                                        tracing::warn!(
+                                            "Page flip failed ({}), falling back to set_crtc",
+                                            page_flip_err
+                                        );
+                                        card.set_crtc(
+                                            crtc.handle(),
+                                            Some(fb_handles[back_buffer_index]),
+                                            (0, 0),
+                                            &[connector.handle()],
+                                            Some(*mode),
+                                        )
+                                    });
+
+                                match present_result {
+                                    Ok(()) => {
+                                        front_buffer_index = back_buffer_index;
+                                        flush_ms = flush_start.elapsed().as_millis();
+                                        tracing::debug!(
+                                            "Scaled framebuffer presented via back-buffer swap"
+                                        );
+                                    }
+                                    Err(err) => {
+                                        tracing::error!(
+                                            "Failed to present scaled framebuffer: {}",
+                                            err
+                                        );
+                                        continue;
+                                    }
+                                }
+                            } else {
+                                match card
+                                    .dirty_framebuffer(fb_handles[front_buffer_index], &[clip])
+                                {
+                                    Ok(()) => {
+                                        flush_ms = flush_start.elapsed().as_millis();
+                                        tracing::debug!("Framebuffer flushed")
+                                    }
+                                    Err(err) => {
+                                        flush_ms = flush_start.elapsed().as_millis();
+                                        tracing::debug!(
+                                            "dirty_framebuffer not supported or failed: {}",
+                                            err
+                                        )
+                                    }
                                 }
                             }
                         } else {
@@ -1057,13 +1136,16 @@ fn main() -> anyhow::Result<()> {
 
                         dump_framebuffer_if_enabled(
                             dump_path.as_deref(),
-                            mapping.as_mut(),
+                            mappings[front_buffer_index].as_mut(),
                             pitch as usize,
                             width.into(),
                             height.into(),
                             2,
                         );
-                        dump_framebuffer_raw_if_enabled(dump_raw_path.as_deref(), mapping.as_mut());
+                        dump_framebuffer_raw_if_enabled(
+                            dump_raw_path.as_deref(),
+                            mappings[front_buffer_index].as_mut(),
+                        );
                     }
                 }
             }

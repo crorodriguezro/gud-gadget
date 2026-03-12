@@ -22,6 +22,8 @@ Turn the Rust userspace GUD implementation into a stable working driver for the 
 - `STATUS_ON_SET` is not safe in the current FunctionFS/userspace design because it deadlocks `SET_BUFFER`.
 - `gud-gadget-debug` has been removed. The main repo is now the only authoritative tree.
 - `usb-moded.service` on the phone can fight the userspace gadget and cause persistent black-screen/disconnect failures unless it is stopped and runtime-masked for the GUD session.
+- Lower-resolution host modes need phone-side scaling. The current working portrait fallback set is `900x1900`, `810x1710`, and `720x1520`.
+- Scaled-mode tearing was caused by repainting the live scanout buffer. The working fix is double-buffered scaled presentation.
 
 ## Completed Milestones
 
@@ -88,38 +90,47 @@ Turn the Rust userspace GUD implementation into a stable working driver for the 
    - The stable phone-side runtime now stops and masks `usb-moded` for the GUD session.
    - The deployment flow also stops `greetd`, masks `getty@tty1`, unbinds `vtcon1`, and clears `fb0` blanking.
 
+12. End-to-end compressed transfer validation
+   - The laptop host now sends real `compression: 1` LZ4 traffic to the phone.
+   - Phone logs show live compressed full-frame transfers with successful decompression and render.
+
+13. Lower-resolution scaling
+   - Lower portrait modes are scaled on the phone to fit the native panel while preserving aspect ratio.
+   - The working fallback portrait modes are:
+     - `900x1900`
+     - `810x1710`
+     - `720x1520`
+   - Smaller portrait modes were rejected by the laptop compositor before they reached the phone.
+
+14. Scaled-mode presentation fix
+   - Scaled mode now renders into a back buffer and presents the completed frame to the CRTC.
+   - The phone no longer rewrites the visible scanout buffer during scaled presentation.
+   - Scaled modes were visually validated on the phone without the earlier black-square tearing artifact.
+
 ## Partially Completed / Still Open
 
 1. `STATUS_ON_SET`
    - Not enabled.
    - Current userspace control/bulk flow deadlocks when it is advertised.
 
-2. Compression support
-   - The descriptor advertises `GUD_COMPRESSION_LZ4` again.
-   - Compression-aware validation and tests are restored.
-   - A fresh live compressed session still needs to be confirmed explicitly on the laptop host.
-
-3. Desktop-PC visual correctness as an acceptance target
+2. Desktop-PC visual correctness as an acceptance target
    - Rejected as a primary milestone target.
    - The corruption there is not specific to the userspace driver.
 
+3. Very small lower-resolution modes on the laptop host
+   - Modes below `720x1520` were rejected by the laptop compositor with framebuffer allocation errors.
+   - This is treated as a host-side limitation for now, not a phone-side scaling bug.
+
 ## Remaining Milestones
 
-1. End-to-end compressed transfer validation
-   - Reconfirm that the laptop host both probes successfully and actually sends compressed `SET_BUFFER` uploads.
-   - Exit criteria:
-     - laptop host still probes
-     - phone log shows `compression: 1`
-     - rendered output remains correct
-
-2. Stricter `SET_BUFFER` validation
+1. Stricter `SET_BUFFER` validation
    - Add more overflow and malformed-rectangle rejection cases.
    - Add direct tests for invalid buffer metadata.
    - Exit criteria:
      - valid buffers still render normally
      - invalid buffers produce `INVALID_PARAMETER`
 
-3. Isolated direct USB protocol validation
+2. Isolated direct USB protocol validation
    - Add a repeatable host-side direct-test workflow that does not collide with the active desktop compositor path.
    - Cover:
      - invalid `SET_STATE_CHECK`
@@ -128,6 +139,16 @@ Turn the Rust userspace GUD implementation into a stable working driver for the 
    - Exit criteria:
      - direct tests can be run intentionally without breaking the normal display session accidentally
 
+3. Scaling performance optimization
+   - Reduce `scale_ms` in scaled modes.
+   - Preferred first steps:
+     - precomputed `x/y` scaling maps
+     - avoid full-frame black clearing on every scaled update
+     - `u16` pixel writes in the hot path
+   - Exit criteria:
+     - scaled-mode visual behavior is unchanged
+     - `scale_ms` is materially lower in `frame_stats`
+
 4. Tighter protocol-state behavior
    - Clarify checked vs committed vs enabled state transitions.
    - Reject bad transitions consistently.
@@ -135,8 +156,8 @@ Turn the Rust userspace GUD implementation into a stable working driver for the 
      - state errors are deterministic and visible via `GET_STATUS`
 
 5. Deployment and documentation cleanup
-   - Update docs to match the current Wi-Fi deploy + laptop validation workflow.
-   - Remove stale notes from old debug phases.
+   - Keep the `docs/` tree aligned with the current Wi-Fi deploy + laptop validation workflow.
+   - Remove or compress stale historical notes as they become redundant.
    - Exit criteria:
      - a fresh operator can rebuild, deploy, and validate from the docs
 
@@ -158,6 +179,8 @@ Turn the Rust userspace GUD implementation into a stable working driver for the 
 - Laptop DRM shows `card*-USB-*`
 - Laptop connector is `connected` and `enabled`
 - Phone shows the laptop extended display correctly
+- Compressed traffic is visible in phone logs with `compression=1`
+- Scaled portrait modes render correctly without the earlier tearing/black-square artifact
 - `cargo test -p gud-gadget` passes
 - `cross build --release --target aarch64-unknown-linux-musl -p gud-drm` passes
 
@@ -173,3 +196,5 @@ Turn the Rust userspace GUD implementation into a stable working driver for the 
 - `04a682a` `Reset gadget state on suspend and resume`
 - `82ab496` `Gate buffers on controller and display enable`
 - `209b887` `Enable LZ4-compressed frame transfers`
+- `d211400` `Restore compression support and document runtime issues`
+- `6a353e1` `Add scaled portrait modes and frame timing`

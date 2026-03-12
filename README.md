@@ -14,8 +14,11 @@ The [`gud-drm`](./drm) crate is a simple implementation that configures a GUD ga
 
 Current project docs:
 
-- [Deploy Guide](./DEPLOY.md)
-- [Working Driver Execution Plan](./WORKING_DRIVER_EXECUTION_PLAN.md)
-- [Checkpoint](./CHECKPOINT_2026-03-10.md)
-- [Known Issues](./KNOWN_ISSUES.md)
-- [Performance Instrumentation](./PERFORMANCE_INSTRUMENTATION.md)
+- [Docs Index](./docs/README.md)
+- [Deploy Guide](./docs/DEPLOY.md)
+- [Working Driver Execution Plan](./docs/WORKING_DRIVER_EXECUTION_PLAN.md)
+- [Checkpoint](./docs/CHECKPOINT_2026-03-10.md)
+- [Known Issues](./docs/KNOWN_ISSUES.md)
+- [Performance Instrumentation](./docs/PERFORMANCE_INSTRUMENTATION.md)
+- [Scaled-Mode Presentation Options](./docs/features/SCALING_PRESENTATION_OPTIONS.md)
+- [Scaled-Mode CPU Cost and Optimization Options](./docs/features/SCALING_PERFORMANCE_OPTIONS.md)

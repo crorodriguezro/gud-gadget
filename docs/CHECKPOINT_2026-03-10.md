@@ -46,6 +46,12 @@ The Rust userspace implementation is past the POC stage. It can:
 - accept state setup and buffer uploads
 - render the host extended display on the phone
 
+It now also supports:
+
+- live compressed transfers from the laptop host
+- portrait lower-resolution modes with phone-side scaling
+- scaled-mode presentation without the earlier tearing/black-square artifact
+
 ### 2. The main transport-stability problem was `usb-moded`
 
 The major cause of the later black-screen/disconnect loop was not the framebuffer path. It was the phone’s USB mode manager fighting the userspace gadget.
@@ -130,6 +136,13 @@ Additional local work in this checkpoint:
   - `ffs_no_disconnect = true`
   - no `FULL_UPDATE` flag
   - no forced connector `CHANGED` reset on every force-detect
+- added lower-resolution portrait fallback modes:
+  - `900x1900`
+  - `810x1710`
+  - `720x1520`
+- added phone-side aspect-ratio-preserving scaling for lower-resolution modes
+- replaced scaled-mode live-buffer repaint with double-buffered presentation
+- moved project docs under `docs/` and feature notes under `docs/features/`
 
 ## What Is Implemented
 
@@ -163,33 +176,46 @@ Additional local work in this checkpoint:
 - compression-aware `SET_BUFFER` validation is restored
 - compression-related unit tests are restored
 
-Important nuance:
+Compression is now confirmed live on the laptop host. Recent phone logs show:
 
-- in the latest sampled live session, the host was still sending `compression: 0`
-- so compression support is restored in code and build artifacts, but an end-to-end compressed session still needs explicit live confirmation
+- `compression=1`
+- full-frame compressed transfers
+- successful decompression and render
+
+### Lower-resolution scaling and presentation
+
+- lower portrait modes are scaled to fit the native panel while preserving aspect ratio
+- the currently working lower-resolution portrait modes are:
+  - `900x1900`
+  - `810x1710`
+  - `720x1520`
+- smaller modes were rejected by the laptop compositor before reaching the phone
+- scaled-mode tearing was fixed by rendering into a native back buffer and presenting the completed frame
 
 ## Current Verified State
 
-After restoring the compression code and redeploying:
+After restoring compression, adding scaling, and fixing scaled-mode presentation:
 
 - `cargo test -p gud-gadget` passed with `28` tests
 - `cargo build -p gud-drm` passed
 - `cross build --release --target aarch64-unknown-linux-musl -p gud-drm` passed
 - phone-side `gud-userspace.service` is active
 - phone UDC state is `configured`
-- phone logs show normal end-to-end uncompressed traffic:
-  - state check
-  - commit
-  - controller/display enable
-  - `SET_BUFFER`
-  - `read 4924800 bytes`
-  - `Framebuffer flushed`
+- laptop `lsusb -t` shows `Driver=gud`
+- laptop `card0-USB-1` is `connected`
+- phone logs show live compressed traffic:
+  - `compression=1`
+  - compressed `SET_BUFFER` payloads
+  - successful decompression and render
+- lower-resolution portrait modes render correctly on the phone
+- the earlier scaled-mode tearing / black-square artifact is fixed
+- phone memory usage with the extra native back buffer is around `18 MiB` RSS
 
 ## Remaining Work
 
-1. Reconfirm a stable laptop display session after the current redeploy.
-2. Explicitly prove a live compressed transfer on the laptop host.
-3. Add a repeatable direct-USB validation workflow that does not collide with the active compositor.
+1. Add stricter invalid `SET_BUFFER` validation and direct tests for malformed buffer metadata.
+2. Build an isolated direct-USB validation workflow that does not collide with the active laptop compositor path.
+3. Reduce `scale_ms` in lower-resolution modes by optimizing the phone-side scaler.
 4. Continue tightening protocol behavior only in small, testable steps.
 
 ## Recommended Resume Strategy
@@ -201,3 +227,4 @@ When resuming from this checkpoint:
 3. Start from the current main repo, not an old debug worktree.
 4. Keep `usb-moded` masked for every GUD session.
 5. Do not re-enable `STATUS_ON_SET`.
+6. Treat the laptop as the visual acceptance host, including for lower-resolution scaling behavior.

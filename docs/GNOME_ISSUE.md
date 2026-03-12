@@ -186,6 +186,6 @@ To verify the gadget driver is working correctly:
 
 ## Related Files
 
-- `IOMMU_INVESTIGATION.md` - DMA-BUF/IOMMU investigation for OnePlus 6
-- `DEPLOY.md` - Deployment instructions for postmarketOS
-- `COMPARISON.md` - Kernel module vs userspace implementation comparison
+- [IOMMU Investigation](./IOMMU_INVESTIGATION.md) - DMA-BUF/IOMMU investigation for OnePlus 6
+- [Deploy Guide](./DEPLOY.md) - Deployment instructions for postmarketOS
+- [Comparison](./COMPARISON.md) - Kernel module vs userspace implementation comparison
