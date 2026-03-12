@@ -1,4 +1,4 @@
-use anyhow::ensure;
+use anyhow::{ensure, Context};
 use drm::buffer::Buffer;
 use drm::control::{ClipRect, Device, Mode, ModeTypeFlags, PageFlipFlags};
 use gud_gadget::{DisplayMode, Event, GUD_COMPRESSION_LZ4};
@@ -212,6 +212,21 @@ const RGB565_WHITE: u16 = 0xffff;
 const RGB565_DARK_GRAY: u16 = 0x4208;
 const RGB565_LIGHT_GRAY: u16 = 0xc618;
 const RGB565_ORANGE: u16 = 0xfd20;
+const RGB565_BLACK: u16 = 0x0000;
+
+const WAITING_SCREEN_LINES: [&str; 5] = [
+    "   _~_        .------------.",
+    "  (o o)       |  WAITING   |",
+    " /  V  \\      '------------'",
+    "/(  _  )\\         |    |",
+    "  ^^ ^^           |____|",
+];
+const WAITING_HIGHLIGHT_LINE: usize = 1;
+const WAITING_HIGHLIGHT_TEXT: &str = "WAITING";
+const WAITING_GLYPH_WIDTH: usize = 5;
+const WAITING_GLYPH_HEIGHT: usize = 7;
+const WAITING_GLYPH_SPACING: usize = 1;
+const WAITING_LINE_SPACING: usize = 1;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum PatternMode {
@@ -294,6 +309,157 @@ fn fill_rgb565_solid(fb: &mut [u8], pitch: usize, width: usize, height: usize, c
             write_rgb565_pixel(fb, pitch, x, y, color);
         }
     }
+}
+
+fn fill_rgb565_rect(
+    fb: &mut [u8],
+    pitch: usize,
+    x: usize,
+    y: usize,
+    width: usize,
+    height: usize,
+    color: u16,
+) {
+    for yy in y..(y + height) {
+        for xx in x..(x + width) {
+            write_rgb565_pixel(fb, pitch, xx, yy, color);
+        }
+    }
+}
+
+fn waiting_scene_glyph(ch: char) -> Option<[u8; WAITING_GLYPH_HEIGHT]> {
+    Some(match ch {
+        ' ' => [0, 0, 0, 0, 0, 0, 0],
+        '_' => [0, 0, 0, 0, 0, 0, 0b11111],
+        '~' => [0, 0b01010, 0b10101, 0, 0, 0, 0],
+        '(' => [
+            0b00110, 0b01000, 0b10000, 0b10000, 0b10000, 0b01000, 0b00110,
+        ],
+        ')' => [
+            0b01100, 0b00010, 0b00001, 0b00001, 0b00001, 0b00010, 0b01100,
+        ],
+        'o' => [0, 0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0],
+        '/' => [0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0, 0],
+        '\\' => [0b10000, 0b01000, 0b00100, 0b00010, 0b00001, 0, 0],
+        'V' => [
+            0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b01010, 0b00100,
+        ],
+        '^' => [0b00100, 0b01010, 0b10001, 0, 0, 0, 0],
+        '|' => [
+            0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100,
+        ],
+        '.' => [0, 0, 0, 0, 0, 0b00100, 0b00100],
+        '-' => [0, 0, 0, 0b11111, 0, 0, 0],
+        '\'' => [0b00100, 0b00100, 0b00010, 0, 0, 0, 0],
+        'A' => [
+            0b01110, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001,
+        ],
+        'G' => [
+            0b01110, 0b10001, 0b10000, 0b10111, 0b10001, 0b10001, 0b01110,
+        ],
+        'I' => [
+            0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11111,
+        ],
+        'N' => [
+            0b10001, 0b11001, 0b10101, 0b10011, 0b10001, 0b10001, 0b10001,
+        ],
+        'T' => [
+            0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100,
+        ],
+        'W' => [
+            0b10001, 0b10001, 0b10001, 0b10101, 0b10101, 0b10101, 0b01010,
+        ],
+        _ => return None,
+    })
+}
+
+fn render_bitmap_glyph(
+    fb: &mut [u8],
+    pitch: usize,
+    x: usize,
+    y: usize,
+    scale: usize,
+    rows: [u8; WAITING_GLYPH_HEIGHT],
+    color: u16,
+) {
+    for (row_idx, bits) in rows.iter().enumerate() {
+        for col_idx in 0..WAITING_GLYPH_WIDTH {
+            if bits & (1 << (WAITING_GLYPH_WIDTH - 1 - col_idx)) == 0 {
+                continue;
+            }
+            fill_rgb565_rect(
+                fb,
+                pitch,
+                x + col_idx * scale,
+                y + row_idx * scale,
+                scale,
+                scale,
+                color,
+            );
+        }
+    }
+}
+
+fn render_waiting_screen(
+    fb: &mut [u8],
+    pitch: usize,
+    width: u32,
+    height: u32,
+) -> anyhow::Result<()> {
+    let width = width as usize;
+    let height = height as usize;
+    fill_rgb565_solid(fb, pitch, width, height, RGB565_BLACK);
+
+    let line_count = WAITING_SCREEN_LINES.len();
+    let max_cols = WAITING_SCREEN_LINES
+        .iter()
+        .map(|line| line.chars().count())
+        .max()
+        .unwrap_or(0);
+    ensure!(
+        line_count > 0 && max_cols > 0,
+        "waiting screen must not be empty"
+    );
+
+    let scene_width_units =
+        max_cols * WAITING_GLYPH_WIDTH + max_cols.saturating_sub(1) * WAITING_GLYPH_SPACING;
+    let scene_height_units =
+        line_count * WAITING_GLYPH_HEIGHT + line_count.saturating_sub(1) * WAITING_LINE_SPACING;
+    let scale = (width / scene_width_units)
+        .min(height / scene_height_units)
+        .max(1);
+    let scene_width = scene_width_units * scale;
+    let scene_height = scene_height_units * scale;
+    let origin_x = (width - scene_width) / 2;
+    let origin_y = (height - scene_height) / 2;
+    let waiting_start = WAITING_SCREEN_LINES[WAITING_HIGHLIGHT_LINE]
+        .find(WAITING_HIGHLIGHT_TEXT)
+        .context("waiting highlight text missing from scene")?;
+    let waiting_end = waiting_start + WAITING_HIGHLIGHT_TEXT.len();
+
+    for (line_idx, line) in WAITING_SCREEN_LINES.iter().enumerate() {
+        let baseline_y =
+            origin_y + line_idx * (WAITING_GLYPH_HEIGHT + WAITING_LINE_SPACING) * scale;
+        for (col_idx, ch) in line.chars().enumerate() {
+            if ch == ' ' {
+                continue;
+            }
+            let glyph = waiting_scene_glyph(ch)
+                .with_context(|| format!("unsupported waiting-scene glyph: {ch:?}"))?;
+            let color = if line_idx == WAITING_HIGHLIGHT_LINE
+                && (waiting_start..waiting_end).contains(&col_idx)
+            {
+                RGB565_GREEN
+            } else {
+                RGB565_WHITE
+            };
+            let glyph_x =
+                origin_x + col_idx * (WAITING_GLYPH_WIDTH + WAITING_GLYPH_SPACING) * scale;
+            render_bitmap_glyph(fb, pitch, glyph_x, baseline_y, scale, glyph, color);
+        }
+    }
+
+    Ok(())
 }
 
 fn diagnostic_pattern_color(x: usize, y: usize, width: usize, height: usize) -> u16 {
@@ -774,19 +940,13 @@ fn main() -> anyhow::Result<()> {
                 height.into(),
             )?;
         } else {
-            fill_rgb565_solid(
-                fb_data,
-                pitch as usize,
-                width.into(),
-                height.into(),
-                RGB565_GREEN,
-            );
+            render_waiting_screen(fb_data, pitch as usize, width.into(), height.into())?;
         }
     }
     if pattern_mode.uses_startup_pattern() {
         info!("Filled both framebuffers with diagnostic startup pattern");
     } else {
-        info!("Filled both framebuffers with green test pattern");
+        info!("Filled both framebuffers with waiting screen");
     }
 
     let test_clip = ClipRect::new(0, 0, width as u16, height as u16);
@@ -855,6 +1015,52 @@ fn main() -> anyhow::Result<()> {
                             tracing::error!("Failed to send modes: {}", err);
                         } else {
                             tracing::debug!("Sent display modes");
+                        }
+                    }
+                    Event::Disconnected => {
+                        tracing::info!("Host disconnected");
+                        if matches!(pattern_mode, PatternMode::Off) {
+                            for mapping in mappings.iter_mut() {
+                                if let Err(err) = render_waiting_screen(
+                                    mapping.as_mut(),
+                                    pitch as usize,
+                                    width.into(),
+                                    height.into(),
+                                ) {
+                                    tracing::error!(
+                                        "Failed to render waiting screen after disconnect: {}",
+                                        err
+                                    );
+                                    continue;
+                                }
+                            }
+
+                            let full_panel =
+                                ClipRect::new(0, 0, panel_width as u16, panel_height as u16);
+                            match card
+                                .dirty_framebuffer(fb_handles[front_buffer_index], &[full_panel])
+                            {
+                                Ok(()) => {
+                                    tracing::debug!("Waiting screen flushed after disconnect")
+                                }
+                                Err(err) => tracing::debug!(
+                                    "dirty_framebuffer for waiting screen failed: {}",
+                                    err
+                                ),
+                            }
+
+                            dump_framebuffer_if_enabled(
+                                dump_path.as_deref(),
+                                mappings[front_buffer_index].as_mut(),
+                                pitch as usize,
+                                width.into(),
+                                height.into(),
+                                2,
+                            );
+                            dump_framebuffer_raw_if_enabled(
+                                dump_raw_path.as_deref(),
+                                mappings[front_buffer_index].as_mut(),
+                            );
                         }
                     }
                     Event::Buffer(info) => {
@@ -1163,8 +1369,11 @@ fn main() -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{compute_scaled_layout, derive_mode_from_native, ScaledLayout};
-    use gud_gadget::{DisplayMode, GUD_DISPLAY_MODE_FLAG_PREFERRED};
+    use super::{
+        compute_scaled_layout, derive_mode_from_native, render_waiting_screen, waiting_scene_glyph,
+        DisplayMode, ScaledLayout, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
+    };
+    use gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED;
 
     fn native_mode() -> DisplayMode {
         DisplayMode {
@@ -1233,5 +1442,42 @@ mod tests {
         assert!(derived.vsync_end > derived.vsync_start);
         assert!(derived.vtotal > derived.vsync_end);
         assert_eq!(derived.flags, 0);
+    }
+
+    #[test]
+    fn waiting_scene_supports_all_glyphs() {
+        for line in super::WAITING_SCREEN_LINES {
+            for ch in line.chars() {
+                assert!(
+                    waiting_scene_glyph(ch).is_some(),
+                    "missing glyph for {:?}",
+                    ch
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn waiting_screen_contains_black_white_and_green_pixels() {
+        let width = 320usize;
+        let height = 240usize;
+        let pitch = width * 2;
+        let mut fb = vec![0u8; pitch * height];
+
+        render_waiting_screen(&mut fb, pitch, width as u32, height as u32).unwrap();
+
+        let mut has_black = false;
+        let mut has_white = false;
+        let mut has_green = false;
+        for chunk in fb.chunks_exact(2) {
+            let pixel = u16::from_le_bytes([chunk[0], chunk[1]]);
+            has_black |= pixel == RGB565_BLACK;
+            has_white |= pixel == RGB565_WHITE;
+            has_green |= pixel == RGB565_GREEN;
+        }
+
+        assert!(has_black);
+        assert!(has_white);
+        assert!(has_green);
     }
 }

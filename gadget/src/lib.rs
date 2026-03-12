@@ -254,6 +254,7 @@ pub enum Event<'a> {
     GetDisplayModes(GetDisplayModes<'a>),
     GetPixelFormats(GetPixelFormats<'a>),
     Buffer(SetBuffer),
+    Disconnected,
 }
 
 #[derive(Debug)]
@@ -845,6 +846,7 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
         custom::Event::Disable => {
             handle_suspend_transition();
             debug!("Disable event received");
+            return Ok(Some(Event::Disconnected));
         }
         other_event => {
             warn!("unhandled event {:?}", other_event);
@@ -1029,6 +1031,7 @@ impl PixelDataEndpoint {
 
 #[cfg(test)]
 mod tests {
+    use crate::{event, Event};
     use super::{
         active_scanout_state, build_display_descriptor, commit_pending_state,
         configure_state_check_validation, current_status, handle_resume_transition,
@@ -1043,6 +1046,7 @@ mod tests {
         GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
     use serde::Serialize;
+    use usb_gadget::function::custom;
 
     #[derive(Serialize)]
     struct StateCheckRequest {
@@ -1596,5 +1600,11 @@ mod tests {
             status,
             GUD_CONNECTOR_STATUS_CONNECTED | GUD_CONNECTOR_STATUS_CHANGED
         );
+    }
+
+    #[test]
+    fn disable_event_maps_to_disconnected() {
+        let event = event(custom::Event::Disable).unwrap();
+        assert!(matches!(event, Some(Event::Disconnected)));
     }
 }
