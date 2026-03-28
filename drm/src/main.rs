@@ -795,12 +795,21 @@ fn main() -> anyhow::Result<()> {
         .find(|c| c.state() == drm::control::connector::State::Connected)
         .expect("no connected connectors found");
 
-    let crtc = resources
-        .crtcs()
-        .iter()
-        .flat_map(|crtc| card.get_crtc(*crtc))
+    let encoder_handle = connector
+        .current_encoder()
+        .or_else(|| connector.encoders().first().copied())
+        .expect("no encoder found for connected connector");
+    let encoder = card
+        .get_encoder(encoder_handle)
+        .expect("get drm encoder failed");
+    let crtc_handle = resources
+        .filter_crtcs(encoder.possible_crtcs())
+        .into_iter()
         .next()
-        .expect("no crtc found");
+        .expect("no compatible crtc found for connected connector");
+    let crtc = card
+        .get_crtc(crtc_handle)
+        .expect("get compatible drm crtc failed");
 
     let mut min_width = u32::MAX;
     let mut min_height = u32::MAX;
