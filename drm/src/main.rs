@@ -19,6 +19,10 @@ use usb_gadget::{default_udc, Class, Config, Gadget, RegGadget, Strings, Udc, Ud
 const CRTC_SET_RETRIES: usize = 20;
 const CRTC_SET_RETRY_DELAY: Duration = Duration::from_millis(250);
 
+fn should_report_detach_error(restart_requested: bool, shutdown_requested: bool) -> bool {
+    restart_requested && !shutdown_requested
+}
+
 trait GadgetUnbind: Send + Sync {
     fn unbind(&self) -> io::Result<()>;
 }
@@ -1767,7 +1771,11 @@ fn main() -> anyhow::Result<()> {
         return Err(err);
     }
 
-    if restart_requested {
+    let shutdown_requested = !running.load(Ordering::Acquire);
+    if restart_requested && shutdown_requested {
+        info!("Intentional shutdown supersedes queued detach restart request");
+    }
+    if should_report_detach_error(restart_requested, shutdown_requested) {
         return Err(anyhow::anyhow!(
             "USB detached after active host session; restart to recreate gadget"
         ));
@@ -1779,14 +1787,25 @@ fn main() -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::{
-        compute_scaled_layout, derive_mode_from_native, render_waiting_screen, waiting_scene_glyph,
-        DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ScaledLayout, RGB565_BLACK,
-        RGB565_GREEN, RGB565_WHITE,
+        compute_scaled_layout, derive_mode_from_native, render_waiting_screen,
+        should_report_detach_error, waiting_scene_glyph, DisplayMode, GadgetShutdown, GadgetUnbind,
+        GadgetUnbindOutcome, ScaledLayout, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
     };
     use gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED;
     use std::io;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+
+    #[test]
+    fn intentional_shutdown_suppresses_queued_detach_error() {
+        assert!(!should_report_detach_error(true, true));
+    }
+
+    #[test]
+    fn unexpected_detach_still_reports_restart_error() {
+        assert!(should_report_detach_error(true, false));
+        assert!(!should_report_detach_error(false, false));
+    }
 
     #[derive(Default)]
     struct MockGadget {

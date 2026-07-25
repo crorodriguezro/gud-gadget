@@ -83,19 +83,25 @@ configured and no competing phone USB identity is required to reproduce it.
   vendored removal path unbinds before closing FunctionFS, and systemd
   `SIGTERM` is handled through the same idempotent path. Focused tests cover
   shutdown timing and retry after an unbind failure.
-- The repaired binary is active on the Pi. Its controlled no-payload restart
-  completed the ordered lifecycle and produced no DWC2 timeout or Oops. The
-  first controlled post-payload restart also passed: an isolated 1280x720
-  RGB565 submission completed all 29 tiles, the host returned
-  `PAYLOAD_RC=0`, shutdown released FunctionFS before DRM, and the Pi logged no
-  DWC2 timeout or Oops. The OnePlus then re-enumerated `1d50:614d` and
-  recreated its GUD DRM node without `-110`.
-- The stopping process still briefly reports status 1 because the
-  shutdown-induced detach is classified as a restart request, although the
-  explicit systemd restart succeeds and the replacement remains active. A
-  separate boot-time DRM race also exhausted `set_crtc` retries once before a
-  manual start succeeded. Neither is the previous kernel-cleanup crash, but
-  both should remain visible as follow-up lifecycle/reporting defects.
+- The base lifecycle-repair binary completed a controlled no-payload restart
+  and one controlled post-payload restart without DWC2 timeout or Oops. The
+  isolated 1280x720 RGB565 submission completed all 29 tiles, the host returned
+  `PAYLOAD_RC=0`, shutdown released FunctionFS before DRM, and the OnePlus
+  re-enumerated `1d50:614d` without `-110`.
+- A small follow-up now makes an intentional shutdown take precedence over a
+  queued detach restart request, while preserving the error result for an
+  unexpected detach. Eleven focused `gud-drm` tests pass, including both exit
+  decisions. Its first hardware attempt could not exercise SIGTERM: the first
+  payload after activation reproduced host `-110` before shutdown and Pi SSH
+  became unreachable, so containment correctly prevented a service stop.
+  The timeout occurred before the changed return path; the exit-status fix is
+  locally verified but still needs one safe hardware payload/restart. Artifact
+  `7053d5b1cf3f7cc94da776a97f64d3471382df9b8f40b00b511eb9ef3bcf1e12`
+  is installed on the currently unreachable Pi, with the prior base retained
+  at `/home/cristian/gud-drm.pre-xdisp-p0.1-exit0-5aae726`.
+- A separate boot-time DRM race exhausted `set_crtc` retries once before a
+  manual start succeeded. This is not the previous kernel-cleanup crash, but
+  should remain visible as a follow-up lifecycle issue.
 
 ### Priority and acceptance
 
