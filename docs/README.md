@@ -10,6 +10,11 @@ Core docs:
 - [Viewer Demo](./VIEWER_DEMO.md)
 - [Comparison](./COMPARISON.md)
 
+Project process:
+
+- [Cross-Repository Specification and Delivery Workflow](../../gud/docs/superpowers/CROSS-REPOSITORY-WORKFLOW.md)
+- [XDISP-P0.1 FunctionFS Rebind Test](./XDISP-P0.1-FUNCTIONFS-REBIND-TEST.md)
+
 Investigations:
 
 - [GNOME/Mutter Wayland Multi-GPU Issue](./GNOME_ISSUE.md)
