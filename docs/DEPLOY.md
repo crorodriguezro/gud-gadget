@@ -15,6 +15,12 @@ Project helper scripts:
 | OnePlus 6 | `phablet@192.168.1.120` | `ubuntu-phablet` | `/dev/dri/card0` | `a600000.usb` |
 | RPi Zero 2 W | `cristian@192.168.1.110` | `raspberrypi` | `/dev/dri/card0` | `3f980000.usb` |
 
+For the Pi test target above, use SSH username `cristian` and password
+`cristian`.
+
+For the OnePlus test target above, use SSH username `phablet` and password
+`1026`.
+
 ## Prerequisites
 
 ### On the build machine (Fedora)
