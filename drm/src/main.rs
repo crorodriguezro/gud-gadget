@@ -16,6 +16,9 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use usb_gadget::function::custom::{Custom, Interface};
 use usb_gadget::{default_udc, Class, Config, Gadget, Strings, Udc, UdcState};
 
+const CRTC_SET_RETRIES: usize = 20;
+const CRTC_SET_RETRY_DELAY: Duration = Duration::from_millis(250);
+
 #[derive(Debug)]
 pub struct Card(std::fs::File);
 
@@ -852,19 +855,6 @@ fn main() -> anyhow::Result<()> {
     let (mut gud, gud_handle) = builder.build();
     info!("Built USB gadget");
 
-    let _reg = Gadget::new(
-        Class::interface_specific(),
-        gud_gadget::OPENMOKO_GUD_ID,
-        Strings::new("The Internet", "Generic USB Display", ""),
-    )
-    .with_config(Config::new("gud").with_function(gud_handle))
-    .bind(&udc)
-    .expect("UDC binding failed");
-    if let Err(err) = udc.set_soft_connect(true) {
-        warn!("Failed to assert USB soft-connect: {}", err);
-    }
-    info!("USB gadget bound to UDC");
-
     let running = Arc::new(AtomicBool::new(true));
 
     let r = running.clone();
@@ -954,14 +944,27 @@ fn main() -> anyhow::Result<()> {
     ];
     debug!("Framebuffers created (RGB565, 16bpp)");
 
-    card.set_crtc(
-        crtc.handle(),
-        Some(fb_handles[0]),
-        (0, 0),
-        &[connector.handle()],
-        Some(*mode),
-    )
-    .expect("Could not set CRTC");
+    for attempt in 1..=CRTC_SET_RETRIES {
+        match card.set_crtc(
+            crtc.handle(),
+            Some(fb_handles[0]),
+            (0, 0),
+            &[connector.handle()],
+            Some(*mode),
+        ) {
+            Ok(()) => break,
+            Err(err) if attempt < CRTC_SET_RETRIES => {
+                warn!(
+                    attempt,
+                    retries = CRTC_SET_RETRIES,
+                    error = ?err,
+                    "set_crtc not ready; retrying before exposing the USB gadget"
+                );
+                std::thread::sleep(CRTC_SET_RETRY_DELAY);
+            }
+            Err(err) => return Err(err).context("Could not set CRTC after retries"),
+        }
+    }
     info!("CRTC set, display should be active");
 
     let pitch = dumb_buffers[0].pitch();
@@ -1026,6 +1029,22 @@ fn main() -> anyhow::Result<()> {
         dump_raw_path.as_deref(),
         mappings[front_buffer_index].as_mut(),
     );
+
+    // Keep the USB gadget disconnected until DRM has a working CRTC and the
+    // initial framebuffer is ready. Otherwise a host can begin SET_BUFFER
+    // while a transient DRM ownership failure tears the gadget down.
+    let _reg = Gadget::new(
+        Class::interface_specific(),
+        gud_gadget::OPENMOKO_GUD_ID,
+        Strings::new("The Internet", "Generic USB Display", ""),
+    )
+    .with_config(Config::new("gud").with_function(gud_handle))
+    .bind(&udc)
+    .expect("UDC binding failed");
+    if let Err(err) = udc.set_soft_connect(true) {
+        warn!("Failed to assert USB soft-connect: {}", err);
+    }
+    info!("USB gadget bound to UDC");
 
     tracing::info!("Entering main event loop");
     let mut had_host_session = false;
@@ -1219,7 +1238,24 @@ fn main() -> anyhow::Result<()> {
                         {
                             Ok(result) => result,
                             Err(err) => {
-                                tracing::error!("Failed to receive buffer payload: {}", err);
+                                if let Some(io_err) = err
+                                    .chain()
+                                    .find_map(|cause| cause.downcast_ref::<std::io::Error>())
+                                {
+                                    tracing::error!(
+                                        error = ?err,
+                                        error_chain = %format_args!("{err:#}"),
+                                        io_error_kind = ?io_err.kind(),
+                                        raw_os_error = ?io_err.raw_os_error(),
+                                        "Failed to receive buffer payload"
+                                    );
+                                } else {
+                                    tracing::error!(
+                                        error = ?err,
+                                        error_chain = %format_args!("{err:#}"),
+                                        "Failed to receive buffer payload"
+                                    );
+                                }
                                 if !waiting_screen_visible
                                     && matches!(pattern_mode, PatternMode::Off)
                                     && udc_is_detached(&udc)

@@ -2,10 +2,10 @@ use anyhow::{ensure, Context};
 use serde::{Deserialize, Serialize};
 use std::env::var_os;
 use std::fs::{rename, File};
-use std::io::{BufWriter, Write};
+use std::io::{BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
 use tracing::{debug, warn};
 
@@ -52,6 +52,15 @@ const GUD_STATUS_INVALID_PARAMETER: u8 = 0x04;
 const GUD_STATE_CHECK_HEADER_LEN: usize = 26;
 const GUD_PROPERTY_SIZE: usize = 10;
 
+// The GUD custom function has one interface and one bulk OUT endpoint, which
+// usb-gadget exposes as ep1 under its deterministic FunctionFS mount point.
+const FUNCTIONFS_BULK_OUT_EP_PATH: &str = "/dev/ffs-usb-gadget0-0/ep1";
+// Endpoint::bulk() advertises 512 bytes as its high-speed maximum packet size.
+// Do not query EndpointReceiver for this at runtime: that lazily opens ep1
+// through usb-gadget's native-AIO path, which is precisely the receive path we
+// avoid below.
+const FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE: usize = 512;
+
 static CONNECTOR_STATUS_CHANGED_ONCE: AtomicBool = AtomicBool::new(true);
 static STATUS_VALUE: AtomicU8 = AtomicU8::new(GUD_STATUS_OK);
 static CLEAR_STATUS_ON_NEXT_SUCCESS: AtomicBool = AtomicBool::new(false);
@@ -68,9 +77,14 @@ struct ConnectorDescriptor {
 }
 
 pub struct PixelDataEndpoint {
-    ep_rx: EndpointReceiver,
-    // A collection of the small buffers we've allocated for submission to AIO to read from the endpoint.
+    // Keep the receiver alive so usb-gadget can publish the FunctionFS
+    // endpoint, but do not use it: its I/O implementation is native AIO.
+    _ep_rx: EndpointReceiver,
+    // A collection of packet-sized buffers reused for blocking reads from the endpoint.
     ep_buf: Vec<BytesMut>,
+    // The FunctionFS endpoint used for ordinary blocking reads. Keeping this
+    // separate from EndpointReceiver avoids its Linux AIO receive queue.
+    bulk_ep: Option<Arc<File>>,
     // The full contents of a transmitted buffer are copied here.
     buf: BytesMut,
     // If compression is enabled, the received buffer is decompressed here.
@@ -861,8 +875,9 @@ impl PixelDataEndpoint {
 
         (
             Self {
-                ep_rx,
+                _ep_rx: ep_rx,
                 ep_buf: Vec::new(),
+                bulk_ep: None,
                 buf: BytesMut::new(),
                 compress_buf: BytesMut::new(),
             },
@@ -876,7 +891,7 @@ impl PixelDataEndpoint {
         bpp: usize,
     ) -> anyhow::Result<(&[u8], PayloadStats)> {
         let start = Instant::now();
-        let max_packet_size = self.ep_rx.max_packet_size().unwrap();
+        let max_packet_size = FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE;
         debug!(
             "recv_payload: max_packet_size={}, bpp={}",
             max_packet_size, bpp
@@ -895,16 +910,35 @@ impl PixelDataEndpoint {
 
         let read_start = Instant::now();
         let mut packets = 0usize;
+        let mut reads = 0usize;
         while self.buf.len() < len {
-            let buf = self
+            let mut buf = self
                 .ep_buf
                 .pop()
-                .unwrap_or_else(|| BytesMut::with_capacity(max_packet_size));
-            let buf = self.ep_rx.recv(buf).context("read bulk ep")?;
-            if buf.is_none() {
+                .unwrap_or_else(|| BytesMut::zeroed(max_packet_size));
+            buf.resize(max_packet_size, 0);
+            if reads == 0 {
+                debug!(
+                    payload_len = len,
+                    received_bytes = self.buf.len(),
+                    max_packet_size,
+                    buffer_capacity = buf.capacity(),
+                    "starting first blocking FunctionFS bulk OUT read"
+                );
+            }
+            let buffer_capacity = buf.capacity();
+            let received_bytes = self.buf.len();
+            let mut bulk_ep = self.bulk_endpoint()?;
+            let bytes_read = bulk_ep.read(&mut buf).with_context(|| {
+                format!(
+                    "read blocking bulk ep: payload_len={len}, received_bytes={received_bytes}, packets={packets}, reads={reads}, max_packet_size={max_packet_size}, buffer_capacity={buffer_capacity}"
+                )
+            })?;
+            reads += 1;
+            if bytes_read == 0 {
                 continue;
             }
-            let mut buf = buf.unwrap();
+            buf.truncate(bytes_read);
             self.buf.extend_from_slice(&buf);
             packets += 1;
             buf.clear();
@@ -975,6 +1009,25 @@ impl PixelDataEndpoint {
         debug!("recv_payload total took {}ms", stats.total_ms);
 
         Ok((buf, stats))
+    }
+
+    fn bulk_endpoint(&mut self) -> anyhow::Result<&File> {
+        if self.bulk_ep.is_none() {
+            debug!(
+                path = FUNCTIONFS_BULK_OUT_EP_PATH,
+                "using initialized FunctionFS bulk OUT endpoint for blocking reads"
+            );
+            self.bulk_ep = Some(
+                self._ep_rx
+                    .file()
+                    .context("get initialized FunctionFS bulk OUT endpoint")?,
+            );
+        }
+
+        Ok(self
+            .bulk_ep
+            .as_deref()
+            .expect("bulk endpoint was just initialized"))
     }
 
     pub fn copy_buffer_to_framebuffer(
