@@ -124,6 +124,99 @@ gadget test with `g_dma=0`.
 Evidence:
 `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-step5-16k-first-hardware-2026-07-25T2214BST/`.
 
+## Read-count decision and `g_dma=0` isolation
+
+**Decision (2026-07-25):** retain the configurable 16 KiB implementation and
+its four exact-length FunctionFS reads as the candidate receive strategy, but
+do not call it the accepted default until it passes with DWC2 gadget DMA
+isolated. Do not restore the historical 125-read loop as a fix: it had one
+clean run but later stalled during an active payload and was followed by
+allocator corruption. The four-read run also failed with `g_dma=1`, but it
+localized the failure to the first DWC2 buffer-DMA completion and the new
+containment prevented teardown and a new Oops.
+
+The next comparison changes only DWC2 gadget DMA:
+
+```text
+OnePlus host URB:       unchanged (one 64,000-byte bulk transfer per normal tile)
+USB packets on wire:    unchanged (125 high-speed 512-byte packets)
+Pi FunctionFS requests: unchanged Step 5 sequence (16,384 + 16,384 + 16,384 + 14,848)
+Pi DWC2 data movement:  g_dma=1 buffer DMA -> g_dma=0 slave/PIO FIFO handling
+```
+
+Do not compare 125 reads against four reads in the same boot. First test the
+same four-read binary with `g_dma=0` on a fresh Pi boot. If one complete frame
+and its controlled stop/start are clean, retain four reads for the three
+mini-cycles and then the ten-cycle matrix. If the first payload fails, preserve
+the isolated result and reassess; do not fall back to 512 bytes on that boot.
+
+### Why this Pi needs a separate test kernel
+
+Read-only inspection on 2026-07-25 established that the installed
+`6.12.47+rpt-rpi-v8` kernel has `CONFIG_USB_DWC2=y`, so DWC2 is built in rather
+than unloadable. It has no `/sys/module/dwc2/parameters/g_dma` file. The
+installed `dwc2` overlay exposes only `dr_mode`, `g-rx-fifo-size`, and
+`g-np-tx-fifo-size`; `/sys/kernel/debug/usb/3f980000.usb/params` is mode `0444`
+and reports state rather than accepting changes.
+
+The matching Raspberry Pi DWC2 source auto-enables `g_dma` on a DMA-capable
+gadget controller, does not read a device property for it, and leaves the
+Broadcom parameter callback at that default:
+
+- [DWC2 parameter initialization](https://github.com/raspberrypi/linux/blob/rpi-6.12.y/drivers/usb/dwc2/params.c)
+- [DWC2 gadget DMA/slave paths](https://github.com/raspberrypi/linux/blob/rpi-6.12.y/drivers/usb/dwc2/gadget.c)
+- [Raspberry Pi `dwc2` overlay parameters](https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README)
+
+Consequently, none of these changes enables the required test on this kernel:
+
+```text
+dwc2.g_dma=0 in cmdline.txt          unsupported: no such module parameter
+dtoverlay=dwc2,g_dma=0               unsupported: no such overlay/property
+write 0 to the debugfs params file   impossible: the file is read-only
+unload/reload dwc2                   impossible: CONFIG_USB_DWC2=y
+```
+
+Do not clear the controller DMA bit with `devmem` and do not impersonate
+another SoC with a Device Tree `compatible` string. Either would leave the
+driver's software state inconsistent with the hardware or apply unrelated
+SoC parameters.
+
+The controlled implementation is a one-line Broadcom-specific test change in
+the matching Raspberry Pi kernel source:
+
+```diff
+ static void dwc2_set_bcm_params(struct dwc2_hsotg *hsotg)
+ {
+     struct dwc2_core_params *p = &hsotg->params;
+
++    p->g_dma = false;
+     p->host_rx_fifo_size = 774;
+```
+
+Build and install it as a separately named test kernel with its matching
+modules and initramfs; do not overwrite the stock kernel or its modules. Keep
+the stock boot selection as the rollback path. Before selecting the test
+kernel, the current poisoned instance must be recovered by physical,
+hardware, or watchdog reset while service auto-start remains disabled.
+
+On the first fresh boot, do not start the service or send a payload until all
+of these gates pass:
+
+```bash
+uname -r
+grep -E '^CONFIG_USB_DWC2(=|_)' /boot/config-$(uname -r)
+systemctl is-active gud-userspace.service
+grep -E 'g_dma|g_dma_desc' /sys/kernel/debug/usb/3f980000.usb/params
+cat /proc/sys/kernel/random/boot_id
+find /sys/fs/pstore -maxdepth 1 -type f -print
+```
+
+Require a distinct test-kernel release, `CONFIG_USB_DWC2=y`, an inactive or
+failed service, `g_dma: 0`, and `g_dma_desc: 0`. Also collect the previous-boot
+service/kernel journals, pstore, and watchdog state before the one isolated
+four-read payload. A kernel that still reports `g_dma: 1` is not the intended
+test and must receive no payload.
+
 ## Step 5 pre-matrix gate
 
 Do not begin the ten-cycle matrix with the historical 512-byte loop or with
@@ -187,8 +280,7 @@ the optional 64 KiB A/B setting. Before the first hardware payload:
    sha256sum /etc/systemd/system/gud-userspace.service.d/20-xdisp-p0.1-ffs-read-size.conf
    systemctl show gud-userspace.service -p FragmentPath -p DropInPaths -p Restart -p SendSIGKILL -p Environment
    cat /proc/sys/kernel/random/boot_id
-   cat /sys/module/dwc2/parameters/g_dma
-   cat /sys/module/dwc2/parameters/g_dma_desc
+   grep -E 'g_dma|g_dma_desc' /sys/kernel/debug/usb/3f980000.usb/params
    cat /sys/class/udc/3f980000.usb/state
    cat /proc/meminfo
    cat /proc/buddyinfo
