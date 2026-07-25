@@ -122,6 +122,32 @@ Interpretation:
 - decompression is not free, but it is smaller than receive time
 - the dominant cost is the transfer/receive stage
 
+## Read-granularity performance decision
+
+The user reported no noticeable visible-performance difference between the
+historical 512-byte FunctionFS reads and the 16 KiB read ceiling during normal
+extended-monitor use. The successful 1920x1080 laptop control proves
+correctness and records service timing, but it was not a controlled A/B:
+content, host, compression, update cadence, and instrumentation were not held
+constant. Do not claim a frame-rate improvement from the read-size change.
+
+Keep the 16 KiB setting for the active reliability investigation because it
+reduces request churn and provides bounded, exact-length diagnostics.
+Benchmarking belongs to `XDISP-P2.1`, after `XDISP-P0.1` is stable. That future
+benchmark should:
+
+- compare 512-byte and 16 KiB userspace reads with the same host, mode,
+  compression setting, content, and run duration;
+- include warm-up and repeated runs rather than subjective observation alone;
+- record end-to-end presented FPS and frame drops, not only payload count;
+- retain Pi `recv_ms`, `total_ms`, CPU, memory, and read-call distributions;
+- retain host CPU, GUD errors, usbmon throughput, and USB negotiated speed; and
+- report median and tail latency before selecting a performance default.
+
+The 512-byte path is a future test-only comparison implemented with the
+current poison/teardown containment; do not redeploy the old artifact. It is
+not an authorized fallback or reliability fix during `XDISP-P0.1`.
+
 ## How To Collect Logs
 
 On the Pi:

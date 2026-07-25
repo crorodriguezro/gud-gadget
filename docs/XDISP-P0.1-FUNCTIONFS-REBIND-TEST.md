@@ -118,18 +118,19 @@ record are mandatory.
 Conclusion: larger reads improved fault localization and containment, but did
 not fix transport. Do not run a 64 KiB A/B, return to 512 bytes, start the
 mini-cycles, or attempt service stop/start. The poisoned instance requires
-physical/hardware/watchdog reset. The next diagnostic is a fresh-boot DWC2
-gadget test with `g_dma=0`.
+physical/hardware/watchdog reset. At that point the next proposed diagnostic
+was a fresh-boot DWC2 gadget test with `g_dma=0`; the later laptop control and
+revised ordering below supersede that ordering.
 
 Evidence:
 `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-step5-16k-first-hardware-2026-07-25T2214BST/`.
 
-## Read-count decision and `g_dma=0` isolation
+## Initial read-count and `g_dma=0` decision
 
-**Decision (2026-07-25):** retain the configurable 16 KiB implementation and
-its four exact-length FunctionFS reads as the candidate receive strategy, but
-do not call it the accepted default until it passes with DWC2 gadget DMA
-isolated. Do not restore the historical 125-read loop as a fix: it had one
+**Initial decision (2026-07-25, before the laptop control):** retain the
+configurable 16 KiB implementation and its four exact-length FunctionFS reads
+as the candidate receive strategy. Do not restore the historical 125-read loop
+as a fix: it had one
 clean run but later stalled during an active payload and was followed by
 allocator corruption. The four-read run also failed with `g_dma=1`, but it
 localized the failure to the first DWC2 buffer-DMA completion and the new
@@ -144,11 +145,10 @@ Pi FunctionFS requests: unchanged Step 5 sequence (16,384 + 16,384 + 16,384 + 14
 Pi DWC2 data movement:  g_dma=1 buffer DMA -> g_dma=0 slave/PIO FIFO handling
 ```
 
-Do not compare 125 reads against four reads in the same boot. First test the
-same four-read binary with `g_dma=0` on a fresh Pi boot. If one complete frame
-and its controlled stop/start are clean, retain four reads for the three
-mini-cycles and then the ten-cycle matrix. If the first payload fails, preserve
-the isolated result and reassess; do not fall back to 512 bytes on that boot.
+Do not compare 125 reads against four reads in the same boot. The original
+next action was the same four-read binary with `g_dma=0`; retain the procedure
+below as a fallback, but do not execute it before the revised userspace-only
+controls later in this document.
 
 ### Why this Pi needs a separate test kernel
 
@@ -195,9 +195,10 @@ the matching Raspberry Pi kernel source:
 
 Build and install it as a separately named test kernel with its matching
 modules and initramfs; do not overwrite the stock kernel or its modules. Keep
-the stock boot selection as the rollback path. Before selecting the test
-kernel, the current poisoned instance must be recovered by physical,
-hardware, or watchdog reset while service auto-start remains disabled.
+the stock boot selection as the rollback path. The poisoned instance that
+produced the Step 5 failure was subsequently physically recovered. Any future
+kernel test must likewise start from a clean boot with service auto-start
+disabled, never by transitioning a poisoned instance.
 
 On the first fresh boot, do not start the service or send a payload until all
 of these gates pass:
@@ -247,10 +248,63 @@ mini-cycle or acceptance-matrix entry, so `XDISP-P0.1` remains blocked.
 Evidence:
 `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-16k-live-2026-07-25T2256BST/`.
 
-## Step 5 pre-matrix gate
+The user saw no noticeable performance difference between the historical
+512-byte userspace reads and the 16 KiB implementation. Treat that as a useful
+subjective observation, not a benchmark or a performance claim. The 16 KiB
+setting remains selected for request-count reduction, diagnostics, and
+containment—not because it has demonstrated higher visible frame rate.
+Controlled read-granularity benchmarking is deferred to `XDISP-P2.1`, after
+the reliability gate. Do not re-enable 512-byte reads during `XDISP-P0.1` to
+measure performance.
 
-Do not begin the ten-cycle matrix with the historical 512-byte loop or with
-the optional 64 KiB A/B setting. Before the first hardware payload:
+## Revised next diagnostic after the laptop control
+
+Avoid a Pi kernel build until a userspace-only transfer-shape control is run:
+
+1. Leave the current healthy laptop session untouched. When the session is
+   finished, retain final host/Pi counters, physically disconnect the laptop,
+   and require the UDC to become detached and the receive session to be idle
+   without a kernel/service anomaly.
+2. In `gud-gadget`, add test-only descriptor configuration for compression
+   disabled and an optional `max_buffer_size=64000`. Keep the normal LZ4 and
+   natural maximum-buffer defaults unchanged, validate both settings, and
+   cover them with unit tests. Use temporary service configuration and require
+   a fresh enumeration whenever descriptor values change.
+3. On a fresh, clean Pi boot, use the same 16 KiB FunctionFS binary and
+   `g_dma=1`, connect the modern laptop at RGB565 1280x720, advertise
+   `max_buffer_size=64000` while retaining LZ4, and submit one deterministic
+   frame. This reproduces the 25-row `SET_BUFFER` tiling/control cadence while
+   retaining compressed bulk payloads. Capture usbmon and complete host/Pi
+   logs before any transition.
+4. Only if the compressed 64,000-byte-rectangle control is clean, use another
+   fresh boot/enumeration with the same maximum but compression disabled. This
+   produces the same 64,000-byte normal bulk payloads and 51,200-byte tail as
+   the OnePlus at the protocol level. Usbmon must prove the underlying host URB
+   count and length. The modern upstream path uses an SG-backed buffer; the
+   OnePlus uses one linear DMA-coherent URB with
+   `URB_NO_TRANSFER_DMA_MAP`.
+5. Interpret the controls before selecting another risky test:
+   - first control fails: 25-row tiling/control cadence is implicated;
+   - first passes and uncompressed fails: uncompressed 64,000-byte bulk
+     behavior is implicated; or
+   - both pass: keep the Pi kernel unchanged and focus on the OnePlus
+     controller/backport transfer path. Preserve the normal module and use
+     only separately named diagnostic artifacts for chunk-size or DMA-mapping
+     A/B tests before reconsidering a `g_dma=0` Pi kernel.
+6. Only after an evidence-backed OnePlus change produces one complete frame
+   and a safe controlled stop/start may the three mini-cycles and then the
+   ten-cycle acceptance matrix begin.
+
+This transfer-shape control is a correctness diagnostic, not the deferred
+performance benchmark. Any anomaly remains terminal for that Pi boot.
+
+## Post-isolation pre-matrix gate
+
+Do not execute this section yet. It is gated on the transfer-shape control
+above and then one evidence-backed OnePlus changed-variable test completing
+the full frame plus a safe controlled stop/start. Do not begin the ten-cycle
+matrix with the historical 512-byte loop or with the optional 64 KiB A/B
+setting. After the gate is satisfied and before the first mini-cycle payload:
 
 1. Disable auto-start without signaling the current process:
 

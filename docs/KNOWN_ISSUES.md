@@ -138,10 +138,21 @@ configured and no competing phone USB identity is required to reproduce it.
 - The OnePlus utility returned `PAYLOAD_RC=0`, but its kernel logged fresh GUD
   bulk and atomic `-110`, then request `0x64` `-110`. Tool return status alone
   is not transfer proof. Do not run 65,536 bytes, fall back to 512 bytes, or
-  stop/restart this poisoned boot. The next experiment is DWC2 gadget DMA
-  isolation with `g_dma=0` after physical/hardware/watchdog reset. Evidence is
-  under
+  stop/restart that poisoned boot. It was subsequently physically recovered.
+  Evidence is under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-step5-16k-first-hardware-2026-07-25T2214BST/`.
+- The later modern-laptop control passed with the same 16 KiB reads and
+  `g_dma=1`: 953 compressed payloads, 432.6 MB, and 27,053 of 27,053 exact
+  FunctionFS reads completed without a transport or kernel error. This proves
+  the OnePlus failure is conditional rather than a universal 16 KiB/DMA fault.
+  Before compiling a `g_dma=0` kernel, run the planned userspace-only modern
+  host controls at a 64,000-byte advertised maximum: first with LZ4 to isolate
+  tiling/control cadence, then after a clean result and fresh enumeration with
+  compression disabled to reproduce the OnePlus bulk lengths. The user
+  observed no noticeable read-size performance difference; formal
+  512-byte-versus-16 KiB benchmarking is deferred to `XDISP-P2.1`.
+  Evidence is under
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-16k-live-2026-07-25T2256BST/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.

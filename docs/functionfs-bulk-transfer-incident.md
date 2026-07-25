@@ -127,11 +127,25 @@ ep1 OUT residual `0x7f800` (522,240) against a loaded length of `0x4000`
 parked without teardown; the Pi remained reachable and kernel-clean, while
 the host logged bulk/atomic `-110`.
 
-This rules out read-call count alone as the fix and makes DWC2 buffer DMA
-isolation (`g_dma=0`) the next diagnostic. Do not run the 64 KiB A/B or return
-to 512 bytes first. `PAYLOAD_RC=0` also proved insufficient as standalone
-evidence because the asynchronous host failure appeared in the kernel after
-the utility reported success.
+This rules out read-call count alone as the fix. `PAYLOAD_RC=0` also proved
+insufficient as standalone evidence because the asynchronous host failure
+appeared in the kernel after the utility reported success.
+
+A later modern-laptop control completed 953 compressed payloads, 432.6 MB, and
+27,053 of 27,053 exact 16 KiB-capped FunctionFS reads with `g_dma=1`. The
+immediate failure is therefore conditional on host, transfer shape, timing, or
+their interaction—not a universal DWC2 DMA or 16 KiB failure. Before compiling
+a `g_dma=0` kernel, two test-only modern-host gates will use
+`max_buffer_size=64000` at RGB565 1280x720: first with LZ4 retained to isolate
+25-row tiling/control cadence, then after a clean result and fresh enumeration
+with compression disabled to reproduce the OnePlus bulk lengths. If both pass,
+focus on separately named OnePlus chunk-size/DMA-mapping diagnostic modules
+while preserving the normal module.
+
+The user reported no noticeable visible-performance difference from the read
+size change. This is not a controlled benchmark; defer 512-byte-versus-16 KiB
+performance testing to `XDISP-P2.1` and do not return to 512 bytes as a P0.1
+fallback.
 
 ## Future improvements
 
