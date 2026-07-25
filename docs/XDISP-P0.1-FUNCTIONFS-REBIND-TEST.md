@@ -6,6 +6,11 @@ Prove that the Pi GUD gadget accepts the **first** bulk payload after a fresh
 gadget rebind or OnePlus reconnect. This is a transport gate for the external
 display work; it does not test Mir or Lomiri.
 
+The cross-repository design and implementation plan are maintained in the
+host project at `../../gud/docs/superpowers/specs/2026-07-25-xdisp-p0-1-functionfs-rebind-design.md`
+and `../../gud/docs/superpowers/plans/2026-07-25-xdisp-p0-1-functionfs-rebind.md`.
+This file is the single executable hardware test procedure.
+
 ## Scope
 
 The system under test is:
