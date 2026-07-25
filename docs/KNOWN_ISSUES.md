@@ -97,8 +97,18 @@ configured and no competing phone USB identity is required to reproduce it.
   The timeout occurred before the changed return path; the exit-status fix is
   locally verified but still needs one safe hardware payload/restart. Artifact
   `7053d5b1cf3f7cc94da776a97f64d3471382df9b8f40b00b511eb9ef3bcf1e12`
-  is installed on the currently unreachable Pi, with the prior base retained
+  is installed on the Pi, with the prior base retained
   at `/home/cristian/gud-drm.pre-xdisp-p0.1-exit0-5aae726`.
+- Persistent journal recovery after two Pi restarts captured the failed
+  payload boot. `gud-drm` validated the first 64,000-byte `SET_BUFFER` and
+  blocked in its first FunctionFS bulk read. Fifteen seconds later the kernel
+  Oopsed in `__kmalloc_noprof` while `sshd-session` loaded an ELF binary, with
+  `f81ff81ff81ff81f` in allocator state and a subsequent bad RSS-counter
+  report. No SIGTERM, DWC2 endpoint-stop timeout, FunctionFS teardown, or DRM
+  release occurred. The lifecycle repair therefore makes cleanup safer but
+  does not remove the corruption that can occur during the active blocked
+  payload. Do not retry the existing 512-byte read loop before changing the
+  receive strategy or isolating DWC2 DMA.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
