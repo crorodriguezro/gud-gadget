@@ -483,7 +483,9 @@ fn main() -> anyhow::Result<()> {
     );
 
     usb_gadget::remove_all().context("remove existing USB gadgets")?;
-    let (mut gud_data, gud_data_ep) = PixelDataEndpoint::new();
+    // The XDISP-P0.1 larger-read experiment is scoped to the Pi gud-drm
+    // service. Keep this unrelated viewer demo at its historical granularity.
+    let (mut gud_data, gud_data_ep) = PixelDataEndpoint::new_legacy_512();
     let mut builder = Custom::builder().with_interface(
         Interface::new(Class::vendor_specific(Class::VENDOR_SPECIFIC, 0), "GUD")
             .with_endpoint(gud_data_ep),

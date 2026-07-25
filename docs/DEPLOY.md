@@ -367,13 +367,48 @@ sudo systemctl enable gud-userspace.service
 The tracked containment drop-in is
 `../systemd/gud-userspace.service.d/10-xdisp-p0.1-containment.conf`. Installing
 it requires `systemctl daemon-reload`, but do not restart an already-running
-service merely to load the `Restart=no` policy.
+service merely to load the policy. It sets `Restart=no` and `SendSIGKILL=no`.
+The latter prevents systemd from forcing teardown if an in-flight or poisoned
+Step 5 process intentionally ignores `SIGTERM`.
 
-The lifecycle-repair build enables `ctrlc` termination handling. A normal
-systemd stop sends `SIGTERM`, which first unbinds the UDC, lets an active
-FunctionFS read return, removes the gadget, closes the remaining endpoint
-owners, and only then releases DRM. Do not use `SIGKILL` for routine shutdown;
-it bypasses this ordering.
+The Step 5 read-size drop-in is
+`../systemd/gud-userspace.service.d/20-xdisp-p0.1-ffs-read-size.conf`:
+
+```ini
+[Service]
+Environment=GUD_FFS_READ_SIZE=16384
+Environment=RUST_LOG=debug
+```
+
+The value is a receive ceiling, not a padded request size. `gud-drm` requests
+exactly the remaining payload when it is smaller. The staged 16,384-byte
+setting receives a normal 64,000-byte tile as
+`[16384, 16384, 16384, 14848]`, replacing 125 separate 512-byte reads while
+limiting contiguous-allocation pressure. Valid values are 4,096 through 65,536
+bytes in 512-byte increments. Invalid values fail before DRM or UDC setup; the
+service never silently falls back to the old 512-byte loop. The 65,536-byte
+ceiling is reserved for an explicit later A/B test and is not the first
+hardware setting. The debug filter is pinned so every read start/completion is
+retained in the service journal.
+
+Install this drop-in only together with the matching Step 5 binary. Reloading
+systemd is safe, but activation requires the separately controlled
+stop/start-and-payload procedure in
+`XDISP-P0.1-FUNCTIONFS-REBIND-TEST.md`.
+
+The lifecycle-repair build enables `ctrlc` termination handling. Before every
+blocking FunctionFS receive, Step 5 atomically changes the session from
+`Idle` to `InFlight`. `SIGTERM` may claim and unbind the UDC only from `Idle`;
+an in-flight or poisoned session ignores it. A successful receive under the
+conservative one-second safety threshold returns to `Idle`; a returned error
+or late completion becomes permanently `Poisoned` and refuses further
+USB/control work. A hung read remains `InFlight`. Decompression and optional
+dumps run after the session returns to `Idle`. For a proven-idle stop, teardown
+removes the gadget, closes the remaining endpoint owners, and only then
+releases DRM. Do not use `SIGKILL` for routine shutdown. For an
+in-flight/poisoned instance, do not stop, restart, reboot, or shut down; use a
+physical power cycle, hardware reset, or watchdog reset and collect
+previous-boot evidence.
 
 Note: The service file may have warnings about `StartLimitIntervalSec` — this key
 is not recognized in the `[Service]` section (it belongs in `[Unit]`) but it is

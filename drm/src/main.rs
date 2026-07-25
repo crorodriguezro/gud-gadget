@@ -5,10 +5,11 @@ use drm::control::{
 };
 use gud_gadget::{DisplayMode, Event, GUD_COMPRESSION_LZ4};
 use std::env::{args, var_os};
+use std::ffi::OsStr;
 use std::fs::{rename, File};
 use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 use std::time::Duration;
 use tracing::{debug, info, warn};
@@ -21,6 +22,165 @@ const CRTC_SET_RETRY_DELAY: Duration = Duration::from_millis(250);
 
 fn should_report_detach_error(restart_requested: bool, shutdown_requested: bool) -> bool {
     restart_requested && !shutdown_requested
+}
+
+const BULK_RECEIVE_DEADLINE: Duration = Duration::from_millis(1_000);
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
+enum BulkReceiveState {
+    Idle = 0,
+    InFlight = 1,
+    Poisoned = 2,
+    ShuttingDown = 3,
+}
+
+impl BulkReceiveState {
+    fn from_raw(raw: u8) -> Self {
+        match raw {
+            0 => Self::Idle,
+            1 => Self::InFlight,
+            2 => Self::Poisoned,
+            3 => Self::ShuttingDown,
+            _ => unreachable!("invalid bulk receive state {raw}"),
+        }
+    }
+}
+
+#[derive(Clone)]
+struct BulkReceiveSession {
+    state: Arc<AtomicU8>,
+    deadline: Duration,
+}
+
+impl Default for BulkReceiveSession {
+    fn default() -> Self {
+        Self::with_deadline(BULK_RECEIVE_DEADLINE)
+    }
+}
+
+impl BulkReceiveSession {
+    fn with_deadline(deadline: Duration) -> Self {
+        Self {
+            state: Arc::new(AtomicU8::new(BulkReceiveState::Idle as u8)),
+            deadline,
+        }
+    }
+
+    fn receive<T, F>(&self, receive: F) -> anyhow::Result<T>
+    where
+        F: FnOnce() -> anyhow::Result<T>,
+    {
+        self.state
+            .compare_exchange(
+                BulkReceiveState::Idle as u8,
+                BulkReceiveState::InFlight as u8,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            )
+            .map_err(|raw| {
+                anyhow::anyhow!(
+                    "FunctionFS bulk receive session is {:?}; a fresh Pi boot may be required",
+                    BulkReceiveState::from_raw(raw)
+                )
+            })?;
+        debug!(
+            deadline_ms = self.deadline.as_millis(),
+            "FunctionFS bulk receive session entered InFlight"
+        );
+
+        let started = std::time::Instant::now();
+        let result = receive();
+        let elapsed = started.elapsed();
+        match result {
+            Err(err) => {
+                self.state
+                    .store(BulkReceiveState::Poisoned as u8, Ordering::Release);
+                tracing::error!("FunctionFS bulk receive session entered Poisoned after an error");
+                Err(err)
+            }
+            Ok(_) if elapsed > self.deadline => {
+                self.state
+                    .store(BulkReceiveState::Poisoned as u8, Ordering::Release);
+                tracing::error!(
+                    elapsed_ms = elapsed.as_millis(),
+                    deadline_ms = self.deadline.as_millis(),
+                    "FunctionFS bulk receive session entered Poisoned after a late completion"
+                );
+                Err(anyhow::anyhow!(
+                    "FunctionFS bulk receive exceeded the conservative {:?} safety deadline \
+                     (elapsed {:?}); session poisoned",
+                    self.deadline,
+                    elapsed
+                ))
+            }
+            Ok(value) => {
+                self.state
+                    .compare_exchange(
+                        BulkReceiveState::InFlight as u8,
+                        BulkReceiveState::Idle as u8,
+                        Ordering::AcqRel,
+                        Ordering::Acquire,
+                    )
+                    .map_err(|raw| {
+                        self.state
+                            .store(BulkReceiveState::Poisoned as u8, Ordering::Release);
+                        anyhow::anyhow!(
+                            "FunctionFS bulk receive state changed unexpectedly to {:?}; \
+                             session poisoned",
+                            BulkReceiveState::from_raw(raw)
+                        )
+                    })?;
+                debug!(
+                    elapsed_ms = elapsed.as_millis(),
+                    "FunctionFS bulk receive session returned to Idle"
+                );
+                Ok(value)
+            }
+        }
+    }
+
+    fn begin_shutdown(&self) -> Result<(), BulkReceiveState> {
+        loop {
+            match self.current_state() {
+                BulkReceiveState::Idle => {
+                    if self
+                        .state
+                        .compare_exchange(
+                            BulkReceiveState::Idle as u8,
+                            BulkReceiveState::ShuttingDown as u8,
+                            Ordering::AcqRel,
+                            Ordering::Acquire,
+                        )
+                        .is_ok()
+                    {
+                        return Ok(());
+                    }
+                }
+                BulkReceiveState::InFlight => {
+                    if self
+                        .state
+                        .compare_exchange(
+                            BulkReceiveState::InFlight as u8,
+                            BulkReceiveState::Poisoned as u8,
+                            Ordering::AcqRel,
+                            Ordering::Acquire,
+                        )
+                        .is_ok()
+                    {
+                        return Err(BulkReceiveState::InFlight);
+                    }
+                }
+                state @ (BulkReceiveState::Poisoned | BulkReceiveState::ShuttingDown) => {
+                    return Err(state);
+                }
+            }
+        }
+    }
+
+    fn current_state(&self) -> BulkReceiveState {
+        BulkReceiveState::from_raw(self.state.load(Ordering::Acquire))
+    }
 }
 
 trait GadgetUnbind: Send + Sync {
@@ -835,18 +995,33 @@ fn scale_rgb565_to_fit(
     Ok((layout, start.elapsed().as_millis()))
 }
 
+fn parse_functionfs_read_size(raw: Option<&OsStr>) -> anyhow::Result<usize> {
+    let Some(raw) = raw else {
+        return Ok(gud_gadget::DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE);
+    };
+    let raw = raw
+        .to_str()
+        .context("GUD_FFS_READ_SIZE must be valid UTF-8")?;
+    raw.parse::<usize>()
+        .with_context(|| format!("invalid GUD_FFS_READ_SIZE={raw:?}"))
+}
+
 fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(fmt::layer())
         .with(EnvFilter::from_default_env())
         .init();
 
-    info!("gud-drm starting (XDISP-P0.1 lifecycle repair)");
+    info!("gud-drm starting (XDISP-P0.1 lifecycle and read-size repair)");
 
     let card_path = args()
         .skip(1)
         .next()
         .expect("specify full path to /dev/dri/cardN as program argument");
+    let functionfs_read_size = parse_functionfs_read_size(var_os("GUD_FFS_READ_SIZE").as_deref())?;
+    let (mut gud_data, gud_data_ep) =
+        gud_gadget::PixelDataEndpoint::new_with_read_size(functionfs_read_size)
+            .context("configure FunctionFS bulk OUT read size")?;
     let dump_path = var_os("GUD_DUMP_FB_PATH").map(PathBuf::from);
     let dump_raw_path = var_os("GUD_DUMP_FB_RAW_PATH").map(PathBuf::from);
     let pattern_mode = PatternMode::from_env();
@@ -862,6 +1037,11 @@ fn main() -> anyhow::Result<()> {
         "Transfer format: {:?} ({} bytes/pixel)",
         transfer_format,
         transfer_format.bytes_per_pixel()
+    );
+    info!(
+        "FunctionFS bulk OUT read ceiling: {} bytes; conservative receive safety deadline: {} ms",
+        functionfs_read_size,
+        BULK_RECEIVE_DEADLINE.as_millis()
     );
     info!("Opening DRM device: {}", card_path);
     let mut card = Card::open(&card_path);
@@ -926,7 +1106,6 @@ fn main() -> anyhow::Result<()> {
     usb_gadget::remove_all().expect("UDC init failed");
     info!("USB gadgets removed");
 
-    let (mut gud_data, gud_data_ep) = gud_gadget::PixelDataEndpoint::new();
     info!("Created pixel data endpoint");
 
     let mut builder = Custom::builder().with_interface(
@@ -939,10 +1118,21 @@ fn main() -> anyhow::Result<()> {
 
     let running = Arc::new(AtomicBool::new(true));
     let gadget_shutdown = GadgetShutdown::default();
+    let bulk_receive_session = BulkReceiveSession::default();
 
     let r = running.clone();
     let shutdown = gadget_shutdown.clone();
+    let signal_bulk_receive_session = bulk_receive_session.clone();
     ctrlc::set_handler(move || {
+        if let Err(state) = signal_bulk_receive_session.begin_shutdown() {
+            tracing::error!(
+                ?state,
+                "Ignoring process shutdown signal because the FunctionFS bulk session is not idle; \
+                 do not stop, restart, reboot, or shut down this service instance, recover with a \
+                 physical/hardware reset"
+            );
+            return;
+        }
         r.store(false, Ordering::SeqCst);
         match shutdown.request_unbind() {
             Ok(GadgetUnbindOutcome::DeferredUntilPublish) => {
@@ -1166,6 +1356,11 @@ fn main() -> anyhow::Result<()> {
     drop(unbind_target);
 
     'event_loop: while running.load(Ordering::Relaxed) {
+        if bulk_receive_session.current_state() == BulkReceiveState::Poisoned {
+            std::thread::sleep(Duration::from_millis(100));
+            continue;
+        }
+
         let event = match gud.event_timeout(Duration::from_millis(100)) {
             Ok(event) => event,
             Err(err) => {
@@ -1352,8 +1547,8 @@ fn main() -> anyhow::Result<()> {
                             (info.x + info.width) as u16,
                             (info.y + info.height) as u16,
                         );
-                        let (payload, payload_stats) = match gud_data
-                            .recv_payload(&info, transfer_format.bytes_per_pixel())
+                        let payload_stats = match bulk_receive_session
+                            .receive(|| gud_data.recv_payload_bytes(&info))
                         {
                             Ok(result) => result,
                             Err(err) => {
@@ -1379,39 +1574,30 @@ fn main() -> anyhow::Result<()> {
                                     tracing::info!("Bulk endpoint read cancelled for shutdown");
                                     break 'event_loop;
                                 }
-                                if !waiting_screen_visible
-                                    && matches!(pattern_mode, PatternMode::Off)
-                                    && udc_is_detached(&udc)
-                                {
-                                    tracing::info!(
-                                        "Rendering waiting screen after bulk receive failure"
-                                    );
-                                    if let Err(wait_err) = present_waiting_screen(
-                                        &mut card,
-                                        &mut mappings,
-                                        pitch as usize,
-                                        width.into(),
-                                        height.into(),
-                                        &fb_handles,
-                                        front_buffer_index,
-                                        dump_path.as_deref(),
-                                        dump_raw_path.as_deref(),
-                                    ) {
-                                        tracing::error!(
-                                                "Failed to render waiting screen after bulk receive failure: {}",
-                                                wait_err
-                                            );
-                                    } else {
-                                        waiting_screen_visible = true;
-                                        if had_host_session {
-                                            tracing::info!(
-                                                "Restarting gadget after bulk receive failure on detached UDC"
-                                            );
-                                            restart_requested = true;
-                                            break 'event_loop;
-                                        }
-                                    }
-                                }
+                                tracing::error!(
+                                    state = ?bulk_receive_session.current_state(),
+                                    "FunctionFS bulk receive session is terminal; refusing all \
+                                     further USB/control processing and automatic teardown. Do not \
+                                     stop, restart, reboot, or shut down this service instance; \
+                                     recover with a physical/hardware reset and collect \
+                                     previous-boot evidence"
+                                );
+                                continue;
+                            }
+                        };
+                        let (payload, payload_stats) = match gud_data.finish_payload(
+                            &info,
+                            transfer_format.bytes_per_pixel(),
+                            payload_stats,
+                        ) {
+                            Ok(result) => result,
+                            Err(err) => {
+                                tracing::error!(
+                                    error = ?err,
+                                    error_chain = %format_args!("{err:#}"),
+                                    "Failed to post-process received buffer payload; FunctionFS \
+                                     receive session remains idle"
+                                );
                                 continue;
                             }
                         };
@@ -1645,7 +1831,8 @@ fn main() -> anyhow::Result<()> {
                             0.0
                         };
                         tracing::info!(
-                            "frame_stats rect={}x{}+{},{} source={}x{} scaled={} transfer_bytes={} output_bytes={} packets={} compression={} ratio={:.2} recv_ms={} decompress_ms={} copy_ms={} scale_ms={} flush_ms={} total_ms={} usb_mib_s={:.2}",
+                            "frame_stats payload_seq={} rect={}x{}+{},{} source={}x{} scaled={} transfer_bytes={} output_bytes={} read_size={} read_calls={} first_request_bytes={} last_request_bytes={} usb_packets_est={} compression={} ratio={:.2} recv_ms={} decompress_ms={} copy_ms={} scale_ms={} flush_ms={} total_ms={} usb_mib_s={:.2}",
+                            payload_stats.payload_seq,
                             info.width,
                             info.height,
                             info.x,
@@ -1655,7 +1842,11 @@ fn main() -> anyhow::Result<()> {
                             scaled_mode,
                             payload_stats.transfer_bytes,
                             payload_stats.output_bytes,
-                            payload_stats.packets,
+                            payload_stats.read_size,
+                            payload_stats.read_calls,
+                            payload_stats.first_request_bytes,
+                            payload_stats.last_request_bytes,
+                            payload_stats.usb_packets_est,
                             info.compression,
                             compression_ratio,
                             payload_stats.read_ms,
@@ -1787,14 +1978,123 @@ fn main() -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::{
-        compute_scaled_layout, derive_mode_from_native, render_waiting_screen,
-        should_report_detach_error, waiting_scene_glyph, DisplayMode, GadgetShutdown, GadgetUnbind,
-        GadgetUnbindOutcome, ScaledLayout, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
+        compute_scaled_layout, derive_mode_from_native, parse_functionfs_read_size,
+        render_waiting_screen, should_report_detach_error, waiting_scene_glyph, BulkReceiveSession,
+        BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome,
+        ScaledLayout, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
     };
     use gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED;
+    use std::ffi::OsStr;
     use std::io;
     use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::Arc;
+    use std::sync::{Arc, Barrier};
+    use std::time::Duration;
+
+    #[test]
+    fn functionfs_read_size_parser_uses_default_and_accepts_numeric_override() {
+        assert_eq!(
+            parse_functionfs_read_size(None).unwrap(),
+            gud_gadget::DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE
+        );
+        assert_eq!(
+            parse_functionfs_read_size(Some(OsStr::new("16384"))).unwrap(),
+            16_384
+        );
+        assert!(parse_functionfs_read_size(Some(OsStr::new("not-a-size"))).is_err());
+    }
+
+    #[test]
+    fn failed_bulk_receive_poison_prevents_a_second_attempt() {
+        let session = BulkReceiveSession::default();
+        let attempts = AtomicUsize::new(0);
+
+        let first: anyhow::Result<()> = session.receive(|| {
+            attempts.fetch_add(1, Ordering::SeqCst);
+            Err(anyhow::anyhow!("injected receive failure"))
+        });
+        assert!(first.is_err());
+        assert_eq!(session.current_state(), BulkReceiveState::Poisoned);
+        assert_eq!(session.begin_shutdown(), Err(BulkReceiveState::Poisoned));
+
+        let second = session.receive(|| {
+            attempts.fetch_add(1, Ordering::SeqCst);
+            Ok(())
+        });
+        assert!(second.is_err());
+        assert_eq!(attempts.load(Ordering::SeqCst), 1);
+        assert!(second.unwrap_err().to_string().contains("fresh Pi boot"));
+    }
+
+    #[test]
+    fn in_flight_bulk_receive_refuses_concurrent_unbind() {
+        let session = BulkReceiveSession::default();
+        let worker_session = session.clone();
+        let entered = Arc::new(Barrier::new(2));
+        let release = Arc::new(Barrier::new(2));
+        let worker_entered = Arc::clone(&entered);
+        let worker_release = Arc::clone(&release);
+        let worker = std::thread::spawn(move || {
+            worker_session.receive(|| {
+                worker_entered.wait();
+                worker_release.wait();
+                Ok(())
+            })
+        });
+
+        entered.wait();
+        assert_eq!(session.current_state(), BulkReceiveState::InFlight);
+        let unbind_calls = AtomicUsize::new(0);
+        if session.begin_shutdown().is_ok() {
+            unbind_calls.fetch_add(1, Ordering::SeqCst);
+        }
+        assert_eq!(unbind_calls.load(Ordering::SeqCst), 0);
+        assert_eq!(session.current_state(), BulkReceiveState::Poisoned);
+        assert_eq!(session.begin_shutdown(), Err(BulkReceiveState::Poisoned));
+
+        release.wait();
+        assert!(worker.join().unwrap().is_err());
+        assert_eq!(session.current_state(), BulkReceiveState::Poisoned);
+    }
+
+    #[test]
+    fn late_bulk_receive_is_poisoned_at_safety_threshold() {
+        let session = BulkReceiveSession::with_deadline(Duration::from_millis(1));
+
+        let result = session.receive(|| {
+            std::thread::sleep(Duration::from_millis(5));
+            Ok(())
+        });
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("safety deadline"));
+        assert_eq!(session.current_state(), BulkReceiveState::Poisoned);
+    }
+
+    #[test]
+    fn slow_failed_post_read_work_does_not_poison_idle_session() {
+        let session = BulkReceiveSession::default();
+        session.receive(|| Ok(())).unwrap();
+
+        std::thread::sleep(Duration::from_millis(5));
+        let post_read_result: anyhow::Result<()> =
+            Err(anyhow::anyhow!("injected post-read failure"));
+
+        assert!(post_read_result.is_err());
+        assert_eq!(session.current_state(), BulkReceiveState::Idle);
+        assert!(session.begin_shutdown().is_ok());
+    }
+
+    #[test]
+    fn idle_bulk_session_can_be_claimed_for_shutdown_once() {
+        let session = BulkReceiveSession::default();
+
+        assert!(session.begin_shutdown().is_ok());
+        assert_eq!(session.current_state(), BulkReceiveState::ShuttingDown);
+        assert_eq!(
+            session.begin_shutdown(),
+            Err(BulkReceiveState::ShuttingDown)
+        );
+    }
 
     #[test]
     fn intentional_shutdown_suppresses_queued_detach_error() {

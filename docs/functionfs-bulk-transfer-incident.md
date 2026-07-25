@@ -51,10 +51,10 @@ opening the endpoint path again.
    `EndpointReceiver::file()`. It returns an `Arc<File>` for the initialized
    FunctionFS endpoint. Keeping the receiver alive also keeps the endpoint
    state and file lifetime valid.
-2. In `PixelDataEndpoint`, retain that initialized endpoint file and perform
-   synchronous, bounded 512-byte `read()` calls until the GUD payload length
-   has been received. This bypasses the unreliable native-AIO completion path
-   and avoids the second-open deadlock.
+2. In `PixelDataEndpoint`, retain that initialized endpoint file and, in the
+   original repair, perform synchronous, bounded 512-byte `read()` calls until
+   the GUD payload length has been received. This bypassed the unreliable
+   native-AIO completion path and avoided the second-open deadlock.
 3. Bind the USB gadget only after DRM has successfully acquired the CRTC,
    allocated/mapped framebuffers, and rendered the waiting screen. A temporary
    DRM permission/ownership failure previously exposed a half-started gadget
@@ -78,6 +78,49 @@ OnePlus USB-device-to-host transition:
 The Pi's `frame_stats` entries are the authoritative evidence that payloads
 were received, copied/scaled, and presented rather than merely enumerated.
 
+## Step 5: larger aligned reads
+
+Later rebind testing exposed a separate failure in the original blocking path.
+The OnePlus completed a 64,000-byte host URB while the Pi entered its 512-byte
+FunctionFS loop without an aggregate completion, followed by allocator
+corruption during the active payload. The old logging does not identify which
+of the 125 reads stalled. This made another hardware retry of that loop unsafe.
+
+The Step 5 implementation keeps the same initialized endpoint file and
+blocking API, but changes request granularity:
+
+- `GUD_FFS_READ_SIZE` is validated as a 512-byte-aligned value from 4,096
+  through 65,536 bytes;
+- the default and tracked first-test value is 16,384 bytes;
+- each syscall requests exactly `min(remaining_payload, read_size)`;
+- the normal 64,000-byte tile is therefore four requests:
+  `[16384, 16384, 16384, 14848]`;
+- no userspace request is padded past the declared payload; and
+- a short or zero-byte completion fails immediately instead of starting
+  another blocking read.
+
+The read logs now distinguish FunctionFS `read_calls` from the estimated USB
+packet count and record each requested/result byte count. Unit tests cover the
+16 KiB first-test strategy, a later 64 KiB A/B ceiling, the 51,200-byte final
+tile, ceiling splits, an unaligned exact tail, short/zero reads, and endpoint
+I/O errors. A caller-level test also proves that one receive error permanently
+poisons the process before a second read attempt. An atomic
+`Idle -> InFlight -> Idle/Poisoned` state machine also prevents `SIGTERM` from
+unbinding DWC2 while a receive is blocked. A completion taking more than the
+conservative one-second safety threshold is poisoned when it returns; a hung
+read remains `InFlight`. Decompression and optional dumps run only after the
+session returns to `Idle`, so slow/failed post-read work does not falsely
+poison the endpoint. In-flight and poisoned processes refuse further
+USB/control processing and automatic teardown and require
+physical/hardware-reset recovery. This is locally verified only; no Step 5
+payload has been sent to the Pi yet.
+
+The 16 KiB first setting lowers contiguous-allocation pressure relative to a
+one-request 64,000-byte read on this non-scatter-gather path; it does not prove
+that allocation pressure caused or fixes the corruption. The 64 KiB ceiling
+is reserved for an explicit A/B comparison only after three clean 16 KiB
+payload/teardown/rebind cycles.
+
 ## Future improvements
 
 - Upstream a minimal endpoint-file accessor or a supported synchronous receive
@@ -86,9 +129,9 @@ were received, copied/scaled, and presented rather than merely enumerated.
   through FunctionFS and asserts both GUD completion and Pi frame statistics.
 - Add an explicit FunctionFS/DWC2 capability probe or configuration flag so
   platforms with working AIO can opt into it deliberately.
-- Add a bounded read timeout/cancellation strategy. The current blocking read
-  is reliable on the tested Pi, but an unplug during a payload should be
-  surfaced promptly and trigger a controlled gadget restart.
+- Add a bounded read timeout/cancellation strategy. While `XDISP-P0.1` remains
+  blocked, a receive anomaly poisons the process and requires fresh-boot
+  recovery rather than an automatic gadget restart.
 - Investigate DRM dirty-framebuffer support on the Pi. It currently falls back
   to back-buffer swaps after `Function not implemented`, which is correct but
   less efficient than an available damage/flush path.

@@ -101,14 +101,43 @@ configured and no competing phone USB identity is required to reproduce it.
   at `/home/cristian/gud-drm.pre-xdisp-p0.1-exit0-5aae726`.
 - Persistent journal recovery after two Pi restarts captured the failed
   payload boot. `gud-drm` validated the first 64,000-byte `SET_BUFFER` and
-  blocked in its first FunctionFS bulk read. Fifteen seconds later the kernel
-  Oopsed in `__kmalloc_noprof` while `sshd-session` loaded an ELF binary, with
-  `f81ff81ff81ff81f` in allocator state and a subsequent bad RSS-counter
-  report. No SIGTERM, DWC2 endpoint-stop timeout, FunctionFS teardown, or DRM
-  release occurred. The lifecycle repair therefore makes cleanup safer but
-  does not remove the corruption that can occur during the active blocked
-  payload. Do not retry the existing 512-byte read loop before changing the
-  receive strategy or isolating DWC2 DMA.
+  entered the 512-byte FunctionFS loop without an aggregate completion. The
+  old logging cannot identify which of its 125 reads stalled. Fifteen seconds
+  later the kernel Oopsed in `__kmalloc_noprof` while `sshd-session` loaded an
+  ELF binary, with `f81ff81ff81ff81f` in allocator state and a subsequent bad
+  RSS-counter report. No SIGTERM, DWC2 endpoint-stop timeout, FunctionFS
+  teardown, or DRM release occurred. The lifecycle repair therefore makes
+  cleanup safer but does not remove the corruption that can occur during the
+  active blocked payload. Do not retry the existing 512-byte read loop before
+  changing the receive strategy or isolating DWC2 DMA.
+- Step 5 is now implemented locally, but has not yet sent a hardware payload.
+  `GUD_FFS_READ_SIZE` selects a 512-byte-aligned receive ceiling from 4,096
+  through 65,536 bytes; the tracked first-test drop-in pins 16,384. Every
+  syscall requests the smaller of that ceiling and the exact remaining
+  payload, so the normal 64,000-byte first tile becomes four requests
+  (`16384, 16384, 16384, 14848`) rather than 125. The exact remaining count is
+  never padded in userspace because the host does not send undeclared bytes or
+  a terminating zero-length packet.
+- Individual read start/completion logs now include the payload sequence,
+  request size, result size, remaining bytes, and duration. A short or
+  zero-byte completion fails that payload immediately instead of queueing a
+  request for bytes the host has not declared. The caller marks the session
+  `InFlight` before blocking, so a hung read refuses concurrent teardown. Any
+  receive error or completion beyond the conservative one-second safety
+  threshold permanently poisons the process when it returns; a hung read
+  remains `InFlight`. Decompression and optional dumps run after the session
+  returns to `Idle` and cannot falsely poison the endpoint. In-flight and
+  poisoned states refuse further USB/control work and ignore `SIGTERM`;
+  recovery requires a physical power cycle, hardware reset, or watchdog reset.
+  `frame_stats` reports `read_calls` separately from `usb_packets_est`. All 39
+  `gud-gadget` and 17 `gud-drm` tests pass. The local AArch64 release artifact
+  is `0c5961daf65a543101bb1727c2c6909a19b5a48ae398cadd94c4c6ebd044b662`.
+- On this DWC2/FunctionFS configuration, larger reads may increase contiguous
+  kernel-allocation pressure. Starting at 16,384 bytes reduces that pressure
+  relative to a one-request 64,000-byte tile, but is not proof that allocation
+  caused or fixes the corruption. A 65,536-byte ceiling remains an explicit
+  later A/B test only after three clean 16,384-byte payload/teardown/rebind
+  cycles. There is no automatic fallback to the old 512-byte loop.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
@@ -120,9 +149,10 @@ This is `XDISP-P0.1`, tracked canonically in
 result, but the item is still **blocked**, not verified.
 
 Do not mark it resolved from one successful frame. The acceptance test is ten
-fresh gadget rebind/phone reconnect cycles in which the first 64 KiB payload
-completes without a host `-110` timeout. Retain both host kernel logs and Pi
-service logs for each failed or successful run. Follow
+fresh gadget rebind/phone reconnect cycles in which all 29 tiles of the
+1,843,200-byte frame, including the first 64,000-byte tile, complete without a
+host `-110` timeout. Retain both host kernel logs and Pi service logs for each
+failed or successful run. Follow
 `XDISP-P0.1-FUNCTIONFS-REBIND-TEST.md` exactly so the evidence is comparable.
 
 ### Safe investigation boundary

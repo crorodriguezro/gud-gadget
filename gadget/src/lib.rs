@@ -1,4 +1,4 @@
-use anyhow::{ensure, Context};
+use anyhow::{bail, ensure, Context};
 use serde::{Deserialize, Serialize};
 use std::env::var_os;
 use std::fs::{rename, File};
@@ -60,6 +60,12 @@ const FUNCTIONFS_BULK_OUT_EP_PATH: &str = "/dev/ffs-usb-gadget0-0/ep1";
 // through usb-gadget's native-AIO path, which is precisely the receive path we
 // avoid below.
 const FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE: usize = 512;
+const FUNCTIONFS_BULK_OUT_MIN_READ_SIZE: usize = 4 * 1024;
+// Keep 64 KiB available only for the later diagnostic A/B. The target DWC2
+// gadget path segments controller transfers internally, but FunctionFS may
+// still need a 64 KiB-class contiguous buffer when scatter-gather is disabled.
+const FUNCTIONFS_BULK_OUT_MAX_READ_SIZE: usize = 64 * 1024;
+pub const DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE: usize = 16 * 1024;
 
 static CONNECTOR_STATUS_CHANGED_ONCE: AtomicBool = AtomicBool::new(true);
 static STATUS_VALUE: AtomicU8 = AtomicU8::new(GUD_STATUS_OK);
@@ -80,11 +86,17 @@ pub struct PixelDataEndpoint {
     // Keep the receiver alive so usb-gadget can publish the FunctionFS
     // endpoint, but do not use it: its I/O implementation is native AIO.
     _ep_rx: EndpointReceiver,
-    // A collection of packet-sized buffers reused for blocking reads from the endpoint.
-    ep_buf: Vec<BytesMut>,
+    // Retained only for the unrelated viewer demo's historical 512-byte
+    // receive behavior.
+    legacy_ep_buf: Vec<BytesMut>,
+    legacy_512: bool,
     // The FunctionFS endpoint used for ordinary blocking reads. Keeping this
     // separate from EndpointReceiver avoids its Linux AIO receive queue.
     bulk_ep: Option<Arc<File>>,
+    // Maximum size of one blocking FunctionFS read. Each read is further
+    // limited to the exact number of bytes remaining in the GUD payload.
+    read_size: usize,
+    payload_seq: u64,
     // The full contents of a transmitted buffer are copied here.
     buf: BytesMut,
     // If compression is enabled, the received buffer is decompressed here.
@@ -249,9 +261,15 @@ pub struct SetBuffer {
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct PayloadStats {
+    pub payload_seq: u64,
     pub transfer_bytes: usize,
     pub output_bytes: usize,
-    pub packets: usize,
+    /// Estimated USB data packets, excluding retries and protocol overhead.
+    pub usb_packets_est: usize,
+    pub read_calls: usize,
+    pub read_size: usize,
+    pub first_request_bytes: usize,
+    pub last_request_bytes: usize,
     pub read_ms: u128,
     pub decompress_ms: u128,
     pub total_ms: u128,
@@ -869,15 +887,145 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
     Ok(None)
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct BulkReadStats {
+    read_calls: usize,
+    first_request_bytes: usize,
+    last_request_bytes: usize,
+}
+
+fn validate_functionfs_read_size(read_size: usize) -> anyhow::Result<()> {
+    ensure!(
+        (FUNCTIONFS_BULK_OUT_MIN_READ_SIZE..=FUNCTIONFS_BULK_OUT_MAX_READ_SIZE)
+            .contains(&read_size),
+        "FunctionFS read size must be between {} and {} bytes, got {}",
+        FUNCTIONFS_BULK_OUT_MIN_READ_SIZE,
+        FUNCTIONFS_BULK_OUT_MAX_READ_SIZE,
+        read_size
+    );
+    ensure!(
+        read_size & (FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE - 1) == 0,
+        "FunctionFS read size must be a multiple of {} bytes, got {}",
+        FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE,
+        read_size
+    );
+    Ok(())
+}
+
+fn usb_packet_estimate(bytes: usize) -> usize {
+    bytes.div_ceil(FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE)
+}
+
+fn read_functionfs_payload<R: Read>(
+    reader: &mut R,
+    buf: &mut BytesMut,
+    payload_seq: u64,
+    payload_len: usize,
+    read_size: usize,
+) -> anyhow::Result<BulkReadStats> {
+    ensure!(
+        read_size >= FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE
+            && read_size & (FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE - 1) == 0,
+        "internal FunctionFS read size must be a non-zero multiple of {} bytes, got {}",
+        FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE,
+        read_size
+    );
+    ensure!(
+        payload_len > 0,
+        "FunctionFS payload length must be non-zero"
+    );
+
+    buf.clear();
+    buf.resize(payload_len, 0);
+
+    let mut stats = BulkReadStats::default();
+    let mut received_bytes = 0usize;
+    while received_bytes < payload_len {
+        let remaining_before = payload_len - received_bytes;
+        // Keep the configured ceiling packet-aligned, but never round the
+        // final userspace count past the protocol payload. FunctionFS aligns
+        // its kernel-side OUT buffer as needed; padding this count can wait
+        // forever when the host ends on a full packet without a ZLP.
+        let request_bytes = remaining_before.min(read_size);
+        let read_index = stats.read_calls + 1;
+        if stats.read_calls == 0 {
+            stats.first_request_bytes = request_bytes;
+        }
+
+        debug!(
+            payload_seq,
+            payload_len,
+            read_size,
+            read_index,
+            received_bytes,
+            remaining_before,
+            request_bytes,
+            "starting blocking FunctionFS bulk OUT read"
+        );
+
+        let read_start = Instant::now();
+        let result = reader.read(&mut buf[received_bytes..received_bytes + request_bytes]);
+        let read_us = read_start.elapsed().as_micros();
+        let bytes_read = result.with_context(|| {
+            format!(
+                "read blocking bulk ep: payload_seq={payload_seq}, payload_len={payload_len}, read_size={read_size}, read_index={read_index}, received_bytes={received_bytes}, remaining_before={remaining_before}, request_bytes={request_bytes}"
+            )
+        })?;
+        stats.read_calls += 1;
+        stats.last_request_bytes = request_bytes;
+
+        let remaining_after = remaining_before.saturating_sub(bytes_read);
+        let short_read = bytes_read != request_bytes;
+        debug!(
+            payload_seq,
+            payload_len,
+            read_size,
+            read_index,
+            remaining_before,
+            request_bytes,
+            result_bytes = bytes_read,
+            remaining_after,
+            read_us,
+            short_read,
+            "completed blocking FunctionFS bulk OUT read"
+        );
+
+        if short_read {
+            bail!(
+                "short FunctionFS bulk OUT read: payload_seq={payload_seq}, payload_len={payload_len}, read_size={read_size}, read_index={read_index}, received_bytes={received_bytes}, request_bytes={request_bytes}, result_bytes={bytes_read}"
+            );
+        }
+
+        received_bytes += bytes_read;
+    }
+
+    Ok(stats)
+}
+
 impl PixelDataEndpoint {
-    pub fn new() -> (Self, Endpoint) {
+    /// Preserve the historical 512-byte receive granularity for the unrelated
+    /// viewer demo. The Pi `gud-drm` service must use
+    /// `new_with_read_size()` instead.
+    pub fn new_legacy_512() -> (Self, Endpoint) {
+        Self::build(FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE, true)
+    }
+
+    pub fn new_with_read_size(read_size: usize) -> anyhow::Result<(Self, Endpoint)> {
+        validate_functionfs_read_size(read_size)?;
+        Ok(Self::build(read_size, false))
+    }
+
+    fn build(read_size: usize, legacy_512: bool) -> (Self, Endpoint) {
         let (ep_rx, ep_dir) = EndpointDirection::host_to_device();
 
         (
             Self {
                 _ep_rx: ep_rx,
-                ep_buf: Vec::new(),
+                legacy_ep_buf: Vec::new(),
+                legacy_512,
                 bulk_ep: None,
+                read_size,
+                payload_seq: 0,
                 buf: BytesMut::new(),
                 compress_buf: BytesMut::new(),
             },
@@ -890,89 +1038,71 @@ impl PixelDataEndpoint {
         info: &SetBuffer,
         bpp: usize,
     ) -> anyhow::Result<(&[u8], PayloadStats)> {
-        let start = Instant::now();
-        let max_packet_size = FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE;
-        debug!(
-            "recv_payload: max_packet_size={}, bpp={}",
-            max_packet_size, bpp
-        );
+        let stats = self.recv_payload_bytes(info)?;
+        self.finish_payload(info, bpp, stats)
+    }
 
+    pub fn recv_payload_bytes(&mut self, info: &SetBuffer) -> anyhow::Result<PayloadStats> {
         let len = if info.compression > 0 {
             info.compressed_length
         } else {
             info.length
         } as usize;
-        self.buf.clear();
-
-        if self.buf.capacity() < len {
-            self.buf.reserve(len - self.buf.capacity());
-        }
-
-        let read_start = Instant::now();
-        let mut packets = 0usize;
-        let mut reads = 0usize;
-        while self.buf.len() < len {
-            let mut buf = self
-                .ep_buf
-                .pop()
-                .unwrap_or_else(|| BytesMut::zeroed(max_packet_size));
-            buf.resize(max_packet_size, 0);
-            if reads == 0 {
-                debug!(
-                    payload_len = len,
-                    received_bytes = self.buf.len(),
-                    max_packet_size,
-                    buffer_capacity = buf.capacity(),
-                    "starting first blocking FunctionFS bulk OUT read"
-                );
-            }
-            let buffer_capacity = buf.capacity();
-            let received_bytes = self.buf.len();
-            let mut bulk_ep = self.bulk_endpoint()?;
-            let bytes_read = bulk_ep.read(&mut buf).with_context(|| {
-                format!(
-                    "read blocking bulk ep: payload_len={len}, received_bytes={received_bytes}, packets={packets}, reads={reads}, max_packet_size={max_packet_size}, buffer_capacity={buffer_capacity}"
-                )
-            })?;
-            reads += 1;
-            if bytes_read == 0 {
-                continue;
-            }
-            buf.truncate(bytes_read);
-            self.buf.extend_from_slice(&buf);
-            packets += 1;
-            buf.clear();
-            self.ep_buf.push(buf);
-        }
-        let read_ms = read_start.elapsed().as_millis();
+        self.payload_seq = self.payload_seq.wrapping_add(1);
+        let payload_seq = self.payload_seq;
         debug!(
-            "read {} bytes in {} packets, took {}ms",
-            self.buf.len(),
-            packets,
-            read_ms
+            payload_seq,
+            payload_len = len,
+            read_size = self.read_size,
+            max_packet_size = FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE,
+            "receiving FunctionFS bulk OUT payload"
         );
 
-        if self.buf.len() < len {
-            panic!("expected buf len at least {}, got {}", len, self.buf.len());
-        }
-        if self.buf.len() > len {
-            warn!(
-                "bulk read overshot expected payload length: got {} bytes, expected {}. Truncating trailing {} bytes",
-                self.buf.len(),
+        let read_start = Instant::now();
+        let bulk_stats = if self.legacy_512 {
+            self.read_legacy_512_payload(len)?
+        } else {
+            let bulk_ep = self.bulk_endpoint()?;
+            let mut bulk_reader = bulk_ep.as_ref();
+            read_functionfs_payload(
+                &mut bulk_reader,
+                &mut self.buf,
+                payload_seq,
                 len,
-                self.buf.len() - len
-            );
-            self.buf.truncate(len);
-        }
+                self.read_size,
+            )?
+        };
+        let read_ms = read_start.elapsed().as_millis();
+        debug!(
+            payload_seq,
+            payload_bytes = self.buf.len(),
+            read_calls = bulk_stats.read_calls,
+            usb_packets_est = usb_packet_estimate(len),
+            read_ms,
+            "completed FunctionFS bulk OUT payload"
+        );
 
-        let mut stats = PayloadStats {
+        Ok(PayloadStats {
+            payload_seq,
             transfer_bytes: len,
             output_bytes: info.length as usize,
-            packets,
+            usb_packets_est: usb_packet_estimate(len),
+            read_calls: bulk_stats.read_calls,
+            read_size: self.read_size,
+            first_request_bytes: bulk_stats.first_request_bytes,
+            last_request_bytes: bulk_stats.last_request_bytes,
             read_ms,
             ..PayloadStats::default()
-        };
+        })
+    }
 
+    pub fn finish_payload(
+        &mut self,
+        info: &SetBuffer,
+        bpp: usize,
+        mut stats: PayloadStats,
+    ) -> anyhow::Result<(&[u8], PayloadStats)> {
+        let processing_start = Instant::now();
         let buf = if info.compression > 0 {
             let decompress_start = Instant::now();
             if self.compress_buf.len() < info.length as usize {
@@ -1005,13 +1135,69 @@ impl PixelDataEndpoint {
             bpp,
         );
         dump_raw_buffer_if_enabled("GUD_DUMP_RX_RAW_PATH", buf);
-        stats.total_ms = start.elapsed().as_millis();
+        stats.total_ms = stats.read_ms + processing_start.elapsed().as_millis();
         debug!("recv_payload total took {}ms", stats.total_ms);
 
         Ok((buf, stats))
     }
 
-    fn bulk_endpoint(&mut self) -> anyhow::Result<&File> {
+    fn read_legacy_512_payload(&mut self, len: usize) -> anyhow::Result<BulkReadStats> {
+        let max_packet_size = FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE;
+        self.buf.clear();
+        if self.buf.capacity() < len {
+            self.buf.reserve(len - self.buf.capacity());
+        }
+
+        let mut stats = BulkReadStats::default();
+        while self.buf.len() < len {
+            let mut buf = self
+                .legacy_ep_buf
+                .pop()
+                .unwrap_or_else(|| BytesMut::zeroed(max_packet_size));
+            buf.resize(max_packet_size, 0);
+            let buffer_capacity = buf.capacity();
+            let received_bytes = self.buf.len();
+            let bulk_ep = self.bulk_endpoint()?;
+            let mut bulk_reader = bulk_ep.as_ref();
+            let bytes_read = bulk_reader.read(&mut buf).with_context(|| {
+                format!(
+                    "read legacy blocking bulk ep: payload_len={len}, \
+                     received_bytes={received_bytes}, reads={}, \
+                     max_packet_size={max_packet_size}, \
+                     buffer_capacity={buffer_capacity}",
+                    stats.read_calls
+                )
+            })?;
+            stats.read_calls += 1;
+            if stats.read_calls == 1 {
+                stats.first_request_bytes = max_packet_size;
+            }
+            stats.last_request_bytes = max_packet_size;
+            if bytes_read == 0 {
+                self.legacy_ep_buf.push(buf);
+                continue;
+            }
+            buf.truncate(bytes_read);
+            self.buf.extend_from_slice(&buf);
+            buf.clear();
+            self.legacy_ep_buf.push(buf);
+        }
+
+        if self.buf.len() > len {
+            warn!(
+                "legacy bulk read overshot expected payload length: got {} bytes, expected {}. \
+                 Truncating trailing {} bytes",
+                self.buf.len(),
+                len,
+                self.buf.len() - len
+            );
+            self.buf.truncate(len);
+        }
+
+        Ok(stats)
+    }
+
+    fn bulk_endpoint(&mut self) -> anyhow::Result<Arc<File>> {
         if self.bulk_ep.is_none() {
             debug!(
                 path = FUNCTIONFS_BULK_OUT_EP_PATH,
@@ -1024,10 +1210,11 @@ impl PixelDataEndpoint {
             );
         }
 
-        Ok(self
-            .bulk_ep
-            .as_deref()
-            .expect("bulk endpoint was just initialized"))
+        Ok(Arc::clone(
+            self.bulk_ep
+                .as_ref()
+                .expect("bulk endpoint was just initialized"),
+        ))
     }
 
     pub fn copy_buffer_to_framebuffer(
@@ -1088,18 +1275,65 @@ mod tests {
         active_scanout_state, build_display_descriptor, commit_pending_state,
         configure_state_check_validation, current_status, handle_resume_transition,
         handle_suspend_transition, latch_status, mark_success, next_connector_status,
-        parse_enable_request, reset_connector_status_changed, reset_protocol_state, reset_status,
-        serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
-        store_pending_state, update_controller_enabled, update_display_enabled,
-        validate_buffer_request, validate_state_check_payload, ActiveScanoutState,
-        ConnectorDescriptor, DisplayMode, DisplayState, PixelDataEndpoint, SetBuffer,
+        parse_enable_request, read_functionfs_payload, reset_connector_status_changed,
+        reset_protocol_state, reset_status, serialize_connector_descriptors,
+        serialize_display_descriptor, serialize_display_modes, store_pending_state,
+        update_controller_enabled, update_display_enabled, usb_packet_estimate,
+        validate_buffer_request, validate_functionfs_read_size, validate_state_check_payload,
+        ActiveScanoutState, ConnectorDescriptor, DisplayMode, DisplayState, PixelDataEndpoint,
+        SetBuffer, DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE, FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE,
         GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
         GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_MAGIC, GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK,
         GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
     use crate::{event, Event};
+    use bytes::BytesMut;
     use serde::Serialize;
+    use std::io::{self, Cursor, Read};
     use usb_gadget::function::custom;
+
+    struct RecordingReader {
+        data: Cursor<Vec<u8>>,
+        max_result: Option<usize>,
+        requests: Vec<usize>,
+    }
+
+    impl RecordingReader {
+        fn new(data: Vec<u8>) -> Self {
+            Self {
+                data: Cursor::new(data),
+                max_result: None,
+                requests: Vec::new(),
+            }
+        }
+
+        fn with_max_result(data: Vec<u8>, max_result: usize) -> Self {
+            Self {
+                data: Cursor::new(data),
+                max_result: Some(max_result),
+                requests: Vec::new(),
+            }
+        }
+    }
+
+    impl Read for RecordingReader {
+        fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+            self.requests.push(buf.len());
+            let result_len = self.max_result.unwrap_or(buf.len()).min(buf.len());
+            self.data.read(&mut buf[..result_len])
+        }
+    }
+
+    struct ErrorReader;
+
+    impl Read for ErrorReader {
+        fn read(&mut self, _buf: &mut [u8]) -> io::Result<usize> {
+            Err(io::Error::new(
+                io::ErrorKind::Interrupted,
+                "simulated endpoint cancellation",
+            ))
+        }
+    }
 
     #[derive(Serialize)]
     struct StateCheckRequest {
@@ -1219,6 +1453,179 @@ mod tests {
         assert_eq!(&buf[0..4], &174_359_u32.to_le_bytes());
         assert_eq!(&buf[4..6], &1080_u16.to_le_bytes());
         assert_eq!(&buf[12..14], &2280_u16.to_le_bytes());
+    }
+
+    #[test]
+    fn functionfs_read_size_requires_larger_packet_aligned_requests() {
+        assert!(validate_functionfs_read_size(4 * 1024).is_ok());
+        assert!(validate_functionfs_read_size(16 * 1024).is_ok());
+        assert!(validate_functionfs_read_size(DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE).is_ok());
+
+        assert!(validate_functionfs_read_size(FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE).is_err());
+        assert!(validate_functionfs_read_size(65_000).is_err());
+        assert!(validate_functionfs_read_size(64 * 1024 + 512).is_err());
+    }
+
+    #[test]
+    fn functionfs_current_tile_uses_four_staged_reads() {
+        let data = vec![0x5a; 64_000];
+        let mut reader = RecordingReader::new(data.clone());
+        let mut buf = BytesMut::new();
+
+        let stats = read_functionfs_payload(
+            &mut reader,
+            &mut buf,
+            1,
+            data.len(),
+            DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        )
+        .unwrap();
+
+        assert_eq!(reader.requests, [16_384, 16_384, 16_384, 14_848]);
+        assert_eq!(buf.as_ref(), data.as_slice());
+        assert_eq!(stats.read_calls, 4);
+        assert_eq!(stats.first_request_bytes, 16_384);
+        assert_eq!(stats.last_request_bytes, 14_848);
+        assert_eq!(usb_packet_estimate(data.len()), 125);
+    }
+
+    #[test]
+    fn functionfs_64k_ab_ceiling_uses_one_exact_read() {
+        let data = vec![0x3c; 64_000];
+        let mut reader = RecordingReader::new(data.clone());
+        let mut buf = BytesMut::new();
+
+        let stats =
+            read_functionfs_payload(&mut reader, &mut buf, 2, data.len(), 64 * 1024).unwrap();
+
+        assert_eq!(reader.requests, [64_000]);
+        assert_eq!(buf.as_ref(), data.as_slice());
+        assert_eq!(stats.read_calls, 1);
+        assert_eq!(stats.first_request_bytes, 64_000);
+        assert_eq!(stats.last_request_bytes, 64_000);
+    }
+
+    #[test]
+    fn functionfs_read_ceiling_splits_only_after_full_aligned_request() {
+        let data = vec![0xa5; DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE + 1];
+        let mut reader = RecordingReader::new(data.clone());
+        let mut buf = BytesMut::new();
+
+        let stats = read_functionfs_payload(
+            &mut reader,
+            &mut buf,
+            3,
+            data.len(),
+            DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        )
+        .unwrap();
+
+        assert_eq!(reader.requests, [16_384, 1]);
+        assert_eq!(buf.as_ref(), data.as_slice());
+        assert_eq!(stats.read_calls, 2);
+        assert_eq!(stats.first_request_bytes, 16_384);
+        assert_eq!(stats.last_request_bytes, 1);
+    }
+
+    #[test]
+    fn functionfs_final_frame_tile_uses_four_staged_reads() {
+        let data = vec![0x24; 51_200];
+        let mut reader = RecordingReader::new(data.clone());
+        let mut buf = BytesMut::new();
+
+        let stats = read_functionfs_payload(
+            &mut reader,
+            &mut buf,
+            4,
+            data.len(),
+            DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        )
+        .unwrap();
+
+        assert_eq!(reader.requests, [16_384, 16_384, 16_384, 2_048]);
+        assert_eq!(buf.as_ref(), data.as_slice());
+        assert_eq!(stats.read_calls, 4);
+    }
+
+    #[test]
+    fn functionfs_final_unaligned_request_is_not_padded_in_userspace() {
+        let data = vec![0x7e; 64_800];
+        let mut reader = RecordingReader::new(data.clone());
+        let mut buf = BytesMut::new();
+
+        let stats = read_functionfs_payload(
+            &mut reader,
+            &mut buf,
+            5,
+            data.len(),
+            DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        )
+        .unwrap();
+
+        assert_eq!(reader.requests, [16_384, 16_384, 16_384, 15_648]);
+        assert_eq!(buf.as_ref(), data.as_slice());
+        assert_eq!(stats.read_calls, 4);
+    }
+
+    #[test]
+    fn functionfs_short_read_fails_without_queueing_another_request() {
+        let data = vec![0x5a; 64_000];
+        let mut reader = RecordingReader::with_max_result(data, 4 * 1024);
+        let mut buf = BytesMut::new();
+
+        let err = read_functionfs_payload(
+            &mut reader,
+            &mut buf,
+            6,
+            64_000,
+            DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        )
+        .unwrap_err();
+
+        assert_eq!(reader.requests, [16_384]);
+        assert!(err.to_string().contains("short FunctionFS bulk OUT read"));
+        assert!(err.to_string().contains("result_bytes=4096"));
+    }
+
+    #[test]
+    fn functionfs_zero_read_fails_without_busy_looping() {
+        let mut reader = RecordingReader::new(Vec::new());
+        let mut buf = BytesMut::new();
+
+        let err = read_functionfs_payload(
+            &mut reader,
+            &mut buf,
+            7,
+            64_000,
+            DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        )
+        .unwrap_err();
+
+        assert_eq!(reader.requests, [16_384]);
+        assert!(err.to_string().contains("result_bytes=0"));
+    }
+
+    #[test]
+    fn functionfs_read_error_preserves_io_error_in_chain() {
+        let mut reader = ErrorReader;
+        let mut buf = BytesMut::new();
+
+        let err = read_functionfs_payload(
+            &mut reader,
+            &mut buf,
+            8,
+            64_000,
+            DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        )
+        .unwrap_err();
+        let io_err = err
+            .chain()
+            .find_map(|cause| cause.downcast_ref::<io::Error>())
+            .expect("I/O error should remain in the error chain");
+
+        assert_eq!(io_err.kind(), io::ErrorKind::Interrupted);
+        assert!(err.to_string().contains("read_index=1"));
+        assert!(err.to_string().contains("request_bytes=16384"));
     }
 
     #[test]
