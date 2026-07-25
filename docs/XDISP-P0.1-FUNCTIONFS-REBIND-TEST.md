@@ -217,6 +217,36 @@ service/kernel journals, pstore, and watchdog state before the one isolated
 four-read payload. A kernel that still reports `g_dma: 1` is not the intended
 test and must receive no payload.
 
+### Modern-laptop control with `g_dma=1`: passed
+
+After physical recovery, the same Pi binary and 16 KiB setting were started
+once from an inactive service and connected to a modern Linux 7.0 Asahi/Fedora
+laptop using its upstream in-tree GUD driver and xHCI. KDE recognized the
+gadget as an extended monitor at 1920x1080. The Pi remained in buffer-DMA mode
+(`g_dma=1`, `g_dma_desc=0`) at high speed.
+
+The live aggregate reached 953 completed compressed payloads, 432,606,856
+transfer bytes, and 27,053 FunctionFS read calls. All 27,053 reads completed;
+there were zero short reads, poisoned transitions, or impossible completion
+lengths. Receive time averaged 14.86 ms and total Pi processing averaged
+32.48 ms. A representative 420,584-byte compressed 1920x1080 update used 26
+reads (`25 * 16384 + 10984`) and completed receive/decompress/copy processing
+in 27 ms. Neither host nor Pi logged a transport/kernel failure.
+
+This control proves that neither 16 KiB reads nor DWC2 buffer DMA is
+universally broken on this Pi. The OnePlus failure is conditional on host,
+transfer shape, timing, or their interaction. Important differences include
+the laptop's modern upstream GUD/xHCI path and compressed full-screen payloads
+versus the OnePlus Linux 4.9 backport and uncompressed 64,000-byte tiles.
+
+Keep the four-read candidate and do not restore the 125-read loop. `g_dma=0`
+remains useful as an OnePlus-specific A/B isolation test, not as a newly proven
+general requirement. This laptop control does not satisfy any OnePlus
+mini-cycle or acceptance-matrix entry, so `XDISP-P0.1` remains blocked.
+
+Evidence:
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-16k-live-2026-07-25T2256BST/`.
+
 ## Step 5 pre-matrix gate
 
 Do not begin the ten-cycle matrix with the historical 512-byte loop or with
