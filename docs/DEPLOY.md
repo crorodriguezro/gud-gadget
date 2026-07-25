@@ -1,19 +1,19 @@
-# Deploying gud-drm to postmarketOS (OnePlus 6)
+# Deploying gud-drm
 
-This guide covers building, deploying, and running the GUD gadget driver on a postmarketOS device.
-
-For the current OnePlus target in this workspace, use:
-
-- SSH target: `cristian@192.168.1.106`
-- Hostname: `oneplus-enchilada`
-- DRM node: `/dev/dri/card0`
-- UDC: `a600000.usb`
+This guide covers building, deploying, and running the GUD gadget driver.
 
 Project helper scripts:
 
 - `scripts/oneplus-status.sh`
 - `scripts/deploy-oneplus.sh`
 - `scripts/run-oneplus-gud.sh`
+
+## Targets
+
+| Device | SSH target | Hostname | DRM node | UDC |
+|--------|-----------|----------|----------|-----|
+| OnePlus 6 | `cristian@192.168.1.106` | `oneplus-enchilada` | `/dev/dri/card0` | `a600000.usb` |
+| RPi Zero 2 W | `cristian@192.168.1.110` | `raspberrypi` | `/dev/dri/card0` | `3f980000.usb` |
 
 ## Prerequisites
 
@@ -269,13 +269,139 @@ doas systemctl start greetd
 
 ## On the Host PC
 
-The host PC needs the GUD kernel driver (available in Linux 5.13+). When the OnePlus is connected and gud-drm is running:
+The host PC needs the GUD kernel driver (available in Linux 5.13+). When the gadget device is connected and gud-drm is running:
 
 ```bash
 # Check if GUD device is recognized
-ls /sys/class/drm/ | grep gud
+lsusb | grep 1d50:614d
+ls /sys/class/drm/ | grep USB
 
 # The display should appear as a DRM device
 # Check dmesg for GUD driver messages
 dmesg | grep -i gud
+```
+
+# Raspberry Pi Zero 2 W Setup
+
+## Hardware Notes
+
+The RPi Zero 2 W has a single micro-USB port (OTG) and a mini-HDMI port.
+
+- **Micro-USB port**: OTG-capable, used for USB gadget mode. Must be connected to the host PC with a **data cable** (not charge-only).
+- **Mini-HDMI port**: Video output only, used to see the "WAITING" screen on the device.
+
+**Cable compatibility**: Not all micro-USB data cables work for gadget mode. Out of
+three cables tested (two short black, one long white), only the long white cable
+worked. If the UDC state stays `not attached`, try a different cable — even cables
+that work for file transfer may lack the OTG pin wiring needed for gadget mode.
+
+The RPi Zero 2 W runs Debian with kernel `6.12.47+rpt-rpi-v8`. The kernel has
+FunctionFS support built-in (`CONFIG_USB_CONFIGFS_F_FS=y`, `CONFIG_USB_F_FS=m`).
+
+## First-Time Setup
+
+### 1. Connect a monitor and keyboard
+
+Plug a monitor into the mini-HDMI port and a keyboard into a USB hub on the
+micro-USB port (or connect via WiFi/SSH if already configured).
+
+### 2. Deploy the binary
+
+```bash
+# From the build machine
+scp ~/gud-drm cristian@192.168.1.110:~/
+ssh cristian@192.168.1.110 "chmod +x ~/gud-drm"
+```
+
+### 3. Stop the local display and start gud-drm manually
+
+```bash
+ssh cristian@192.168.1.110
+
+# Unbind the virtual console to free the DRM device
+sudo sh -c 'echo 0 > /sys/class/vtconsole/vtcon1/bind'
+sudo sh -c 'echo 0 > /sys/class/graphics/fb0/blank'
+
+# Start gud-drm
+sudo ~/gud-drm /dev/dri/card0
+```
+
+The screen will show a "WAITING" penguin. At this point the USB gadget is set up
+but the display won't show the host desktop until the USB data cable is connected
+**and** the host enumerates the device.
+
+### 4. Enable auto-start on boot
+
+The RPi Zero 2 W starts `gud-drm` automatically on boot via a systemd service.
+To set this up:
+
+```bash
+# Create the service file
+sudo tee /etc/systemd/system/gud-userspace.service << 'EOF'
+[Unit]
+Description=GUD Userspace Display Driver
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/home/cristian/gud-drm /dev/dri/card0
+Restart=on-failure
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable the service
+sudo systemctl enable gud-userspace.service
+```
+
+Note: The service file may have warnings about `StartLimitIntervalSec` — this key
+is not recognized in the `[Service]` section (it belongs in `[Unit]`) but it is
+harmless.
+
+### 5. Reboot with the USB cable connected
+
+After rebooting with the micro-USB data cable connected to the host PC, the
+device will automatically:
+
+1. Start `gud-drm` on boot
+2. Enumerate as a USB GUD display (`1d50:614d`)
+3. Appear as a new DRM output on the host (`card*-USB-*`)
+4. Display the host's extended/mirrored desktop
+
+No manual SSH intervention is needed after the initial setup.
+
+## Troubleshooting (RPi Zero 2 W)
+
+### Display shows "WAITING" but host doesn't see it
+
+- Check the UDC state: `cat /sys/class/udc/3f980000.usb/state`
+  - `configured` = USB connected and enumerated
+  - `not attached` = no USB data connection (try a different cable or port)
+- Ensure the micro-USB **data** cable is connected to the host PC
+- Verify on the host: `lsusb | grep 1d50:614d`
+
+### UDC shows "UDC had already started"
+
+A previous `gud-drm` instance or the systemd service already bound the gadget.
+Kill the duplicate:
+
+```bash
+ps aux | grep gud-drm | grep -v grep
+sudo kill <PID>
+```
+
+### SSH becomes unreachable when gud-drm is running
+
+`usb_gadget::remove_all()` is called at startup, which tears down all existing
+USB gadgets. On the RPi Zero 2 W this can disrupt the WiFi adapter if it shares
+the USB bus. Connect via the mini-HDMI console or wait for the systemd service
+to restart `gud-drm` after a disconnect/reconnect cycle.
+
+### Restore local display
+
+```bash
+sudo systemctl stop gud-userspace.service
+sudo sh -c 'echo 1 > /sys/class/vtconsole/vtcon1/bind'
 ```
