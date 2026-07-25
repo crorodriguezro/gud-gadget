@@ -396,6 +396,28 @@ systemd is safe, but activation requires the separately controlled
 stop/start-and-payload procedure in
 `XDISP-P0.1-FUNCTIONFS-REBIND-TEST.md`.
 
+### XDISP-P0.1 test-only descriptor controls
+
+The diagnostic binary accepts two explicitly test-only environment variables:
+
+```text
+GUD_TEST_COMPRESSION=lz4|none
+GUD_TEST_MAX_BUFFER_SIZE=<positive u32>
+```
+
+When absent, behavior is unchanged: the gadget advertises LZ4 and its natural
+maximum buffer size. `GUD_TEST_COMPRESSION` accepts exactly `lz4` or `none`;
+the maximum-buffer override must be nonzero and no larger than the natural
+maximum. Invalid values fail before DRM or UDC setup. A startup warning makes
+any active override visible in the journal.
+
+The reproducible Gate A and Gate B examples live under `systemd/test-only/`.
+They are not normal service configuration and must never be installed
+together. Changing either descriptor value requires a fresh Pi boot and USB
+enumeration; reusing a host's cached descriptor is not valid evidence. Gate A
+retains LZ4 with a 64,000-byte maximum. Gate B keeps the same maximum and
+advertises no compression.
+
 The lifecycle-repair build enables `ctrlc` termination handling. Before every
 blocking FunctionFS receive, Step 5 atomically changes the session from
 `Idle` to `InFlight`. `SIGTERM` may claim and unbind the UDC only from `Idle`;

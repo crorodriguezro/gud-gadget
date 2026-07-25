@@ -313,8 +313,33 @@ impl<'a> GetDescriptor<'a> {
         max_height: u32,
         compression: u8,
     ) -> anyhow::Result<()> {
-        let descriptor =
-            build_display_descriptor(min_width, min_height, max_width, max_height, compression);
+        self.send_descriptor_with_max_buffer_size(
+            min_width,
+            min_height,
+            max_width,
+            max_height,
+            compression,
+            None,
+        )
+    }
+
+    pub fn send_descriptor_with_max_buffer_size(
+        self,
+        min_width: u32,
+        min_height: u32,
+        max_width: u32,
+        max_height: u32,
+        compression: u8,
+        max_buffer_size: Option<u32>,
+    ) -> anyhow::Result<()> {
+        let descriptor = build_display_descriptor(
+            min_width,
+            min_height,
+            max_width,
+            max_height,
+            compression,
+            max_buffer_size,
+        )?;
         let buf = serialize_display_descriptor(&descriptor)?;
 
         self.sender.send(&buf).context("send display descriptor")?;
@@ -366,8 +391,25 @@ fn build_display_descriptor(
     max_width: u32,
     max_height: u32,
     compression: u8,
-) -> DisplayDescriptor {
-    DisplayDescriptor {
+    max_buffer_size: Option<u32>,
+) -> anyhow::Result<DisplayDescriptor> {
+    let natural_max_buffer_size = max_width
+        .checked_mul(max_height)
+        .and_then(|pixels| pixels.checked_mul(4))
+        .context("natural display descriptor maximum buffer size overflowed u32")?;
+    let max_buffer_size = max_buffer_size.unwrap_or(natural_max_buffer_size);
+    ensure!(
+        max_buffer_size > 0,
+        "display descriptor maximum buffer size must be greater than zero"
+    );
+    ensure!(
+        max_buffer_size <= natural_max_buffer_size,
+        "display descriptor maximum buffer size {} exceeds natural maximum {}",
+        max_buffer_size,
+        natural_max_buffer_size
+    );
+
+    Ok(DisplayDescriptor {
         magic: GUD_DISPLAY_MAGIC,
         version: 1,
         flags: 0,
@@ -376,8 +418,8 @@ fn build_display_descriptor(
         max_width,
         min_height,
         min_width,
-        max_buffer_size: max_height * max_width * 4,
-    }
+        max_buffer_size,
+    })
 }
 
 fn serialize_display_descriptor(descriptor: &DisplayDescriptor) -> anyhow::Result<[u8; 30]> {
@@ -1371,7 +1413,7 @@ mod tests {
 
     #[test]
     fn build_display_descriptor_sets_expected_fields() {
-        let descriptor = build_display_descriptor(640, 480, 1080, 2280, 0);
+        let descriptor = build_display_descriptor(640, 480, 1080, 2280, 0, None).unwrap();
 
         assert_eq!(descriptor.magic, GUD_DISPLAY_MAGIC);
         assert_eq!(descriptor.version, 1);
@@ -1386,10 +1428,29 @@ mod tests {
 
     #[test]
     fn build_display_descriptor_preserves_zero_flags_with_compression_enabled() {
-        let descriptor = build_display_descriptor(640, 480, 1080, 2280, GUD_COMPRESSION_LZ4);
+        let descriptor =
+            build_display_descriptor(640, 480, 1080, 2280, GUD_COMPRESSION_LZ4, None).unwrap();
 
         assert_eq!(descriptor.flags, 0);
         assert_eq!(descriptor.compression, GUD_COMPRESSION_LZ4);
+    }
+
+    #[test]
+    fn build_display_descriptor_accepts_smaller_buffer_size_override() {
+        let descriptor =
+            build_display_descriptor(640, 480, 1920, 1080, GUD_COMPRESSION_LZ4, Some(64_000))
+                .unwrap();
+
+        assert_eq!(descriptor.max_buffer_size, 64_000);
+        assert_eq!(descriptor.compression, GUD_COMPRESSION_LZ4);
+    }
+
+    #[test]
+    fn build_display_descriptor_rejects_invalid_buffer_size_override() {
+        assert!(build_display_descriptor(640, 480, 1920, 1080, 0, Some(0)).is_err());
+        assert!(
+            build_display_descriptor(640, 480, 1920, 1080, 0, Some(1920 * 1080 * 4 + 1)).is_err()
+        );
     }
 
     #[test]
@@ -1420,7 +1481,7 @@ mod tests {
 
     #[test]
     fn serialize_display_descriptor_matches_expected_size_and_header() {
-        let descriptor = build_display_descriptor(640, 480, 1080, 2280, 0);
+        let descriptor = build_display_descriptor(640, 480, 1080, 2280, 0, None).unwrap();
 
         let buf = serialize_display_descriptor(&descriptor).unwrap();
 

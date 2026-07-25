@@ -1006,6 +1006,39 @@ fn parse_functionfs_read_size(raw: Option<&OsStr>) -> anyhow::Result<usize> {
         .with_context(|| format!("invalid GUD_FFS_READ_SIZE={raw:?}"))
 }
 
+fn parse_test_compression(raw: Option<&OsStr>) -> anyhow::Result<u8> {
+    let Some(raw) = raw else {
+        return Ok(GUD_COMPRESSION_LZ4);
+    };
+    let raw = raw
+        .to_str()
+        .context("GUD_TEST_COMPRESSION must be valid UTF-8")?;
+    match raw {
+        "lz4" => Ok(GUD_COMPRESSION_LZ4),
+        "none" => Ok(0),
+        _ => anyhow::bail!(
+            "invalid GUD_TEST_COMPRESSION={raw:?}; expected exactly \"lz4\" or \"none\""
+        ),
+    }
+}
+
+fn parse_test_max_buffer_size(raw: Option<&OsStr>) -> anyhow::Result<Option<u32>> {
+    let Some(raw) = raw else {
+        return Ok(None);
+    };
+    let raw = raw
+        .to_str()
+        .context("GUD_TEST_MAX_BUFFER_SIZE must be valid UTF-8")?;
+    let max_buffer_size = raw
+        .parse::<u32>()
+        .with_context(|| format!("invalid GUD_TEST_MAX_BUFFER_SIZE={raw:?}"))?;
+    ensure!(
+        max_buffer_size > 0,
+        "GUD_TEST_MAX_BUFFER_SIZE must be greater than zero"
+    );
+    Ok(Some(max_buffer_size))
+}
+
 fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(fmt::layer())
@@ -1019,6 +1052,11 @@ fn main() -> anyhow::Result<()> {
         .next()
         .expect("specify full path to /dev/dri/cardN as program argument");
     let functionfs_read_size = parse_functionfs_read_size(var_os("GUD_FFS_READ_SIZE").as_deref())?;
+    let test_compression_raw = var_os("GUD_TEST_COMPRESSION");
+    let test_max_buffer_size_raw = var_os("GUD_TEST_MAX_BUFFER_SIZE");
+    let descriptor_compression = parse_test_compression(test_compression_raw.as_deref())?;
+    let descriptor_max_buffer_size =
+        parse_test_max_buffer_size(test_max_buffer_size_raw.as_deref())?;
     let (mut gud_data, gud_data_ep) =
         gud_gadget::PixelDataEndpoint::new_with_read_size(functionfs_read_size)
             .context("configure FunctionFS bulk OUT read size")?;
@@ -1043,6 +1081,17 @@ fn main() -> anyhow::Result<()> {
         functionfs_read_size,
         BULK_RECEIVE_DEADLINE.as_millis()
     );
+    if test_compression_raw.is_some() || test_max_buffer_size_raw.is_some() {
+        warn!(
+            compression = if descriptor_compression == 0 {
+                "none"
+            } else {
+                "lz4"
+            },
+            ?descriptor_max_buffer_size,
+            "TEST-ONLY GUD descriptor override enabled; a fresh USB enumeration is required"
+        );
+    }
     info!("Opening DRM device: {}", card_path);
     let mut card = Card::open(&card_path);
     let udc = default_udc().expect("no UDC found");
@@ -1473,12 +1522,13 @@ fn main() -> anyhow::Result<()> {
                 }
                 match gud_event {
                     Event::GetDescriptor(req) => {
-                        if let Err(err) = req.send_descriptor(
+                        if let Err(err) = req.send_descriptor_with_max_buffer_size(
                             min_width,
                             min_height,
                             max_width,
                             max_height,
-                            GUD_COMPRESSION_LZ4,
+                            descriptor_compression,
+                            descriptor_max_buffer_size,
                         ) {
                             tracing::error!("Failed to send descriptor: {}", err);
                         } else {
@@ -1979,9 +2029,10 @@ fn main() -> anyhow::Result<()> {
 mod tests {
     use super::{
         compute_scaled_layout, derive_mode_from_native, parse_functionfs_read_size,
-        render_waiting_screen, should_report_detach_error, waiting_scene_glyph, BulkReceiveSession,
-        BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome,
-        ScaledLayout, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
+        parse_test_compression, parse_test_max_buffer_size, render_waiting_screen,
+        should_report_detach_error, waiting_scene_glyph, BulkReceiveSession, BulkReceiveState,
+        DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ScaledLayout, RGB565_BLACK,
+        RGB565_GREEN, RGB565_WHITE,
     };
     use gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED;
     use std::ffi::OsStr;
@@ -2001,6 +2052,26 @@ mod tests {
             16_384
         );
         assert!(parse_functionfs_read_size(Some(OsStr::new("not-a-size"))).is_err());
+    }
+
+    #[test]
+    fn test_compression_parser_preserves_default_and_accepts_named_values() {
+        assert_eq!(parse_test_compression(None).unwrap(), 1);
+        assert_eq!(parse_test_compression(Some(OsStr::new("lz4"))).unwrap(), 1);
+        assert_eq!(parse_test_compression(Some(OsStr::new("none"))).unwrap(), 0);
+        assert!(parse_test_compression(Some(OsStr::new("off"))).is_err());
+    }
+
+    #[test]
+    fn test_max_buffer_size_parser_accepts_positive_u32_only() {
+        assert_eq!(parse_test_max_buffer_size(None).unwrap(), None);
+        assert_eq!(
+            parse_test_max_buffer_size(Some(OsStr::new("64000"))).unwrap(),
+            Some(64_000)
+        );
+        assert!(parse_test_max_buffer_size(Some(OsStr::new("0"))).is_err());
+        assert!(parse_test_max_buffer_size(Some(OsStr::new("-1"))).is_err());
+        assert!(parse_test_max_buffer_size(Some(OsStr::new("not-a-size"))).is_err());
     }
 
     #[test]

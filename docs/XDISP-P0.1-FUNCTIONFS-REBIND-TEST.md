@@ -265,11 +265,21 @@ Avoid a Pi kernel build until a userspace-only transfer-shape control is run:
    finished, retain final host/Pi counters, physically disconnect the laptop,
    and require the UDC to become detached and the receive session to be idle
    without a kernel/service anomaly.
-2. In `gud-gadget`, add test-only descriptor configuration for compression
-   disabled and an optional `max_buffer_size=64000`. Keep the normal LZ4 and
-   natural maximum-buffer defaults unchanged, validate both settings, and
-   cover them with unit tests. Use temporary service configuration and require
-   a fresh enumeration whenever descriptor values change.
+2. The test-only descriptor controls are implemented as
+   `GUD_TEST_COMPRESSION=lz4|none` and
+   `GUD_TEST_MAX_BUFFER_SIZE=<positive u32>`. With both absent, the normal LZ4
+   and natural maximum-buffer defaults remain unchanged. Invalid values fail
+   before UDC setup, the descriptor layer rejects a zero or above-natural
+   maximum, and unit tests cover the default, both compression choices,
+   `64000`, and invalid inputs. The mutually exclusive temporary drop-ins are:
+
+   ```text
+   systemd/test-only/30-xdisp-p0.1-laptop-gate-a.conf
+   systemd/test-only/30-xdisp-p0.1-laptop-gate-b.conf
+   ```
+
+   Install only the drop-in for the current gate. Any descriptor change
+   requires a fresh Pi boot and USB enumeration.
 3. On a fresh, clean Pi boot, use the same 16 KiB FunctionFS binary and
    `g_dma=1`, connect the modern laptop at RGB565 1280x720, advertise
    `max_buffer_size=64000` while retaining LZ4, and submit one deterministic
