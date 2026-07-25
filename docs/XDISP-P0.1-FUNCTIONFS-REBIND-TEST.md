@@ -56,6 +56,74 @@ power cycle, hardware reset, or watchdog reset, and immediately collect the
 previous-boot service/kernel journals, `/sys/fs/pstore`, and watchdog state
 before another gadget start.
 
+## Step 5 read strategy and rationale
+
+The Step 5 change replaces the Pi service's historical 512-byte userspace read
+loop with a configurable, packet-aligned FunctionFS read ceiling. The first
+hardware setting is 16,384 bytes. A normal 64,000-byte tile is therefore read
+as `16384 + 16384 + 16384 + 14848`, reducing 125 blocking FunctionFS read
+operations to four. The last 51,200-byte tile is read as
+`16384 + 16384 + 16384 + 2048`.
+
+This changes the number and size of userspace/FunctionFS requests, not the
+number of 512-byte USB high-speed packets on the wire. Its goal is to reduce
+FunctionFS request churn and the timing surface around the DWC2 endpoint while
+retaining a bounded allocation size. Starting at 16 KiB is deliberately more
+conservative than immediately requesting one 64 KiB kernel buffer because the
+reproduced failure also showed allocator corruption on a DWC2 configuration
+without scatter-gather support.
+
+The final read always requests the exact remaining protocol payload. It is not
+padded to 16 KiB or even to 512 bytes, because the host sends exactly the
+declared tile length and does not promise extra padding or a terminating
+zero-length packet. Padding the userspace request could create a new indefinite
+wait after a complete host transfer.
+
+This is a diagnostic stability change, not a proven fix. A clean complete
+frame followed by a safe stop/start establishes only the first Step 5 gate.
+Three clean mini-cycles are required before the official ten-cycle matrix, and
+only all ten matrix passes can verify `XDISP-P0.1`.
+
+## First 16 KiB hardware result: failed
+
+The first controlled Step 5 hardware run on 2026-07-25 deployed and verified
+the documented binary and drop-ins, manually started the service from an
+inactive state, and reached a fresh high-speed `1d50:614d` probe after the
+documented OnePlus `device -> host` role reset.
+
+The first 64,000-byte tile failed on read 1 of 4. The Pi requested 16,384 bytes
+and FunctionFS returned `18446744073709045760`, the unsigned representation of
+signed `-505856`, after 476 microseconds. DWC2 debugfs simultaneously showed
+buffer DMA enabled (`g_dma=1`, `g_dma_desc=0`) and ep1 OUT `DOEPTSIZ=0x7f800`,
+or 522,240 bytes remaining, despite only 16,384 bytes being loaded. The
+resulting unsigned arithmetic is:
+
+```text
+0x4000 - 0x7f800 = 0xfff84800 = -505856 signed
+```
+
+That result matches the DWC2 buffer-DMA completion path that derives
+`req->actual` from loaded bytes minus the endpoint's residual count. FunctionFS
+propagated the impossible completion, and the Step 5 service correctly entered
+`Poisoned` without another read or teardown. The Pi stayed reachable and
+showed no new kernel Oops, allocator warning, endpoint-stop timeout, or pstore
+record.
+
+The OnePlus utility printed `PAYLOAD_RC=0`, but its fresh kernel log recorded
+bulk and atomic-update `-110`, followed by control request `0x64` `-110`.
+`PAYLOAD_RC=0` is therefore not proof of successful transport for this
+asynchronous update path; host kernel status plus a complete Pi `frame_stats`
+record are mandatory.
+
+Conclusion: larger reads improved fault localization and containment, but did
+not fix transport. Do not run a 64 KiB A/B, return to 512 bytes, start the
+mini-cycles, or attempt service stop/start. The poisoned instance requires
+physical/hardware/watchdog reset. The next diagnostic is a fresh-boot DWC2
+gadget test with `g_dma=0`.
+
+Evidence:
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-step5-16k-first-hardware-2026-07-25T2214BST/`.
+
 ## Step 5 pre-matrix gate
 
 Do not begin the ten-cycle matrix with the historical 512-byte loop or with
@@ -149,10 +217,11 @@ the optional 64 KiB A/B setting. Before the first hardware payload:
    `[16384, 16384, 16384, 2048]`. Require host `PAYLOAD_RC=0`, no host `-110`,
    and no Pi failure condition.
 6. Capture host usbmon for the first URB when available and require
-   `status=0, actual_length=64000`. If usbmon is unavailable, record that fact;
-   `PAYLOAD_RC=0` is the fallback proof because the unchanged host transfer
-   logic in `gud_pipe.c` returns an error when URB `actual_length` differs from
-   the submitted tile length.
+   `status=0, actual_length=64000`. If usbmon is unavailable, record that fact
+   and require both a host kernel log without GUD failure and the complete
+   matching Pi `frame_stats` sequence. `PAYLOAD_RC=0` records only that the
+   userspace invocation returned; the first Step 5 hardware test proved that
+   it can coexist with a later asynchronous host bulk/atomic `-110`.
 7. Immediately after the complete frame, retain the Pi service/kernel journal,
    boot ID, UDC state/speed, `/proc/meminfo`, `/proc/buddyinfo`, allocator
    warnings, host result, and host kernel log. Only if every completion and

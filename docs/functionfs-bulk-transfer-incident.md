@@ -112,14 +112,26 @@ read remains `InFlight`. Decompression and optional dumps run only after the
 session returns to `Idle`, so slow/failed post-read work does not falsely
 poison the endpoint. In-flight and poisoned processes refuse further
 USB/control processing and automatic teardown and require
-physical/hardware-reset recovery. This is locally verified only; no Step 5
-payload has been sent to the Pi yet.
+physical/hardware-reset recovery.
 
 The 16 KiB first setting lowers contiguous-allocation pressure relative to a
 one-request 64,000-byte read on this non-scatter-gather path; it does not prove
-that allocation pressure caused or fixes the corruption. The 64 KiB ceiling
-is reserved for an explicit A/B comparison only after three clean 16 KiB
-payload/teardown/rebind cycles.
+that allocation pressure caused or fixes the corruption.
+
+The first 16 KiB hardware test failed on the first read. FunctionFS returned
+`18446744073709045760` (signed `-505856`) for a 16,384-byte request. The
+poisoned DWC2 state showed buffer DMA enabled, descriptor DMA disabled, and
+ep1 OUT residual `0x7f800` (522,240) against a loaded length of `0x4000`
+(16,384). The buffer-DMA calculation therefore underflowed exactly to
+`0xfff84800`, the observed result. The service entered `Poisoned` and safely
+parked without teardown; the Pi remained reachable and kernel-clean, while
+the host logged bulk/atomic `-110`.
+
+This rules out read-call count alone as the fix and makes DWC2 buffer DMA
+isolation (`g_dma=0`) the next diagnostic. Do not run the 64 KiB A/B or return
+to 512 bytes first. `PAYLOAD_RC=0` also proved insufficient as standalone
+evidence because the asynchronous host failure appeared in the kernel after
+the utility reported success.
 
 ## Future improvements
 

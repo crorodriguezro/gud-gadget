@@ -110,14 +110,14 @@ configured and no competing phone USB identity is required to reproduce it.
   cleanup safer but does not remove the corruption that can occur during the
   active blocked payload. Do not retry the existing 512-byte read loop before
   changing the receive strategy or isolating DWC2 DMA.
-- Step 5 is now implemented locally, but has not yet sent a hardware payload.
-  `GUD_FFS_READ_SIZE` selects a 512-byte-aligned receive ceiling from 4,096
-  through 65,536 bytes; the tracked first-test drop-in pins 16,384. Every
-  syscall requests the smaller of that ceiling and the exact remaining
-  payload, so the normal 64,000-byte first tile becomes four requests
-  (`16384, 16384, 16384, 14848`) rather than 125. The exact remaining count is
-  never padded in userspace because the host does not send undeclared bytes or
-  a terminating zero-length packet.
+- Step 5 was deployed and its first 16,384-byte hardware payload failed on the
+  first read. The Pi requested 16,384 bytes, but FunctionFS returned
+  `18446744073709045760` (signed `-505856`) after 476 microseconds. DWC2
+  debugfs showed `g_dma=1`, `g_dma_desc=0`, and ep1 OUT
+  `DOEPTSIZ=0x0007f800`, or 522,240 bytes remaining. With 16,384 bytes loaded,
+  `0x4000 - 0x7f800` underflows to `0xfff84800`, exactly the returned value.
+  This localizes the immediate failure to DWC2 buffer-DMA completion
+  accounting propagated by FunctionFS; no tile completed.
 - Individual read start/completion logs now include the payload sequence,
   request size, result size, remaining bytes, and duration. A short or
   zero-byte completion fails that payload immediately instead of queueing a
@@ -129,15 +129,19 @@ configured and no competing phone USB identity is required to reproduce it.
   returns to `Idle` and cannot falsely poison the endpoint. In-flight and
   poisoned states refuse further USB/control work and ignore `SIGTERM`;
   recovery requires a physical power cycle, hardware reset, or watchdog reset.
-  `frame_stats` reports `read_calls` separately from `usb_packets_est`. All 39
-  `gud-gadget` and 17 `gud-drm` tests pass. The local AArch64 release artifact
-  is `0c5961daf65a543101bb1727c2c6909a19b5a48ae398cadd94c4c6ebd044b662`.
-- On this DWC2/FunctionFS configuration, larger reads may increase contiguous
-  kernel-allocation pressure. Starting at 16,384 bytes reduces that pressure
-  relative to a one-request 64,000-byte tile, but is not proof that allocation
-  caused or fixes the corruption. A 65,536-byte ceiling remains an explicit
-  later A/B test only after three clean 16,384-byte payload/teardown/rebind
-  cycles. There is no automatic fallback to the old 512-byte loop.
+  That containment worked in hardware: the process entered `Poisoned`, parked,
+  kept the UDC configured, and did not trigger teardown. The Pi remained
+  reachable with no new Oops, allocator warning, DWC2 stop timeout, or pstore
+  record. All 39 `gud-gadget` and 17 `gud-drm` tests pass; the deployed
+  artifact is
+  `0c5961daf65a543101bb1727c2c6909a19b5a48ae398cadd94c4c6ebd044b662`.
+- The OnePlus utility returned `PAYLOAD_RC=0`, but its kernel logged fresh GUD
+  bulk and atomic `-110`, then request `0x64` `-110`. Tool return status alone
+  is not transfer proof. Do not run 65,536 bytes, fall back to 512 bytes, or
+  stop/restart this poisoned boot. The next experiment is DWC2 gadget DMA
+  isolation with `g_dma=0` after physical/hardware/watchdog reset. Evidence is
+  under
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-step5-16k-first-hardware-2026-07-25T2214BST/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
