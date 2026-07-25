@@ -536,12 +536,13 @@ impl RegGadget {
     }
 
     fn do_remove(&mut self) -> Result<()> {
-        for func in self.func_dirs.keys() {
-            func.get().pre_removal()?;
-        }
+        // Cancel UDC requests before FunctionFS closes endpoint files. Closing
+        // a live FunctionFS endpoint can otherwise leave a configured host
+        // attached to stale endpoint state across a gadget rebind.
+        self.bind(None)?;
 
         for func in self.func_dirs.keys() {
-            func.get().dir().set_bound(false);
+            func.get().pre_removal()?;
         }
 
         remove_at(&self.dir)?;

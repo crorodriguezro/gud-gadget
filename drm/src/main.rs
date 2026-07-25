@@ -6,18 +6,96 @@ use drm::control::{
 use gud_gadget::{DisplayMode, Event, GUD_COMPRESSION_LZ4};
 use std::env::{args, var_os};
 use std::fs::{rename, File};
-use std::io::{BufWriter, Write};
+use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, Weak};
 use std::time::Duration;
 use tracing::{debug, info, warn};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use usb_gadget::function::custom::{Custom, Interface};
-use usb_gadget::{default_udc, Class, Config, Gadget, Strings, Udc, UdcState};
+use usb_gadget::{default_udc, Class, Config, Gadget, RegGadget, Strings, Udc, UdcState};
 
 const CRTC_SET_RETRIES: usize = 20;
 const CRTC_SET_RETRY_DELAY: Duration = Duration::from_millis(250);
+
+trait GadgetUnbind: Send + Sync {
+    fn unbind(&self) -> io::Result<()>;
+}
+
+impl GadgetUnbind for RegGadget {
+    fn unbind(&self) -> io::Result<()> {
+        self.bind(None)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum GadgetUnbindOutcome {
+    Armed,
+    DeferredUntilPublish,
+    Unbound,
+    AlreadyUnbound,
+}
+
+#[derive(Default)]
+struct GadgetShutdownState {
+    requested: bool,
+    unbound: bool,
+    target: Option<Weak<dyn GadgetUnbind>>,
+}
+
+#[derive(Clone, Default)]
+struct GadgetShutdown {
+    state: Arc<Mutex<GadgetShutdownState>>,
+}
+
+impl GadgetShutdown {
+    fn publish(&self, target: &Arc<dyn GadgetUnbind>) -> io::Result<GadgetUnbindOutcome> {
+        let mut state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        state.target = Some(Arc::downgrade(target));
+        state.unbound = false;
+
+        if state.requested {
+            Self::unbind_locked(&mut state)
+        } else {
+            Ok(GadgetUnbindOutcome::Armed)
+        }
+    }
+
+    fn request_unbind(&self) -> io::Result<GadgetUnbindOutcome> {
+        let mut state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        state.requested = true;
+        Self::unbind_locked(&mut state)
+    }
+
+    fn clear(&self) {
+        let mut state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        state.target = None;
+    }
+
+    fn unbind_locked(state: &mut GadgetShutdownState) -> io::Result<GadgetUnbindOutcome> {
+        if state.unbound {
+            return Ok(GadgetUnbindOutcome::AlreadyUnbound);
+        }
+
+        let Some(target) = state.target.as_ref().and_then(Weak::upgrade) else {
+            return Ok(GadgetUnbindOutcome::DeferredUntilPublish);
+        };
+
+        target.unbind()?;
+        state.unbound = true;
+        Ok(GadgetUnbindOutcome::Unbound)
+    }
+}
 
 #[derive(Debug)]
 pub struct Card(std::fs::File);
@@ -759,7 +837,7 @@ fn main() -> anyhow::Result<()> {
         .with(EnvFilter::from_default_env())
         .init();
 
-    info!("gud-drm starting (working baseline)");
+    info!("gud-drm starting (XDISP-P0.1 lifecycle repair)");
 
     let card_path = args()
         .skip(1)
@@ -856,10 +934,25 @@ fn main() -> anyhow::Result<()> {
     info!("Built USB gadget");
 
     let running = Arc::new(AtomicBool::new(true));
+    let gadget_shutdown = GadgetShutdown::default();
 
     let r = running.clone();
+    let shutdown = gadget_shutdown.clone();
     ctrlc::set_handler(move || {
         r.store(false, Ordering::SeqCst);
+        match shutdown.request_unbind() {
+            Ok(GadgetUnbindOutcome::DeferredUntilPublish) => {
+                info!("Shutdown requested before USB gadget bind")
+            }
+            Ok(GadgetUnbindOutcome::Unbound) => {
+                info!("USB gadget unbound by shutdown handler")
+            }
+            Ok(GadgetUnbindOutcome::AlreadyUnbound) => {
+                debug!("USB gadget was already unbound")
+            }
+            Ok(GadgetUnbindOutcome::Armed) => unreachable!(),
+            Err(err) => tracing::error!("Failed to unbind USB gadget during shutdown: {}", err),
+        }
     })
     .expect("cleanup handler registration failed");
 
@@ -1033,28 +1126,50 @@ fn main() -> anyhow::Result<()> {
     // Keep the USB gadget disconnected until DRM has a working CRTC and the
     // initial framebuffer is ready. Otherwise a host can begin SET_BUFFER
     // while a transient DRM ownership failure tears the gadget down.
-    let _reg = Gadget::new(
-        Class::interface_specific(),
-        gud_gadget::OPENMOKO_GUD_ID,
-        Strings::new("The Internet", "Generic USB Display", ""),
-    )
-    .with_config(Config::new("gud").with_function(gud_handle))
-    .bind(&udc)
-    .expect("UDC binding failed");
-    if let Err(err) = udc.set_soft_connect(true) {
-        warn!("Failed to assert USB soft-connect: {}", err);
-    }
+    let reg = Arc::new(
+        Gadget::new(
+            Class::interface_specific(),
+            gud_gadget::OPENMOKO_GUD_ID,
+            Strings::new("The Internet", "Generic USB Display", ""),
+        )
+        .with_config(Config::new("gud").with_function(gud_handle))
+        .bind(&udc)
+        .expect("UDC binding failed"),
+    );
     info!("USB gadget bound to UDC");
 
     tracing::info!("Entering main event loop");
     let mut had_host_session = false;
     let mut restart_requested = false;
+    let mut lifecycle_error = None;
+    let unbind_target: Arc<dyn GadgetUnbind> = reg.clone();
+    match gadget_shutdown.publish(&unbind_target) {
+        Ok(GadgetUnbindOutcome::Armed) => {}
+        Ok(GadgetUnbindOutcome::Unbound) => {
+            info!("USB gadget unbound for shutdown immediately after bind")
+        }
+        Ok(GadgetUnbindOutcome::DeferredUntilPublish) | Ok(GadgetUnbindOutcome::AlreadyUnbound) => {
+            unreachable!()
+        }
+        Err(err) => {
+            running.store(false, Ordering::SeqCst);
+            lifecycle_error = Some(
+                anyhow::Error::new(err)
+                    .context("failed to unbind USB gadget after an early shutdown request"),
+            );
+        }
+    }
+    drop(unbind_target);
 
     'event_loop: while running.load(Ordering::Relaxed) {
         let event = match gud.event_timeout(Duration::from_millis(100)) {
             Ok(event) => event,
             Err(err) => {
                 tracing::error!("Failed to read GUD event: {}", err);
+                if !running.load(Ordering::Acquire) {
+                    tracing::info!("Control endpoint read cancelled for shutdown");
+                    break 'event_loop;
+                }
                 if waiting_screen_visible || !matches!(pattern_mode, PatternMode::Off) {
                     continue;
                 }
@@ -1255,6 +1370,10 @@ fn main() -> anyhow::Result<()> {
                                         error_chain = %format_args!("{err:#}"),
                                         "Failed to receive buffer payload"
                                     );
+                                }
+                                if !running.load(Ordering::Acquire) {
+                                    tracing::info!("Bulk endpoint read cancelled for shutdown");
+                                    break 'event_loop;
                                 }
                                 if !waiting_screen_visible
                                     && matches!(pattern_mode, PatternMode::Off)
@@ -1600,6 +1719,54 @@ fn main() -> anyhow::Result<()> {
 
     tracing::info!("Shutting down");
 
+    match gadget_shutdown.request_unbind() {
+        Ok(GadgetUnbindOutcome::Unbound) => info!("USB gadget unbound from UDC"),
+        Ok(GadgetUnbindOutcome::AlreadyUnbound) => {
+            debug!("USB gadget already unbound from UDC")
+        }
+        Ok(GadgetUnbindOutcome::DeferredUntilPublish) | Ok(GadgetUnbindOutcome::Armed) => {
+            unreachable!()
+        }
+        Err(err) => {
+            tracing::error!("Failed to unbind USB gadget from UDC: {}", err);
+            if lifecycle_error.is_none() {
+                lifecycle_error =
+                    Some(anyhow::Error::new(err).context("failed to unbind USB gadget from UDC"));
+            }
+        }
+    }
+
+    gadget_shutdown.clear();
+    let remove_result = match Arc::try_unwrap(reg) {
+        Ok(reg) => reg
+            .remove()
+            .map_err(anyhow::Error::new)
+            .context("failed to remove USB gadget and close FunctionFS"),
+        Err(reg) => {
+            drop(reg);
+            Err(anyhow::anyhow!(
+                "USB gadget still had an unexpected strong owner during shutdown"
+            ))
+        }
+    };
+    match remove_result {
+        Ok(()) => info!("USB gadget removed and FunctionFS teardown completed"),
+        Err(err) => {
+            tracing::error!("{:#}", err);
+            if lifecycle_error.is_none() {
+                lifecycle_error = Some(err);
+            }
+        }
+    }
+
+    drop(gud_data);
+    drop(gud);
+    info!("FunctionFS endpoint owners dropped; DRM release follows");
+
+    if let Some(err) = lifecycle_error {
+        return Err(err);
+    }
+
     if restart_requested {
         return Err(anyhow::anyhow!(
             "USB detached after active host session; restart to recreate gadget"
@@ -1613,9 +1780,97 @@ fn main() -> anyhow::Result<()> {
 mod tests {
     use super::{
         compute_scaled_layout, derive_mode_from_native, render_waiting_screen, waiting_scene_glyph,
-        DisplayMode, ScaledLayout, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
+        DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ScaledLayout, RGB565_BLACK,
+        RGB565_GREEN, RGB565_WHITE,
     };
     use gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED;
+    use std::io;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+
+    #[derive(Default)]
+    struct MockGadget {
+        unbind_calls: AtomicUsize,
+    }
+
+    impl GadgetUnbind for MockGadget {
+        fn unbind(&self) -> io::Result<()> {
+            self.unbind_calls.fetch_add(1, Ordering::SeqCst);
+            Ok(())
+        }
+    }
+
+    #[derive(Default)]
+    struct FailOnceGadget {
+        unbind_calls: AtomicUsize,
+    }
+
+    impl GadgetUnbind for FailOnceGadget {
+        fn unbind(&self) -> io::Result<()> {
+            if self.unbind_calls.fetch_add(1, Ordering::SeqCst) == 0 {
+                Err(io::Error::other("injected first unbind failure"))
+            } else {
+                Ok(())
+            }
+        }
+    }
+
+    #[test]
+    fn shutdown_unbinds_published_gadget_once() {
+        let shutdown = GadgetShutdown::default();
+        let gadget = Arc::new(MockGadget::default());
+        let target: Arc<dyn GadgetUnbind> = gadget.clone();
+
+        assert_eq!(
+            shutdown.publish(&target).unwrap(),
+            GadgetUnbindOutcome::Armed
+        );
+        assert_eq!(
+            shutdown.request_unbind().unwrap(),
+            GadgetUnbindOutcome::Unbound
+        );
+        assert_eq!(
+            shutdown.request_unbind().unwrap(),
+            GadgetUnbindOutcome::AlreadyUnbound
+        );
+        assert_eq!(gadget.unbind_calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn failed_unbind_remains_retryable() {
+        let shutdown = GadgetShutdown::default();
+        let gadget = Arc::new(FailOnceGadget::default());
+        let target: Arc<dyn GadgetUnbind> = gadget.clone();
+
+        assert_eq!(
+            shutdown.publish(&target).unwrap(),
+            GadgetUnbindOutcome::Armed
+        );
+        assert!(shutdown.request_unbind().is_err());
+        assert_eq!(
+            shutdown.request_unbind().unwrap(),
+            GadgetUnbindOutcome::Unbound
+        );
+        assert_eq!(gadget.unbind_calls.load(Ordering::SeqCst), 2);
+    }
+
+    #[test]
+    fn shutdown_before_publish_unbinds_as_soon_as_gadget_is_available() {
+        let shutdown = GadgetShutdown::default();
+
+        assert_eq!(
+            shutdown.request_unbind().unwrap(),
+            GadgetUnbindOutcome::DeferredUntilPublish
+        );
+
+        let gadget = Arc::new(MockGadget::default());
+        let target: Arc<dyn GadgetUnbind> = gadget.clone();
+        assert_eq!(
+            shutdown.publish(&target).unwrap(),
+            GadgetUnbindOutcome::Unbound
+        );
+        assert_eq!(gadget.unbind_calls.load(Ordering::SeqCst), 1);
+    }
 
     fn native_mode() -> DisplayMode {
         DisplayMode {

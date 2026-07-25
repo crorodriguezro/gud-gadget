@@ -12,7 +12,7 @@ Project helper scripts:
 
 | Device | SSH target | Hostname | DRM node | UDC |
 |--------|-----------|----------|----------|-----|
-| OnePlus 6 | `cristian@192.168.1.106` | `oneplus-enchilada` | `/dev/dri/card0` | `a600000.usb` |
+| OnePlus 6 | `phablet@192.168.1.120` | `ubuntu-phablet` | `/dev/dri/card0` | `a600000.usb` |
 | RPi Zero 2 W | `cristian@192.168.1.110` | `raspberrypi` | `/dev/dri/card0` | `3f980000.usb` |
 
 ## Prerequisites
@@ -344,9 +344,11 @@ After=multi-user.target
 
 [Service]
 Type=simple
+# Keep fbcon from restoring its stale vc4 state when gud-drm exits.
+ExecStartPre=/bin/sh -c 'echo 0 > /sys/class/vtconsole/vtcon1/bind'
 ExecStart=/home/cristian/gud-drm /dev/dri/card0
-Restart=on-failure
-RestartSec=1s
+# XDISP-P0.1 containment: never rebind automatically after a USB failure.
+Restart=no
 
 [Install]
 WantedBy=multi-user.target
@@ -355,6 +357,17 @@ EOF
 # Enable the service
 sudo systemctl enable gud-userspace.service
 ```
+
+The tracked containment drop-in is
+`../systemd/gud-userspace.service.d/10-xdisp-p0.1-containment.conf`. Installing
+it requires `systemctl daemon-reload`, but do not restart an already-running
+service merely to load the `Restart=no` policy.
+
+The lifecycle-repair build enables `ctrlc` termination handling. A normal
+systemd stop sends `SIGTERM`, which first unbinds the UDC, lets an active
+FunctionFS read return, removes the gadget, closes the remaining endpoint
+owners, and only then releases DRM. Do not use `SIGKILL` for routine shutdown;
+it bypasses this ordering.
 
 Note: The service file may have warnings about `StartLimitIntervalSec` — this key
 is not recognized in the `[Service]` section (it belongs in `[Unit]`) but it is
@@ -396,8 +409,8 @@ sudo kill <PID>
 
 `usb_gadget::remove_all()` is called at startup, which tears down all existing
 USB gadgets. On the RPi Zero 2 W this can disrupt the WiFi adapter if it shares
-the USB bus. Connect via the mini-HDMI console or wait for the systemd service
-to restart `gud-drm` after a disconnect/reconnect cycle.
+the USB bus. Connect via the mini-HDMI console. While `XDISP-P0.1` is blocked,
+the service deliberately does not restart `gud-drm` automatically.
 
 ### Restore local display
 
