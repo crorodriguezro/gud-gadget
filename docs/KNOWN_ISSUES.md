@@ -144,15 +144,30 @@ configured and no competing phone USB identity is required to reproduce it.
 - The later modern-laptop control passed with the same 16 KiB reads and
   `g_dma=1`: 953 compressed payloads, 432.6 MB, and 27,053 of 27,053 exact
   FunctionFS reads completed without a transport or kernel error. This proves
-  the OnePlus failure is conditional rather than a universal 16 KiB/DMA fault.
-  Before compiling a `g_dma=0` kernel, run the planned userspace-only modern
-  host controls at a 64,000-byte advertised maximum: first with LZ4 to isolate
-  tiling/control cadence, then after a clean result and fresh enumeration with
-  compression disabled to reproduce the OnePlus bulk lengths. The user
-  observed no noticeable read-size performance difference; formal
-  512-byte-versus-16 KiB benchmarking is deferred to `XDISP-P2.1`.
+  the failure is conditional rather than a universal 16 KiB/DMA fault. Its
+  final controlled session reached 4,786 payloads and stopped cleanly after
+  physical detach. The user observed no noticeable read-size performance
+  difference; formal 512-byte-versus-16 KiB benchmarking is deferred to
+  `XDISP-P2.1`.
   Evidence is under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-16k-live-2026-07-25T2256BST/`.
+- Laptop Gate A passed with LZ4 and an advertised 64,000-byte maximum: 5,671
+  SET_BUFFER/bulk pairs completed, and every actual compressed bulk URB was
+  131--12,600 bytes. Gate B then failed on the first uncompressed 61,440-byte
+  URB from the upstream GUD/xHCI host. The host cancelled it with `-104` after
+  18,432 bytes and logged `-110`; Pi FunctionFS returned signed `-505856`,
+  exactly matching `16384 - 522240` from ep1 OUT `DOEPTSIZ=0x7f800`.
+  Containment parked the service and physical recovery found no DWC2 stop
+  timeout, Oops, watchdog reset, or pstore record. This proves that the
+  OnePlus backport is not required to trigger the fault and implicates larger
+  uncompressed DWC2 buffer-DMA OUT transfers. Gate B must not be repeated
+  unchanged. Before building a `g_dma=0` kernel, start the uncompressed
+  complete-row size ladder at 15,360 bytes; advance on fresh boots through
+  30,720, 46,080, and 53,760 only while each prior value remains clean.
+  Evidence is under
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-a-2026-07-25T1754COT/`
+  and
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-b-2026-07-25T1810COT/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.

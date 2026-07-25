@@ -131,16 +131,29 @@ This rules out read-call count alone as the fix. `PAYLOAD_RC=0` also proved
 insufficient as standalone evidence because the asynchronous host failure
 appeared in the kernel after the utility reported success.
 
-A later modern-laptop control completed 953 compressed payloads, 432.6 MB, and
-27,053 of 27,053 exact 16 KiB-capped FunctionFS reads with `g_dma=1`. The
-immediate failure is therefore conditional on host, transfer shape, timing, or
-their interaction—not a universal DWC2 DMA or 16 KiB failure. Before compiling
-a `g_dma=0` kernel, two test-only modern-host gates will use
-`max_buffer_size=64000` at RGB565 1280x720: first with LZ4 retained to isolate
-25-row tiling/control cadence, then after a clean result and fresh enumeration
-with compression disabled to reproduce the OnePlus bulk lengths. If both pass,
-focus on separately named OnePlus chunk-size/DMA-mapping diagnostic modules
-while preserving the normal module.
+A later modern-laptop control completed sustained compressed traffic with
+exact 16 KiB-capped FunctionFS reads and `g_dma=1`, proving that neither is
+universally broken. Its final controlled session reached 4,786 payloads and
+shut down cleanly after physical detach.
+
+The follow-up transfer-shape gates then reproduced the failure without the
+OnePlus. Gate A advertised `max_buffer_size=64000` with LZ4 and completed 5,671
+matched SET_BUFFER/bulk transfers; every actual compressed bulk URB was
+131--12,600 bytes. Gate B disabled compression. Its first 1920x16 rectangle
+submitted one 61,440-byte upstream GUD/xHCI bulk URB, which was cancelled with
+`-104` after 18,432 bytes while the host reported `-110`. The Pi's first
+16,384-byte read again returned signed `-505856`, exactly
+`16384 - 522240`, matching ep1 OUT `DOEPTSIZ=0x7f800`.
+
+This rules out the OnePlus backport as a necessary trigger and implicates
+larger uncompressed FunctionFS/DWC2 buffer-DMA transfers. Containment prevented
+teardown, endpoint-stop timeouts, and another Oops; physical recovery retained
+the failure journal and both pstore captures were empty. Before compiling a
+`g_dma=0` kernel, run a fresh-boot uncompressed size ladder using packet- and
+complete-row-aligned descriptor maxima: 15,360 bytes first, then 30,720,
+46,080, and 53,760 only after the preceding value passes. The existing
+61,440-byte failure is the upper bound and should not be repeated unchanged.
+The largest clean value becomes the no-kernel mitigation candidate.
 
 The user reported no noticeable visible-performance difference from the read
 size change. This is not a controlled benchmark; defer 512-byte-versus-16 KiB

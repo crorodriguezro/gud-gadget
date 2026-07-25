@@ -411,12 +411,17 @@ the maximum-buffer override must be nonzero and no larger than the natural
 maximum. Invalid values fail before DRM or UDC setup. A startup warning makes
 any active override visible in the journal.
 
-The reproducible Gate A and Gate B examples live under `systemd/test-only/`.
-They are not normal service configuration and must never be installed
-together. Changing either descriptor value requires a fresh Pi boot and USB
-enumeration; reusing a host's cached descriptor is not valid evidence. Gate A
-retains LZ4 with a 64,000-byte maximum. Gate B keeps the same maximum and
-advertises no compression.
+The reproducible Gate A, Gate B, and Gate C examples live under
+`systemd/test-only/`. They are not normal service configuration and must never
+be installed together. Changing either descriptor value requires a fresh Pi
+boot and USB enumeration; reusing a host's cached descriptor is not valid
+evidence. Gate A retains LZ4 with a 64,000-byte maximum. Gate B keeps the same
+maximum and advertises no compression; it reproduced the terminal DWC2
+residual failure at an actual 61,440-byte transfer and must not be reinstalled
+for an unchanged test. Gate C advertises no compression with a 15,360-byte
+maximum. That value is high-speed-packet aligned and forms complete RGB565
+rows at both 1280 and 1920 pixels wide, making it the first no-kernel-build
+transfer-length isolation gate.
 
 The lifecycle-repair build enables `ctrlc` termination handling. Before every
 blocking FunctionFS receive, Step 5 atomically changes the session from
