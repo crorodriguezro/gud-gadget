@@ -118,6 +118,15 @@ clip. The acceptance shape is `scaled=false`, `scale_ms=0`, no scaled
 back-buffer swap, and exact matching `InFlight`/`Idle` counts. See
 `XDISP-P2.1-NATIVE-SCANOUT-GATE.md`.
 
+The corrected native gate passed. It retained the same 113 rectangles and
+roughly 0.919 MB of compressed payload, but all 113 Pi entries reported
+`scaled=false` and `scale_ms=0`. The mean of the logged whole-millisecond Pi
+`total_ms` values was 0.504 ms per payload; host average commit latency fell
+from 489.394 ms to 50.097 ms, and the workload reached its configured 5-fps
+ceiling at 4.999 fps. This isolates per-rectangle full-frame
+scaling/presentation as the earlier bottleneck. It does not measure maximum
+unpaced throughput, Mir/Lomiri presentation, CPU utilization, or tearing.
+
 Historical full-frame `1080x2280 RGB565` compressed gadget runs showed:
 
 - `compression=1`

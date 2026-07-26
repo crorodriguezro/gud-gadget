@@ -132,6 +132,47 @@ retain connector mode index zero, which is the normal no-override fallback.
 Unit tests cover both cases. The retry must prove a successful state check and
 commit before interpreting any bulk or performance result.
 
+## Corrected Hardware Result
+
+The corrected 2026-07-26 gate passed with source commit `4556800` and Pi
+binary SHA-256
+`05bbc2284f38bcd0152bcf462cecd009fa94b342e42e399204347a3fb53a8984`.
+
+The unchanged host command completed at the requested pacing limit:
+
+```text
+modeset_ms=34.049
+update_elapsed_s=1.800
+update_fps=4.999
+commit_avg_ms=50.097
+commit_min_ms=34.142
+commit_max_ms=70.695
+```
+
+All ten state checks and commits succeeded. The ten frames produced 113 Pi
+payloads, and all 113 entered `InFlight` and returned to `Idle`. Every
+`frame_stats` entry reported `source=1280x720`, `scaled=false`, and
+`scale_ms=0`; there was no scaled back-buffer swap. The largest payload was
+12,793 bytes. The mean of the logged whole-millisecond Pi `total_ms` values
+was 0.504 ms per payload and the logged maximum was 6 ms. Neither host nor Pi
+recorded a new transport or kernel fault.
+
+The scaled baseline and corrected native run used the same clip, host module,
+113 rectangles, roughly 0.919 MB of payload, and a 12,793-byte maximum.
+Average commit latency fell from 489.394 ms to 50.097 ms, a 9.77-times
+improvement, while update rate rose from 2.015 to 4.999 fps and reached the
+configured 5-fps pacing ceiling. This causally identifies per-rectangle Pi
+scaling/presentation as the baseline bottleneck; it does not establish maximum
+native throughput.
+
+The next userspace design step is dynamic physical mode selection on a
+successful GUD state commit: select an exact connector mode, create and map
+matching scanout buffers, modeset once, then receive through the native copy
+path. Preserve the current scaled path when no exact physical mode exists and
+keep USB advertised preference independent of physical selection. An unpaced
+native benchmark should follow before optimizing the remaining host-side
+compression and synchronous submission cost.
+
 ## Interpretation
 
 - Large improvement with the same rectangle count: full-frame scaling and
