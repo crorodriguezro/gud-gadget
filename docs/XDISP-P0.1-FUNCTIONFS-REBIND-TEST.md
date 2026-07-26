@@ -538,6 +538,19 @@ remained clean. Start all ten matrix cycles again from cycle 1. Evidence is
 under
 `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-detach-restart-repair-2026-07-26T1446COT/`.
 
+The required replacement matrix subsequently passed 10/10. Five cycles used
+Pi gadget rebinds and five used OnePlus USB reconnects. Ten complete RGB565
+frames produced 45 payloads; all 45 matching Pi receives completed in one
+read and returned to `Idle`. The largest actual payload was 12,799 bytes.
+All five reconnect cycles safely recreated the service, and no host timeout,
+receive anomaly, DWC2/vc4 fault, Oops, pstore record, watchdog event, or Pi
+reboot occurred. Evidence is under
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-matrix-2026-07-26T1454COT/`.
+
+This meets the technical acceptance conditions below. The standing project
+instruction still prohibits marking verification or starting P0.2, so those
+status transitions remain withheld.
+
 ## Post-isolation pre-matrix gate
 
 The adaptive-LZ4 result above satisfies this section's original entry

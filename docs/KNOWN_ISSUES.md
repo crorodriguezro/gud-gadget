@@ -245,6 +245,13 @@ configured and no competing phone USB identity is required to reproduce it.
   and all receives returning to `Idle`. Nonzero failures and crashes remain
   non-restarting. No DWC2/vc4 failure occurred. Evidence is under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-detach-restart-repair-2026-07-26T1446COT/`.
+- The replacement adaptive matrix passed 10/10: five Pi gadget rebinds and
+  five OnePlus reconnects, ten complete frames, 45 matching Pi payload
+  completions and `Idle` returns, and a 12,799-byte maximum actual payload.
+  All five reconnect cycles recreated the service automatically. No host
+  `-110`, receive anomaly, DWC2/vc4 fault, Oops, pstore record, watchdog
+  event, or Pi reboot occurred. Evidence is under
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-matrix-2026-07-26T1454COT/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
@@ -255,11 +262,11 @@ This is `XDISP-P0.1`, tracked canonically in
 `../../gud/PROJECT-STATUS.md`. Step 2 has one positive post-payload runtime
 result, but the item is still **blocked**, not verified.
 
-Do not mark it resolved from the isolated frame, mini-cycles, or successful
-reconnect-repair gate. The mini-cycle gate is 3/3 PASS and the clean-detach
-lifecycle repair is qualified, but the first matrix remains discarded after
-its cycle-2 lifecycle failure. Start a new ten-cycle
-gadget-rebind/phone-reconnect matrix from cycle 1. The historical
+The first matrix remains discarded after its cycle-2 lifecycle failure. The
+replacement matrix's 10/10 pass satisfies the adaptive diagnostic's technical
+acceptance criteria. The standing project instruction still withholds the
+verified status and prohibits P0.2, so retain `XDISP-P0.1` as blocked until
+that status decision is explicitly changed. The historical
 29-tile 64,000-byte transfer shape is unsafe and is not the acceptance shape
 for the adaptive diagnostic; require complete row coverage and every actual
 payload at or below 12,800 bytes. Retain both host kernel logs and Pi service
