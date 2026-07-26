@@ -1039,6 +1039,58 @@ fn parse_test_max_buffer_size(raw: Option<&OsStr>) -> anyhow::Result<Option<u32>
     Ok(Some(max_buffer_size))
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct TestOutputMode {
+    width: u16,
+    height: u16,
+}
+
+fn parse_test_output_mode(raw: Option<&OsStr>) -> anyhow::Result<Option<TestOutputMode>> {
+    let Some(raw) = raw else {
+        return Ok(None);
+    };
+    let raw = raw
+        .to_str()
+        .context("GUD_TEST_OUTPUT_MODE must be valid UTF-8")?;
+    let (width, height) = raw
+        .split_once('x')
+        .context("GUD_TEST_OUTPUT_MODE must use WIDTHxHEIGHT")?;
+    let width = width
+        .parse::<u16>()
+        .with_context(|| format!("invalid GUD_TEST_OUTPUT_MODE width in {raw:?}"))?;
+    let height = height
+        .parse::<u16>()
+        .with_context(|| format!("invalid GUD_TEST_OUTPUT_MODE height in {raw:?}"))?;
+    ensure!(
+        width > 0 && height > 0,
+        "GUD_TEST_OUTPUT_MODE dimensions must be greater than zero"
+    );
+    Ok(Some(TestOutputMode { width, height }))
+}
+
+fn select_output_mode(
+    connector_modes: &[Mode],
+    test_output_mode: Option<TestOutputMode>,
+) -> anyhow::Result<&Mode> {
+    ensure!(
+        !connector_modes.is_empty(),
+        "connected DRM connector has no modes"
+    );
+    let Some(requested) = test_output_mode else {
+        return Ok(&connector_modes[0]);
+    };
+
+    connector_modes
+        .iter()
+        .find(|mode| mode.size() == (requested.width, requested.height))
+        .with_context(|| {
+            format!(
+                "GUD_TEST_OUTPUT_MODE={}x{} is not supported by the connected DRM connector",
+                requested.width, requested.height
+            )
+        })
+}
+
 fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(fmt::layer())
@@ -1054,9 +1106,11 @@ fn main() -> anyhow::Result<()> {
     let functionfs_read_size = parse_functionfs_read_size(var_os("GUD_FFS_READ_SIZE").as_deref())?;
     let test_compression_raw = var_os("GUD_TEST_COMPRESSION");
     let test_max_buffer_size_raw = var_os("GUD_TEST_MAX_BUFFER_SIZE");
+    let test_output_mode_raw = var_os("GUD_TEST_OUTPUT_MODE");
     let descriptor_compression = parse_test_compression(test_compression_raw.as_deref())?;
     let descriptor_max_buffer_size =
         parse_test_max_buffer_size(test_max_buffer_size_raw.as_deref())?;
+    let test_output_mode = parse_test_output_mode(test_output_mode_raw.as_deref())?;
     let (mut gud_data, gud_data_ep) =
         gud_gadget::PixelDataEndpoint::new_with_read_size(functionfs_read_size)
             .context("configure FunctionFS bulk OUT read size")?;
@@ -1092,6 +1146,14 @@ fn main() -> anyhow::Result<()> {
             "TEST-ONLY GUD descriptor override enabled; a fresh USB enumeration is required"
         );
     }
+    if let Some(output_mode) = test_output_mode {
+        warn!(
+            width = output_mode.width,
+            height = output_mode.height,
+            "TEST-ONLY physical DRM output-mode override enabled; normal mode selection is unchanged \
+             when GUD_TEST_OUTPUT_MODE is absent"
+        );
+    }
     info!("Opening DRM device: {}", card_path);
     let mut card = Card::open(&card_path);
     let udc = default_udc().expect("no UDC found");
@@ -1125,12 +1187,15 @@ fn main() -> anyhow::Result<()> {
         .get_crtc(crtc_handle)
         .expect("get compatible drm crtc failed");
 
+    let connector_modes = connector.modes();
+    let mode = select_output_mode(connector_modes, test_output_mode)?;
+
     let mut min_width = u32::MAX;
     let mut min_height = u32::MAX;
     let mut max_width = 0;
     let mut max_height = 0;
-    for mode in connector.modes() {
-        let (width, height) = mode.size();
+    for connector_mode in connector_modes {
+        let (width, height) = connector_mode.size();
         let width = width as u32;
         let height = height as u32;
         if width < min_width {
@@ -1199,8 +1264,6 @@ fn main() -> anyhow::Result<()> {
     })
     .expect("cleanup handler registration failed");
 
-    let connector_modes = connector.modes();
-    let mode = connector_modes.first().unwrap();
     let preferred_mode_name = connector_modes
         .iter()
         .find(|candidate| candidate.mode_type().contains(ModeTypeFlags::PREFERRED))
@@ -1253,7 +1316,13 @@ fn main() -> anyhow::Result<()> {
         &advertised_modes,
     );
 
-    info!("picked mode {:?}", mode);
+    info!(
+        width = mode.size().0,
+        height = mode.size().1,
+        test_override = test_output_mode.is_some(),
+        ?mode,
+        "Picked physical DRM output mode"
+    );
 
     let (width, height) = mode.size();
     debug!("Creating double dumb buffers {}x{} (RGB565)", width, height);
@@ -2045,10 +2114,11 @@ fn main() -> anyhow::Result<()> {
 mod tests {
     use super::{
         compute_scaled_layout, derive_mode_from_native, parse_functionfs_read_size,
-        parse_test_compression, parse_test_max_buffer_size, render_waiting_screen,
-        should_restart_after_clean_detach, waiting_scene_glyph, BulkReceiveSession,
-        BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome,
-        ScaledLayout, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
+        parse_test_compression, parse_test_max_buffer_size, parse_test_output_mode,
+        render_waiting_screen, should_restart_after_clean_detach, waiting_scene_glyph,
+        BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind,
+        GadgetUnbindOutcome, ScaledLayout, TestOutputMode, RGB565_BLACK, RGB565_GREEN,
+        RGB565_WHITE,
     };
     use gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED;
     use std::ffi::OsStr;
@@ -2088,6 +2158,28 @@ mod tests {
         assert!(parse_test_max_buffer_size(Some(OsStr::new("0"))).is_err());
         assert!(parse_test_max_buffer_size(Some(OsStr::new("-1"))).is_err());
         assert!(parse_test_max_buffer_size(Some(OsStr::new("not-a-size"))).is_err());
+    }
+
+    #[test]
+    fn test_output_mode_parser_preserves_default_and_accepts_exact_dimensions() {
+        assert_eq!(parse_test_output_mode(None).unwrap(), None);
+        assert_eq!(
+            parse_test_output_mode(Some(OsStr::new("1280x720"))).unwrap(),
+            Some(TestOutputMode {
+                width: 1280,
+                height: 720,
+            })
+        );
+    }
+
+    #[test]
+    fn test_output_mode_parser_rejects_ambiguous_or_invalid_values() {
+        for value in ["1280", "1280X720", "1280x720x60", "0x720", "1280x0"] {
+            assert!(
+                parse_test_output_mode(Some(OsStr::new(value))).is_err(),
+                "unexpectedly accepted {value:?}"
+            );
+        }
     }
 
     #[test]

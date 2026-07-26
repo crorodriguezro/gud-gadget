@@ -105,6 +105,19 @@ The likely bottleneck is DRM dirty flushing or panel/display update behavior.
 
 ## Current Observations
 
+The 2026-07-26 OnePlus raw-video baseline exposed a separate Pi presentation
+bottleneck. A 1280x720 GUD source was software-scaled into a 1920x1080 physical
+HDMI framebuffer. Ten frames became 113 rectangles; every rectangle triggered
+a full-frame scale and back-buffer swap at roughly 39--40 ms, producing only
+2.015 synchronous updates per second. USB receive and framebuffer copy did not
+explain that cadence.
+
+The next controlled gate selects an actual 1280x720 physical HDMI mode through
+the test-only `GUD_TEST_OUTPUT_MODE=1280x720` override and repeats the identical
+clip. The acceptance shape is `scaled=false`, `scale_ms=0`, no scaled
+back-buffer swap, and exact matching `InFlight`/`Idle` counts. See
+`XDISP-P2.1-NATIVE-SCANOUT-GATE.md`.
+
 Historical full-frame `1080x2280 RGB565` compressed gadget runs showed:
 
 - `compression=1`

@@ -440,6 +440,30 @@ must not be installed unchanged. This also means Gate E's small advertised
 maximum cannot be replaced by a small internal read while retaining large
 host tiles under `g_dma=1`.
 
+### XDISP-P2.1 test-only physical output mode
+
+The diagnostic binary also accepts:
+
+```text
+GUD_TEST_OUTPUT_MODE=WIDTHxHEIGHT
+```
+
+This selects the first exact-resolution mode from the connected physical DRM
+connector before buffers are allocated and the CRTC is programmed. With the
+variable absent, normal first-connector-mode behavior is unchanged. Invalid
+or unsupported values fail before the UDC/configfs gadget is cleared. The
+override does not force the USB host to commit the same GUD mode.
+
+The `systemd/test-only/40-xdisp-p2.1-native-1280x720.conf` drop-in exists only
+for the controlled native-scanout performance gate. It must not become normal
+service configuration and must not be combined accidentally with stale
+`systemd/test-only/30-*` gates.
+
+Activation and rollback must follow
+`XDISP-P2.1-NATIVE-SCANOUT-GATE.md`: physically detach USB, prove the
+FunctionFS receive state is `Idle`, and only then stop/install/start the
+service. The host must explicitly commit the matching 1280x720 GUD mode.
+
 The subsequent stock-preserving `g_dma=0` one-shot kernel also failed on the
 first 16,274-byte normal laptop payload. The host completed the entire URB,
 but FunctionFS returned only 3,986 bytes and DWC2 retained a matching

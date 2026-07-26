@@ -14,6 +14,7 @@ Project process:
 
 - [Cross-Repository Specification and Delivery Workflow](../../gud/docs/superpowers/CROSS-REPOSITORY-WORKFLOW.md)
 - [XDISP-P0.1 FunctionFS Rebind Test](./XDISP-P0.1-FUNCTIONFS-REBIND-TEST.md)
+- [XDISP-P2.1 Native 1280x720 Scanout Gate](./XDISP-P2.1-NATIVE-SCANOUT-GATE.md)
 
 Investigations:
 
