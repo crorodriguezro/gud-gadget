@@ -440,6 +440,13 @@ must not be installed unchanged. This also means Gate E's small advertised
 maximum cannot be replaced by a small internal read while retaining large
 host tiles under `g_dma=1`.
 
+The subsequent stock-preserving `g_dma=0` one-shot kernel also failed on the
+first 16,274-byte normal laptop payload. The host completed the entire URB,
+but FunctionFS returned only 3,986 bytes and DWC2 retained a matching
+12,288-byte residual. The diagnostic artifacts under `docs/test-only/` are
+retained for reproduction only; do not install that kernel as a service
+workaround or continue from it into the OnePlus/verification gates.
+
 The lifecycle-repair build enables `ctrlc` termination handling. Before every
 blocking FunctionFS receive, Step 5 atomically changes the session from
 `Idle` to `InFlight`. `SIGTERM` may claim and unbind the UDC only from `Idle`;

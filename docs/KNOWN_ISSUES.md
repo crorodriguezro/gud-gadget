@@ -195,6 +195,21 @@ configured and no competing phone USB identity is required to reproduce it.
   Do not reinstall Gate F unchanged or advance to the OnePlus gate. Evidence
   is under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-f-2026-07-25T2039COT/`.
+- The separately named `6.12.47+rpt-rpi-v8-xdisp-gdma0` one-shot Pi kernel
+  then failed on its first normal laptop payload. Usbmon recorded the host
+  completing the full 16,274-byte LZ4 bulk URB with status zero in 823
+  microseconds, but Pi FunctionFS returned only 3,986 bytes from the exact
+  16,274-byte read. Live DWC2 state showed `total_data=3986` and a 12,288-byte
+  `DOEPTSIZ` residual, exactly the missing amount. Containment parked the
+  service as `Poisoned`; later control retries produced 17 secondary ep0-state
+  warnings, so no teardown, OnePlus gate, or matrix was attempted. `g_dma=0`
+  is therefore rejected as an unchanged workaround. It localizes both DMA
+  and PIO failures to the Pi DWC2/FunctionFS receive path but does not supply
+  a safe kernel fix. Physical reset returned to the stock kernel with
+  `g_dma=1`, the service disabled/inactive, and the UDC detached. The previous
+  boot has no endpoint-stop timeout, Oops, panic, or pstore record. Evidence
+  is under
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-pi-gdma0-laptop-normal-2026-07-25T2140COT/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.

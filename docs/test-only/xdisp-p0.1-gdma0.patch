@@ -1,0 +1,35 @@
+Subject: [TEST ONLY] usb: dwc2: disable gadget buffer DMA on BCM2835
+
+XDISP-P0.1 diagnostic only. This deliberately selects the DWC2 slave/PIO
+gadget path on Raspberry Pi. It is not a product fix and must not be applied
+to the stock kernel.
+
+Apply to the Debian/Raspberry Pi 6.12.47 source after the packaged patches:
+
+  linux-6.12.47/drivers/usb/dwc2/params.c
+
+The separately named build used:
+
+  release: 6.12.47+rpt-rpi-v8-xdisp-gdma0
+  Image sha256:
+    f3716136a03061e2a81039b65ee5234f785f04706c1b1ed8297e67600835cb97
+  vmlinux sha256:
+    d92b8dcc7ae543ee8953ad2f575c52315e1dfab76c38095c0a8f5e91b7a1c96d
+  params.o sha256:
+    53cfb5ec4b2fa55f8c696ba1ee3ff0d7d10b323326581be0a1e71f97fae10f81
+  .config sha256:
+    75eef4dafb1a419b87bb01688ac2223535da037286b0e2f6278fea71b20d5c9e
+  modules archive sha256:
+    9d1dc40d35c7a41a1b55de54cf20e79a20a763aabcf291c01a6bd5c360648df2
+
+The original source archives were:
+
+  linux_6.12.47.orig.tar.xz:
+    e82fe40871743048226987bd349ef107168b15aab90140e872ca4ed470922e25
+  linux_6.12.47-1+rpt1.debian.tar.xz:
+    d028f5cfce9e8220fbdeae9d83d5a3c31bce7ec9fa4baafa805fb2fd9b1fde88
+
+--- a/drivers/usb/dwc2/params.c
++++ b/drivers/usb/dwc2/params.c
+@@ -21,0 +22 @@
++	p->g_dma = false;

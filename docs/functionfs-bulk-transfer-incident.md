@@ -185,9 +185,26 @@ Therefore Gate E's success applies when 12,800 bytes is the complete host
 transfer, not when a 12,800-byte FunctionFS request consumes part of a larger
 transfer. The descriptor ceiling and internal read ceiling cannot be
 decoupled as a `g_dma=1` performance fix. Gate F must not be repeated
-unchanged. The next root-cause isolation is the separately named Pi
-`g_dma=0` test kernel; do not advance to the OnePlus gate or verification
-matrix first.
+unchanged. The next root-cause isolation at that point was the separately
+named Pi `g_dma=0` test kernel; the result follows. The OnePlus gate and
+verification matrix were not advanced first.
+
+That `g_dma=0` isolation has now failed. The stock-preserving one-shot kernel
+booted with DWC2 buffer and descriptor DMA both disabled, then received one
+normal 16,274-byte compressed laptop payload. Usbmon recorded the host URB
+completing in full with status zero after 823 microseconds. The Pi's exact
+16,274-byte blocking FunctionFS read instead returned 3,986 bytes after 302
+microseconds; DWC2 reported `total_data=3986` and 12,288 bytes remaining in
+`DOEPTSIZ`, exactly `16274 - 3986`. The service entered `Poisoned`, and no
+teardown or subsequent payload was attempted.
+
+This rejects `g_dma=0` as a workaround. The `g_dma=1` path can expose an
+impossible residual or hang, while the PIO path can short-complete a full host
+URB. The common boundary is the Pi DWC2/FunctionFS receive path, not the
+OnePlus backport or the userspace read-call count. Gate E remains useful only
+as a slow correctness control; a normal-performance result now requires a
+targeted DWC2/FunctionFS investigation before any OnePlus or verification
+cycle.
 
 The user reported no noticeable visible-performance difference from the read
 size change. This is not a controlled benchmark; defer 512-byte-versus-16 KiB
@@ -202,6 +219,10 @@ fallback.
   through FunctionFS and asserts both GUD completion and Pi frame statistics.
 - Add an explicit FunctionFS/DWC2 capability probe or configuration flag so
   platforms with working AIO can opt into it deliberately.
+- Add a kernel-instrumented DWC2 OUT regression for the exact failed shapes:
+  full host completion with a 16,274-byte request under PIO, and the recurring
+  `0x7f800` residual under buffer DMA. Do not treat the existing `g_dma=0`
+  switch as the fix.
 - Add a bounded read timeout/cancellation strategy. While `XDISP-P0.1` remains
   blocked, a receive anomaly poisons the process and requires fresh-boot
   recovery rather than an automatic gadget restart.

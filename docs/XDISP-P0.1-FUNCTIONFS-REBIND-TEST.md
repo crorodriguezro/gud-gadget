@@ -426,10 +426,68 @@ the advertised-buffer and internal-read ceilings cannot be decoupled as a
 reinstalled unchanged.
 
 Do not proceed to the OnePlus gate, mini-cycles, or matrix with Gate F. The
-next root-cause isolation is the separately named Pi `g_dma=0` test kernel
-described above. That test does not modify the OnePlus kernel, module, or Mir,
-but this installed Pi kernel cannot enable it through a boot argument or
-overlay.
+next root-cause isolation at that point was the separately named Pi `g_dma=0`
+test kernel described above. That test does not modify the OnePlus kernel,
+module, or Mir, but this installed Pi kernel cannot enable it through a boot
+argument or overlay. Its completed result follows.
+
+### `g_dma=0` laptop isolation failed on the first payload
+
+The separately named one-shot kernel
+`6.12.47+rpt-rpi-v8-xdisp-gdma0` booted with `CONFIG_USB_DWC2=y`,
+`g_dma=0`, and `g_dma_desc=0`. The stock kernel, modules, `config.txt`,
+`kernel8.img`, and `initramfs8` remained unchanged. The service started once
+with the normal LZ4/natural-size descriptor and the 16 KiB blocking
+FunctionFS read ceiling; neither a Gate E/F descriptor override nor a
+OnePlus/Mir change was present.
+
+The first normal laptop update was one 1920x1080 LZ4 rectangle:
+4,147,200 bytes uncompressed and 16,274 bytes on the wire. Usbmon proves the
+upstream GUD/xHCI host submitted and successfully completed that entire bulk
+URB:
+
+```text
+bulk submit:   2026-07-26 00:23:06.039858, length=16274, status=-115
+bulk complete: 2026-07-26 00:23:06.040681, actual=16274, status=0
+elapsed:       823 microseconds
+```
+
+The Pi requested exactly 16,274 bytes from FunctionFS, but the slave/PIO path
+returned only 3,986 bytes after 302 microseconds. The live ep1 state reported
+`total_data=3986` and `DOEPTSIZ=0x00d83000`; its 12,288-byte transfer-size
+residual exactly matches the missing part:
+
+```text
+16274 - 3986 = 12288
+```
+
+Containment changed the service to `Poisoned` and refused teardown. Later host
+control retries triggered 17 instances of the DWC2 ep0-state warning at
+`drivers/usb/dwc2/gadget.c:2534`; they are secondary to the first short bulk
+read, not its cause. No stop/restart, OnePlus test, mini-cycle, or matrix was
+attempted on the poisoned boot.
+
+After physical USB detach and a physical reset, the Pi returned through the
+cleared one-shot flag to stock `6.12.47+rpt-rpi-v8` with `g_dma=1`. The
+service is disabled/inactive and the UDC is `not attached`. The retained
+previous-boot journals match the final live captures; they contain no DWC2
+endpoint-stop timeout, Oops, panic, or paging fault. Pstore is empty, watchdog
+bootstatus is zero, and the recovery boot has no kernel error.
+
+This is a failed diagnostic, not a workaround. Disabling buffer DMA changes
+the observed failure from the `g_dma=1` impossible residual/hang to a
+slave/PIO short completion even though the host completed the full URB. It
+strengthens the localization to the Pi DWC2/FunctionFS receive path, but does
+not identify a safe kernel fix. Do not ship or repeat this `g_dma=0` build
+unchanged. The reproducible patch, one-shot boot configuration, and
+stock-preserving installer are under `docs/test-only/`; evidence is under
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-pi-gdma0-laptop-normal-2026-07-25T2140COT/`.
+
+`XDISP-P0.1` remains blocked. Gate E remains the only laptop-qualified
+userspace configuration, but its roughly one-frame-per-five-seconds cadence
+is not a usable product setting. Normal-performance verification remains
+blocked on a DWC2/FunctionFS receive fix; do not advance to the OnePlus gate
+or verification matrix.
 
 ## Post-isolation pre-matrix gate
 
