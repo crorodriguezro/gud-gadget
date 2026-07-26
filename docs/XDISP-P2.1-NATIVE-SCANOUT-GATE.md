@@ -157,6 +157,18 @@ payloads, and all 113 entered `InFlight` and returned to `Idle`. Every
 was 0.504 ms per payload and the logged maximum was 6 ms. Neither host nor Pi
 recorded a new transport or kernel fault.
 
+The final physical cable removal was also safe. The OnePlus logged USB/GUD
+disconnect and removed its GUD DRM card. The Pi stayed on the same boot and
+service PID, and FunctionFS delivered `Suspend` after the final receive had
+returned to `Idle`; all 113 `InFlight` entries still had matching `Idle`
+entries and no receive was poisoned. No Pi kernel fault or pstore record
+appeared. FunctionFS did not deliver `Disable`, however: the service remained
+active and UDC sysfs retained `configured`. This is a quiescent physical
+detach, not proof of automatic gadget teardown/restart. A manual stop is not
+part of this performance gate; it is required only before removing the
+test-only drop-in or changing the staged service artifact, using the safety
+preconditions above.
+
 The scaled baseline and corrected native run used the same clip, host module,
 113 rectangles, roughly 0.919 MB of payload, and a 12,793-byte maximum.
 Average commit latency fell from 489.394 ms to 50.097 ms, a 9.77-times
