@@ -512,7 +512,13 @@ sustained-cadence benchmark and does not establish product performance.
 Evidence is under
 `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-frame-2026-07-26T1154COT/`.
 The result satisfies the one-frame and first safe-lifecycle prerequisites for
-three fresh mini-cycles. It does not verify `XDISP-P0.1`.
+three fresh mini-cycles. Those mini-cycles subsequently passed 3/3 under
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-mini-cycles-2026-07-26T1236COT/`.
+They used 4, 3, and 4 compressed complete-row rectangles, with maximum actual
+payloads of 12,728, 12,718, and 12,347 bytes. Every transfer returned to
+`Idle`, and every proven-detached separate stop/start completed without host
+`-110`, DWC2 stop timeout, vc4 fault, or Pi Oops. This authorizes the
+ten-cycle matrix from cycle 1 but does not verify `XDISP-P0.1`.
 
 ## Post-isolation pre-matrix gate
 
@@ -529,6 +535,10 @@ Pi `frame_stats`, and no host or kernel error. After the sender exits,
 physically detach USB and prove every receive session returned to `Idle`.
 Then use separate `systemctl stop` and `systemctl start` operations; do not
 substitute `restart`.
+
+This gate passed 3/3 on 2026-07-26. Use the same adaptive contract for the
+official matrix below. Do not substitute the historical 64,000-byte
+normal-module transfer shape.
 
 Do not begin the ten-cycle matrix with the historical 512-byte loop or with
 the optional 64 KiB A/B setting. The original procedure follows for
@@ -660,16 +670,20 @@ For every cycle:
    kernel time.
 2. Perform exactly one defined reset action: Pi gadget rebind, cable/USB-host
    reconnect, or phone reboot followed by its normal host-mode setup.
-3. Wait for the OnePlus enumeration gate: `1d50:614d`, successful `gud.ko`
-   probe, and a live GUD `/dev/dri/cardX` node. Record the actual node; it is
-   not necessarily `card1`.
-4. Run the isolated KMS fill/smoke tool once. Its first transfer must be the
-   normal 64,000-byte RGB565 tile.
+3. Wait for the OnePlus enumeration gate: `1d50:614d`, successful
+   `gud_xdisp_lz4_12800` probe, diagnostic version
+   `xdisp-p0.1-adaptive-12800-v1`, and a live GUD `/dev/dri/cardX` node.
+   Record the actual node; it is not necessarily `card1`.
+4. Run the isolated KMS fill/smoke tool once at 1280x720 RGB565. Require the
+   adaptive module to cover the full frame with contiguous, non-overlapping
+   complete-row rectangles and to report every actual payload at or below
+   12,800 bytes.
 5. Capture the Pi GUD service log and the focused OnePlus kernel log from just
-   before enumeration through the end of the complete 29-tile frame.
-6. For every tile retain the selected `read_size`, matching `payload_seq`,
-   request/result byte counts, and `read_calls`; also retain the negotiated UDC
-   speed.
+   before enumeration through the end of the complete adaptive frame.
+6. For every rectangle retain `SetBuffer`, the selected `read_size`, matching
+   `payload_seq`, request/result byte counts, `read_calls`, `frame_stats`, and
+   the transition from `InFlight` back to `Idle`; also retain the negotiated
+   UDC speed.
 7. Mark the cycle pass or fail before attempting recovery. If it fails, retain
    the logs, state the first failing operation, and recover with a physical
    power cycle, hardware reset, or watchdog reset under the containment rule
@@ -678,21 +692,25 @@ For every cycle:
 
 ## Acceptance
 
-`XDISP-P0.1` becomes **verified** only if all ten cycles pass at the selected
-16,384-byte setting, each complete 1,843,200-byte frame and its first
-64,000-byte tile complete, and none of the retained host logs contains a GUD
-`-110` bulk/atomic timeout. A single passing frame, an optional 65,536-byte A/B
-result, or a test that succeeds only after retrying the first transfer is
-diagnostic evidence and does not pass this specification.
+`XDISP-P0.1` becomes **verified** only if all ten cycles pass with the Pi
+16,384-byte read ceiling and the separately preserved adaptive diagnostic
+module. Each cycle must cover the complete 1,843,200-byte RGB565 frame with
+contiguous complete-row rectangles, keep every actual payload at or below
+12,800 bytes, match every receive with completion and return to `Idle`, and
+contain no host GUD `-110`, short/impossible read, poisoned receive, DWC2
+endpoint-stop timeout, vc4 fault, or Pi Oops. A single passing frame, the
+three passing mini-cycles, an optional 65,536-byte A/B result, or a test that
+succeeds only after retrying the first transfer does not pass this
+specification.
 
 ## Evidence record
 
 Store a short table with one row per cycle and preserve the referenced raw
 logs. At minimum record:
 
-| Cycle | Reset type | GUD DRM node | Read size | First tile requests/results/calls | Frame bytes/tiles | UDC speed | Host result | Pi result | Log paths |
+| Cycle | Reset type | GUD DRM node | Read ceiling | Rectangle payloads/read calls | Row coverage / source bytes | UDC speed | Host result | Pi result | Log paths |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Pi rebind | `cardX` | 16384 | 4 matching reads/4 | 1843200/29 | high-speed | pass/fail | pass/fail | host + Pi |
+| 1 | Pi rebind | `cardX` | 16384 | all `<=12800`, matching one-read completions | 720 contiguous / 1843200 | high-speed | pass/fail | pass/fail | host + Pi |
 
 When this gate passes, update the canonical entry in
 `../../gud/PROJECT-STATUS.md` from **blocked** to **verified** with the

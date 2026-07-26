@@ -218,9 +218,15 @@ configured and no competing phone USB identity is required to reproduce it.
   started on the same Pi boot without DWC2 stop timeouts or the vc4 release
   Oops. The Pi processing totals sum to 208 ms, about 4.8 full frames/s for
   the highly compressible one-shot color-bar pattern; sustained cadence and
-  normal-content performance remain unmeasured. Three fresh mini-cycles are
-  required next. Evidence is under
+  normal-content performance remain unmeasured. Evidence is under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-frame-2026-07-26T1154COT/`.
+- Three fresh adaptive-LZ4 mini-cycles then passed. Their frames used 4, 3,
+  and 4 compressed complete-row rectangles and maximum actual payloads of
+  12,728, 12,718, and 12,347 bytes. Every receive completed in one 16 KiB
+  FunctionFS read and returned to `Idle`. After proven physical detach, every
+  separate stop/start exited zero on the same Pi boot without host `-110`,
+  short read, DWC2 stop timeout, vc4 fault, or Pi Oops. Evidence is under
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-mini-cycles-2026-07-26T1236COT/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
@@ -231,9 +237,9 @@ This is `XDISP-P0.1`, tracked canonically in
 `../../gud/PROJECT-STATUS.md`. Step 2 has one positive post-payload runtime
 result, but the item is still **blocked**, not verified.
 
-Do not mark it resolved from one successful frame. The current adaptive path
-must first pass three fresh payload/detach/stop/start mini-cycles. Only then
-may the ten-cycle gadget-rebind/phone-reconnect matrix begin. The historical
+Do not mark it resolved from the isolated frame or the three successful
+mini-cycles. The mini-cycle gate is now 3/3 PASS, so the ten-cycle
+gadget-rebind/phone-reconnect matrix is next from cycle 1. The historical
 29-tile 64,000-byte transfer shape is unsafe and is not the acceptance shape
 for the adaptive diagnostic; require complete row coverage and every actual
 payload at or below 12,800 bytes. Retain both host kernel logs and Pi service
