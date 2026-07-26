@@ -236,6 +236,15 @@ configured and no competing phone USB identity is required to reproduce it.
   vc4 fault, Pi Oops, pstore record, or watchdog event occurred. Evidence is
   under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-matrix-2026-07-26T1256COT/`.
+- The userspace lifecycle repair and its dedicated reconnect gate passed.
+  Before clean-detach teardown, `gud-drm` must successfully claim an `Idle`
+  receive session; it then exits zero after UDC-first teardown. With
+  `Restart=on-success`, systemd changed PID 2739 to PID 2836 on the same Pi
+  boot and the OnePlus re-enumerated automatically. A fresh frame under the
+  new PID covered 720 rows with five one-read payloads, a 12,735-byte maximum,
+  and all receives returning to `Idle`. Nonzero failures and crashes remain
+  non-restarting. No DWC2/vc4 failure occurred. Evidence is under
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-detach-restart-repair-2026-07-26T1446COT/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
@@ -246,11 +255,11 @@ This is `XDISP-P0.1`, tracked canonically in
 `../../gud/PROJECT-STATUS.md`. Step 2 has one positive post-payload runtime
 result, but the item is still **blocked**, not verified.
 
-Do not mark it resolved from the isolated frame or the three successful
-mini-cycles. The mini-cycle gate is 3/3 PASS, but the first matrix is halted
-after its cycle-2 lifecycle failure. Repair the proven-idle clean-detach exit
-and restart policy in userspace, requalify one post-payload reconnect, then
-start a new ten-cycle gadget-rebind/phone-reconnect matrix from cycle 1. The historical
+Do not mark it resolved from the isolated frame, mini-cycles, or successful
+reconnect-repair gate. The mini-cycle gate is 3/3 PASS and the clean-detach
+lifecycle repair is qualified, but the first matrix remains discarded after
+its cycle-2 lifecycle failure. Start a new ten-cycle
+gadget-rebind/phone-reconnect matrix from cycle 1. The historical
 29-tile 64,000-byte transfer shape is unsafe and is not the acceptance shape
 for the adaptive diagnostic; require complete row coverage and every actual
 payload at or below 12,800 bytes. Retain both host kernel logs and Pi service

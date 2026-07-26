@@ -20,7 +20,7 @@ use usb_gadget::{default_udc, Class, Config, Gadget, RegGadget, Strings, Udc, Ud
 const CRTC_SET_RETRIES: usize = 20;
 const CRTC_SET_RETRY_DELAY: Duration = Duration::from_millis(250);
 
-fn should_report_detach_error(restart_requested: bool, shutdown_requested: bool) -> bool {
+fn should_restart_after_clean_detach(restart_requested: bool, shutdown_requested: bool) -> bool {
     restart_requested && !shutdown_requested
 }
 
@@ -1962,6 +1962,21 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
+    if should_restart_after_clean_detach(restart_requested, !running.load(Ordering::Acquire)) {
+        if let Err(state) = bulk_receive_session.begin_shutdown() {
+            tracing::error!(
+                ?state,
+                "Refusing automatic detach teardown because the FunctionFS bulk session is not \
+                 idle; do not stop, restart, reboot, or shut down this service instance, recover \
+                 with a physical/hardware reset"
+            );
+            loop {
+                std::thread::sleep(Duration::from_secs(1));
+            }
+        }
+        info!("Idle FunctionFS bulk session claimed for safe detach teardown");
+    }
+
     tracing::info!("Shutting down");
 
     match gadget_shutdown.request_unbind() {
@@ -2016,10 +2031,11 @@ fn main() -> anyhow::Result<()> {
     if restart_requested && shutdown_requested {
         info!("Intentional shutdown supersedes queued detach restart request");
     }
-    if should_report_detach_error(restart_requested, shutdown_requested) {
-        return Err(anyhow::anyhow!(
-            "USB detached after active host session; restart to recreate gadget"
-        ));
+    if should_restart_after_clean_detach(restart_requested, shutdown_requested) {
+        info!(
+            "USB detached after active host session; exiting successfully for policy-controlled \
+             gadget recreation"
+        );
     }
 
     Ok(())
@@ -2030,9 +2046,9 @@ mod tests {
     use super::{
         compute_scaled_layout, derive_mode_from_native, parse_functionfs_read_size,
         parse_test_compression, parse_test_max_buffer_size, render_waiting_screen,
-        should_report_detach_error, waiting_scene_glyph, BulkReceiveSession, BulkReceiveState,
-        DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ScaledLayout, RGB565_BLACK,
-        RGB565_GREEN, RGB565_WHITE,
+        should_restart_after_clean_detach, waiting_scene_glyph, BulkReceiveSession,
+        BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome,
+        ScaledLayout, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
     };
     use gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED;
     use std::ffi::OsStr;
@@ -2168,14 +2184,14 @@ mod tests {
     }
 
     #[test]
-    fn intentional_shutdown_suppresses_queued_detach_error() {
-        assert!(!should_report_detach_error(true, true));
+    fn intentional_shutdown_suppresses_clean_detach_restart() {
+        assert!(!should_restart_after_clean_detach(true, true));
     }
 
     #[test]
-    fn unexpected_detach_still_reports_restart_error() {
-        assert!(should_report_detach_error(true, false));
-        assert!(!should_report_detach_error(false, false));
+    fn safe_detach_requests_policy_controlled_restart() {
+        assert!(should_restart_after_clean_detach(true, false));
+        assert!(!should_restart_after_clean_detach(false, false));
     }
 
     #[derive(Default)]

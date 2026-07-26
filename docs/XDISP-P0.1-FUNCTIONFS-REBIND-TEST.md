@@ -524,11 +524,19 @@ The first matrix attempt passed cycle 1, then failed cycle 2 before payload
 during a reconnect-only reset. The detached service safely removed its gadget
 and FunctionFS resources, then exited status 1 to request recreation.
 Containment's `Restart=no` prevented it, so the phone could not complete
-enumeration. This was not a receive or kernel failure. Do not continue that
-matrix. Qualify a userspace policy in which only the proven-idle safe-detach
-path exits successfully under `Restart=on-success`; status-1 failures,
-poisoned receives, and crashes must remain non-restarting. After the dedicated
-reconnect gate passes, start all ten matrix cycles again from cycle 1.
+enumeration. This was not a receive or kernel failure.
+
+Do not continue that matrix. The replacement userspace policy is now
+qualified: only a proven-idle safe-detach path exits successfully under
+`Restart=on-success`; nonzero failures, poisoned receives, and crashes remain
+non-restarting. In the dedicated reconnect gate, PID 2739 exited zero after
+UDC-first teardown, systemd created PID 2836 on the same Pi boot, and the
+OnePlus re-enumerated automatically. A fresh frame under PID 2836 covered all
+720 rows with five one-read compressed payloads; the 12,735-byte maximum was
+below the 12,800-byte cap, every receive returned to `Idle`, and the Pi kernel
+remained clean. Start all ten matrix cycles again from cycle 1. Evidence is
+under
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-detach-restart-repair-2026-07-26T1446COT/`.
 
 ## Post-isolation pre-matrix gate
 
