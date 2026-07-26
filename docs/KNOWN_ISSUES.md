@@ -227,6 +227,15 @@ configured and no competing phone USB identity is required to reproduce it.
   separate stop/start exited zero on the same Pi boot without host `-110`,
   short read, DWC2 stop timeout, vc4 fault, or Pi Oops. Evidence is under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-mini-cycles-2026-07-26T1236COT/`.
+- The first adaptive matrix attempt passed cycle 1 but failed cycle 2 before
+  payload. A reconnect-only reset delivered a stale queued `Disable`; the Pi
+  safely unbound UDC, removed FunctionFS, dropped endpoint ownership, and
+  intentionally exited status 1 to request gadget recreation. The
+  containment drop-in's `Restart=no` left the service failed, so the phone
+  could not complete re-enumeration. No receive anomaly, DWC2 stop timeout,
+  vc4 fault, Pi Oops, pstore record, or watchdog event occurred. Evidence is
+  under
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-matrix-2026-07-26T1256COT/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
@@ -238,8 +247,10 @@ This is `XDISP-P0.1`, tracked canonically in
 result, but the item is still **blocked**, not verified.
 
 Do not mark it resolved from the isolated frame or the three successful
-mini-cycles. The mini-cycle gate is now 3/3 PASS, so the ten-cycle
-gadget-rebind/phone-reconnect matrix is next from cycle 1. The historical
+mini-cycles. The mini-cycle gate is 3/3 PASS, but the first matrix is halted
+after its cycle-2 lifecycle failure. Repair the proven-idle clean-detach exit
+and restart policy in userspace, requalify one post-payload reconnect, then
+start a new ten-cycle gadget-rebind/phone-reconnect matrix from cycle 1. The historical
 29-tile 64,000-byte transfer shape is unsafe and is not the acceptance shape
 for the adaptive diagnostic; require complete row coverage and every actual
 payload at or below 12,800 bytes. Retain both host kernel logs and Pi service

@@ -520,6 +520,16 @@ payloads of 12,728, 12,718, and 12,347 bytes. Every transfer returned to
 `-110`, DWC2 stop timeout, vc4 fault, or Pi Oops. This authorizes the
 ten-cycle matrix from cycle 1 but does not verify `XDISP-P0.1`.
 
+The first matrix attempt passed cycle 1, then failed cycle 2 before payload
+during a reconnect-only reset. The detached service safely removed its gadget
+and FunctionFS resources, then exited status 1 to request recreation.
+Containment's `Restart=no` prevented it, so the phone could not complete
+enumeration. This was not a receive or kernel failure. Do not continue that
+matrix. Qualify a userspace policy in which only the proven-idle safe-detach
+path exits successfully under `Restart=on-success`; status-1 failures,
+poisoned receives, and crashes must remain non-restarting. After the dedicated
+reconnect gate passes, start all ten matrix cycles again from cycle 1.
+
 ## Post-isolation pre-matrix gate
 
 The adaptive-LZ4 result above satisfies this section's original entry
