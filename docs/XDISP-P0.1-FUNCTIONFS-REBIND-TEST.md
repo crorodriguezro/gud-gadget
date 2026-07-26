@@ -489,13 +489,50 @@ is not a usable product setting. Normal-performance verification remains
 blocked on a DWC2/FunctionFS receive fix; do not advance to the OnePlus gate
 or verification matrix.
 
+## Adaptive-LZ4 OnePlus pre-matrix result
+
+The separately preserved OnePlus diagnostic module changed the host transfer
+shape by compressing before splitting and enforcing a final actual-payload
+cap of 12,800 bytes. Its first hardware gate passed on 2026-07-26:
+
+- one 1280x720 RGB565 frame covered all 720 rows with four contiguous LZ4
+  rectangles;
+- actual payloads were 11,260, 12,144, 12,380, and 10,204 bytes;
+- all four payloads completed in one 16 KiB FunctionFS read and returned the
+  receive session to `Idle`;
+- the host logged no `-110`, and neither kernel logged a warning or Oops;
+- after physical detach, a controlled post-payload restart exited zero,
+  unbound the UDC before FunctionFS/DRM release, kept the same Pi boot alive,
+  and returned the new service instance to `not attached`.
+
+The four Pi processing totals sum to 208 ms, approximately 4.8 full frames/s
+for the highly compressible one-shot color-bar pattern. This is not a
+sustained-cadence benchmark and does not establish product performance.
+
+Evidence is under
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-frame-2026-07-26T1154COT/`.
+The result satisfies the one-frame and first safe-lifecycle prerequisites for
+three fresh mini-cycles. It does not verify `XDISP-P0.1`.
+
 ## Post-isolation pre-matrix gate
 
-Do not execute this section yet. It is gated on the transfer-shape control
-above and then one evidence-backed OnePlus changed-variable test completing
-the full frame plus a safe controlled stop/start. Do not begin the ten-cycle
-matrix with the historical 512-byte loop or with the optional 64 KiB A/B
-setting. After the gate is satisfied and before the first mini-cycle payload:
+The adaptive-LZ4 result above satisfies this section's original entry
+prerequisite. The detailed 64,000-byte normal-module frame expectations in
+steps 4--7 below are retained as historical procedure and must not be used for
+the adaptive mini-cycles: the original 29-tile transfer shape is unsafe on the
+Pi and is deliberately absent from the diagnostic.
+
+For each adaptive mini-cycle, require the diagnostic OnePlus module version
+`xdisp-p0.1-adaptive-12800-v1`, contiguous complete-row coverage of the full
+RGB565 frame, every actual payload at or below 12,800 bytes, matching complete
+Pi `frame_stats`, and no host or kernel error. After the sender exits,
+physically detach USB and prove every receive session returned to `Idle`.
+Then use separate `systemctl stop` and `systemctl start` operations; do not
+substitute `restart`.
+
+Do not begin the ten-cycle matrix with the historical 512-byte loop or with
+the optional 64 KiB A/B setting. The original procedure follows for
+provenance:
 
 1. Disable auto-start without signaling the current process:
 

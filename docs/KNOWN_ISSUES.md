@@ -210,6 +210,17 @@ configured and no competing phone USB identity is required to reproduce it.
   boot has no endpoint-stop timeout, Oops, panic, or pstore record. Evidence
   is under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-pi-gdma0-laptop-normal-2026-07-25T2140COT/`.
+- The separately preserved OnePlus adaptive-LZ4 diagnostic then passed its
+  first real frame and post-payload lifecycle gate on the stock Pi kernel. It
+  covered 1280x720 RGB565 with four compressed payloads of 11,260, 12,144,
+  12,380, and 10,204 bytes, each completed by one 16 KiB FunctionFS read.
+  After physical detach, the old service exited zero and a new instance
+  started on the same Pi boot without DWC2 stop timeouts or the vc4 release
+  Oops. The Pi processing totals sum to 208 ms, about 4.8 full frames/s for
+  the highly compressible one-shot color-bar pattern; sustained cadence and
+  normal-content performance remain unmeasured. Three fresh mini-cycles are
+  required next. Evidence is under
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-oneplus-adaptive-frame-2026-07-26T1154COT/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
@@ -220,11 +231,13 @@ This is `XDISP-P0.1`, tracked canonically in
 `../../gud/PROJECT-STATUS.md`. Step 2 has one positive post-payload runtime
 result, but the item is still **blocked**, not verified.
 
-Do not mark it resolved from one successful frame. The acceptance test is ten
-fresh gadget rebind/phone reconnect cycles in which all 29 tiles of the
-1,843,200-byte frame, including the first 64,000-byte tile, complete without a
-host `-110` timeout. Retain both host kernel logs and Pi service logs for each
-failed or successful run. Follow
+Do not mark it resolved from one successful frame. The current adaptive path
+must first pass three fresh payload/detach/stop/start mini-cycles. Only then
+may the ten-cycle gadget-rebind/phone-reconnect matrix begin. The historical
+29-tile 64,000-byte transfer shape is unsafe and is not the acceptance shape
+for the adaptive diagnostic; require complete row coverage and every actual
+payload at or below 12,800 bytes. Retain both host kernel logs and Pi service
+logs for each failed or successful run. Follow
 `XDISP-P0.1-FUNCTIONFS-REBIND-TEST.md` exactly so the evidence is comparable.
 
 ### Safe investigation boundary
