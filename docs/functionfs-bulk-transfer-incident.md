@@ -145,15 +145,22 @@ submitted one 61,440-byte upstream GUD/xHCI bulk URB, which was cancelled with
 16,384-byte read again returned signed `-505856`, exactly
 `16384 - 522240`, matching ep1 OUT `DOEPTSIZ=0x7f800`.
 
-This rules out the OnePlus backport as a necessary trigger and implicates
-larger uncompressed FunctionFS/DWC2 buffer-DMA transfers. Containment prevented
-teardown, endpoint-stop timeouts, and another Oops; physical recovery retained
-the failure journal and both pstore captures were empty. Before compiling a
-`g_dma=0` kernel, run a fresh-boot uncompressed size ladder using packet- and
-complete-row-aligned descriptor maxima: 15,360 bytes first, then 30,720,
-46,080, and 53,760 only after the preceding value passes. The existing
-61,440-byte failure is the upper bound and should not be repeated unchanged.
-The largest clean value becomes the no-kernel mitigation candidate.
+Gate C then failed at only 15,360 bytes. The host completed that entire
+uncompressed bulk URB successfully in 774 microseconds, but the Pi's exact
+15,360-byte FunctionFS read never returned and remained in flight after
+physical detach. This rules out a simple large-transfer threshold. All 5,671
+Gate A compressed bulk lengths were nonmultiples of 512, while the failed Gate
+B and C lengths were exact multiples of the 512-byte high-speed maxpacket.
+The leading hypothesis is buffer-DMA OUT completion without a terminating
+short packet or ZLP.
+
+Before compiling a `g_dma=0` kernel, run Gate D with compression disabled and
+`max_buffer_size=11520` at cached 1920 width. Its 1920x3 tile ends with a
+256-byte short packet. A repeatable pass promotes a separately named OnePlus
+diagnostic module using `URB_ZERO_PACKET` for aligned bulk writes; it does not
+modify the preserved normal module or require a Pi kernel build. A failure
+means alignment alone is insufficient and promotes the `g_dma=0` Pi test
+kernel to the next isolation.
 
 The user reported no noticeable visible-performance difference from the read
 size change. This is not a controlled benchmark; defer 512-byte-versus-16 KiB

@@ -265,7 +265,7 @@ Controlled read-granularity benchmarking is deferred to `XDISP-P2.1`, after
 the reliability gate. Do not re-enable 512-byte reads during `XDISP-P0.1` to
 measure performance.
 
-## Laptop transfer-shape gates: Gate A passed, Gate B failed
+## Laptop transfer-shape gates: Gate A passed; Gates B and C failed
 
 The test-only descriptor controls are implemented as
 `GUD_TEST_COMPRESSION=lz4|none` and
@@ -307,49 +307,53 @@ must not be installed again for an unchanged 64,000-byte test. Evidence is
 under
 `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-b-2026-07-25T1810COT/`.
 
-Together, the gates rule out 25-row control cadence by itself and rule out the
-OnePlus backport as a necessary trigger. They implicate the Pi
-FunctionFS/DWC2 buffer-DMA handling of a larger uncompressed OUT transfer.
-They do not yet establish the first unsafe length or prove that all payloads
-below 16 KiB are safe.
+Gate C kept compression disabled but reduced the advertised maximum to 15,360
+bytes. The first SET_BUFFER was 1920x4/15,360 bytes. Usbmon proves that its
+single bulk URB completed in full with status zero after 774 microseconds, but
+the matching one-call FunctionFS read never returned. Live DWC2 state retained
+the request in flight with zero bytes done and `DOEPTSIZ=0x00200000`, even
+after physical detach. Containment prevented teardown and physical recovery
+found no endpoint-stop timeout, Oops, watchdog reset, or pstore record.
+Evidence is under
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-c-2026-07-25T1834COT/`.
 
-## Revised no-kernel transfer-length isolation
+Gate C disproves a simple large-transfer threshold. Gate A's 5,671 successful
+actual bulk lengths were all nonmultiples of 512, whereas both failed
+uncompressed lengths—61,440 and 15,360—are exact multiples of the high-speed
+512-byte maxpacket. Gate C additionally shows successful delivery of all host
+bytes without completion of the Pi read. The leading hypothesis is therefore
+DWC2 buffer-DMA/FunctionFS OUT completion when a transfer ends on a full
+maxpacket without a terminating short packet or ZLP. This is a strong
+correlation, not sole-cause proof, because Gate A also used compression.
 
-Do not repeat Gate B and do not compile a Pi kernel yet. Use the existing
-descriptor control to find a safe uncompressed maximum:
+## Revised no-kernel packet-termination isolation
 
-1. Start Gate C only from a fresh, kernel-clean boot with the service inactive.
+Do not repeat Gates B or C and do not compile a Pi kernel yet:
+
+1. Run Gate D from a fresh, kernel-clean boot with the service inactive.
    Keep `GUD_FFS_READ_SIZE=16384`, `g_dma=1`, and compression disabled.
-   Advertise `max_buffer_size=15360`. This is 30 high-speed packets and a
-   complete-row multiple for both relevant modes:
-   `4 * 1920 * 2 = 6 * 1280 * 2 = 15360`. Each full tile therefore uses one
-   host bulk URB and one FunctionFS read regardless of whether KDE restores
-   1920x1080 or 1280x720.
-2. Capture usbmon and full host/Pi journals. Require at least one complete
+   Advertise `max_buffer_size=11520`.
+2. Gate D is valid only when the first SET_BUFFER is 1920x3/11,520 bytes. That
+   host bulk transfer ends with 22 full 512-byte packets and a 256-byte short
+   packet. If the cached mode is not 1920 wide, stop before interpreting the
+   result and select a maximum that produces a non-512-aligned complete-row
+   tile in the actual mode.
+3. Capture usbmon and full host/Pi journals. Require at least one complete
    frame, exact successful URB/read matching, an `Idle` receive session, and a
    safe post-detach controlled stop. Any impossible/short read, host timeout,
    late completion, or kernel anomaly poisons that boot and requires physical
    recovery.
-3. If Gate C fails, a smaller advertised maximum is not an immediate
-   userspace mitigation. Preserve that evidence and then reconsider one
-   isolated `g_dma=0` Pi test kernel; do not vary the host module at the same
-   time.
-4. If Gate C passes, repeat on separate fresh boots with complete-row,
-   packet-aligned maxima `30720`, `46080`, then `53760`. Stop at the first
-   anomaly. The already failed 61,440-byte actual transfer is the upper bound
-   and must not be repeated merely to complete the ladder.
-5. The largest clean value below the first failure becomes a userspace
-   mitigation candidate. Verify it first on the laptop with a safe restart,
-   then on the unchanged normal OnePlus module for one full frame and a safe
-   restart. The host drivers already honor the descriptor maximum by splitting
-   updates into complete-row rectangles; no OnePlus kernel/module change is
-   expected for this test.
-6. Only after that OnePlus gate may the three mini-cycles and then the
-   ten-cycle matrix begin. `g_dma=0` remains deferred unless the size ladder
-   produces no usable clean value.
+4. If Gate D passes repeatedly, treat full-maxpacket termination as confirmed
+   strongly enough to test a separately named OnePlus diagnostic `gud.ko`
+   that requests `URB_ZERO_PACKET` only for aligned bulk writes. Preserve
+   `/home/phablet/gud.ko` unchanged. This builds one module, not the Pi kernel.
+5. If Gate D fails, alignment alone is insufficient. The next isolation is one
+   Pi test kernel with `g_dma=0`; do not vary the host module at the same time.
+6. Only after one clean OnePlus frame and a safe restart may the three
+   mini-cycles and then the ten-cycle matrix begin.
 
-This transfer-length isolation is a correctness diagnostic, not the deferred
-performance benchmark. `XDISP-P0.1` remains blocked.
+This packet-termination isolation is a correctness diagnostic, not the
+deferred performance benchmark. `XDISP-P0.1` remains blocked.
 
 ## Post-isolation pre-matrix gate
 

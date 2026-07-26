@@ -159,15 +159,21 @@ configured and no competing phone USB identity is required to reproduce it.
   exactly matching `16384 - 522240` from ep1 OUT `DOEPTSIZ=0x7f800`.
   Containment parked the service and physical recovery found no DWC2 stop
   timeout, Oops, watchdog reset, or pstore record. This proves that the
-  OnePlus backport is not required to trigger the fault and implicates larger
-  uncompressed DWC2 buffer-DMA OUT transfers. Gate B must not be repeated
-  unchanged. Before building a `g_dma=0` kernel, start the uncompressed
-  complete-row size ladder at 15,360 bytes; advance on fresh boots through
-  30,720, 46,080, and 53,760 only while each prior value remains clean.
+  OnePlus backport is not required to trigger the fault. Gate C then failed at
+  only 15,360 bytes even though usbmon recorded a successful full-length host
+  completion in 774 microseconds; the Pi read remained in flight after
+  physical detach. Gate A's successful lengths were all nonmultiples of 512,
+  while the failed Gate B/C lengths were exact maxpacket multiples. Do not
+  repeat either failure unchanged. Before building a `g_dma=0` kernel, use
+  Gate D at cached 1920 width: uncompressed 11,520-byte/1920x3 tiles terminate
+  with a 256-byte short packet. A repeatable pass promotes a separately named
+  OnePlus `URB_ZERO_PACKET` diagnostic module; a failure promotes `g_dma=0`.
   Evidence is under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-a-2026-07-25T1754COT/`
   and
-  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-b-2026-07-25T1810COT/`.
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-b-2026-07-25T1810COT/`,
+  plus
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-c-2026-07-25T1834COT/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
