@@ -371,6 +371,24 @@ Do not repeat Gates B or C and do not compile a Pi kernel yet:
 This aligned-size isolation is a correctness diagnostic, not the deferred
 performance benchmark. `XDISP-P0.1` remains blocked.
 
+### Gate E first run passed; repeat gate
+
+The first Gate E boot completed one known-clean 1920 frame and then six
+complete target 1280x720 frames: 864 aligned 12,800-byte transfers. All 1,224
+session transfers matched in usbmon with status zero and full length, and all
+1,224 Pi reads returned to `Idle`. Physical detach and controlled stop were
+clean. Evidence is under
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-e-2026-07-25T1919COT/`.
+
+Do not call 12,800 bytes verified from one boot. Repeat the identical Gate E
+configuration on two additional fresh Pi boots, capturing at least one
+complete 1280x720 frame and a safe stop in each. Stop on the first anomaly.
+If both repeat boots pass, use 12,800 bytes as the laptop-qualified userspace
+ceiling candidate for one unchanged-normal-module OnePlus frame and safe
+restart. If a repeat fails, drop the candidate to the proven-clean 10,240-byte
+shape and repeat that value before OnePlus use. Keep `g_dma=0` deferred as a
+root-cause experiment.
+
 ## Post-isolation pre-matrix gate
 
 Do not execute this section yet. It is gated on the transfer-shape control
