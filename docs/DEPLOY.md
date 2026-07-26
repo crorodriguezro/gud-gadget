@@ -411,7 +411,7 @@ the maximum-buffer override must be nonzero and no larger than the natural
 maximum. Invalid values fail before DRM or UDC setup. A startup warning makes
 any active override visible in the journal.
 
-The reproducible Gate A through Gate D examples live under
+The reproducible Gate A through Gate E examples live under
 `systemd/test-only/`. They are not normal service configuration and must never
 be installed together. Changing either descriptor value requires a fresh Pi
 boot and USB enumeration; reusing a host's cached descriptor is not valid
@@ -423,7 +423,10 @@ maximum. Its full host URB completed successfully, but the exact FunctionFS
 read remained blocked, so it also must not be repeated unchanged. Gate D
 advertises no compression with an 11,520-byte maximum. It is valid only if
 the first SET_BUFFER is 1920x3/11,520 bytes, ending in a 256-byte short packet;
-it is the no-kernel-build packet-termination control.
+it passed, as did later aligned 10,240-byte transfers with no ZLP. Gate E
+advertises no compression with a 12,800-byte maximum. Interpret it only after
+observing 1280x5/12,800-byte transfers; it is the aligned lower-boundary
+control between the clean 10,240 and failed 15,360 values.
 
 The lifecycle-repair build enables `ctrlc` termination handling. Before every
 blocking FunctionFS receive, Step 5 atomically changes the session from

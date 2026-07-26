@@ -326,34 +326,50 @@ DWC2 buffer-DMA/FunctionFS OUT completion when a transfer ends on a full
 maxpacket without a terminating short packet or ZLP. This is a strong
 correlation, not sole-cause proof, because Gate A also used compression.
 
-## Revised no-kernel packet-termination isolation
+Gate D passed one complete 1920x1080 frame as 360 uncompressed
+1920x3/11,520-byte transfers, each ending in a 256-byte short packet. KDE then
+selected 1280x720 and the same session passed six complete frames as 1,080
+uncompressed 1280x4/10,240-byte transfers. Those later transfers are exact
+20-packet multiples. Usbmon recorded 1,440 matched successful bulk transfers,
+all with transfer flags zero and no zero-length bulk URB. The Pi recorded
+1,440 returns to `Idle`, and post-detach controlled shutdown exited zero with
+clean gadget/DRM teardown and no kernel anomaly. Evidence is under
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-d-2026-07-25T1905COT/`.
+
+Gate D rejects exact maxpacket termination as a sufficient trigger. Do not
+implement the proposed OnePlus `URB_ZERO_PACKET` diagnostic on this evidence.
+The useful boundary is now an aligned 10,240-byte pass versus aligned
+15,360-byte failure; size and/or intermittent DWC2 state still matters.
+
+## Revised no-kernel aligned-size isolation
 
 Do not repeat Gates B or C and do not compile a Pi kernel yet:
 
-1. Run Gate D from a fresh, kernel-clean boot with the service inactive.
+1. Run Gate E from a fresh, kernel-clean boot with the service inactive.
    Keep `GUD_FFS_READ_SIZE=16384`, `g_dma=1`, and compression disabled.
-   Advertise `max_buffer_size=11520`.
-2. Gate D is valid only when the first SET_BUFFER is 1920x3/11,520 bytes. That
-   host bulk transfer ends with 22 full 512-byte packets and a 256-byte short
-   packet. If the cached mode is not 1920 wide, stop before interpreting the
-   result and select a maximum that produces a non-512-aligned complete-row
-   tile in the actual mode.
+   Advertise `max_buffer_size=12800`.
+2. Interpret Gate E only after observing 1280x5/12,800-byte SET_BUFFERs. They
+   are exactly 25 high-speed 512-byte packets, between the proven-clean
+   10,240-byte/20-packet value and failed 15,360-byte/30-packet value. If the
+   host starts at 1920, its temporary 1920x3/11,520-byte transfers repeat an
+   already clean shape; wait for the cached 1280 mode without treating those
+   transfers as Gate E.
 3. Capture usbmon and full host/Pi journals. Require at least one complete
-   frame, exact successful URB/read matching, an `Idle` receive session, and a
-   safe post-detach controlled stop. Any impossible/short read, host timeout,
-   late completion, or kernel anomaly poisons that boot and requires physical
-   recovery.
-4. If Gate D passes repeatedly, treat full-maxpacket termination as confirmed
-   strongly enough to test a separately named OnePlus diagnostic `gud.ko`
-   that requests `URB_ZERO_PACKET` only for aligned bulk writes. Preserve
-   `/home/phablet/gud.ko` unchanged. This builds one module, not the Pi kernel.
-5. If Gate D fails, alignment alone is insufficient. The next isolation is one
-   Pi test kernel with `g_dma=0`; do not vary the host module at the same time.
-6. Only after one clean OnePlus frame and a safe restart may the three
-   mini-cycles and then the ten-cycle matrix begin.
+   1280x720 frame, exact successful URB/read matching, an `Idle` receive
+   session, and a safe post-detach controlled stop. Any impossible/short read,
+   host timeout, late completion, or kernel anomaly poisons that boot and
+   requires physical recovery.
+4. If Gate E fails, retain 10,240 bytes as the current userspace ceiling
+   candidate and verify that candidate repeatedly before OnePlus use. Keep
+   one `g_dma=0` Pi test kernel as later root-cause isolation.
+5. If Gate E passes, the clean/failing aligned boundary narrows to
+   12,800--15,360 bytes. Repeat the clean candidate on separate fresh boots
+   because the historical 64,000-byte behavior was intermittent.
+6. Only after a repeated laptop candidate, one clean OnePlus frame, and a safe
+   restart may the three mini-cycles and then the ten-cycle matrix begin.
 
-This packet-termination isolation is a correctness diagnostic, not the
-deferred performance benchmark. `XDISP-P0.1` remains blocked.
+This aligned-size isolation is a correctness diagnostic, not the deferred
+performance benchmark. `XDISP-P0.1` remains blocked.
 
 ## Post-isolation pre-matrix gate
 

@@ -154,13 +154,20 @@ B and C lengths were exact multiples of the 512-byte high-speed maxpacket.
 The leading hypothesis is buffer-DMA OUT completion without a terminating
 short packet or ZLP.
 
-Before compiling a `g_dma=0` kernel, run Gate D with compression disabled and
-`max_buffer_size=11520` at cached 1920 width. Its 1920x3 tile ends with a
-256-byte short packet. A repeatable pass promotes a separately named OnePlus
-diagnostic module using `URB_ZERO_PACKET` for aligned bulk writes; it does not
-modify the preserved normal module or require a Pi kernel build. A failure
-means alignment alone is insufficient and promotes the `g_dma=0` Pi test
-kernel to the next isolation.
+Gate D passed a full 1920 frame at 11,520 bytes, then six 1280 frames at
+10,240 bytes. The latter are exact 20-packet multiples, and usbmon proved that
+all 1,440 successful bulk submits had transfer flags zero with no separate
+zero-length URB. Exact maxpacket termination is therefore not sufficient to
+trigger the failure, and the proposed OnePlus `URB_ZERO_PACKET` diagnostic is
+cancelled.
+
+Before compiling a `g_dma=0` kernel, run Gate E with compression disabled and
+`max_buffer_size=12800`. Interpret it only for 1280x5/12,800-byte transfers:
+25 packets, between the aligned clean 10,240-byte value and aligned failed
+15,360-byte value. A failure retains 10,240 as the ceiling candidate; a pass
+narrows the boundary to 12,800--15,360. Any candidate still requires
+fresh-boot repetition because the historical 64,000-byte result was
+intermittent.
 
 The user reported no noticeable visible-performance difference from the read
 size change. This is not a controlled benchmark; defer 512-byte-versus-16 KiB
