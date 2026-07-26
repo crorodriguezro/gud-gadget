@@ -167,8 +167,27 @@ Before compiling a `g_dma=0` kernel, run Gate E with compression disabled and
 15,360-byte value. Three fresh boots each passed six complete 1280 target
 frames, 864 target transfers, and a clean stop. The boundary is now 12,800
 clean versus 15,360 failed, with 2,592 target transfers clean across the
-qualification. Use 12,800 for one unchanged-normal-module OnePlus frame and a
-safe controlled restart before mini-cycles.
+qualification. This establishes a complete-transfer correctness boundary;
+the later performance-preserving Gate F result below supersedes the proposed
+OnePlus advance.
+
+The user then reported that the small descriptor ceiling produced roughly one
+visible frame every five seconds. This is expected control-cadence overhead:
+1280x720 requires 144 separate 12,800-byte SET_BUFFER operations. Gate F tried
+to preserve normal large LZ4 rectangles while limiting only the internal
+FunctionFS reads to 12,800 bytes. It failed on the first 16,274-byte compressed
+payload. The first 12,800-byte read returned signed `-509440`, exactly
+`12800 - 522240` from the recurring `DOEPTSIZ=0x7f800` residual, and the
+service entered `Poisoned`. Usbmon recorded host cancellation `-104` after
+14,848 bytes and 3.052803 seconds; the host logged `-110`.
+
+Therefore Gate E's success applies when 12,800 bytes is the complete host
+transfer, not when a 12,800-byte FunctionFS request consumes part of a larger
+transfer. The descriptor ceiling and internal read ceiling cannot be
+decoupled as a `g_dma=1` performance fix. Gate F must not be repeated
+unchanged. The next root-cause isolation is the separately named Pi
+`g_dma=0` test kernel; do not advance to the OnePlus gate or verification
+matrix first.
 
 The user reported no noticeable visible-performance difference from the read
 size change. This is not a controlled benchmark; defer 512-byte-versus-16 KiB

@@ -387,12 +387,49 @@ without a host URB error, length mismatch, Pi read anomaly, poisoned session,
 or kernel fault. The qualification table is under
 `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-e-qualification-2026-07-25.md`.
 
-Use 12,800 bytes as the laptop-qualified userspace ceiling candidate for one
-unchanged-normal-module OnePlus frame. Reinstall the identical Gate E drop-in
-on a fresh, service-inactive Pi boot, keep `/home/phablet/gud.ko` unchanged,
-capture the phone and Pi logs, then physically detach and require a safe
-controlled stop/restart. Keep `g_dma=0` deferred as a root-cause experiment.
-Do not start mini-cycles or the matrix until this OnePlus gate passes.
+Gate E qualifies 12,800 bytes only as a complete-transfer correctness
+boundary. It is not an acceptable normal configuration: at 1280x720 the
+advertised ceiling forces 144 SET_BUFFER operations per frame, and the user
+observed roughly one visible frame every five seconds. Do not confuse this
+descriptor-induced control cadence with the internal read-call optimization.
+
+### Gate F failed: internal 12,800-byte reads cannot preserve large tiles
+
+Gate F restored the normal LZ4 and natural maximum-buffer descriptor while
+changing only `GUD_FFS_READ_SIZE=12800`. Its purpose was to keep one/few large
+host rectangles while consuming their compressed bulk stream in smaller
+reads.
+
+The first fresh-boot payload was one full-screen 1920x1080 LZ4 rectangle:
+4,147,200 bytes uncompressed and 16,274 bytes on the wire. The first
+12,800-byte FunctionFS read returned after 395 microseconds with unsigned
+`18446744073709042176`, signed `-509440`. The live ep1 OUT residual was again
+`DOEPTSIZ=0x0007f800`, or 522,240 bytes:
+
+```text
+12800 - 522240 = -509440
+```
+
+Usbmon recorded the 16,274-byte submit and its cancellation 3.052803 seconds
+later with status `-104` and 14,848 bytes actual; the laptop logged framebuffer
+flush `-110`. Containment changed the Pi session to `Poisoned` and prevented
+teardown. Physical recovery retained matching previous-boot journals; pstore
+was empty and neither boot contained a DWC2 stop timeout or kernel Oops.
+Evidence is under
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-f-2026-07-25T2039COT/`.
+
+Gate E passed when the complete host transfer and userspace read were both
+12,800 bytes. Gate F proves that the same read size does not safely consume
+the prefix of a larger host transfer with DWC2 buffer DMA enabled. Therefore
+the advertised-buffer and internal-read ceilings cannot be decoupled as a
+`g_dma=1` performance workaround. Gate F is quarantined and must not be
+reinstalled unchanged.
+
+Do not proceed to the OnePlus gate, mini-cycles, or matrix with Gate F. The
+next root-cause isolation is the separately named Pi `g_dma=0` test kernel
+described above. That test does not modify the OnePlus kernel, module, or Mir,
+but this installed Pi kernel cannot enable it through a boot argument or
+overlay.
 
 ## Post-isolation pre-matrix gate
 

@@ -427,8 +427,18 @@ it passed, as did later aligned 10,240-byte transfers with no ZLP. Gate E
 advertises no compression with a 12,800-byte maximum. Interpret it only after
 observing 1280x5/12,800-byte transfers; it is the aligned lower-boundary
 control between the clean 10,240 and failed 15,360 values. Three fresh laptop
-boots passed the identical file, qualifying 12,800 as the candidate for one
-unchanged-normal-module OnePlus frame and safe restart.
+boots passed the identical file, qualifying 12,800 as a complete-transfer
+correctness boundary. Its small-tile performance is not acceptable for normal
+use, and the later Gate F result below blocks advancing it to OnePlus.
+
+Gate F keeps the normal LZ4/natural descriptor and changes only the internal
+FunctionFS read ceiling to 12,800 bytes. It failed on the first 16,274-byte
+compressed payload: the first 12,800-byte read returned the impossible signed
+value `-509440`, exactly `12800 - 522240` from ep1 OUT
+`DOEPTSIZ=0x7f800`. It is retained as the exact failed-gate configuration and
+must not be installed unchanged. This also means Gate E's small advertised
+maximum cannot be replaced by a small internal read while retaining large
+host tiles under `g_dma=1`.
 
 The lifecycle-repair build enables `ctrlc` termination handling. Before every
 blocking FunctionFS receive, Step 5 atomically changes the session from

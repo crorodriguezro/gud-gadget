@@ -171,8 +171,8 @@ configured and no competing phone USB identity is required to reproduce it.
   aligned 1280x5/12,800-byte transfers between the clean 10,240 and failed
   15,360 values. Gate E and two identical fresh-boot repeats each passed six
   full target frames and a clean stop: 2,592 target transfers total with zero
-  error. Use 12,800 as the laptop-qualified ceiling candidate for one
-  unchanged-normal-module OnePlus frame and safe restart.
+  error. This qualifies 12,800 as a complete-transfer correctness boundary;
+  the following Gate F result supersedes the proposed OnePlus advance.
   Evidence is under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-a-2026-07-25T1754COT/`
   and
@@ -183,6 +183,18 @@ configured and no competing phone USB identity is required to reproduce it.
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-d-2026-07-25T1905COT/`,
   plus
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-e-qualification-2026-07-25.md`.
+- Gate E's 12,800-byte advertised ceiling is not a usable performance
+  configuration: it creates 144 SET_BUFFER operations per 1280x720 frame and
+  the user observed roughly one visible frame every five seconds. Gate F
+  restored normal LZ4/natural descriptors and capped only internal FunctionFS
+  reads at 12,800 bytes. Its first 16,274-byte compressed payload failed on
+  the first read with signed `-509440`, exactly `12800 - 522240` from
+  `DOEPTSIZ=0x7f800`; the host later cancelled with `-104` after 14,848 bytes
+  and logged `-110`. This proves a complete 12,800-byte transfer can pass
+  while a 12,800-byte prefix read of a larger transfer fails under `g_dma=1`.
+  Do not reinstall Gate F unchanged or advance to the OnePlus gate. Evidence
+  is under
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-f-2026-07-25T2039COT/`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
