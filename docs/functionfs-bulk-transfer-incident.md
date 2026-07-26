@@ -164,11 +164,11 @@ cancelled.
 Before compiling a `g_dma=0` kernel, run Gate E with compression disabled and
 `max_buffer_size=12800`. Interpret it only for 1280x5/12,800-byte transfers:
 25 packets, between the aligned clean 10,240-byte value and aligned failed
-15,360-byte value. Its first boot passed six complete 1280 frames, 864 target
-transfers, and a clean stop. The boundary is now 12,800 clean versus 15,360
-failed. Repeat 12,800 on two additional fresh boots before treating it as the
-OnePlus ceiling candidate; stop on the first anomaly. Any candidate requires
-this repetition because the historical 64,000-byte result was intermittent.
+15,360-byte value. Three fresh boots each passed six complete 1280 target
+frames, 864 target transfers, and a clean stop. The boundary is now 12,800
+clean versus 15,360 failed, with 2,592 target transfers clean across the
+qualification. Use 12,800 for one unchanged-normal-module OnePlus frame and a
+safe controlled restart before mini-cycles.
 
 The user reported no noticeable visible-performance difference from the read
 size change. This is not a controlled benchmark; defer 512-byte-versus-16 KiB

@@ -371,7 +371,7 @@ Do not repeat Gates B or C and do not compile a Pi kernel yet:
 This aligned-size isolation is a correctness diagnostic, not the deferred
 performance benchmark. `XDISP-P0.1` remains blocked.
 
-### Gate E first run passed; repeat gate
+### Gate E qualified across three fresh laptop boots
 
 The first Gate E boot completed one known-clean 1920 frame and then six
 complete target 1280x720 frames: 864 aligned 12,800-byte transfers. All 1,224
@@ -380,14 +380,19 @@ session transfers matched in usbmon with status zero and full length, and all
 clean. Evidence is under
 `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-e-2026-07-25T1919COT/`.
 
-Do not call 12,800 bytes verified from one boot. Repeat the identical Gate E
-configuration on two additional fresh Pi boots, capturing at least one
-complete 1280x720 frame and a safe stop in each. Stop on the first anomaly.
-If both repeat boots pass, use 12,800 bytes as the laptop-qualified userspace
-ceiling candidate for one unchanged-normal-module OnePlus frame and safe
-restart. If a repeat fails, drop the candidate to the proven-clean 10,240-byte
-shape and repeat that value before OnePlus use. Keep `g_dma=0` deferred as a
-root-cause experiment.
+Two additional identical fresh-boot repeats also passed. Each run completed
+six target 1280x720 frames, 864 aligned 12,800-byte transfers, and an exit-zero
+safe stop. Across the three boots, all 2,592 target transfers completed
+without a host URB error, length mismatch, Pi read anomaly, poisoned session,
+or kernel fault. The qualification table is under
+`../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-e-qualification-2026-07-25.md`.
+
+Use 12,800 bytes as the laptop-qualified userspace ceiling candidate for one
+unchanged-normal-module OnePlus frame. Reinstall the identical Gate E drop-in
+on a fresh, service-inactive Pi boot, keep `/home/phablet/gud.ko` unchanged,
+capture the phone and Pi logs, then physically detach and require a safe
+controlled stop/restart. Keep `g_dma=0` deferred as a root-cause experiment.
+Do not start mini-cycles or the matrix until this OnePlus gate passes.
 
 ## Post-isolation pre-matrix gate
 

@@ -426,9 +426,9 @@ the first SET_BUFFER is 1920x3/11,520 bytes, ending in a 256-byte short packet;
 it passed, as did later aligned 10,240-byte transfers with no ZLP. Gate E
 advertises no compression with a 12,800-byte maximum. Interpret it only after
 observing 1280x5/12,800-byte transfers; it is the aligned lower-boundary
-control between the clean 10,240 and failed 15,360 values. Its first boot
-passed; retain the same file unchanged for two fresh-boot repeat gates before
-using 12,800 as an OnePlus ceiling candidate.
+control between the clean 10,240 and failed 15,360 values. Three fresh laptop
+boots passed the identical file, qualifying 12,800 as the candidate for one
+unchanged-normal-module OnePlus frame and safe restart.
 
 The lifecycle-repair build enables `ctrlc` termination handling. Before every
 blocking FunctionFS receive, Step 5 atomically changes the session from

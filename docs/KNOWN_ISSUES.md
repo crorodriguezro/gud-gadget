@@ -169,9 +169,10 @@ configured and no competing phone USB identity is required to reproduce it.
   proposed OnePlus `URB_ZERO_PACKET` change. Do not repeat the Gate B/C
   failures unchanged. Before building a `g_dma=0` kernel, use Gate E to test
   aligned 1280x5/12,800-byte transfers between the clean 10,240 and failed
-  15,360 values. Gate E's first boot passed six full target frames and a clean
-  stop. Repeat that exact configuration on two additional fresh boots before
-  using 12,800 as the OnePlus ceiling candidate.
+  15,360 values. Gate E and two identical fresh-boot repeats each passed six
+  full target frames and a clean stop: 2,592 target transfers total with zero
+  error. Use 12,800 as the laptop-qualified ceiling candidate for one
+  unchanged-normal-module OnePlus frame and safe restart.
   Evidence is under
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-a-2026-07-25T1754COT/`
   and
@@ -181,7 +182,7 @@ configured and no competing phone USB identity is required to reproduce it.
   and
   `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-d-2026-07-25T1905COT/`,
   plus
-  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-e-2026-07-25T1919COT/`.
+  `../../gud/backport-4.9/env/local/evidence/xdisp-p0.1-laptop-gate-e-qualification-2026-07-25.md`.
 - A separate boot-time DRM race exhausted `set_crtc` retries once before a
   manual start succeeded. This is not the previous kernel-cleanup crash, but
   should remain visible as a follow-up lifecycle issue.
