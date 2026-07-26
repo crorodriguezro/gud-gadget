@@ -105,6 +105,33 @@ commit_avg_ms=489.394
 rectangles=113
 ```
 
+## First Activation Was Invalid at State Negotiation
+
+The first hardware attempt on 2026-07-26 did not exercise native pixel
+transfer and is not a performance result. The Pi correctly selected the
+physical 1280x720 timing, but the monitor's DRM mode list marked every mode
+only as `DRIVER`; it supplied no `PREFERRED` type. The initial override
+implementation therefore used the override-selected 1280x720 mode as its
+fallback USB preferred mode and advertised its flags as `0x405`.
+
+The separately preserved OnePlus diagnostic backport submitted the identical
+74250 kHz 720p timing with flags `0x005`. The only difference was the GUD
+advertisement-only preferred bit `0x400`. Exact state validation rejected
+`SET_STATE_CHECK`, so no state was committed and `SET_BUFFER` was also
+rejected. The host nevertheless submitted a 6,227-byte bulk request and
+reported `-110` because the Pi had correctly posted no bulk receive for the
+invalid buffer request.
+
+There was no `Event::Buffer`, `InFlight`, `Poisoned`, `payload_seq`, or
+`frame_stats` entry. This was neither a 12,800-byte transport failure nor an
+adaptive-LZ4 result.
+
+The correction keeps advertised preference independent of the physical
+test override: use an explicit DRM preferred mode when one exists, otherwise
+retain connector mode index zero, which is the normal no-override fallback.
+Unit tests cover both cases. The retry must prove a successful state check and
+commit before interpreting any bulk or performance result.
+
 ## Interpretation
 
 - Large improvement with the same rectangle count: full-frame scaling and

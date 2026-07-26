@@ -384,6 +384,13 @@ fn gud_flags_for_mode(mode: &Mode, preferred_mode_name: &std::ffi::CStr) -> u32 
     flags
 }
 
+fn advertised_preferred_mode_index(mode_types: impl IntoIterator<Item = ModeTypeFlags>) -> usize {
+    mode_types
+        .into_iter()
+        .position(|mode_type| mode_type.contains(ModeTypeFlags::PREFERRED))
+        .unwrap_or(0)
+}
+
 fn derive_mode_from_native(
     native: &DisplayMode,
     target_width: u16,
@@ -1264,12 +1271,13 @@ fn main() -> anyhow::Result<()> {
     })
     .expect("cleanup handler registration failed");
 
-    let preferred_mode_name = connector_modes
-        .iter()
-        .find(|candidate| candidate.mode_type().contains(ModeTypeFlags::PREFERRED))
-        .unwrap_or(mode)
-        .name()
-        .to_owned();
+    // The physical test override must not alter which USB mode is advertised
+    // as preferred. If DRM supplies no preference, preserve the normal
+    // connector-order fallback instead of falling back to the override-selected
+    // physical mode.
+    let preferred_mode_index =
+        advertised_preferred_mode_index(connector_modes.iter().map(Mode::mode_type));
+    let preferred_mode_name = connector_modes[preferred_mode_index].name().to_owned();
     let mut advertised_modes: Vec<DisplayMode> = connector_modes
         .iter()
         .map(|mode| {
@@ -2113,13 +2121,14 @@ fn main() -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::{
-        compute_scaled_layout, derive_mode_from_native, parse_functionfs_read_size,
-        parse_test_compression, parse_test_max_buffer_size, parse_test_output_mode,
-        render_waiting_screen, should_restart_after_clean_detach, waiting_scene_glyph,
-        BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind,
-        GadgetUnbindOutcome, ScaledLayout, TestOutputMode, RGB565_BLACK, RGB565_GREEN,
-        RGB565_WHITE,
+        advertised_preferred_mode_index, compute_scaled_layout, derive_mode_from_native,
+        parse_functionfs_read_size, parse_test_compression, parse_test_max_buffer_size,
+        parse_test_output_mode, render_waiting_screen, should_restart_after_clean_detach,
+        waiting_scene_glyph, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
+        GadgetUnbind, GadgetUnbindOutcome, ScaledLayout, TestOutputMode, RGB565_BLACK,
+        RGB565_GREEN, RGB565_WHITE,
     };
+    use drm::control::ModeTypeFlags;
     use gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED;
     use std::ffi::OsStr;
     use std::io;
@@ -2180,6 +2189,30 @@ mod tests {
                 "unexpectedly accepted {value:?}"
             );
         }
+    }
+
+    #[test]
+    fn advertised_preferred_mode_falls_back_to_first_connector_mode() {
+        assert_eq!(
+            advertised_preferred_mode_index([
+                ModeTypeFlags::DRIVER,
+                ModeTypeFlags::DRIVER,
+                ModeTypeFlags::DRIVER,
+            ]),
+            0
+        );
+    }
+
+    #[test]
+    fn advertised_preferred_mode_uses_explicit_drm_preference() {
+        assert_eq!(
+            advertised_preferred_mode_index([
+                ModeTypeFlags::DRIVER,
+                ModeTypeFlags::DRIVER | ModeTypeFlags::PREFERRED,
+                ModeTypeFlags::DRIVER,
+            ]),
+            1
+        );
     }
 
     #[test]
