@@ -1,9 +1,13 @@
+mod scanout;
+
 use anyhow::{ensure, Context};
 use drm::buffer::Buffer;
 use drm::control::{
-    dumbbuffer::DumbMapping, framebuffer, ClipRect, Device, Mode, ModeTypeFlags, PageFlipFlags,
+    connector, crtc, dumbbuffer::DumbBuffer, dumbbuffer::DumbMapping, framebuffer, ClipRect,
+    Device, Mode, ModeTypeFlags, PageFlipFlags,
 };
 use gud_gadget::{DisplayMode, Event, ProtocolInvalidationReason, GUD_COMPRESSION_LZ4};
+use scanout::{logical_memory_estimate, MappedActive, ScanoutBackend, ScanoutManager};
 use std::env::{args, var_os};
 use std::ffi::OsStr;
 use std::fs::{rename, File};
@@ -295,6 +299,92 @@ impl Card {
 
     pub fn open_global() -> Self {
         Self::open("/dev/dri/card0")
+    }
+}
+
+struct DrmScanoutBackend {
+    card: Card,
+    crtc: crtc::Handle,
+    connector: connector::Handle,
+}
+
+impl ScanoutBackend for DrmScanoutBackend {
+    type Buffer = DumbBuffer;
+    type Framebuffer = framebuffer::Handle;
+    type Mode = Mode;
+    type Mapping<'a> = DumbMapping<'a>;
+
+    fn mode_size(&self, mode: Self::Mode) -> (u32, u32) {
+        let (width, height) = mode.size();
+        (width.into(), height.into())
+    }
+
+    fn create_buffer(&mut self, width: u32, height: u32) -> anyhow::Result<Self::Buffer> {
+        self.card
+            .create_dumb_buffer((width, height), drm::buffer::DrmFourcc::Rgb565, 16)
+            .context("create RGB565 dumb buffer")
+    }
+
+    fn buffer_pitch(&self, buffer: &Self::Buffer) -> u32 {
+        buffer.pitch()
+    }
+
+    fn add_framebuffer(&mut self, buffer: &Self::Buffer) -> anyhow::Result<Self::Framebuffer> {
+        self.card
+            .add_framebuffer(buffer, 16, 16)
+            .context("add RGB565 framebuffer")
+    }
+
+    fn map_buffer<'a>(
+        &mut self,
+        buffer: &'a mut Self::Buffer,
+    ) -> anyhow::Result<Self::Mapping<'a>> {
+        self.card
+            .map_dumb_buffer(buffer)
+            .context("map RGB565 dumb buffer")
+    }
+
+    fn remove_framebuffer(&mut self, framebuffer: Self::Framebuffer) -> anyhow::Result<()> {
+        self.card
+            .destroy_framebuffer(framebuffer)
+            .context("remove DRM framebuffer")
+    }
+
+    fn destroy_buffer(&mut self, buffer: Self::Buffer) -> anyhow::Result<()> {
+        self.card
+            .destroy_dumb_buffer(buffer)
+            .context("destroy DRM dumb buffer")
+    }
+
+    fn dirty_framebuffer(
+        &mut self,
+        framebuffer: Self::Framebuffer,
+        x1: u16,
+        y1: u16,
+        x2: u16,
+        y2: u16,
+    ) -> anyhow::Result<()> {
+        self.card
+            .dirty_framebuffer(framebuffer, &[ClipRect::new(x1, y1, x2, y2)])
+            .context("dirty DRM framebuffer")
+    }
+
+    fn set_crtc(&mut self, framebuffer: Self::Framebuffer, mode: Self::Mode) -> anyhow::Result<()> {
+        self.card
+            .set_crtc(
+                self.crtc,
+                Some(framebuffer),
+                (0, 0),
+                &[self.connector],
+                Some(mode),
+            )
+            .context("set DRM CRTC")
+    }
+
+    fn page_flip(&mut self, framebuffer: Self::Framebuffer) -> anyhow::Result<()> {
+        self.card
+            .page_flip(self.crtc, framebuffer, PageFlipFlags::empty(), None)
+            .context("page flip DRM framebuffer")
     }
 }
 
@@ -727,36 +817,38 @@ fn render_waiting_screen(
     Ok(())
 }
 
-fn present_waiting_screen(
-    card: &mut Card,
-    mappings: &mut [DumbMapping<'_>; 2],
-    pitch: usize,
-    width: u32,
-    height: u32,
-    fb_handles: &[framebuffer::Handle; 2],
-    front_buffer_index: usize,
+fn present_waiting_screen<B: ScanoutBackend>(
+    backend: &mut B,
+    active: &mut MappedActive<'_, B>,
     dump_path: Option<&Path>,
     dump_raw_path: Option<&Path>,
 ) -> anyhow::Result<()> {
-    for mapping in mappings.iter_mut() {
-        render_waiting_screen(mapping.as_mut(), pitch, width, height)?;
+    let (width, height) = active.size();
+    let pitch = active.pitch() as usize;
+    for index in 0..2 {
+        render_waiting_screen(active.buffer_mut(index), pitch, width, height)?;
     }
 
-    let full_panel = ClipRect::new(0, 0, width as u16, height as u16);
-    match card.dirty_framebuffer(fb_handles[front_buffer_index], &[full_panel]) {
+    match backend.dirty_framebuffer(
+        active.front_framebuffer(),
+        0,
+        0,
+        width as u16,
+        height as u16,
+    ) {
         Ok(()) => tracing::debug!("Waiting screen flushed"),
         Err(err) => tracing::debug!("dirty_framebuffer for waiting screen failed: {}", err),
     }
 
     dump_framebuffer_if_enabled(
         dump_path,
-        mappings[front_buffer_index].as_mut(),
+        active.front_buffer_mut(),
         pitch,
         width,
         height,
         2,
     );
-    dump_framebuffer_raw_if_enabled(dump_raw_path, mappings[front_buffer_index].as_mut());
+    dump_framebuffer_raw_if_enabled(dump_raw_path, active.front_buffer_mut());
 
     Ok(())
 }
@@ -1173,7 +1265,7 @@ fn main() -> anyhow::Result<()> {
         );
     }
     info!("Opening DRM device: {}", card_path);
-    let mut card = Card::open(&card_path);
+    let card = Card::open(&card_path);
     let udc = default_udc().expect("no UDC found");
     info!("Using UDC: {:?}", udc);
 
@@ -1205,14 +1297,15 @@ fn main() -> anyhow::Result<()> {
         .get_crtc(crtc_handle)
         .expect("get compatible drm crtc failed");
 
-    let connector_modes = connector.modes();
-    let mode = select_output_mode(connector_modes, test_output_mode)?;
+    let connector_handle = connector.handle();
+    let connector_modes = connector.modes().to_vec();
+    let mode = *select_output_mode(&connector_modes, test_output_mode)?;
 
     let mut min_width = u32::MAX;
     let mut min_height = u32::MAX;
     let mut max_width = 0;
     let mut max_height = 0;
-    for connector_mode in connector_modes {
+    for connector_mode in &connector_modes {
         let (width, height) = connector_mode.size();
         let width = width as u32;
         let height = height as u32;
@@ -1329,6 +1422,23 @@ fn main() -> anyhow::Result<()> {
             advertised_modes.push(derive_mode_from_native(&native_mode, w, h));
         }
     }
+    let logical_memory = logical_memory_estimate(
+        connector_modes.iter().map(|mode| {
+            let (width, height) = mode.size();
+            (width.into(), height.into())
+        }),
+        advertised_modes
+            .iter()
+            .map(|mode| (mode.hdisplay.into(), mode.vdisplay.into())),
+    )
+    .context("calculate catalog-derived logical memory estimate")?;
+    info!(
+        logical_scanout_estimate_bytes = logical_memory.scanout_bytes,
+        max_shadow_bytes = logical_memory.max_shadow_bytes,
+        logical_peak_estimate_bytes = logical_memory.peak_bytes,
+        "Catalog-derived RGB565 memory estimate; actual DRM pitch/mapping lengths are recorded \
+         per allocation"
+    );
     gud_gadget::configure_state_check_validation(
         1,
         &[transfer_format.gud_pixel_format()],
@@ -1343,39 +1453,29 @@ fn main() -> anyhow::Result<()> {
         "Picked physical DRM output mode"
     );
 
-    let (width, height) = mode.size();
-    debug!("Creating double dumb buffers {}x{} (RGB565)", width, height);
-    let mut dumb_buffers = [
-        card.create_dumb_buffer(
-            (width.into(), height.into()),
-            drm::buffer::DrmFourcc::Rgb565,
-            16,
-        )
-        .expect("Could not create primary dumb buffer"),
-        card.create_dumb_buffer(
-            (width.into(), height.into()),
-            drm::buffer::DrmFourcc::Rgb565,
-            16,
-        )
-        .expect("Could not create secondary dumb buffer"),
-    ];
-
-    let fb_handles = [
-        card.add_framebuffer(&dumb_buffers[0], 16, 16)
-            .expect("Could not create primary FB"),
-        card.add_framebuffer(&dumb_buffers[1], 16, 16)
-            .expect("Could not create secondary FB"),
-    ];
-    debug!("Framebuffers created (RGB565, 16bpp)");
+    let mut backend = DrmScanoutBackend {
+        card,
+        crtc: crtc.handle(),
+        connector: connector_handle,
+    };
+    let mut scanout_manager =
+        ScanoutManager::new_baseline(&mut backend, mode).context("create baseline scanout")?;
+    let scanout_counters = scanout_manager.counters();
+    let baseline = scanout_manager.active_mut();
+    debug!(
+        width = baseline.size().0,
+        height = baseline.size().1,
+        pitch = baseline.pitch(),
+        mapping_lengths = ?baseline.mapping_lengths(),
+        live_bytes = baseline.live_bytes(),
+        "Created owned baseline double-buffer scanout"
+    );
+    let mut active = baseline
+        .map(&mut backend, &scanout_counters)
+        .context("map baseline scanout")?;
 
     for attempt in 1..=CRTC_SET_RETRIES {
-        match card.set_crtc(
-            crtc.handle(),
-            Some(fb_handles[0]),
-            (0, 0),
-            &[connector.handle()],
-            Some(*mode),
-        ) {
+        match backend.set_crtc(active.front_framebuffer(), mode) {
             Ok(()) => break,
             Err(err) if attempt < CRTC_SET_RETRIES => {
                 warn!(
@@ -1391,42 +1491,27 @@ fn main() -> anyhow::Result<()> {
     }
     info!("CRTC set, display should be active");
 
-    let pitch = dumb_buffers[0].pitch();
-    ensure!(
-        dumb_buffers[1].pitch() == pitch,
-        "dumb buffer pitches differ: {} vs {}",
-        pitch,
-        dumb_buffers[1].pitch()
-    );
-
-    let (primary_buffer, secondary_buffer) = dumb_buffers.split_at_mut(1);
-    let mut mappings = [
-        card.map_dumb_buffer(&mut primary_buffer[0])
-            .expect("map_dumb_buffer for primary failed"),
-        card.map_dumb_buffer(&mut secondary_buffer[0])
-            .expect("map_dumb_buffer for secondary failed"),
-    ];
-    debug!("Dumb buffer mapped, pitch={}", pitch);
-    let panel_width = width as u32;
-    let panel_height = height as u32;
+    let (panel_width, panel_height) = active.size();
+    let pitch = active.pitch();
+    let width = panel_width;
+    let height = panel_height;
     let mut shadow = ShadowFramebuffer::default();
-    let mut front_buffer_index = 0usize;
 
-    for mapping in mappings.iter_mut() {
-        let fb_data = mapping.as_mut();
+    for index in 0..2 {
+        let fb_data = active.buffer_mut(index);
         if pattern_mode.uses_startup_pattern() {
             fill_diagnostic_pattern_rect(
                 fb_data,
                 pitch as usize,
-                width.into(),
-                height.into(),
+                width,
+                height,
                 0,
                 0,
-                width.into(),
-                height.into(),
+                width,
+                height,
             )?;
         } else {
-            render_waiting_screen(fb_data, pitch as usize, width.into(), height.into())?;
+            render_waiting_screen(fb_data, pitch as usize, width, height)?;
         }
     }
     if pattern_mode.uses_startup_pattern() {
@@ -1436,23 +1521,25 @@ fn main() -> anyhow::Result<()> {
     }
     let mut waiting_screen_visible = matches!(pattern_mode, PatternMode::Off);
 
-    let test_clip = ClipRect::new(0, 0, width as u16, height as u16);
-    match card.dirty_framebuffer(fb_handles[front_buffer_index], &[test_clip]) {
+    match backend.dirty_framebuffer(
+        active.front_framebuffer(),
+        0,
+        0,
+        width as u16,
+        height as u16,
+    ) {
         Ok(()) => info!("Test pattern flushed to display"),
         Err(err) => warn!("Failed to flush test pattern: {}", err),
     }
     dump_framebuffer_if_enabled(
         dump_path.as_deref(),
-        mappings[front_buffer_index].as_mut(),
+        active.front_buffer_mut(),
         pitch as usize,
-        width.into(),
-        height.into(),
+        width,
+        height,
         2,
     );
-    dump_framebuffer_raw_if_enabled(
-        dump_raw_path.as_deref(),
-        mappings[front_buffer_index].as_mut(),
-    );
+    dump_framebuffer_raw_if_enabled(dump_raw_path.as_deref(), active.front_buffer_mut());
 
     // Keep the USB gadget disconnected until DRM has a working CRTC and the
     // initial framebuffer is ready. Otherwise a host can begin SET_BUFFER
@@ -1512,13 +1599,8 @@ fn main() -> anyhow::Result<()> {
                 if udc_is_detached(&udc) {
                     tracing::info!("Rendering waiting screen after event read failure");
                     if let Err(wait_err) = present_waiting_screen(
-                        &mut card,
-                        &mut mappings,
-                        pitch as usize,
-                        width.into(),
-                        height.into(),
-                        &fb_handles,
-                        front_buffer_index,
+                        &mut backend,
+                        &mut active,
                         dump_path.as_deref(),
                         dump_raw_path.as_deref(),
                     ) {
@@ -1547,13 +1629,8 @@ fn main() -> anyhow::Result<()> {
             {
                 tracing::info!("Rendering waiting screen after detach");
                 if let Err(err) = present_waiting_screen(
-                    &mut card,
-                    &mut mappings,
-                    pitch as usize,
-                    width.into(),
-                    height.into(),
-                    &fb_handles,
-                    front_buffer_index,
+                    &mut backend,
+                    &mut active,
                     dump_path.as_deref(),
                     dump_raw_path.as_deref(),
                 ) {
@@ -1577,13 +1654,8 @@ fn main() -> anyhow::Result<()> {
         {
             tracing::info!("Rendering waiting screen before processing stale queued event");
             if let Err(err) = present_waiting_screen(
-                &mut card,
-                &mut mappings,
-                pitch as usize,
-                width.into(),
-                height.into(),
-                &fb_handles,
-                front_buffer_index,
+                &mut backend,
+                &mut active,
                 dump_path.as_deref(),
                 dump_raw_path.as_deref(),
             ) {
@@ -1676,13 +1748,8 @@ fn main() -> anyhow::Result<()> {
                         tracing::info!(?generation, had_host_session, "Host disconnected");
                         if matches!(pattern_mode, PatternMode::Off) {
                             if let Err(err) = present_waiting_screen(
-                                &mut card,
-                                &mut mappings,
-                                pitch as usize,
-                                width.into(),
-                                height.into(),
-                                &fb_handles,
-                                front_buffer_index,
+                                &mut backend,
+                                &mut active,
                                 dump_path.as_deref(),
                                 dump_raw_path.as_deref(),
                             ) {
@@ -1780,7 +1847,6 @@ fn main() -> anyhow::Result<()> {
                             .unwrap_or(panel_height);
                         let scaled_mode =
                             source_width != panel_width || source_height != panel_height;
-                        let back_buffer_index = front_buffer_index ^ 1;
                         let mut copy_ms = 0u128;
                         let mut scale_ms = 0u128;
                         let framebuffer_changed = match pattern_mode {
@@ -1829,7 +1895,7 @@ fn main() -> anyhow::Result<()> {
                                         shadow.pitch,
                                         source_width,
                                         source_height,
-                                        mappings[back_buffer_index].as_mut(),
+                                        active.back_buffer_mut(),
                                         pitch as usize,
                                         panel_width,
                                         panel_height,
@@ -1851,7 +1917,7 @@ fn main() -> anyhow::Result<()> {
                                         TransferFormat::Rgb565 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
                                             &info,
                                             payload,
-                                            mappings[front_buffer_index].as_mut(),
+                                            active.front_buffer_mut(),
                                             pitch as usize,
                                             2,
                                         ) {
@@ -1866,7 +1932,7 @@ fn main() -> anyhow::Result<()> {
                                             let result = copy_rgb888_to_rgb565_framebuffer(
                                                 &info,
                                                 payload,
-                                                mappings[front_buffer_index].as_mut(),
+                                                active.front_buffer_mut(),
                                                 pitch as usize,
                                             );
                                             copy_ms = copy_start.elapsed().as_millis();
@@ -1891,10 +1957,10 @@ fn main() -> anyhow::Result<()> {
                             }
                             PatternMode::Usb => {
                                 match fill_diagnostic_pattern_rect(
-                                    mappings[front_buffer_index].as_mut(),
+                                    active.front_buffer_mut(),
                                     pitch as usize,
-                                    width.into(),
-                                    height.into(),
+                                    width,
+                                    height,
                                     info.x,
                                     info.y,
                                     info.width,
@@ -1918,11 +1984,13 @@ fn main() -> anyhow::Result<()> {
                             if scaled_mode
                                 && matches!(pattern_mode, PatternMode::Off | PatternMode::Startup)
                             {
-                                let full_panel =
-                                    ClipRect::new(0, 0, panel_width as u16, panel_height as u16);
-                                match card
-                                    .dirty_framebuffer(fb_handles[back_buffer_index], &[full_panel])
-                                {
+                                match backend.dirty_framebuffer(
+                                    active.back_framebuffer(),
+                                    0,
+                                    0,
+                                    panel_width as u16,
+                                    panel_height as u16,
+                                ) {
                                     Ok(()) => tracing::debug!("Back buffer flushed before flip"),
                                     Err(err) => tracing::debug!(
                                         "dirty_framebuffer on back buffer not supported or failed: {}",
@@ -1930,30 +1998,20 @@ fn main() -> anyhow::Result<()> {
                                     ),
                                 }
 
-                                let present_result = card
-                                    .page_flip(
-                                        crtc.handle(),
-                                        fb_handles[back_buffer_index],
-                                        PageFlipFlags::empty(),
-                                        None,
-                                    )
+                                let present_result = backend
+                                    .page_flip(active.back_framebuffer())
                                     .or_else(|page_flip_err| {
                                         tracing::warn!(
                                             "Page flip failed ({}), falling back to set_crtc",
                                             page_flip_err
                                         );
-                                        card.set_crtc(
-                                            crtc.handle(),
-                                            Some(fb_handles[back_buffer_index]),
-                                            (0, 0),
-                                            &[connector.handle()],
-                                            Some(*mode),
-                                        )
+                                        backend.set_crtc(active.back_framebuffer(), mode)
                                     });
 
                                 match present_result {
                                     Ok(()) => {
-                                        front_buffer_index = back_buffer_index;
+                                        let back_buffer_index = active.back_index();
+                                        active.set_front_index(back_buffer_index);
                                         flush_ms = flush_start.elapsed().as_millis();
                                         tracing::debug!(
                                             "Scaled framebuffer presented via back-buffer swap"
@@ -1968,9 +2026,13 @@ fn main() -> anyhow::Result<()> {
                                     }
                                 }
                             } else {
-                                match card
-                                    .dirty_framebuffer(fb_handles[front_buffer_index], &[clip])
-                                {
+                                match backend.dirty_framebuffer(
+                                    active.front_framebuffer(),
+                                    clip.x1(),
+                                    clip.y1(),
+                                    clip.x2(),
+                                    clip.y2(),
+                                ) {
                                     Ok(()) => {
                                         flush_ms = flush_start.elapsed().as_millis();
                                         tracing::debug!("Framebuffer flushed")
@@ -2030,15 +2092,15 @@ fn main() -> anyhow::Result<()> {
 
                         dump_framebuffer_if_enabled(
                             dump_path.as_deref(),
-                            mappings[front_buffer_index].as_mut(),
+                            active.front_buffer_mut(),
                             pitch as usize,
-                            width.into(),
-                            height.into(),
+                            width,
+                            height,
                             2,
                         );
                         dump_framebuffer_raw_if_enabled(
                             dump_raw_path.as_deref(),
-                            mappings[front_buffer_index].as_mut(),
+                            active.front_buffer_mut(),
                         );
                         if matches!(pattern_mode, PatternMode::Off) {
                             waiting_screen_visible = false;
@@ -2055,13 +2117,8 @@ fn main() -> anyhow::Result<()> {
                 {
                     tracing::info!("Rendering waiting screen after control-path failure");
                     if let Err(wait_err) = present_waiting_screen(
-                        &mut card,
-                        &mut mappings,
-                        pitch as usize,
-                        width.into(),
-                        height.into(),
-                        &fb_handles,
-                        front_buffer_index,
+                        &mut backend,
+                        &mut active,
                         dump_path.as_deref(),
                         dump_raw_path.as_deref(),
                     ) {
@@ -2142,6 +2199,18 @@ fn main() -> anyhow::Result<()> {
     drop(gud_data);
     drop(gud);
     info!("FunctionFS endpoint owners dropped; DRM release follows");
+    drop(active);
+    if let Err(err) = scanout_manager.release_all(&mut backend) {
+        tracing::error!("Failed to explicitly release DRM scanout resources: {err:#}");
+        if lifecycle_error.is_none() {
+            lifecycle_error = Some(err.context("explicit DRM scanout release failed"));
+        }
+    } else {
+        info!(
+            counters = ?scanout_manager.counter_snapshot(),
+            "Explicit DRM framebuffer removal and dumb-buffer destruction completed"
+        );
+    }
 
     if let Some(err) = lifecycle_error {
         return Err(err);
