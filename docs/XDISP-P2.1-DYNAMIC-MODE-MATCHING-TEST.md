@@ -172,6 +172,54 @@ Record:
 - descriptor-decoder contract log; and
 - the known rollback binary/configuration hashes.
 
+### Recorded offline implementation evidence (2026-07-26)
+
+This record covers Tasks 1--7 only. No phone/Pi deployment, service change,
+USB attachment, or hardware-gate action was performed.
+
+- `gud-gadget` source commit:
+  `d2fa1d4119b7deb308f5effc3550adc14af96fa6`
+  (`XDISP-P2.1 switch exact modes on committed state`).
+- `gud` descriptor-tool commit:
+  `97fc774` (`XDISP-P2.1 decode served GUD descriptors`).
+- `gud` mode-runner/source commit:
+  `96bdcb5f4e98d421919078143630484db7e7a1ba`
+  (`XDISP-P2.1 add generic KMS mode-sequence runner`).
+- AArch64 `target/release/gud-drm` SHA-256:
+  `55631c1c73701a7fd54693ab967567e5d2d16629857896a7c46a6991588e8b67`.
+- Dynamic `50-*` drop-in SHA-256:
+  `648835c21ae4069a3348f7ce8cee823ac54e1ebac6c528786f9df4e0e1b4b4fc`.
+- Max-only laptop `60-*` drop-in SHA-256:
+  `8b28512fa118c147294d7c816b5b5213a229f1dd011b51abf0e9fcb0383fef74`.
+- Build host/toolchain: AArch64 Fedora; `rustc 1.93.1`, `cargo 1.93.1`,
+  `aarch64-redhat-linux-gcc 16.1.1`, `cc 16.1.1`, and `libdrm 2.4.134`.
+- The exact serialized test command above passed with 56 `gud-drm` tests
+  and 47 `gud-gadget` tests. The `gud-drm` ownership/failure suite also
+  passed 25 consecutive repetitions.
+- `gud-drm` and `gud-viewerd` dependent checks passed together. Focused
+  clippy completed successfully with dependency linting excluded. A strict
+  `-D warnings` run is not a gate in this tree because existing vendored
+  `usb-gadget` warnings and pre-existing style lints fail it.
+- All eight `gud/backport-4.9/tests/test-*-contract.sh` suites passed,
+  including the descriptor decoder and mode-sequence runner contracts.
+- A current-host AArch64 build of `gud-kms-mode-sequence` passed its offline
+  self-test and had SHA-256
+  `cca9a5a959bf3b08479b6fd76e224f81336edea6a59873448b0727b42d32d989`.
+
+The controlled x86-64 runner artifact is intentionally not claimed here:
+this offline workspace is AArch64 and has no x86-64 compiler/libdrm runtime.
+Gate 0 remains blocked until the committed source is built on the controlled
+x86-64 laptop with the exact command above and that binary's SHA-256 is added
+to the evidence. The concrete DRM node and complete 1280x720 timing key are
+also read-only hardware inventory outputs and must not be invented offline.
+Once recorded, the exact one-frame command is:
+
+```text
+gud/backport-4.9/tests/gud-kms-mode-sequence \
+    --device "$GUD_DRM_NODE" --mode-key "$GATE0_1280X720_COMPLETE_TIMING_KEY" \
+    --frames 1 --pattern row-id --json "$GATE0_JSON"
+```
+
 Offline acceptance requires tests for:
 
 - full-timing mode identity and preferred-bit normalization;
