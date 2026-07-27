@@ -574,6 +574,82 @@ impl<'a, B: ScanoutBackend + 'a> MappedActive<'a, B> {
     }
 }
 
+pub(crate) enum StableMappedActive<'a, B: ScanoutBackend + 'a> {
+    Slot0(MappedActive<'a, B>),
+    Slot1(MappedActive<'a, B>),
+    Slot2(MappedActive<'a, B>),
+}
+
+impl<'a, B: ScanoutBackend + 'a> StableMappedActive<'a, B> {
+    pub(crate) fn index(&self) -> usize {
+        match self {
+            Self::Slot0(_) => 0,
+            Self::Slot1(_) => 1,
+            Self::Slot2(_) => 2,
+        }
+    }
+
+    fn mapped(&self) -> &MappedActive<'a, B> {
+        match self {
+            Self::Slot0(mapped) | Self::Slot1(mapped) | Self::Slot2(mapped) => mapped,
+        }
+    }
+
+    fn mapped_mut(&mut self) -> &mut MappedActive<'a, B> {
+        match self {
+            Self::Slot0(mapped) | Self::Slot1(mapped) | Self::Slot2(mapped) => mapped,
+        }
+    }
+
+    pub(crate) fn mode(&self) -> B::Mode {
+        self.mapped().mode()
+    }
+
+    pub(crate) fn size(&self) -> (u32, u32) {
+        self.mapped().size()
+    }
+
+    pub(crate) fn pitch(&self) -> u32 {
+        self.mapped().pitch()
+    }
+
+    pub(crate) fn mapping_lengths(&self) -> [usize; BUFFERS_PER_SCANOUT] {
+        self.mapped().mapping_lengths()
+    }
+
+    pub(crate) fn front_index(&self) -> usize {
+        self.mapped().front_index()
+    }
+
+    pub(crate) fn back_index(&self) -> usize {
+        self.mapped().back_index()
+    }
+
+    pub(crate) fn set_front_index(&mut self, index: usize) {
+        self.mapped_mut().set_front_index(index);
+    }
+
+    pub(crate) fn front_framebuffer(&self) -> B::Framebuffer {
+        self.mapped().front_framebuffer()
+    }
+
+    pub(crate) fn back_framebuffer(&self) -> B::Framebuffer {
+        self.mapped().back_framebuffer()
+    }
+
+    pub(crate) fn buffer_mut(&mut self, index: usize) -> &mut [u8] {
+        self.mapped_mut().buffer_mut(index)
+    }
+
+    pub(crate) fn front_buffer_mut(&mut self) -> &mut [u8] {
+        self.mapped_mut().front_buffer_mut()
+    }
+
+    pub(crate) fn back_buffer_mut(&mut self) -> &mut [u8] {
+        self.mapped_mut().back_buffer_mut()
+    }
+}
+
 pub(crate) struct MappedTransition<'old, 'target, B: ScanoutBackend + 'old + 'target> {
     pub(crate) old: MappedActive<'old, B>,
     pub(crate) target: MappedActive<'target, B>,
@@ -881,6 +957,14 @@ impl<B: ScanoutBackend> ScanoutRuntime<'_, B> {
         self.counters.clone()
     }
 
+    pub(crate) fn current_live_bytes(&self) -> usize {
+        *self.current_live_bytes
+    }
+
+    pub(crate) fn observed_peak_live_bytes(&self) -> usize {
+        *self.observed_peak_live_bytes
+    }
+
     pub(crate) fn dynamic_routes(&self) -> anyhow::Result<&DynamicRouteState<B::Mode>> {
         self.dynamic_routes
             .as_ref()
@@ -963,6 +1047,21 @@ impl<B: ScanoutBackend> ScanoutRuntime<'_, B> {
         Ok((old_active, candidate))
     }
 
+    pub(crate) fn activate_slot(&mut self, target: usize) -> anyhow::Result<usize> {
+        ensure!(target < SCANOUT_SLOT_COUNT, "invalid scanout slot {target}");
+        let old_active = self.roles.active;
+        if self.roles.candidate == Some(target) {
+            self.roles.candidate = None;
+        } else {
+            ensure!(
+                target == self.roles.baseline,
+                "target slot {target} is neither the candidate nor the baseline"
+            );
+        }
+        self.roles.active = target;
+        Ok(old_active)
+    }
+
     pub(crate) fn release_inactive(
         &mut self,
         backend: &mut B,
@@ -996,7 +1095,10 @@ mod tests {
     use gud_gadget::{DisplayMode, DisplayStateSnapshot, GUD_PIXEL_FORMAT_RGB565};
 
     use crate::modes::{ModeKey, PhysicalCatalogMode, RouteCatalog};
-    use crate::{invalidate_dynamic_pending_off_baseline, prepare_dynamic_check};
+    use crate::{
+        attempt_mapped_switch, invalidate_dynamic_pending_off_baseline, prepare_dynamic_check,
+        MappedSwitch,
+    };
 
     use super::{
         checked_add_live_bytes, logical_memory_estimate, MappedTransition, ScanoutAllocation,
@@ -1256,6 +1358,115 @@ mod tests {
         }
 
         assert_eq!(counters.snapshot().maps, counters.snapshot().unmaps);
+        old.release(&mut backend, &counters).unwrap();
+        target.release(&mut backend, &counters).unwrap();
+    }
+
+    #[test]
+    fn successful_commit_switches_once_and_keeps_target_mapping_live() {
+        let mut backend = MockBackend::default();
+        let counters = ScanoutCounters::default();
+        let mut old = ScanoutAllocation::create(&mut backend, (64, 32), &counters).unwrap();
+        let mut target = ScanoutAllocation::create(&mut backend, (80, 40), &counters).unwrap();
+        let mut old_mapped = old.map(&mut backend, &counters).unwrap();
+        old_mapped.front_buffer_mut()[0] = 0x35;
+        let maps_before = counters.snapshot().maps;
+        let sets_before = backend.count(Operation::SetCrtc);
+
+        let mut active =
+            match attempt_mapped_switch(&mut backend, old_mapped, &mut target, &counters) {
+                MappedSwitch::Switched { active, .. } => active,
+                MappedSwitch::Retained { error, .. } => {
+                    panic!("unexpected retained route: {error:#}")
+                }
+            };
+        counters.switched();
+
+        assert_eq!(backend.count(Operation::SetCrtc), sets_before + 1);
+        assert_eq!(
+            counters.snapshot().maps,
+            maps_before + BUFFERS_PER_SCANOUT as u64
+        );
+        assert_eq!(
+            counters.snapshot().maps,
+            counters.snapshot().unmaps + BUFFERS_PER_SCANOUT as u64
+        );
+        let maps_after_switch = counters.snapshot().maps;
+        for _ in 0..10 {
+            counters.no_op();
+            active.front_buffer_mut()[0] ^= 1;
+        }
+        assert_eq!(backend.count(Operation::SetCrtc), sets_before + 1);
+        assert_eq!(counters.snapshot().maps, maps_after_switch);
+        assert_eq!(counters.snapshot().switches, 1);
+        assert_eq!(counters.snapshot().no_ops, 10);
+
+        drop(active);
+        old.release(&mut backend, &counters).unwrap();
+        target.release(&mut backend, &counters).unwrap();
+        assert_eq!(counters.snapshot().maps, counters.snapshot().unmaps);
+    }
+
+    #[test]
+    fn commit_switch_failure_retains_old_mapping_without_retry() {
+        let mut backend = MockBackend::default();
+        let counters = ScanoutCounters::default();
+        let mut old = ScanoutAllocation::create(&mut backend, (64, 32), &counters).unwrap();
+        let mut target = ScanoutAllocation::create(&mut backend, (80, 40), &counters).unwrap();
+        let mut old_mapped = old.map(&mut backend, &counters).unwrap();
+        old_mapped.front_buffer_mut()[0] = 0x6b;
+        let set_occurrence = backend.count(Operation::SetCrtc) + 1;
+        backend.failure = Some(Failure {
+            operation: Operation::SetCrtc,
+            occurrence: set_occurrence,
+        });
+
+        let mut active =
+            match attempt_mapped_switch(&mut backend, old_mapped, &mut target, &counters) {
+                MappedSwitch::Retained { active, .. } => active,
+                MappedSwitch::Switched { .. } => panic!("injected set_crtc unexpectedly succeeded"),
+            };
+
+        assert_eq!(backend.count(Operation::SetCrtc), set_occurrence);
+        assert_eq!(active.front_buffer_mut()[0], 0x6b);
+        assert_eq!(
+            counters.snapshot().maps,
+            counters.snapshot().unmaps + BUFFERS_PER_SCANOUT as u64
+        );
+        active.front_buffer_mut()[1] = 0x4d;
+        assert_eq!(active.front_buffer_mut()[1], 0x4d);
+
+        drop(active);
+        backend.failure = None;
+        old.release(&mut backend, &counters).unwrap();
+        target.release(&mut backend, &counters).unwrap();
+        assert_eq!(counters.snapshot().maps, counters.snapshot().unmaps);
+    }
+
+    #[test]
+    fn target_map_failure_does_not_attempt_a_modeset() {
+        let mut backend = MockBackend::default();
+        let counters = ScanoutCounters::default();
+        let mut old = ScanoutAllocation::create(&mut backend, (64, 32), &counters).unwrap();
+        let mut target = ScanoutAllocation::create(&mut backend, (80, 40), &counters).unwrap();
+        let mut old_mapped = old.map(&mut backend, &counters).unwrap();
+        old_mapped.front_buffer_mut()[0] = 0x2a;
+        let sets_before = backend.count(Operation::SetCrtc);
+        backend.failure = Some(Failure {
+            operation: Operation::MapBuffer,
+            occurrence: backend.count(Operation::MapBuffer) + 1,
+        });
+
+        let mut active =
+            match attempt_mapped_switch(&mut backend, old_mapped, &mut target, &counters) {
+                MappedSwitch::Retained { active, .. } => active,
+                MappedSwitch::Switched { .. } => panic!("injected map unexpectedly succeeded"),
+            };
+
+        assert_eq!(backend.count(Operation::SetCrtc), sets_before);
+        assert_eq!(active.front_buffer_mut()[0], 0x2a);
+        drop(active);
+        backend.failure = None;
         old.release(&mut backend, &counters).unwrap();
         target.release(&mut backend, &counters).unwrap();
     }
@@ -1527,6 +1738,7 @@ mod tests {
             .map(&mut backend, &counters)
             .unwrap();
         active.front_buffer_mut()[0] = 0x5a;
+        let set_crtc_before = backend.count(Operation::SetCrtc);
 
         prepare_dynamic_check(
             &mut backend,
@@ -1580,6 +1792,7 @@ mod tests {
         assert!(runtime.roles().candidate.is_none());
         assert!(runtime.dynamic_routes().unwrap().pending_plan.is_none());
         assert_eq!(active.front_buffer_mut()[0], 0x5a);
+        assert_eq!(backend.count(Operation::SetCrtc), set_crtc_before);
 
         drop(active);
         drop(runtime);

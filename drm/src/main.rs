@@ -11,7 +11,8 @@ use gud_gadget::{DisplayMode, Event, ProtocolInvalidationReason, GUD_COMPRESSION
 use modes::{CatalogRoute, ModeKey, PhysicalCatalogMode, RouteCatalog};
 use scanout::{
     logical_memory_estimate, FallbackReason, MappedActive, PendingPlan, PendingPlanKind,
-    ScanoutAllocation, ScanoutBackend, ScanoutManager, ScanoutRuntime, ScanoutSlot,
+    PresentationRoute, ScanoutAllocation, ScanoutBackend, ScanoutCounters, ScanoutManager,
+    ScanoutRuntime, ScanoutSlot, StableMappedActive,
 };
 use std::env::{args, var_os};
 use std::ffi::OsStr;
@@ -816,7 +817,7 @@ fn render_waiting_screen(
 
 fn present_waiting_screen<B: ScanoutBackend>(
     backend: &mut B,
-    active: &mut MappedActive<'_, B>,
+    active: &mut StableMappedActive<'_, B>,
     dump_path: Option<&Path>,
     dump_raw_path: Option<&Path>,
 ) -> anyhow::Result<()> {
@@ -1094,6 +1095,10 @@ impl ShadowFramebuffer {
         self.activate_scaled(identity).map(|_| ())
     }
 
+    fn is_active(&self, identity: ShadowRasterIdentity) -> bool {
+        self.identity == Some(identity) && self.content_valid
+    }
+
     fn invalidate_content(&mut self) {
         self.content_valid = false;
     }
@@ -1287,27 +1292,36 @@ fn validate_test_mode_policy(
     Ok(())
 }
 
-fn release_dynamic_candidate_off_baseline<B: ScanoutBackend>(
+fn release_dynamic_candidate_in_available_slots<B: ScanoutBackend>(
     backend: &mut B,
     runtime: &mut ScanoutRuntime<'_, B>,
-    slot1: &mut ScanoutSlot<B>,
-    slot2: &mut ScanoutSlot<B>,
+    primary_index: usize,
+    primary: &mut ScanoutSlot<B>,
+    secondary: &mut Option<(usize, &mut ScanoutSlot<B>)>,
 ) -> anyhow::Result<()> {
     match runtime.roles().candidate {
         None => Ok(()),
-        Some(1) => runtime.release_candidate(backend, 1, slot1),
-        Some(2) => runtime.release_candidate(backend, 2, slot2),
-        Some(index) => {
-            anyhow::bail!("unexpected candidate slot {index} while baseline slot zero is active")
+        Some(index) if index == primary_index => {
+            runtime.release_candidate(backend, primary_index, primary)
         }
+        Some(index) => match secondary.as_mut() {
+            Some((secondary_index, secondary)) if index == *secondary_index => {
+                runtime.release_candidate(backend, *secondary_index, secondary)
+            }
+            _ => anyhow::bail!(
+                "candidate slot {index} is not available while slot {} is active",
+                runtime.roles().active
+            ),
+        },
     }
 }
 
-fn prepare_dynamic_check<B: ScanoutBackend>(
+fn prepare_dynamic_check_in_available_slots<B: ScanoutBackend>(
     backend: &mut B,
     runtime: &mut ScanoutRuntime<'_, B>,
-    slot1: &mut ScanoutSlot<B>,
-    slot2: &mut ScanoutSlot<B>,
+    primary_index: usize,
+    primary: &mut ScanoutSlot<B>,
+    mut secondary: Option<(usize, &mut ScanoutSlot<B>)>,
     catalog: &RouteCatalog<B::Mode>,
     snapshot: gud_gadget::DisplayStateSnapshot,
     state_check_control_ms: u128,
@@ -1331,7 +1345,13 @@ where
     let mut new_candidate_key = None;
     let (kind, requested_physical_key, requested_mode, cache_hit) = match catalog_entry.route {
         CatalogRoute::Exact(physical_mode) if catalog_entry.key == current_physical_key => {
-            release_dynamic_candidate_off_baseline(backend, runtime, slot1, slot2)?;
+            release_dynamic_candidate_in_available_slots(
+                backend,
+                runtime,
+                primary_index,
+                primary,
+                &mut secondary,
+            )?;
             runtime.counters().no_op();
             (
                 PendingPlanKind::ExactActiveNoOp,
@@ -1357,7 +1377,13 @@ where
             )
         }
         CatalogRoute::Exact(physical_mode) if failed_cache_hit => {
-            release_dynamic_candidate_off_baseline(backend, runtime, slot1, slot2)?;
+            release_dynamic_candidate_in_available_slots(
+                backend,
+                runtime,
+                primary_index,
+                primary,
+                &mut secondary,
+            )?;
             runtime.counters().fallback();
             (
                 PendingPlanKind::ScaledCurrentAfterFailure(FallbackReason::FailedCacheHit),
@@ -1367,7 +1393,13 @@ where
             )
         }
         CatalogRoute::Exact(physical_mode) => {
-            release_dynamic_candidate_off_baseline(backend, runtime, slot1, slot2)?;
+            release_dynamic_candidate_in_available_slots(
+                backend,
+                runtime,
+                primary_index,
+                primary,
+                &mut secondary,
+            )?;
             let prepared_slot = (|| {
                 let allocation =
                     ScanoutAllocation::create(backend, physical_mode, &runtime.counters())?;
@@ -1377,11 +1409,14 @@ where
                         "Candidate black-buffer dirty flush is unsupported or failed"
                     );
                 }
-                let (slot_index, slot) = if slot1.is_none() {
-                    (1, slot1)
+                let (slot_index, slot) = if primary.is_none() {
+                    (primary_index, &mut *primary)
                 } else {
-                    ensure!(slot2.is_none(), "no empty candidate scanout slot");
-                    (2, slot2)
+                    let (slot_index, slot) = secondary
+                        .as_mut()
+                        .context("no second candidate scanout slot is available")?;
+                    ensure!(slot.is_none(), "no empty candidate scanout slot");
+                    (*slot_index, &mut **slot)
                 };
                 runtime.stage_candidate(backend, slot_index, slot, allocation)?;
                 Ok(slot_index)
@@ -1420,7 +1455,13 @@ where
             }
         }
         CatalogRoute::ScaledFallback => {
-            release_dynamic_candidate_off_baseline(backend, runtime, slot1, slot2)?;
+            release_dynamic_candidate_in_available_slots(
+                backend,
+                runtime,
+                primary_index,
+                primary,
+                &mut secondary,
+            )?;
             runtime.counters().fallback();
             (
                 PendingPlanKind::ScaledBaseline {
@@ -1471,15 +1512,138 @@ where
     Ok(())
 }
 
+fn prepare_dynamic_check<B: ScanoutBackend>(
+    backend: &mut B,
+    runtime: &mut ScanoutRuntime<'_, B>,
+    slot1: &mut ScanoutSlot<B>,
+    slot2: &mut ScanoutSlot<B>,
+    catalog: &RouteCatalog<B::Mode>,
+    snapshot: gud_gadget::DisplayStateSnapshot,
+    state_check_control_ms: u128,
+) -> anyhow::Result<()>
+where
+    B::Mode: std::fmt::Debug,
+{
+    prepare_dynamic_check_in_available_slots(
+        backend,
+        runtime,
+        1,
+        slot1,
+        Some((2, slot2)),
+        catalog,
+        snapshot,
+        state_check_control_ms,
+    )
+}
+
+fn invalidate_dynamic_pending_in_available_slots<B: ScanoutBackend>(
+    backend: &mut B,
+    runtime: &mut ScanoutRuntime<'_, B>,
+    primary_index: usize,
+    primary: &mut ScanoutSlot<B>,
+    mut secondary: Option<(usize, &mut ScanoutSlot<B>)>,
+) -> anyhow::Result<()> {
+    release_dynamic_candidate_in_available_slots(
+        backend,
+        runtime,
+        primary_index,
+        primary,
+        &mut secondary,
+    )?;
+    runtime.dynamic_routes_mut()?.invalidate_pending();
+    Ok(())
+}
+
 fn invalidate_dynamic_pending_off_baseline<B: ScanoutBackend>(
     backend: &mut B,
     runtime: &mut ScanoutRuntime<'_, B>,
     slot1: &mut ScanoutSlot<B>,
     slot2: &mut ScanoutSlot<B>,
 ) -> anyhow::Result<()> {
-    release_dynamic_candidate_off_baseline(backend, runtime, slot1, slot2)?;
-    runtime.dynamic_routes_mut()?.invalidate_pending();
+    invalidate_dynamic_pending_in_available_slots(backend, runtime, 1, slot1, Some((2, slot2)))
+}
+
+enum MappedSwitch<'old, 'target, B: ScanoutBackend + 'old + 'target> {
+    Switched {
+        active: MappedActive<'target, B>,
+        mode_switch_ms: u128,
+    },
+    Retained {
+        active: MappedActive<'old, B>,
+        error: anyhow::Error,
+        mode_switch_ms: u128,
+    },
+}
+
+fn attempt_mapped_switch<'old, 'target, B: ScanoutBackend + 'old + 'target>(
+    backend: &mut B,
+    old: MappedActive<'old, B>,
+    target: &'target mut ScanoutAllocation<B>,
+    counters: &ScanoutCounters,
+) -> MappedSwitch<'old, 'target, B> {
+    let switch_start = std::time::Instant::now();
+    let target = match target.map(backend, counters) {
+        Ok(target) => target,
+        Err(error) => {
+            return MappedSwitch::Retained {
+                active: old,
+                error: error.context("map prepared target scanout"),
+                mode_switch_ms: switch_start.elapsed().as_millis(),
+            };
+        }
+    };
+    match backend.set_crtc(target.front_framebuffer(), target.mode()) {
+        Ok(()) => {
+            drop(old);
+            MappedSwitch::Switched {
+                active: target,
+                mode_switch_ms: switch_start.elapsed().as_millis(),
+            }
+        }
+        Err(error) => {
+            drop(target);
+            MappedSwitch::Retained {
+                active: old,
+                error: error.context("single commit-time set_crtc"),
+                mode_switch_ms: switch_start.elapsed().as_millis(),
+            }
+        }
+    }
+}
+
+fn shadow_identity(snapshot: &gud_gadget::DisplayStateSnapshot) -> ShadowRasterIdentity {
+    ShadowRasterIdentity {
+        width: snapshot.mode.hdisplay.into(),
+        height: snapshot.mode.vdisplay.into(),
+        format: snapshot.format,
+    }
+}
+
+fn record_committed_route<B: ScanoutBackend>(
+    runtime: &mut ScanoutRuntime<'_, B>,
+    snapshot: gud_gadget::DisplayStateSnapshot,
+    route: PresentationRoute,
+    new_physical_key: Option<ModeKey>,
+) -> anyhow::Result<()> {
+    let routes = runtime.dynamic_routes_mut()?;
+    routes.committed_snapshot = Some(snapshot);
+    routes.presentation_route = Some(route);
+    if let Some(key) = new_physical_key {
+        routes.current_physical_key = key;
+    }
+    routes.candidate_key = None;
     Ok(())
+}
+
+fn take_matching_pending_plan<M>(
+    pending: &mut Option<PendingPlan<M>>,
+    committed: &gud_gadget::DisplayStateSnapshot,
+) -> Result<PendingPlan<M>, bool> {
+    match pending.take() {
+        Some(plan) if plan.snapshot == *committed => Ok(plan),
+        Some(_) => Err(true),
+        None => Err(false),
+    }
 }
 
 fn main() -> anyhow::Result<()> {
@@ -1816,8 +1980,21 @@ fn main() -> anyhow::Result<()> {
     }
     let scanout_counters = scanout_manager.counters();
     let (scanout_slots, mut scanout_runtime) = scanout_manager.split_runtime();
-    let [slot0, slot1, slot2] = scanout_slots;
-    let baseline = slot0
+    let scanout_slots_ptr = scanout_slots as *mut [ScanoutSlot<DrmScanoutBackend>; 3];
+    // `MappedActive` deliberately keeps the active slot's dumb-buffer mappings alive across
+    // control events. Rust cannot express a mutable borrow that migrates among stable array
+    // elements across loop iterations, so slot access goes through this stable pointer. Every
+    // call site must uphold the role invariant: never borrow the currently mapped slot, except
+    // after its mapping has been moved out and dropped during a transition.
+    macro_rules! slot_mut {
+        ($index:expr) => {{
+            // SAFETY: the fixed three-slot array outlives the event loop. Role checks at each
+            // call site ensure that simultaneous mutable references target distinct slots and
+            // that an allocation is never mutated while one of its mappings is live.
+            unsafe { &mut (*scanout_slots_ptr)[$index] }
+        }};
+    }
+    let baseline = slot_mut!(0)
         .as_deref_mut()
         .context("baseline scanout slot is empty")?;
     debug!(
@@ -1828,9 +2005,11 @@ fn main() -> anyhow::Result<()> {
         live_bytes = baseline.live_bytes(),
         "Created owned baseline double-buffer scanout"
     );
-    let mut active = baseline
-        .map(&mut backend, &scanout_counters)
-        .context("map baseline scanout")?;
+    let mut active = StableMappedActive::Slot0(
+        baseline
+            .map(&mut backend, &scanout_counters)
+            .context("map baseline scanout")?,
+    );
 
     for attempt in 1..=CRTC_SET_RETRIES {
         match backend.set_crtc(active.front_framebuffer(), mode) {
@@ -2075,15 +2254,51 @@ fn main() -> anyhow::Result<()> {
                             .entry_for_snapshot(&snapshot)
                             .map(|entry| entry.route);
                         if dynamic_mode_match {
-                            if let Err(err) = prepare_dynamic_check(
-                                &mut backend,
-                                &mut scanout_runtime,
-                                slot1,
-                                slot2,
-                                &route_catalog,
-                                snapshot,
-                                control_event_ms,
-                            ) {
+                            let result = match active {
+                                StableMappedActive::Slot0(mapped) => {
+                                    let result = prepare_dynamic_check_in_available_slots(
+                                        &mut backend,
+                                        &mut scanout_runtime,
+                                        1,
+                                        slot_mut!(1),
+                                        Some((2, slot_mut!(2))),
+                                        &route_catalog,
+                                        snapshot,
+                                        control_event_ms,
+                                    );
+                                    active = StableMappedActive::Slot0(mapped);
+                                    result
+                                }
+                                StableMappedActive::Slot1(mapped) => {
+                                    let result = prepare_dynamic_check_in_available_slots(
+                                        &mut backend,
+                                        &mut scanout_runtime,
+                                        2,
+                                        slot_mut!(2),
+                                        None,
+                                        &route_catalog,
+                                        snapshot,
+                                        control_event_ms,
+                                    );
+                                    active = StableMappedActive::Slot1(mapped);
+                                    result
+                                }
+                                StableMappedActive::Slot2(mapped) => {
+                                    let result = prepare_dynamic_check_in_available_slots(
+                                        &mut backend,
+                                        &mut scanout_runtime,
+                                        1,
+                                        slot_mut!(1),
+                                        None,
+                                        &route_catalog,
+                                        snapshot,
+                                        control_event_ms,
+                                    );
+                                    active = StableMappedActive::Slot2(mapped);
+                                    result
+                                }
+                            };
+                            if let Err(err) = result {
                                 tracing::error!(
                                     error = %format_args!("{err:#}"),
                                     "Failed to prepare dynamic state-check plan; optimization gate \
@@ -2101,11 +2316,491 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                     Event::StateCommitted(snapshot) => {
-                        tracing::debug!(
+                        if !dynamic_mode_match {
+                            tracing::debug!(
+                                generation = snapshot.generation,
+                                mode = ?snapshot.mode,
+                                commit_control_ms = control_event_ms,
+                                "State commit notification ignored while dynamic matching is \
+                                 disabled"
+                            );
+                            continue;
+                        }
+
+                        let logical_key = ModeKey::from_snapshot(&snapshot);
+                        let plan = match take_matching_pending_plan(
+                            &mut scanout_runtime.dynamic_routes_mut()?.pending_plan,
+                            &snapshot,
+                        ) {
+                            Ok(plan) => plan,
+                            Err(had_plan) => {
+                                let result = match active {
+                                    StableMappedActive::Slot0(mapped) => {
+                                        let result = invalidate_dynamic_pending_in_available_slots(
+                                            &mut backend,
+                                            &mut scanout_runtime,
+                                            1,
+                                            slot_mut!(1),
+                                            Some((2, slot_mut!(2))),
+                                        );
+                                        active = StableMappedActive::Slot0(mapped);
+                                        result
+                                    }
+                                    StableMappedActive::Slot1(mapped) => {
+                                        let result = invalidate_dynamic_pending_in_available_slots(
+                                            &mut backend,
+                                            &mut scanout_runtime,
+                                            2,
+                                            slot_mut!(2),
+                                            None,
+                                        );
+                                        active = StableMappedActive::Slot1(mapped);
+                                        result
+                                    }
+                                    StableMappedActive::Slot2(mapped) => {
+                                        let result = invalidate_dynamic_pending_in_available_slots(
+                                            &mut backend,
+                                            &mut scanout_runtime,
+                                            1,
+                                            slot_mut!(1),
+                                            None,
+                                        );
+                                        active = StableMappedActive::Slot2(mapped);
+                                        result
+                                    }
+                                };
+                                if let Err(err) = result {
+                                    tracing::error!(
+                                        error = %format_args!("{err:#}"),
+                                        "Failed to release candidate after commit-plan mismatch"
+                                    );
+                                }
+                                shadow
+                                    .activate_scaled(shadow_identity(&snapshot))
+                                    .context("activate scaled shadow after commit-plan mismatch")?;
+                                record_committed_route(
+                                    &mut scanout_runtime,
+                                    snapshot.clone(),
+                                    PresentationRoute::ScaledCurrentAfterFailure {
+                                        logical: logical_key,
+                                        reason: FallbackReason::PlanMismatch,
+                                    },
+                                    None,
+                                )?;
+                                scanout_runtime.counters().fallback();
+                                tracing::error!(
+                                    event = "mode_commit_decision",
+                                    generation = snapshot.generation,
+                                    logical = ?logical_key,
+                                    commit_control_ms = control_event_ms,
+                                    had_plan,
+                                    active_slot = active.index(),
+                                    "Commit had no exact generation/snapshot plan; retained current \
+                                     scanout and failed the optimization gate"
+                                );
+                                continue;
+                            }
+                        };
+
+                        let old_physical_key =
+                            scanout_runtime.dynamic_routes()?.current_physical_key;
+                        let mut mode_switch_ms = 0u128;
+                        let mut switch_error: Option<anyhow::Error> = None;
+                        let route = match plan.kind {
+                            PendingPlanKind::ExactActiveNoOp => {
+                                shadow.invalidate_content();
+                                scanout_runtime.counters().no_op();
+                                PresentationRoute::DirectExact {
+                                    logical: logical_key,
+                                    physical: old_physical_key,
+                                }
+                            }
+                            PendingPlanKind::ScaledCurrentAfterFailure(reason) => {
+                                shadow.activate_scaled(shadow_identity(&snapshot)).context(
+                                    "activate scaled shadow for cached/current fallback",
+                                )?;
+                                PresentationRoute::ScaledCurrentAfterFailure {
+                                    logical: logical_key,
+                                    reason,
+                                }
+                            }
+                            PendingPlanKind::ScaledBaseline {
+                                switch_required: false,
+                            } => {
+                                ensure!(
+                                    active.index() == scanout_runtime.roles().baseline,
+                                    "baseline no-switch plan does not match active slot"
+                                );
+                                shadow
+                                    .activate_scaled(shadow_identity(&snapshot))
+                                    .context("activate scaled baseline shadow")?;
+                                PresentationRoute::ScaledBaseline {
+                                    logical: logical_key,
+                                }
+                            }
+                            PendingPlanKind::ExactCandidate {
+                                slot: candidate_slot,
+                            } => {
+                                let requested_key = plan
+                                    .requested_physical_key
+                                    .context("exact candidate plan has no physical key")?;
+                                let switch_succeeded;
+                                match (active, candidate_slot) {
+                                    (StableMappedActive::Slot0(old), 1) => {
+                                        let target = slot_mut!(1)
+                                            .as_deref_mut()
+                                            .context("candidate slot 1 is empty at commit")?;
+                                        match attempt_mapped_switch(
+                                            &mut backend,
+                                            old,
+                                            target,
+                                            &scanout_counters,
+                                        ) {
+                                            MappedSwitch::Switched {
+                                                active: target,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                let old_slot = scanout_runtime.activate_slot(1)?;
+                                                ensure!(old_slot == 0);
+                                                active = StableMappedActive::Slot1(target);
+                                                switch_succeeded = true;
+                                            }
+                                            MappedSwitch::Retained {
+                                                active: old,
+                                                error,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                switch_error = Some(error);
+                                                scanout_runtime.release_candidate(
+                                                    &mut backend,
+                                                    1,
+                                                    slot_mut!(1),
+                                                )?;
+                                                active = StableMappedActive::Slot0(old);
+                                                switch_succeeded = false;
+                                            }
+                                        }
+                                    }
+                                    (StableMappedActive::Slot0(old), 2) => {
+                                        let target = slot_mut!(2)
+                                            .as_deref_mut()
+                                            .context("candidate slot 2 is empty at commit")?;
+                                        match attempt_mapped_switch(
+                                            &mut backend,
+                                            old,
+                                            target,
+                                            &scanout_counters,
+                                        ) {
+                                            MappedSwitch::Switched {
+                                                active: target,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                let old_slot = scanout_runtime.activate_slot(2)?;
+                                                ensure!(old_slot == 0);
+                                                active = StableMappedActive::Slot2(target);
+                                                switch_succeeded = true;
+                                            }
+                                            MappedSwitch::Retained {
+                                                active: old,
+                                                error,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                switch_error = Some(error);
+                                                scanout_runtime.release_candidate(
+                                                    &mut backend,
+                                                    2,
+                                                    slot_mut!(2),
+                                                )?;
+                                                active = StableMappedActive::Slot0(old);
+                                                switch_succeeded = false;
+                                            }
+                                        }
+                                    }
+                                    (StableMappedActive::Slot1(old), 2) => {
+                                        let target = slot_mut!(2)
+                                            .as_deref_mut()
+                                            .context("candidate slot 2 is empty at commit")?;
+                                        match attempt_mapped_switch(
+                                            &mut backend,
+                                            old,
+                                            target,
+                                            &scanout_counters,
+                                        ) {
+                                            MappedSwitch::Switched {
+                                                active: target,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                let old_slot = scanout_runtime.activate_slot(2)?;
+                                                ensure!(old_slot == 1);
+                                                scanout_runtime.release_inactive(
+                                                    &mut backend,
+                                                    1,
+                                                    slot_mut!(1),
+                                                )?;
+                                                active = StableMappedActive::Slot2(target);
+                                                switch_succeeded = true;
+                                            }
+                                            MappedSwitch::Retained {
+                                                active: old,
+                                                error,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                switch_error = Some(error);
+                                                scanout_runtime.release_candidate(
+                                                    &mut backend,
+                                                    2,
+                                                    slot_mut!(2),
+                                                )?;
+                                                active = StableMappedActive::Slot1(old);
+                                                switch_succeeded = false;
+                                            }
+                                        }
+                                    }
+                                    (StableMappedActive::Slot2(old), 1) => {
+                                        let target = slot_mut!(1)
+                                            .as_deref_mut()
+                                            .context("candidate slot 1 is empty at commit")?;
+                                        match attempt_mapped_switch(
+                                            &mut backend,
+                                            old,
+                                            target,
+                                            &scanout_counters,
+                                        ) {
+                                            MappedSwitch::Switched {
+                                                active: target,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                let old_slot = scanout_runtime.activate_slot(1)?;
+                                                ensure!(old_slot == 2);
+                                                scanout_runtime.release_inactive(
+                                                    &mut backend,
+                                                    2,
+                                                    slot_mut!(2),
+                                                )?;
+                                                active = StableMappedActive::Slot1(target);
+                                                switch_succeeded = true;
+                                            }
+                                            MappedSwitch::Retained {
+                                                active: old,
+                                                error,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                switch_error = Some(error);
+                                                scanout_runtime.release_candidate(
+                                                    &mut backend,
+                                                    1,
+                                                    slot_mut!(1),
+                                                )?;
+                                                active = StableMappedActive::Slot2(old);
+                                                switch_succeeded = false;
+                                            }
+                                        }
+                                    }
+                                    (old, unexpected_slot) => {
+                                        active = old;
+                                        anyhow::bail!(
+                                            "candidate slot {unexpected_slot} is incompatible with \
+                                             active slot {}",
+                                            active.index()
+                                        );
+                                    }
+                                }
+                                if switch_succeeded {
+                                    scanout_runtime.counters().switched();
+                                    shadow.invalidate_content();
+                                    record_committed_route(
+                                        &mut scanout_runtime,
+                                        snapshot.clone(),
+                                        PresentationRoute::DirectExact {
+                                            logical: logical_key,
+                                            physical: requested_key,
+                                        },
+                                        Some(requested_key),
+                                    )?;
+                                    PresentationRoute::DirectExact {
+                                        logical: logical_key,
+                                        physical: requested_key,
+                                    }
+                                } else {
+                                    let failed_key =
+                                        scanout_runtime.dynamic_routes()?.failed_key(logical_key);
+                                    scanout_runtime
+                                        .dynamic_routes_mut()?
+                                        .failed_routes
+                                        .insert(failed_key);
+                                    scanout_runtime.counters().fallback();
+                                    shadow.activate_scaled(shadow_identity(&snapshot)).context(
+                                        "activate scaled shadow after exact switch failure",
+                                    )?;
+                                    PresentationRoute::ScaledCurrentAfterFailure {
+                                        logical: logical_key,
+                                        reason: FallbackReason::SwitchFailed,
+                                    }
+                                }
+                            }
+                            PendingPlanKind::ScaledBaseline {
+                                switch_required: true,
+                            } => {
+                                let switch_succeeded;
+                                match active {
+                                    StableMappedActive::Slot1(old) => {
+                                        let target = slot_mut!(0)
+                                            .as_deref_mut()
+                                            .context("baseline slot 0 is empty at commit")?;
+                                        match attempt_mapped_switch(
+                                            &mut backend,
+                                            old,
+                                            target,
+                                            &scanout_counters,
+                                        ) {
+                                            MappedSwitch::Switched {
+                                                active: target,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                let old_slot = scanout_runtime.activate_slot(0)?;
+                                                ensure!(old_slot == 1);
+                                                scanout_runtime.release_inactive(
+                                                    &mut backend,
+                                                    1,
+                                                    slot_mut!(1),
+                                                )?;
+                                                active = StableMappedActive::Slot0(target);
+                                                switch_succeeded = true;
+                                            }
+                                            MappedSwitch::Retained {
+                                                active: old,
+                                                error,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                switch_error = Some(error);
+                                                active = StableMappedActive::Slot1(old);
+                                                switch_succeeded = false;
+                                            }
+                                        }
+                                    }
+                                    StableMappedActive::Slot2(old) => {
+                                        let target = slot_mut!(0)
+                                            .as_deref_mut()
+                                            .context("baseline slot 0 is empty at commit")?;
+                                        match attempt_mapped_switch(
+                                            &mut backend,
+                                            old,
+                                            target,
+                                            &scanout_counters,
+                                        ) {
+                                            MappedSwitch::Switched {
+                                                active: target,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                let old_slot = scanout_runtime.activate_slot(0)?;
+                                                ensure!(old_slot == 2);
+                                                scanout_runtime.release_inactive(
+                                                    &mut backend,
+                                                    2,
+                                                    slot_mut!(2),
+                                                )?;
+                                                active = StableMappedActive::Slot0(target);
+                                                switch_succeeded = true;
+                                            }
+                                            MappedSwitch::Retained {
+                                                active: old,
+                                                error,
+                                                mode_switch_ms: elapsed,
+                                            } => {
+                                                mode_switch_ms = elapsed;
+                                                switch_error = Some(error);
+                                                active = StableMappedActive::Slot2(old);
+                                                switch_succeeded = false;
+                                            }
+                                        }
+                                    }
+                                    StableMappedActive::Slot0(old) => {
+                                        drop(old);
+                                        anyhow::bail!(
+                                            "baseline switch plan was marked required while \
+                                             baseline was already active"
+                                        );
+                                    }
+                                }
+                                shadow
+                                    .activate_scaled(shadow_identity(&snapshot))
+                                    .context("activate shadow for scaled baseline route")?;
+                                if switch_succeeded {
+                                    scanout_runtime.counters().switched();
+                                    PresentationRoute::ScaledBaseline {
+                                        logical: logical_key,
+                                    }
+                                } else {
+                                    scanout_runtime.counters().fallback();
+                                    PresentationRoute::ScaledCurrentAfterFailure {
+                                        logical: logical_key,
+                                        reason: FallbackReason::BaselineSwitchFailed,
+                                    }
+                                }
+                            }
+                        };
+
+                        if !matches!(plan.kind, PendingPlanKind::ExactCandidate { .. })
+                            || !matches!(route, PresentationRoute::DirectExact { .. })
+                        {
+                            record_committed_route(
+                                &mut scanout_runtime,
+                                snapshot.clone(),
+                                route,
+                                None,
+                            )?;
+                        }
+                        if mode_switch_ms > 250 {
+                            tracing::warn!(
+                                generation = snapshot.generation,
+                                mode_switch_ms,
+                                "Commit-time physical switch exceeded the provisional 250 ms \
+                                 acceptance budget; the hardware gate must fail"
+                            );
+                        }
+                        if let Some(error) = switch_error.as_ref() {
+                            tracing::warn!(
+                                generation = snapshot.generation,
+                                logical = ?logical_key,
+                                retained_physical = ?scanout_runtime
+                                    .dynamic_routes()?
+                                    .current_physical_key,
+                                error = %format_args!("{error:#}"),
+                                "Single commit-time physical switch failed; retained old mapped \
+                                 scanout without retry"
+                            );
+                        }
+                        tracing::info!(
+                            event = "mode_commit_decision",
                             generation = snapshot.generation,
-                            mode = ?snapshot.mode,
-                            commit_control_ms = control_event_ms,
-                            "State commit notification ignored while dynamic matching is disabled"
+                            logical = ?logical_key,
+                            old_physical = ?old_physical_key,
+                            new_physical = ?scanout_runtime.dynamic_routes()?.current_physical_key,
+                            ?route,
+                            active_slot = active.index(),
+                            active_size = ?active.size(),
+                            active_pitch = active.pitch(),
+                            active_mapping_lengths = ?active.mapping_lengths(),
+                            state_commit_control_ms = control_event_ms,
+                            mode_prepare_ms = plan.mode_prepare_ms,
+                            mode_switch_ms,
+                            failed_cache_hit = plan.failed_cache_hit,
+                            counters = ?scanout_runtime.counters().snapshot(),
+                            current_live_bytes = scanout_runtime.current_live_bytes(),
+                            observed_peak_live_bytes =
+                                scanout_runtime.observed_peak_live_bytes(),
+                            "Committed generation-bound dynamic presentation route"
                         );
                     }
                     Event::ProtocolStateInvalidated {
@@ -2119,12 +2814,42 @@ fn main() -> anyhow::Result<()> {
                             | ProtocolInvalidationReason::Resume),
                     } => {
                         if dynamic_mode_match {
-                            if let Err(err) = invalidate_dynamic_pending_off_baseline(
-                                &mut backend,
-                                &mut scanout_runtime,
-                                slot1,
-                                slot2,
-                            ) {
+                            let result = match active {
+                                StableMappedActive::Slot0(mapped) => {
+                                    let result = invalidate_dynamic_pending_in_available_slots(
+                                        &mut backend,
+                                        &mut scanout_runtime,
+                                        1,
+                                        slot_mut!(1),
+                                        Some((2, slot_mut!(2))),
+                                    );
+                                    active = StableMappedActive::Slot0(mapped);
+                                    result
+                                }
+                                StableMappedActive::Slot1(mapped) => {
+                                    let result = invalidate_dynamic_pending_in_available_slots(
+                                        &mut backend,
+                                        &mut scanout_runtime,
+                                        2,
+                                        slot_mut!(2),
+                                        None,
+                                    );
+                                    active = StableMappedActive::Slot1(mapped);
+                                    result
+                                }
+                                StableMappedActive::Slot2(mapped) => {
+                                    let result = invalidate_dynamic_pending_in_available_slots(
+                                        &mut backend,
+                                        &mut scanout_runtime,
+                                        1,
+                                        slot_mut!(1),
+                                        None,
+                                    );
+                                    active = StableMappedActive::Slot2(mapped);
+                                    result
+                                }
+                            };
+                            if let Err(err) = result {
                                 tracing::error!(
                                     error = %format_args!("{err:#}"),
                                     "Failed to release invalidated dynamic candidate"
@@ -2143,12 +2868,42 @@ fn main() -> anyhow::Result<()> {
                         reason: ProtocolInvalidationReason::Disconnected,
                     } => {
                         if dynamic_mode_match {
-                            if let Err(err) = invalidate_dynamic_pending_off_baseline(
-                                &mut backend,
-                                &mut scanout_runtime,
-                                slot1,
-                                slot2,
-                            ) {
+                            let result = match active {
+                                StableMappedActive::Slot0(mapped) => {
+                                    let result = invalidate_dynamic_pending_in_available_slots(
+                                        &mut backend,
+                                        &mut scanout_runtime,
+                                        1,
+                                        slot_mut!(1),
+                                        Some((2, slot_mut!(2))),
+                                    );
+                                    active = StableMappedActive::Slot0(mapped);
+                                    result
+                                }
+                                StableMappedActive::Slot1(mapped) => {
+                                    let result = invalidate_dynamic_pending_in_available_slots(
+                                        &mut backend,
+                                        &mut scanout_runtime,
+                                        2,
+                                        slot_mut!(2),
+                                        None,
+                                    );
+                                    active = StableMappedActive::Slot1(mapped);
+                                    result
+                                }
+                                StableMappedActive::Slot2(mapped) => {
+                                    let result = invalidate_dynamic_pending_in_available_slots(
+                                        &mut backend,
+                                        &mut scanout_runtime,
+                                        1,
+                                        slot_mut!(1),
+                                        None,
+                                    );
+                                    active = StableMappedActive::Slot2(mapped);
+                                    result
+                                }
+                            };
+                            if let Err(err) = result {
                                 tracing::error!(
                                     error = %format_args!("{err:#}"),
                                     "Failed to release disconnected dynamic candidate"
@@ -2255,18 +3010,36 @@ fn main() -> anyhow::Result<()> {
                         let source_height = active_state
                             .map(|state| state.height)
                             .unwrap_or(panel_height);
-                        let scaled_mode =
-                            source_width != panel_width || source_height != panel_height;
+                        let (physical_width, physical_height) = active.size();
+                        let physical_pitch = active.pitch();
+                        let scaled_mode = if dynamic_mode_match {
+                            matches!(
+                                scanout_runtime.dynamic_routes()?.presentation_route,
+                                Some(
+                                    PresentationRoute::ScaledBaseline { .. }
+                                        | PresentationRoute::ScaledCurrentAfterFailure { .. }
+                                )
+                            )
+                        } else {
+                            source_width != physical_width || source_height != physical_height
+                        };
                         let mut copy_ms = 0u128;
                         let mut scale_ms = 0u128;
                         let framebuffer_changed = match pattern_mode {
                             PatternMode::Off | PatternMode::Startup => {
                                 if scaled_mode {
-                                    if let Err(err) = shadow.ensure_size(ShadowRasterIdentity {
+                                    let identity = ShadowRasterIdentity {
                                         width: source_width,
                                         height: source_height,
                                         format: transfer_format.gud_pixel_format(),
-                                    }) {
+                                    };
+                                    if dynamic_mode_match {
+                                        ensure!(
+                                            shadow.is_active(identity),
+                                            "dynamic scaled route shadow identity changed outside \
+                                             STATE_COMMIT"
+                                        );
+                                    } else if let Err(err) = shadow.ensure_size(identity) {
                                         tracing::error!(
                                             "Failed to activate source shadow framebuffer: {}",
                                             err
@@ -2316,9 +3089,9 @@ fn main() -> anyhow::Result<()> {
                                         source_width,
                                         source_height,
                                         active.back_buffer_mut(),
-                                        pitch as usize,
-                                        panel_width,
-                                        panel_height,
+                                        physical_pitch as usize,
+                                        physical_width,
+                                        physical_height,
                                     ) {
                                         Ok((_layout, elapsed_ms)) => {
                                             scale_ms = elapsed_ms;
@@ -2338,7 +3111,7 @@ fn main() -> anyhow::Result<()> {
                                             &info,
                                             payload,
                                             active.front_buffer_mut(),
-                                            pitch as usize,
+                                            physical_pitch as usize,
                                             2,
                                         ) {
                                             Ok(stats) => {
@@ -2353,7 +3126,7 @@ fn main() -> anyhow::Result<()> {
                                                 &info,
                                                 payload,
                                                 active.front_buffer_mut(),
-                                                pitch as usize,
+                                                physical_pitch as usize,
                                             );
                                             copy_ms = copy_start.elapsed().as_millis();
                                             result
@@ -2378,9 +3151,9 @@ fn main() -> anyhow::Result<()> {
                             PatternMode::Usb => {
                                 match fill_diagnostic_pattern_rect(
                                     active.front_buffer_mut(),
-                                    pitch as usize,
-                                    width,
-                                    height,
+                                    physical_pitch as usize,
+                                    physical_width,
+                                    physical_height,
                                     info.x,
                                     info.y,
                                     info.width,
@@ -2408,8 +3181,8 @@ fn main() -> anyhow::Result<()> {
                                     active.back_framebuffer(),
                                     0,
                                     0,
-                                    panel_width as u16,
-                                    panel_height as u16,
+                                    physical_width as u16,
+                                    physical_height as u16,
                                 ) {
                                     Ok(()) => tracing::debug!("Back buffer flushed before flip"),
                                     Err(err) => tracing::debug!(
@@ -2425,7 +3198,7 @@ fn main() -> anyhow::Result<()> {
                                             "Page flip failed ({}), falling back to set_crtc",
                                             page_flip_err
                                         );
-                                        backend.set_crtc(active.back_framebuffer(), mode)
+                                        backend.set_crtc(active.back_framebuffer(), active.mode())
                                     });
 
                                 match present_result {
@@ -2513,9 +3286,9 @@ fn main() -> anyhow::Result<()> {
                         dump_framebuffer_if_enabled(
                             dump_path.as_deref(),
                             active.front_buffer_mut(),
-                            pitch as usize,
-                            width,
-                            height,
+                            physical_pitch as usize,
+                            physical_width,
+                            physical_height,
                             2,
                         );
                         dump_framebuffer_raw_if_enabled(
@@ -2659,8 +3432,9 @@ mod tests {
         parse_test_max_buffer_size, parse_test_output_mode, record_host_activity,
         render_waiting_screen, should_restart_after_clean_detach, validate_test_mode_policy,
         waiting_scene_glyph, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
-        GadgetUnbind, GadgetUnbindOutcome, ScaledLayout, ShadowActivation, ShadowFramebuffer,
-        ShadowRasterIdentity, TestOutputMode, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
+        GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind, ScaledLayout,
+        ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, TestOutputMode, RGB565_BLACK,
+        RGB565_GREEN, RGB565_WHITE,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
@@ -3100,6 +3874,89 @@ mod tests {
             ShadowActivation::Zeroed
         );
         assert_eq!(&shadow.pixels[0..4], &[0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn same_geometry_timing_change_preserves_partial_shadow_without_allocation() {
+        let mut shadow = ShadowFramebuffer::preallocated(64).unwrap();
+        let identity = ShadowRasterIdentity {
+            width: 4,
+            height: 4,
+            format: gud_gadget::GUD_PIXEL_FORMAT_RGB565,
+        };
+        shadow.activate_scaled(identity).unwrap();
+        shadow.pixels[6..10].copy_from_slice(&[9, 8, 7, 6]);
+        let pointer = shadow.pixels.as_ptr();
+        let capacity = shadow.pixels.capacity();
+
+        // Timing is intentionally absent from raster identity: a same-size,
+        // different-timing scaled commit must retain partial source pixels.
+        assert_eq!(
+            shadow.activate_scaled(identity).unwrap(),
+            ShadowActivation::Preserved
+        );
+        assert_eq!(&shadow.pixels[6..10], &[9, 8, 7, 6]);
+        assert_eq!(shadow.pixels.as_ptr(), pointer);
+        assert_eq!(shadow.pixels.capacity(), capacity);
+    }
+
+    #[test]
+    fn commit_plan_matching_consumes_missing_stale_and_mismatched_identity() {
+        let mode = DisplayMode {
+            clock: 74_250,
+            hdisplay: 1280,
+            hsync_start: 1390,
+            hsync_end: 1430,
+            htotal: 1650,
+            vdisplay: 720,
+            vsync_start: 725,
+            vsync_end: 730,
+            vtotal: 750,
+            flags: 0,
+        };
+        let committed = DisplayStateSnapshot {
+            mode: mode.clone(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+            generation: 4,
+        };
+        let make_plan = |snapshot: DisplayStateSnapshot| PendingPlan {
+            logical_key: ModeKey::from_snapshot(&snapshot),
+            snapshot,
+            requested_physical_key: None,
+            requested_mode: None::<()>,
+            kind: PendingPlanKind::ExactActiveNoOp,
+            failed_cache_hit: false,
+            mode_prepare_ms: 0,
+        };
+
+        let mut missing: Option<PendingPlan<()>> = None;
+        assert_eq!(
+            super::take_matching_pending_plan(&mut missing, &committed),
+            Err(false)
+        );
+
+        let mut stale_snapshot = committed.clone();
+        stale_snapshot.generation -= 1;
+        let mut stale = Some(make_plan(stale_snapshot));
+        assert_eq!(
+            super::take_matching_pending_plan(&mut stale, &committed),
+            Err(true)
+        );
+        assert!(stale.is_none());
+
+        let mut mismatched_snapshot = committed.clone();
+        mismatched_snapshot.mode.clock += 1;
+        let mut mismatched = Some(make_plan(mismatched_snapshot));
+        assert_eq!(
+            super::take_matching_pending_plan(&mut mismatched, &committed),
+            Err(true)
+        );
+        assert!(mismatched.is_none());
+
+        let mut matching = Some(make_plan(committed.clone()));
+        assert!(super::take_matching_pending_plan(&mut matching, &committed).is_ok());
+        assert!(matching.is_none());
     }
 
     #[test]
