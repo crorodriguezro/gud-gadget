@@ -1,12 +1,105 @@
 use std::cell::RefCell;
+use std::collections::HashSet;
 use std::fmt::Debug;
 use std::rc::Rc;
 
 use anyhow::{ensure, Context};
+use gud_gadget::DisplayStateSnapshot;
+
+use crate::modes::ModeKey;
 
 pub(crate) const SCANOUT_SLOT_COUNT: usize = 3;
 pub(crate) const BUFFERS_PER_SCANOUT: usize = 2;
 const RGB565_BYTES_PER_PIXEL: usize = 2;
+
+pub(crate) type ScanoutSlot<B> = Option<Box<ScanoutAllocation<B>>>;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum FallbackReason {
+    NoMatch,
+    PrepareFailed,
+    SwitchFailed,
+    BaselineSwitchFailed,
+    PlanMismatch,
+    FailedCacheHit,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum PendingPlanKind {
+    ExactActiveNoOp,
+    ExactCandidate { slot: usize },
+    ScaledBaseline { switch_required: bool },
+    ScaledCurrentAfterFailure(FallbackReason),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct PendingPlan<M> {
+    pub(crate) snapshot: DisplayStateSnapshot,
+    pub(crate) logical_key: ModeKey,
+    pub(crate) requested_physical_key: Option<ModeKey>,
+    pub(crate) requested_mode: Option<M>,
+    pub(crate) kind: PendingPlanKind,
+    pub(crate) failed_cache_hit: bool,
+    pub(crate) mode_prepare_ms: u128,
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub(crate) struct FailedRouteKey {
+    pub(crate) logical: ModeKey,
+    pub(crate) current_physical: ModeKey,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum PresentationRoute {
+    DirectExact {
+        logical: ModeKey,
+        physical: ModeKey,
+    },
+    ScaledBaseline {
+        logical: ModeKey,
+    },
+    ScaledCurrentAfterFailure {
+        logical: ModeKey,
+        reason: FallbackReason,
+    },
+}
+
+#[derive(Debug)]
+pub(crate) struct DynamicRouteState<M> {
+    pub(crate) pending_plan: Option<PendingPlan<M>>,
+    pub(crate) failed_routes: HashSet<FailedRouteKey>,
+    pub(crate) committed_snapshot: Option<DisplayStateSnapshot>,
+    pub(crate) presentation_route: Option<PresentationRoute>,
+    pub(crate) current_physical_key: ModeKey,
+    pub(crate) baseline_physical_key: ModeKey,
+    pub(crate) candidate_key: Option<ModeKey>,
+}
+
+impl<M> DynamicRouteState<M> {
+    fn new(baseline_physical_key: ModeKey) -> Self {
+        Self {
+            pending_plan: None,
+            failed_routes: HashSet::new(),
+            committed_snapshot: None,
+            presentation_route: None,
+            current_physical_key: baseline_physical_key,
+            baseline_physical_key,
+            candidate_key: None,
+        }
+    }
+
+    pub(crate) fn failed_key(&self, logical: ModeKey) -> FailedRouteKey {
+        FailedRouteKey {
+            logical,
+            current_physical: self.current_physical_key,
+        }
+    }
+
+    pub(crate) fn invalidate_pending(&mut self) {
+        self.pending_plan = None;
+        self.candidate_key = None;
+    }
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct LogicalMemoryEstimate {
@@ -300,6 +393,25 @@ impl<B: ScanoutBackend> ScanoutAllocation<B> {
         self.live_bytes
     }
 
+    pub(crate) fn flush_black_initialization(&self, backend: &mut B) -> anyhow::Result<()> {
+        let mut errors = Vec::new();
+        for (index, buffer) in self.buffers.iter().enumerate() {
+            let Some(framebuffer) = buffer.framebuffer else {
+                continue;
+            };
+            if let Err(err) =
+                backend.dirty_framebuffer(framebuffer, 0, 0, self.width as u16, self.height as u16)
+            {
+                errors.push(format!("flush candidate framebuffer {index}: {err:#}"));
+            }
+        }
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            anyhow::bail!("{}", errors.join("; "))
+        }
+    }
+
     pub(crate) fn map<'a>(
         &'a mut self,
         backend: &mut B,
@@ -475,7 +587,7 @@ pub(crate) struct ScanoutRoles {
 }
 
 pub(crate) struct ScanoutPool<B: ScanoutBackend> {
-    slots: [Option<Box<ScanoutAllocation<B>>>; SCANOUT_SLOT_COUNT],
+    slots: [ScanoutSlot<B>; SCANOUT_SLOT_COUNT],
     roles: ScanoutRoles,
 }
 
@@ -594,6 +706,7 @@ pub(crate) struct ScanoutManager<B: ScanoutBackend> {
     counters: ScanoutCounters,
     current_live_bytes: usize,
     observed_peak_live_bytes: usize,
+    dynamic_routes: Option<DynamicRouteState<B::Mode>>,
 }
 
 impl<B: ScanoutBackend> ScanoutManager<B> {
@@ -613,7 +726,46 @@ impl<B: ScanoutBackend> ScanoutManager<B> {
             counters,
             current_live_bytes: live_bytes,
             observed_peak_live_bytes: live_bytes,
+            dynamic_routes: None,
         })
+    }
+
+    pub(crate) fn initialize_dynamic_routes(
+        &mut self,
+        baseline_physical_key: ModeKey,
+    ) -> anyhow::Result<()> {
+        ensure!(
+            self.dynamic_routes.is_none(),
+            "dynamic route state is already initialized"
+        );
+        self.dynamic_routes = Some(DynamicRouteState::new(baseline_physical_key));
+        Ok(())
+    }
+
+    pub(crate) fn split_runtime(
+        &mut self,
+    ) -> (
+        &mut [ScanoutSlot<B>; SCANOUT_SLOT_COUNT],
+        ScanoutRuntime<'_, B>,
+    ) {
+        let Self {
+            pool,
+            counters,
+            current_live_bytes,
+            observed_peak_live_bytes,
+            dynamic_routes,
+        } = self;
+        let ScanoutPool { slots, roles } = pool;
+        (
+            slots,
+            ScanoutRuntime {
+                roles,
+                counters: counters.clone(),
+                current_live_bytes,
+                observed_peak_live_bytes,
+                dynamic_routes,
+            },
+        )
     }
 
     pub(crate) fn counters(&self) -> ScanoutCounters {
@@ -712,9 +864,139 @@ impl<B: ScanoutBackend> ScanoutManager<B> {
     }
 }
 
+pub(crate) struct ScanoutRuntime<'a, B: ScanoutBackend> {
+    roles: &'a mut ScanoutRoles,
+    counters: ScanoutCounters,
+    current_live_bytes: &'a mut usize,
+    observed_peak_live_bytes: &'a mut usize,
+    dynamic_routes: &'a mut Option<DynamicRouteState<B::Mode>>,
+}
+
+impl<B: ScanoutBackend> ScanoutRuntime<'_, B> {
+    pub(crate) fn roles(&self) -> ScanoutRoles {
+        *self.roles
+    }
+
+    pub(crate) fn counters(&self) -> ScanoutCounters {
+        self.counters.clone()
+    }
+
+    pub(crate) fn dynamic_routes(&self) -> anyhow::Result<&DynamicRouteState<B::Mode>> {
+        self.dynamic_routes
+            .as_ref()
+            .context("dynamic route state is not initialized")
+    }
+
+    pub(crate) fn dynamic_routes_mut(&mut self) -> anyhow::Result<&mut DynamicRouteState<B::Mode>> {
+        self.dynamic_routes
+            .as_mut()
+            .context("dynamic route state is not initialized")
+    }
+
+    pub(crate) fn stage_candidate(
+        &mut self,
+        backend: &mut B,
+        slot_index: usize,
+        slot: &mut ScanoutSlot<B>,
+        mut allocation: ScanoutAllocation<B>,
+    ) -> anyhow::Result<()> {
+        ensure!(
+            self.roles.candidate.is_none(),
+            "candidate role is already occupied"
+        );
+        ensure!(
+            slot_index != self.roles.active,
+            "candidate slot aliases active scanout"
+        );
+        ensure!(slot.is_none(), "candidate slot is not empty");
+        let new_live_bytes =
+            match checked_add_live_bytes(*self.current_live_bytes, allocation.live_bytes()) {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    allocation.release(backend, &self.counters)?;
+                    return Err(err);
+                }
+            };
+        *slot = Some(Box::new(allocation));
+        self.roles.candidate = Some(slot_index);
+        *self.current_live_bytes = new_live_bytes;
+        *self.observed_peak_live_bytes = (*self.observed_peak_live_bytes).max(new_live_bytes);
+        Ok(())
+    }
+
+    pub(crate) fn release_candidate(
+        &mut self,
+        backend: &mut B,
+        slot_index: usize,
+        slot: &mut ScanoutSlot<B>,
+    ) -> anyhow::Result<()> {
+        ensure!(
+            self.roles.candidate == Some(slot_index),
+            "slot {slot_index} is not the current candidate"
+        );
+        ensure!(
+            slot_index != self.roles.active,
+            "candidate slot aliases active scanout"
+        );
+        let mut allocation = slot.take().context("candidate scanout slot is empty")?;
+        let released_bytes = allocation.live_bytes();
+        let release_result = allocation.release(backend, &self.counters);
+        *self.current_live_bytes = self
+            .current_live_bytes
+            .checked_sub(released_bytes)
+            .context("candidate live-byte accounting underflow")?;
+        self.roles.candidate = None;
+        if let Some(routes) = self.dynamic_routes.as_mut() {
+            routes.candidate_key = None;
+        }
+        release_result
+    }
+
+    pub(crate) fn promote_candidate(&mut self) -> anyhow::Result<(usize, usize)> {
+        let candidate = self
+            .roles
+            .candidate
+            .take()
+            .context("no candidate scanout to promote")?;
+        let old_active = self.roles.active;
+        self.roles.active = candidate;
+        Ok((old_active, candidate))
+    }
+
+    pub(crate) fn release_inactive(
+        &mut self,
+        backend: &mut B,
+        slot_index: usize,
+        slot: &mut ScanoutSlot<B>,
+    ) -> anyhow::Result<()> {
+        ensure!(
+            slot_index != self.roles.active,
+            "cannot release active scanout"
+        );
+        if slot_index == self.roles.baseline {
+            return Ok(());
+        }
+        let Some(mut allocation) = slot.take() else {
+            return Ok(());
+        };
+        let released_bytes = allocation.live_bytes();
+        let release_result = allocation.release(backend, &self.counters);
+        *self.current_live_bytes = self
+            .current_live_bytes
+            .checked_sub(released_bytes)
+            .context("released scanout live-byte accounting underflow")?;
+        release_result
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeSet;
+
+    use gud_gadget::{DisplayMode, DisplayStateSnapshot, GUD_PIXEL_FORMAT_RGB565};
+
+    use crate::modes::{ModeKey, PhysicalCatalogMode, RouteCatalog};
+    use crate::{invalidate_dynamic_pending_off_baseline, prepare_dynamic_check};
 
     use super::{
         checked_add_live_bytes, logical_memory_estimate, MappedTransition, ScanoutAllocation,
@@ -883,6 +1165,30 @@ mod tests {
 
         fn page_flip(&mut self, _framebuffer: Self::Framebuffer) -> anyhow::Result<()> {
             self.hit(Operation::PageFlip)
+        }
+    }
+
+    fn display_mode(clock: u32, width: u16, height: u16) -> DisplayMode {
+        DisplayMode {
+            clock,
+            hdisplay: width,
+            hsync_start: width + 4,
+            hsync_end: width + 8,
+            htotal: width + 16,
+            vdisplay: height,
+            vsync_start: height + 1,
+            vsync_end: height + 2,
+            vtotal: height + 4,
+            flags: 0,
+        }
+    }
+
+    fn snapshot(mode: &DisplayMode, generation: u64) -> DisplayStateSnapshot {
+        DisplayStateSnapshot {
+            mode: mode.clone(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+            generation,
         }
     }
 
@@ -1185,5 +1491,215 @@ mod tests {
                 )
             );
         }
+    }
+
+    #[test]
+    fn dynamic_checks_prepare_rekey_and_invalidate_one_candidate() {
+        let baseline_timing = display_mode(1_000, 64, 32);
+        let candidate_timing = display_mode(2_000, 80, 40);
+        let catalog = RouteCatalog::build(
+            0,
+            &[
+                PhysicalCatalogMode {
+                    mode: (64, 32),
+                    timing: baseline_timing.clone(),
+                },
+                PhysicalCatalogMode {
+                    mode: (80, 40),
+                    timing: candidate_timing.clone(),
+                },
+            ],
+            0,
+            &[],
+        )
+        .unwrap();
+        let mut backend = MockBackend::default();
+        let mut manager = ScanoutManager::new_baseline(&mut backend, (64, 32)).unwrap();
+        manager
+            .initialize_dynamic_routes(ModeKey::new(0, &baseline_timing))
+            .unwrap();
+        let counters = manager.counters();
+        let (slots, mut runtime) = manager.split_runtime();
+        let [slot0, slot1, slot2] = slots;
+        let mut active = slot0
+            .as_deref_mut()
+            .unwrap()
+            .map(&mut backend, &counters)
+            .unwrap();
+        active.front_buffer_mut()[0] = 0x5a;
+
+        prepare_dynamic_check(
+            &mut backend,
+            &mut runtime,
+            slot1,
+            slot2,
+            &catalog,
+            snapshot(&candidate_timing, 1),
+            0,
+        )
+        .unwrap();
+        let allocations_after_first = counters.snapshot().allocations;
+        let candidate_slot = runtime.roles().candidate.unwrap();
+        assert!(matches!(
+            runtime
+                .dynamic_routes()
+                .unwrap()
+                .pending_plan
+                .as_ref()
+                .unwrap()
+                .kind,
+            super::PendingPlanKind::ExactCandidate { .. }
+        ));
+
+        prepare_dynamic_check(
+            &mut backend,
+            &mut runtime,
+            slot1,
+            slot2,
+            &catalog,
+            snapshot(&candidate_timing, 2),
+            0,
+        )
+        .unwrap();
+        assert_eq!(counters.snapshot().allocations, allocations_after_first);
+        assert_eq!(runtime.roles().candidate, Some(candidate_slot));
+        assert_eq!(
+            runtime
+                .dynamic_routes()
+                .unwrap()
+                .pending_plan
+                .as_ref()
+                .unwrap()
+                .snapshot
+                .generation,
+            2
+        );
+        assert_eq!(active.front_buffer_mut()[0], 0x5a);
+
+        invalidate_dynamic_pending_off_baseline(&mut backend, &mut runtime, slot1, slot2).unwrap();
+        assert!(runtime.roles().candidate.is_none());
+        assert!(runtime.dynamic_routes().unwrap().pending_plan.is_none());
+        assert_eq!(active.front_buffer_mut()[0], 0x5a);
+
+        drop(active);
+        drop(runtime);
+        manager.release_all(&mut backend).unwrap();
+    }
+
+    #[test]
+    fn failed_route_cache_is_checked_before_a_new_allocation() {
+        let baseline_timing = display_mode(1_000, 64, 32);
+        let candidate_timing = display_mode(2_000, 80, 40);
+        let synthetic_timing = display_mode(3_000, 70, 70);
+        let catalog = RouteCatalog::build(
+            0,
+            &[
+                PhysicalCatalogMode {
+                    mode: (64, 32),
+                    timing: baseline_timing.clone(),
+                },
+                PhysicalCatalogMode {
+                    mode: (80, 40),
+                    timing: candidate_timing.clone(),
+                },
+            ],
+            0,
+            &[synthetic_timing.clone()],
+        )
+        .unwrap();
+        let mut backend = MockBackend::default();
+        let mut manager = ScanoutManager::new_baseline(&mut backend, (64, 32)).unwrap();
+        manager
+            .initialize_dynamic_routes(ModeKey::new(0, &baseline_timing))
+            .unwrap();
+        let counters = manager.counters();
+        let (slots, mut runtime) = manager.split_runtime();
+        let [slot0, slot1, slot2] = slots;
+        let active = slot0
+            .as_deref_mut()
+            .unwrap()
+            .map(&mut backend, &counters)
+            .unwrap();
+        backend.failure = Some(Failure {
+            operation: Operation::CreateBuffer,
+            occurrence: backend.count(Operation::CreateBuffer) + 1,
+        });
+
+        prepare_dynamic_check(
+            &mut backend,
+            &mut runtime,
+            slot1,
+            slot2,
+            &catalog,
+            snapshot(&candidate_timing, 1),
+            0,
+        )
+        .unwrap();
+        assert!(matches!(
+            runtime
+                .dynamic_routes()
+                .unwrap()
+                .pending_plan
+                .as_ref()
+                .unwrap()
+                .kind,
+            super::PendingPlanKind::ScaledCurrentAfterFailure(super::FallbackReason::PrepareFailed)
+        ));
+        assert_eq!(runtime.dynamic_routes().unwrap().failed_routes.len(), 1);
+
+        backend.failure = None;
+        let creates_before_cache_hit = backend.count(Operation::CreateBuffer);
+        prepare_dynamic_check(
+            &mut backend,
+            &mut runtime,
+            slot1,
+            slot2,
+            &catalog,
+            snapshot(&candidate_timing, 2),
+            0,
+        )
+        .unwrap();
+        assert_eq!(
+            backend.count(Operation::CreateBuffer),
+            creates_before_cache_hit
+        );
+        assert!(
+            runtime
+                .dynamic_routes()
+                .unwrap()
+                .pending_plan
+                .as_ref()
+                .unwrap()
+                .failed_cache_hit
+        );
+
+        prepare_dynamic_check(
+            &mut backend,
+            &mut runtime,
+            slot1,
+            slot2,
+            &catalog,
+            snapshot(&synthetic_timing, 3),
+            0,
+        )
+        .unwrap();
+        prepare_dynamic_check(
+            &mut backend,
+            &mut runtime,
+            slot1,
+            slot2,
+            &catalog,
+            snapshot(&candidate_timing, 4),
+            0,
+        )
+        .unwrap();
+        assert_eq!(
+            backend.count(Operation::CreateBuffer),
+            creates_before_cache_hit
+        );
+
+        drop(active);
+        drop(runtime);
+        manager.release_all(&mut backend).unwrap();
     }
 }

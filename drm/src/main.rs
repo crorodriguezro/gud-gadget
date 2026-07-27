@@ -8,8 +8,11 @@ use drm::control::{
     Device, Mode, ModeTypeFlags, PageFlipFlags,
 };
 use gud_gadget::{DisplayMode, Event, ProtocolInvalidationReason, GUD_COMPRESSION_LZ4};
-use modes::{CatalogRoute, PhysicalCatalogMode, RouteCatalog};
-use scanout::{logical_memory_estimate, MappedActive, ScanoutBackend, ScanoutManager};
+use modes::{CatalogRoute, ModeKey, PhysicalCatalogMode, RouteCatalog};
+use scanout::{
+    logical_memory_estimate, FallbackReason, MappedActive, PendingPlan, PendingPlanKind,
+    ScanoutAllocation, ScanoutBackend, ScanoutManager, ScanoutRuntime, ScanoutSlot,
+};
 use std::env::{args, var_os};
 use std::ffi::OsStr;
 use std::fs::{rename, File};
@@ -1011,24 +1014,88 @@ struct ScaledLayout {
     dst_height: usize,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct ShadowRasterIdentity {
+    width: u32,
+    height: u32,
+    format: u8,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum ShadowActivation {
+    Preserved,
+    Zeroed,
+}
+
 #[derive(Debug, Default)]
 struct ShadowFramebuffer {
     width: u32,
     height: u32,
     pitch: usize,
     pixels: Vec<u8>,
+    preallocated_capacity: Option<usize>,
+    identity: Option<ShadowRasterIdentity>,
+    content_valid: bool,
 }
 
 impl ShadowFramebuffer {
-    fn ensure_size(&mut self, width: u32, height: u32) {
-        let pitch = width as usize * 2;
-        let len = pitch * height as usize;
-        if self.width != width || self.height != height || self.pixels.len() != len {
-            self.width = width;
-            self.height = height;
-            self.pitch = pitch;
+    fn preallocated(max_capacity: usize) -> anyhow::Result<Self> {
+        ensure!(
+            max_capacity > 0,
+            "maximum source shadow capacity must be non-zero"
+        );
+        let mut pixels = Vec::new();
+        pixels
+            .try_reserve_exact(max_capacity)
+            .context("allocate maximum RGB565 source shadow")?;
+        pixels.resize(max_capacity, 0);
+        Ok(Self {
+            pixels,
+            preallocated_capacity: Some(max_capacity),
+            ..Self::default()
+        })
+    }
+
+    fn activate_scaled(
+        &mut self,
+        identity: ShadowRasterIdentity,
+    ) -> anyhow::Result<ShadowActivation> {
+        let pitch = (identity.width as usize)
+            .checked_mul(2)
+            .context("source shadow pitch overflow")?;
+        let len = pitch
+            .checked_mul(identity.height as usize)
+            .context("source shadow length overflow")?;
+
+        if let Some(capacity) = self.preallocated_capacity {
+            ensure!(
+                len <= capacity && self.pixels.len() == capacity,
+                "committed shadow raster requires {len} bytes but preallocated capacity is \
+                 {capacity}"
+            );
+        } else if self.pixels.len() != len {
             self.pixels = vec![0; len];
         }
+        self.width = identity.width;
+        self.height = identity.height;
+        self.pitch = pitch;
+        let preserve = self.identity == Some(identity) && self.content_valid;
+        self.identity = Some(identity);
+        self.content_valid = true;
+        if preserve {
+            Ok(ShadowActivation::Preserved)
+        } else {
+            self.pixels[..len].fill(0);
+            Ok(ShadowActivation::Zeroed)
+        }
+    }
+
+    fn ensure_size(&mut self, identity: ShadowRasterIdentity) -> anyhow::Result<()> {
+        self.activate_scaled(identity).map(|_| ())
+    }
+
+    fn invalidate_content(&mut self) {
+        self.content_valid = false;
     }
 }
 
@@ -1217,6 +1284,201 @@ fn validate_test_mode_policy(
         !(dynamic_mode_match && test_output_mode.is_some()),
         "GUD_TEST_DYNAMIC_MODE_MATCH and GUD_TEST_OUTPUT_MODE are mutually exclusive"
     );
+    Ok(())
+}
+
+fn release_dynamic_candidate_off_baseline<B: ScanoutBackend>(
+    backend: &mut B,
+    runtime: &mut ScanoutRuntime<'_, B>,
+    slot1: &mut ScanoutSlot<B>,
+    slot2: &mut ScanoutSlot<B>,
+) -> anyhow::Result<()> {
+    match runtime.roles().candidate {
+        None => Ok(()),
+        Some(1) => runtime.release_candidate(backend, 1, slot1),
+        Some(2) => runtime.release_candidate(backend, 2, slot2),
+        Some(index) => {
+            anyhow::bail!("unexpected candidate slot {index} while baseline slot zero is active")
+        }
+    }
+}
+
+fn prepare_dynamic_check<B: ScanoutBackend>(
+    backend: &mut B,
+    runtime: &mut ScanoutRuntime<'_, B>,
+    slot1: &mut ScanoutSlot<B>,
+    slot2: &mut ScanoutSlot<B>,
+    catalog: &RouteCatalog<B::Mode>,
+    snapshot: gud_gadget::DisplayStateSnapshot,
+    state_check_control_ms: u128,
+) -> anyhow::Result<()>
+where
+    B::Mode: std::fmt::Debug,
+{
+    let prepare_start = std::time::Instant::now();
+    let logical_key = ModeKey::from_snapshot(&snapshot);
+    let catalog_entry = catalog
+        .entry_for_snapshot(&snapshot)
+        .context("checked snapshot is absent from route catalog")?;
+    let current_physical_key = runtime.dynamic_routes()?.current_physical_key;
+    let candidate_key = runtime.dynamic_routes()?.candidate_key;
+    let failed_key = runtime.dynamic_routes()?.failed_key(logical_key);
+    let failed_cache_hit = runtime
+        .dynamic_routes()?
+        .failed_routes
+        .contains(&failed_key);
+
+    let mut new_candidate_key = None;
+    let (kind, requested_physical_key, requested_mode, cache_hit) = match catalog_entry.route {
+        CatalogRoute::Exact(physical_mode) if catalog_entry.key == current_physical_key => {
+            release_dynamic_candidate_off_baseline(backend, runtime, slot1, slot2)?;
+            runtime.counters().no_op();
+            (
+                PendingPlanKind::ExactActiveNoOp,
+                Some(catalog_entry.key),
+                Some(physical_mode),
+                false,
+            )
+        }
+        CatalogRoute::Exact(physical_mode)
+            if candidate_key == Some(catalog_entry.key) && runtime.roles().candidate.is_some() =>
+        {
+            new_candidate_key = candidate_key;
+            (
+                PendingPlanKind::ExactCandidate {
+                    slot: runtime
+                        .roles()
+                        .candidate
+                        .expect("candidate role was checked"),
+                },
+                Some(catalog_entry.key),
+                Some(physical_mode),
+                false,
+            )
+        }
+        CatalogRoute::Exact(physical_mode) if failed_cache_hit => {
+            release_dynamic_candidate_off_baseline(backend, runtime, slot1, slot2)?;
+            runtime.counters().fallback();
+            (
+                PendingPlanKind::ScaledCurrentAfterFailure(FallbackReason::FailedCacheHit),
+                Some(catalog_entry.key),
+                Some(physical_mode),
+                true,
+            )
+        }
+        CatalogRoute::Exact(physical_mode) => {
+            release_dynamic_candidate_off_baseline(backend, runtime, slot1, slot2)?;
+            let prepared_slot = (|| {
+                let allocation =
+                    ScanoutAllocation::create(backend, physical_mode, &runtime.counters())?;
+                if let Err(err) = allocation.flush_black_initialization(backend) {
+                    debug!(
+                        error = %format_args!("{err:#}"),
+                        "Candidate black-buffer dirty flush is unsupported or failed"
+                    );
+                }
+                let (slot_index, slot) = if slot1.is_none() {
+                    (1, slot1)
+                } else {
+                    ensure!(slot2.is_none(), "no empty candidate scanout slot");
+                    (2, slot2)
+                };
+                runtime.stage_candidate(backend, slot_index, slot, allocation)?;
+                Ok(slot_index)
+            })();
+            match prepared_slot {
+                Ok(slot_index) => {
+                    new_candidate_key = Some(catalog_entry.key);
+                    (
+                        PendingPlanKind::ExactCandidate { slot: slot_index },
+                        Some(catalog_entry.key),
+                        Some(physical_mode),
+                        false,
+                    )
+                }
+                Err(err) => {
+                    runtime
+                        .dynamic_routes_mut()?
+                        .failed_routes
+                        .insert(failed_key);
+                    runtime.counters().fallback();
+                    warn!(
+                        generation = snapshot.generation,
+                        logical = ?logical_key,
+                        current_physical = ?current_physical_key,
+                        error = %format_args!("{err:#}"),
+                        "Exact scanout candidate preparation failed; retaining scaled current \
+                         scanout"
+                    );
+                    (
+                        PendingPlanKind::ScaledCurrentAfterFailure(FallbackReason::PrepareFailed),
+                        Some(catalog_entry.key),
+                        Some(physical_mode),
+                        false,
+                    )
+                }
+            }
+        }
+        CatalogRoute::ScaledFallback => {
+            release_dynamic_candidate_off_baseline(backend, runtime, slot1, slot2)?;
+            runtime.counters().fallback();
+            (
+                PendingPlanKind::ScaledBaseline {
+                    switch_required: runtime.roles().active != runtime.roles().baseline,
+                },
+                None,
+                None,
+                false,
+            )
+        }
+    };
+    let mode_prepare_ms = prepare_start.elapsed().as_millis();
+    if mode_prepare_ms > 1_000 {
+        warn!(
+            generation = snapshot.generation,
+            mode_prepare_ms,
+            "Dynamic mode preparation exceeded the provisional 1000 ms acceptance budget"
+        );
+    }
+    {
+        let routes = runtime.dynamic_routes_mut()?;
+        routes.candidate_key = new_candidate_key;
+        routes.pending_plan = Some(PendingPlan {
+            snapshot: snapshot.clone(),
+            logical_key,
+            requested_physical_key,
+            requested_mode,
+            kind,
+            failed_cache_hit: cache_hit,
+            mode_prepare_ms,
+        });
+    }
+    info!(
+        event = "mode_check_decision",
+        generation = snapshot.generation,
+        connector = snapshot.connector,
+        logical = ?logical_key,
+        current_physical = ?current_physical_key,
+        requested_physical = ?requested_physical_key,
+        ?kind,
+        failed_cache_hit = cache_hit,
+        state_check_control_ms,
+        mode_prepare_ms,
+        candidate_slot = ?runtime.roles().candidate,
+        counters = ?runtime.counters().snapshot(),
+        "Prepared generation-bound dynamic mode plan"
+    );
+    Ok(())
+}
+
+fn invalidate_dynamic_pending_off_baseline<B: ScanoutBackend>(
+    backend: &mut B,
+    runtime: &mut ScanoutRuntime<'_, B>,
+    slot1: &mut ScanoutSlot<B>,
+    slot2: &mut ScanoutSlot<B>,
+) -> anyhow::Result<()> {
+    release_dynamic_candidate_off_baseline(backend, runtime, slot1, slot2)?;
+    runtime.dynamic_routes_mut()?.invalidate_pending();
     Ok(())
 }
 
@@ -1510,6 +1772,17 @@ fn main() -> anyhow::Result<()> {
         "Catalog-derived RGB565 memory estimate; actual DRM pitch/mapping lengths are recorded \
          per allocation"
     );
+    let mut shadow = if dynamic_mode_match {
+        let shadow = ShadowFramebuffer::preallocated(logical_memory.max_shadow_bytes)
+            .context("preallocate dynamic-mode fallback shadow before UDC bind")?;
+        info!(
+            max_shadow_bytes = logical_memory.max_shadow_bytes,
+            "Preallocated maximum RGB565 fallback shadow before UDC bind"
+        );
+        shadow
+    } else {
+        ShadowFramebuffer::default()
+    };
     gud_gadget::configure_state_check_validation(
         1,
         &[transfer_format.gud_pixel_format()],
@@ -1532,8 +1805,21 @@ fn main() -> anyhow::Result<()> {
     };
     let mut scanout_manager =
         ScanoutManager::new_baseline(&mut backend, mode).context("create baseline scanout")?;
+    let baseline_timing = physical_catalog_modes
+        .iter()
+        .find(|physical| physical.mode == mode)
+        .context("selected startup mode is absent from physical catalog")?;
+    if dynamic_mode_match {
+        scanout_manager
+            .initialize_dynamic_routes(ModeKey::new(0, &baseline_timing.timing))
+            .context("initialize dynamic route state")?;
+    }
     let scanout_counters = scanout_manager.counters();
-    let baseline = scanout_manager.active_mut();
+    let (scanout_slots, mut scanout_runtime) = scanout_manager.split_runtime();
+    let [slot0, slot1, slot2] = scanout_slots;
+    let baseline = slot0
+        .as_deref_mut()
+        .context("baseline scanout slot is empty")?;
     debug!(
         width = baseline.size().0,
         height = baseline.size().1,
@@ -1567,7 +1853,6 @@ fn main() -> anyhow::Result<()> {
     let pitch = active.pitch();
     let width = panel_width;
     let height = panel_height;
-    let mut shadow = ShadowFramebuffer::default();
 
     for index in 0..2 {
         let fb_data = active.buffer_mut(index);
@@ -1746,7 +2031,10 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        match gud_gadget::event(event) {
+        let control_event_start = std::time::Instant::now();
+        let parsed_gud_event = gud_gadget::event(event);
+        let control_event_ms = control_event_start.elapsed().as_millis();
+        match parsed_gud_event {
             Ok(Some(gud_event)) => {
                 tracing::debug!("GUD event: {:?}", gud_event);
                 record_host_activity(&mut had_host_session, &gud_event);
@@ -1786,17 +2074,37 @@ fn main() -> anyhow::Result<()> {
                         let catalog_route = route_catalog
                             .entry_for_snapshot(&snapshot)
                             .map(|entry| entry.route);
-                        tracing::debug!(
-                            generation = snapshot.generation,
-                            mode = ?snapshot.mode,
-                            ?catalog_route,
-                            "State check notification ignored while dynamic matching is disabled"
-                        );
+                        if dynamic_mode_match {
+                            if let Err(err) = prepare_dynamic_check(
+                                &mut backend,
+                                &mut scanout_runtime,
+                                slot1,
+                                slot2,
+                                &route_catalog,
+                                snapshot,
+                                control_event_ms,
+                            ) {
+                                tracing::error!(
+                                    error = %format_args!("{err:#}"),
+                                    "Failed to prepare dynamic state-check plan; optimization gate \
+                                     must fail"
+                                );
+                            }
+                        } else {
+                            scanout_counters.no_op();
+                            tracing::debug!(
+                                generation = snapshot.generation,
+                                mode = ?snapshot.mode,
+                                ?catalog_route,
+                                "State check notification ignored while dynamic matching is disabled"
+                            );
+                        }
                     }
                     Event::StateCommitted(snapshot) => {
                         tracing::debug!(
                             generation = snapshot.generation,
                             mode = ?snapshot.mode,
+                            commit_control_ms = control_event_ms,
                             "State commit notification ignored while dynamic matching is disabled"
                         );
                     }
@@ -1810,6 +2118,19 @@ fn main() -> anyhow::Result<()> {
                             | ProtocolInvalidationReason::Suspend
                             | ProtocolInvalidationReason::Resume),
                     } => {
+                        if dynamic_mode_match {
+                            if let Err(err) = invalidate_dynamic_pending_off_baseline(
+                                &mut backend,
+                                &mut scanout_runtime,
+                                slot1,
+                                slot2,
+                            ) {
+                                tracing::error!(
+                                    error = %format_args!("{err:#}"),
+                                    "Failed to release invalidated dynamic candidate"
+                                );
+                            }
+                        }
                         tracing::debug!(
                             ?generation,
                             ?reason,
@@ -1821,6 +2142,19 @@ fn main() -> anyhow::Result<()> {
                         generation,
                         reason: ProtocolInvalidationReason::Disconnected,
                     } => {
+                        if dynamic_mode_match {
+                            if let Err(err) = invalidate_dynamic_pending_off_baseline(
+                                &mut backend,
+                                &mut scanout_runtime,
+                                slot1,
+                                slot2,
+                            ) {
+                                tracing::error!(
+                                    error = %format_args!("{err:#}"),
+                                    "Failed to release disconnected dynamic candidate"
+                                );
+                            }
+                        }
                         tracing::info!(?generation, had_host_session, "Host disconnected");
                         if matches!(pattern_mode, PatternMode::Off) {
                             if let Err(err) = present_waiting_screen(
@@ -1928,7 +2262,17 @@ fn main() -> anyhow::Result<()> {
                         let framebuffer_changed = match pattern_mode {
                             PatternMode::Off | PatternMode::Startup => {
                                 if scaled_mode {
-                                    shadow.ensure_size(source_width, source_height);
+                                    if let Err(err) = shadow.ensure_size(ShadowRasterIdentity {
+                                        width: source_width,
+                                        height: source_height,
+                                        format: transfer_format.gud_pixel_format(),
+                                    }) {
+                                        tracing::error!(
+                                            "Failed to activate source shadow framebuffer: {}",
+                                            err
+                                        );
+                                        continue;
+                                    }
                                     let copy_result = match transfer_format {
                                         TransferFormat::Rgb565 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
                                             &info,
@@ -2276,6 +2620,7 @@ fn main() -> anyhow::Result<()> {
     drop(gud);
     info!("FunctionFS endpoint owners dropped; DRM release follows");
     drop(active);
+    drop(scanout_runtime);
     if let Err(err) = scanout_manager.release_all(&mut backend) {
         tracing::error!("Failed to explicitly release DRM scanout resources: {err:#}");
         if lifecycle_error.is_none() {
@@ -2314,8 +2659,8 @@ mod tests {
         parse_test_max_buffer_size, parse_test_output_mode, record_host_activity,
         render_waiting_screen, should_restart_after_clean_detach, validate_test_mode_policy,
         waiting_scene_glyph, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
-        GadgetUnbind, GadgetUnbindOutcome, ScaledLayout, TestOutputMode, RGB565_BLACK,
-        RGB565_GREEN, RGB565_WHITE,
+        GadgetUnbind, GadgetUnbindOutcome, ScaledLayout, ShadowActivation, ShadowFramebuffer,
+        ShadowRasterIdentity, TestOutputMode, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
@@ -2727,6 +3072,82 @@ mod tests {
         assert!(derived.vsync_end > derived.vsync_start);
         assert!(derived.vtotal > derived.vsync_end);
         assert_eq!(derived.flags, 0);
+    }
+
+    #[test]
+    fn preallocated_shadow_preserves_identity_and_zeros_only_when_required() {
+        let mut shadow = ShadowFramebuffer::preallocated(32).unwrap();
+        let identity = ShadowRasterIdentity {
+            width: 4,
+            height: 4,
+            format: gud_gadget::GUD_PIXEL_FORMAT_RGB565,
+        };
+        assert_eq!(
+            shadow.activate_scaled(identity).unwrap(),
+            ShadowActivation::Zeroed
+        );
+        shadow.pixels[0..4].copy_from_slice(&[1, 2, 3, 4]);
+
+        assert_eq!(
+            shadow.activate_scaled(identity).unwrap(),
+            ShadowActivation::Preserved
+        );
+        assert_eq!(&shadow.pixels[0..4], &[1, 2, 3, 4]);
+
+        shadow.invalidate_content();
+        assert_eq!(
+            shadow.activate_scaled(identity).unwrap(),
+            ShadowActivation::Zeroed
+        );
+        assert_eq!(&shadow.pixels[0..4], &[0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn shadow_format_or_geometry_change_zeros_once_without_reallocation() {
+        let mut shadow = ShadowFramebuffer::preallocated(64).unwrap();
+        let original_ptr = shadow.pixels.as_ptr();
+        let rgb565 = ShadowRasterIdentity {
+            width: 4,
+            height: 4,
+            format: gud_gadget::GUD_PIXEL_FORMAT_RGB565,
+        };
+        shadow.activate_scaled(rgb565).unwrap();
+        shadow.pixels[0] = 0xff;
+
+        let format_change = ShadowRasterIdentity {
+            format: gud_gadget::GUD_PIXEL_FORMAT_RGB888,
+            ..rgb565
+        };
+        assert_eq!(
+            shadow.activate_scaled(format_change).unwrap(),
+            ShadowActivation::Zeroed
+        );
+        shadow.pixels[0] = 0xaa;
+
+        let geometry_change = ShadowRasterIdentity {
+            width: 2,
+            height: 2,
+            format: gud_gadget::GUD_PIXEL_FORMAT_RGB565,
+        };
+        assert_eq!(
+            shadow.activate_scaled(geometry_change).unwrap(),
+            ShadowActivation::Zeroed
+        );
+        assert_eq!(shadow.pixels[0], 0);
+        assert_eq!(shadow.pixels.as_ptr(), original_ptr);
+    }
+
+    #[test]
+    fn maximum_shadow_allocation_and_capacity_fail_before_use() {
+        assert!(ShadowFramebuffer::preallocated(usize::MAX).is_err());
+        let mut shadow = ShadowFramebuffer::preallocated(8).unwrap();
+        assert!(shadow
+            .activate_scaled(ShadowRasterIdentity {
+                width: 3,
+                height: 2,
+                format: gud_gadget::GUD_PIXEL_FORMAT_RGB565,
+            })
+            .is_err());
     }
 
     #[test]
