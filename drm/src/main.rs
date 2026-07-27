@@ -1,3 +1,4 @@
+mod modes;
 mod scanout;
 
 use anyhow::{ensure, Context};
@@ -7,6 +8,7 @@ use drm::control::{
     Device, Mode, ModeTypeFlags, PageFlipFlags,
 };
 use gud_gadget::{DisplayMode, Event, ProtocolInvalidationReason, GUD_COMPRESSION_LZ4};
+use modes::{CatalogRoute, PhysicalCatalogMode, RouteCatalog};
 use scanout::{logical_memory_estimate, MappedActive, ScanoutBackend, ScanoutManager};
 use std::env::{args, var_os};
 use std::ffi::OsStr;
@@ -475,14 +477,6 @@ fn dump_framebuffer_raw_if_enabled(dump_path: Option<&Path>, fb: &[u8]) {
             debug!("Wrote raw framebuffer dump to {}", path.display());
         }
     }
-}
-
-fn gud_flags_for_mode(mode: &Mode, preferred_mode_name: &std::ffi::CStr) -> u32 {
-    let mut flags = mode.flags().bits();
-    if mode.mode_type().contains(ModeTypeFlags::PREFERRED) || mode.name() == preferred_mode_name {
-        flags |= gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED;
-    }
-    flags
 }
 
 fn advertised_preferred_mode_index(mode_types: impl IntoIterator<Item = ModeTypeFlags>) -> usize {
@@ -1381,47 +1375,70 @@ fn main() -> anyhow::Result<()> {
     // physical mode.
     let preferred_mode_index =
         advertised_preferred_mode_index(connector_modes.iter().map(Mode::mode_type));
-    let preferred_mode_name = connector_modes[preferred_mode_index].name().to_owned();
-    let mut advertised_modes: Vec<DisplayMode> = connector_modes
+    let physical_catalog_modes: Vec<PhysicalCatalogMode<Mode>> = connector_modes
         .iter()
         .map(|mode| {
             let (hdisplay, vdisplay) = mode.size();
             let (hsync_start, hsync_end, htotal) = mode.hsync();
             let (vsync_start, vsync_end, vtotal) = mode.vsync();
-            DisplayMode {
-                clock: mode.clock(),
-                hdisplay,
-                htotal,
-                hsync_end,
-                hsync_start,
-                vtotal,
-                vdisplay,
-                vsync_end,
-                vsync_start,
-                flags: gud_flags_for_mode(mode, preferred_mode_name.as_c_str()),
+            PhysicalCatalogMode {
+                mode: *mode,
+                timing: DisplayMode {
+                    clock: mode.clock(),
+                    hdisplay,
+                    htotal,
+                    hsync_end,
+                    hsync_start,
+                    vtotal,
+                    vdisplay,
+                    vsync_end,
+                    vsync_start,
+                    flags: mode.flags().bits(),
+                },
             }
         })
         .collect();
 
-    let native_mode = advertised_modes
-        .iter()
-        .find(|candidate| candidate.flags & gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED != 0)
-        .cloned()
-        .unwrap_or_else(|| advertised_modes[0].clone());
+    let native_mode = physical_catalog_modes[preferred_mode_index].timing.clone();
 
     let portrait_modes = [
         (900_u16, 1900_u16),
         (810_u16, 1710_u16),
         (720_u16, 1520_u16),
     ];
+    let mut synthetic_modes = Vec::new();
     for (w, h) in portrait_modes {
-        if !advertised_modes
+        if !physical_catalog_modes
             .iter()
-            .any(|candidate| candidate.hdisplay == w && candidate.vdisplay == h)
+            .any(|candidate| candidate.timing.hdisplay == w && candidate.timing.vdisplay == h)
         {
-            advertised_modes.push(derive_mode_from_native(&native_mode, w, h));
+            synthetic_modes.push(derive_mode_from_native(&native_mode, w, h));
         }
     }
+    let route_catalog = RouteCatalog::build(
+        0,
+        &physical_catalog_modes,
+        preferred_mode_index,
+        &synthetic_modes,
+    )
+    .context("build complete-timing route catalog")?;
+    let advertised_modes = route_catalog.advertised_modes();
+    info!(
+        connector = route_catalog.connector(),
+        entries = route_catalog.entries().len(),
+        preferred = ?route_catalog.preferred_entry().key,
+        exact_routes = route_catalog
+            .entries()
+            .iter()
+            .filter(|entry| matches!(entry.route, CatalogRoute::Exact(_)))
+            .count(),
+        scaled_routes = route_catalog
+            .entries()
+            .iter()
+            .filter(|entry| entry.route == CatalogRoute::ScaledFallback)
+            .count(),
+        "Built normalized complete-timing route catalog"
+    );
     let logical_memory = logical_memory_estimate(
         connector_modes.iter().map(|mode| {
             let (width, height) = mode.size();
@@ -1711,9 +1728,13 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                     Event::StateChecked(snapshot) => {
+                        let catalog_route = route_catalog
+                            .entry_for_snapshot(&snapshot)
+                            .map(|entry| entry.route);
                         tracing::debug!(
                             generation = snapshot.generation,
                             mode = ?snapshot.mode,
+                            ?catalog_route,
                             "State check notification ignored while dynamic matching is disabled"
                         );
                     }
