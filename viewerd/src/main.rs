@@ -9,7 +9,10 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{ensure, Context};
-use gud_gadget::{ActiveScanoutState, DisplayMode, Event, PixelDataEndpoint, GUD_COMPRESSION_LZ4};
+use gud_gadget::{
+    ActiveScanoutState, DisplayMode, Event, PixelDataEndpoint, ProtocolInvalidationReason,
+    GUD_COMPRESSION_LZ4,
+};
 use memmap2::{MmapMut, MmapOptions};
 use nix::unistd::{chown, Gid, Uid};
 use tracing::{debug, info, warn};
@@ -33,6 +36,17 @@ const DEFAULT_NATIVE_MODE: DisplayMode = DisplayMode {
     flags: gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED,
 };
 const PORTRAIT_FALLBACKS: &[(u16, u16)] = &[(900, 1900), (810, 1710), (720, 1520)];
+
+fn record_host_activity(had_host_session: &mut bool, event: &Event<'_>) {
+    if event.is_host_activity() && !*had_host_session {
+        *had_host_session = true;
+        info!(
+            had_host_session = true,
+            event = ?event,
+            "session_activity"
+        );
+    }
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum TransferFormat {
@@ -549,9 +563,7 @@ fn main() -> anyhow::Result<()> {
 
         match gud_gadget::event(event) {
             Ok(Some(gud_event)) => {
-                if !matches!(gud_event, Event::Disconnected) {
-                    had_host_session = true;
-                }
+                record_host_activity(&mut had_host_session, &gud_event);
                 match gud_event {
                     Event::GetDescriptor(req) => {
                         req.send_descriptor(
@@ -571,8 +583,42 @@ fn main() -> anyhow::Result<()> {
                         req.send_modes(&advertised_modes)
                             .context("send advertised modes")?;
                     }
-                    Event::Disconnected => {
-                        info!("Host disconnected");
+                    Event::StateChecked(snapshot) => {
+                        debug!(
+                            generation = snapshot.generation,
+                            mode = ?snapshot.mode,
+                            "State check notification ignored by viewer"
+                        );
+                    }
+                    Event::StateCommitted(snapshot) => {
+                        debug!(
+                            generation = snapshot.generation,
+                            mode = ?snapshot.mode,
+                            "State commit notification ignored by viewer"
+                        );
+                    }
+                    Event::ProtocolStateInvalidated {
+                        generation,
+                        reason:
+                            reason @ (ProtocolInvalidationReason::InvalidStateCheck
+                            | ProtocolInvalidationReason::CommitWithoutPending
+                            | ProtocolInvalidationReason::Bind
+                            | ProtocolInvalidationReason::Enable
+                            | ProtocolInvalidationReason::Suspend
+                            | ProtocolInvalidationReason::Resume),
+                    } => {
+                        debug!(
+                            ?generation,
+                            ?reason,
+                            had_host_session,
+                            "Protocol state invalidated"
+                        );
+                    }
+                    Event::ProtocolStateInvalidated {
+                        generation,
+                        reason: ProtocolInvalidationReason::Disconnected,
+                    } => {
+                        info!(?generation, had_host_session, "Host disconnected");
                         publisher.disconnected();
                         if had_host_session {
                             return Err(anyhow::anyhow!(
@@ -630,4 +676,47 @@ fn main() -> anyhow::Result<()> {
 
     publisher.shutdown();
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{record_host_activity, DisplayMode};
+    use gud_gadget::{
+        DisplayStateSnapshot, Event, ProtocolInvalidationReason, GUD_PIXEL_FORMAT_RGB565,
+    };
+
+    fn mode() -> DisplayMode {
+        super::DEFAULT_NATIVE_MODE
+    }
+
+    #[test]
+    fn lifecycle_only_events_do_not_create_a_viewer_host_session() {
+        let mut had_host_session = false;
+        for reason in [
+            ProtocolInvalidationReason::Bind,
+            ProtocolInvalidationReason::Enable,
+            ProtocolInvalidationReason::Suspend,
+            ProtocolInvalidationReason::Resume,
+        ] {
+            record_host_activity(
+                &mut had_host_session,
+                &Event::ProtocolStateInvalidated {
+                    generation: None,
+                    reason,
+                },
+            );
+        }
+        assert!(!had_host_session);
+
+        record_host_activity(
+            &mut had_host_session,
+            &Event::StateCommitted(DisplayStateSnapshot {
+                mode: mode(),
+                format: GUD_PIXEL_FORMAT_RGB565,
+                connector: 0,
+                generation: 1,
+            }),
+        );
+        assert!(had_host_session);
+    }
 }

@@ -3,7 +3,7 @@ use drm::buffer::Buffer;
 use drm::control::{
     dumbbuffer::DumbMapping, framebuffer, ClipRect, Device, Mode, ModeTypeFlags, PageFlipFlags,
 };
-use gud_gadget::{DisplayMode, Event, GUD_COMPRESSION_LZ4};
+use gud_gadget::{DisplayMode, Event, ProtocolInvalidationReason, GUD_COMPRESSION_LZ4};
 use std::env::{args, var_os};
 use std::ffi::OsStr;
 use std::fs::{rename, File};
@@ -22,6 +22,17 @@ const CRTC_SET_RETRY_DELAY: Duration = Duration::from_millis(250);
 
 fn should_restart_after_clean_detach(restart_requested: bool, shutdown_requested: bool) -> bool {
     restart_requested && !shutdown_requested
+}
+
+fn record_host_activity(had_host_session: &mut bool, event: &Event<'_>) {
+    if event.is_host_activity() && !*had_host_session {
+        *had_host_session = true;
+        info!(
+            had_host_session = true,
+            event = ?event,
+            "session_activity"
+        );
+    }
 }
 
 const BULK_RECEIVE_DEADLINE: Duration = Duration::from_millis(1_000);
@@ -1594,9 +1605,7 @@ fn main() -> anyhow::Result<()> {
         match gud_gadget::event(event) {
             Ok(Some(gud_event)) => {
                 tracing::debug!("GUD event: {:?}", gud_event);
-                if !matches!(gud_event, Event::Disconnected) {
-                    had_host_session = true;
-                }
+                record_host_activity(&mut had_host_session, &gud_event);
                 match gud_event {
                     Event::GetDescriptor(req) => {
                         if let Err(err) = req.send_descriptor_with_max_buffer_size(
@@ -1629,8 +1638,42 @@ fn main() -> anyhow::Result<()> {
                             tracing::debug!("Sent display modes");
                         }
                     }
-                    Event::Disconnected => {
-                        tracing::info!("Host disconnected");
+                    Event::StateChecked(snapshot) => {
+                        tracing::debug!(
+                            generation = snapshot.generation,
+                            mode = ?snapshot.mode,
+                            "State check notification ignored while dynamic matching is disabled"
+                        );
+                    }
+                    Event::StateCommitted(snapshot) => {
+                        tracing::debug!(
+                            generation = snapshot.generation,
+                            mode = ?snapshot.mode,
+                            "State commit notification ignored while dynamic matching is disabled"
+                        );
+                    }
+                    Event::ProtocolStateInvalidated {
+                        generation,
+                        reason:
+                            reason @ (ProtocolInvalidationReason::InvalidStateCheck
+                            | ProtocolInvalidationReason::CommitWithoutPending
+                            | ProtocolInvalidationReason::Bind
+                            | ProtocolInvalidationReason::Enable
+                            | ProtocolInvalidationReason::Suspend
+                            | ProtocolInvalidationReason::Resume),
+                    } => {
+                        tracing::debug!(
+                            ?generation,
+                            ?reason,
+                            had_host_session,
+                            "Protocol state invalidated"
+                        );
+                    }
+                    Event::ProtocolStateInvalidated {
+                        generation,
+                        reason: ProtocolInvalidationReason::Disconnected,
+                    } => {
+                        tracing::info!(?generation, had_host_session, "Host disconnected");
                         if matches!(pattern_mode, PatternMode::Off) {
                             if let Err(err) = present_waiting_screen(
                                 &mut card,
@@ -2123,13 +2166,16 @@ mod tests {
     use super::{
         advertised_preferred_mode_index, compute_scaled_layout, derive_mode_from_native,
         parse_functionfs_read_size, parse_test_compression, parse_test_max_buffer_size,
-        parse_test_output_mode, render_waiting_screen, should_restart_after_clean_detach,
-        waiting_scene_glyph, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
-        GadgetUnbind, GadgetUnbindOutcome, ScaledLayout, TestOutputMode, RGB565_BLACK,
-        RGB565_GREEN, RGB565_WHITE,
+        parse_test_output_mode, record_host_activity, render_waiting_screen,
+        should_restart_after_clean_detach, waiting_scene_glyph, BulkReceiveSession,
+        BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome,
+        ScaledLayout, TestOutputMode, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
     };
     use drm::control::ModeTypeFlags;
-    use gud_gadget::GUD_DISPLAY_MODE_FLAG_PREFERRED;
+    use gud_gadget::{
+        DisplayStateSnapshot, Event, ProtocolInvalidationReason, GUD_DISPLAY_MODE_FLAG_PREFERRED,
+        GUD_PIXEL_FORMAT_RGB565,
+    };
     use std::ffi::OsStr;
     use std::io;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -2317,6 +2363,37 @@ mod tests {
     fn safe_detach_requests_policy_controlled_restart() {
         assert!(should_restart_after_clean_detach(true, false));
         assert!(!should_restart_after_clean_detach(false, false));
+    }
+
+    #[test]
+    fn lifecycle_only_events_do_not_create_a_host_session() {
+        let mut had_host_session = false;
+        for reason in [
+            ProtocolInvalidationReason::Bind,
+            ProtocolInvalidationReason::Enable,
+            ProtocolInvalidationReason::Suspend,
+            ProtocolInvalidationReason::Resume,
+        ] {
+            record_host_activity(
+                &mut had_host_session,
+                &Event::ProtocolStateInvalidated {
+                    generation: None,
+                    reason,
+                },
+            );
+        }
+        assert!(!had_host_session);
+
+        record_host_activity(
+            &mut had_host_session,
+            &Event::StateChecked(DisplayStateSnapshot {
+                mode: native_mode(),
+                format: GUD_PIXEL_FORMAT_RGB565,
+                connector: 0,
+                generation: 1,
+            }),
+        );
+        assert!(had_host_session);
     }
 
     #[derive(Default)]

@@ -38,7 +38,9 @@ pub const GUD_COMPRESSION_LZ4: u8 = 0x01;
 const GUD_CONNECTOR_STATUS_CONNECTED: u8 = 0x01;
 const GUD_CONNECTOR_STATUS_CHANGED: u8 = 0x80;
 
+pub const GUD_DISPLAY_FLAG_STATUS_ON_SET: u32 = 1 << 0;
 pub const GUD_DISPLAY_MODE_FLAG_PREFERRED: u32 = 1 << 10;
+pub const GUD_DISPLAY_MODE_FLAG_USER_MASK: u32 = 0x0000_33ff;
 pub const GUD_PIXEL_FORMAT_RGB565: u8 = 0x40;
 pub const GUD_PIXEL_FORMAT_RGB888: u8 = 0x50;
 pub const GUD_PIXEL_FORMAT_XRGB8888: u8 = 0x80;
@@ -232,6 +234,14 @@ struct DisplayState {
     connector: u8,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DisplayStateSnapshot {
+    pub mode: DisplayMode,
+    pub format: u8,
+    pub connector: u8,
+    pub generation: u64,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ActiveScanoutState {
     pub width: u32,
@@ -242,8 +252,9 @@ pub struct ActiveScanoutState {
 
 #[derive(Debug, Default)]
 struct ProtocolState {
-    pending_state: Option<DisplayState>,
-    committed_state: Option<DisplayState>,
+    pending_state: Option<DisplayStateSnapshot>,
+    committed_state: Option<DisplayStateSnapshot>,
+    next_generation: u64,
     controller_enabled: bool,
     display_enabled: bool,
 }
@@ -285,8 +296,48 @@ pub enum Event<'a> {
     GetDescriptor(GetDescriptor<'a>),
     GetDisplayModes(GetDisplayModes<'a>),
     GetPixelFormats(GetPixelFormats<'a>),
+    StateChecked(DisplayStateSnapshot),
+    StateCommitted(DisplayStateSnapshot),
+    ProtocolStateInvalidated {
+        generation: Option<u64>,
+        reason: ProtocolInvalidationReason,
+    },
     Buffer(SetBuffer),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ProtocolInvalidationReason {
+    InvalidStateCheck,
+    CommitWithoutPending,
+    Bind,
+    Enable,
+    Suspend,
+    Resume,
     Disconnected,
+}
+
+impl ProtocolInvalidationReason {
+    pub fn is_disconnect(self) -> bool {
+        self == Self::Disconnected
+    }
+
+    pub fn is_host_activity(self) -> bool {
+        matches!(self, Self::InvalidStateCheck | Self::CommitWithoutPending)
+    }
+}
+
+impl Event<'_> {
+    pub fn is_host_activity(&self) -> bool {
+        match self {
+            Self::GetDescriptor(_)
+            | Self::GetDisplayModes(_)
+            | Self::GetPixelFormats(_)
+            | Self::StateChecked(_)
+            | Self::StateCommitted(_)
+            | Self::Buffer(_) => true,
+            Self::ProtocolStateInvalidated { reason, .. } => reason.is_host_activity(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -441,9 +492,26 @@ fn serialize_display_modes(modes: &[DisplayMode]) -> anyhow::Result<Vec<u8>> {
     let mut buf = vec![0_u8; 24 * modes.len()];
     let mut pos = 0;
     for mode in modes {
-        pos += ssmarshal::serialize(&mut buf[pos..], mode).context("serialize mode")?;
+        let mut normalized = mode.clone();
+        normalized.flags = (mode.flags & GUD_DISPLAY_MODE_FLAG_USER_MASK)
+            | (mode.flags & GUD_DISPLAY_MODE_FLAG_PREFERRED);
+        pos += ssmarshal::serialize(&mut buf[pos..], &normalized).context("serialize mode")?;
     }
     Ok(buf)
+}
+
+fn modes_have_same_user_timing(left: &DisplayMode, right: &DisplayMode) -> bool {
+    left.clock == right.clock
+        && left.hdisplay == right.hdisplay
+        && left.hsync_start == right.hsync_start
+        && left.hsync_end == right.hsync_end
+        && left.htotal == right.htotal
+        && left.vdisplay == right.vdisplay
+        && left.vsync_start == right.vsync_start
+        && left.vsync_end == right.vsync_end
+        && left.vtotal == right.vtotal
+        && (left.flags & GUD_DISPLAY_MODE_FLAG_USER_MASK)
+            == (right.flags & GUD_DISPLAY_MODE_FLAG_USER_MASK)
 }
 
 fn reset_connector_status_changed() {
@@ -467,25 +535,31 @@ fn reset_status() {
     CLEAR_STATUS_ON_NEXT_SUCCESS.store(false, Ordering::SeqCst);
 }
 
-fn reset_protocol_state() {
+fn reset_protocol_state() -> Option<u64> {
     let mut state = protocol_state()
         .lock()
         .expect("protocol state lock poisoned");
-    state.pending_state = None;
+    let invalidated_generation = state
+        .pending_state
+        .take()
+        .map(|snapshot| snapshot.generation);
     state.committed_state = None;
     state.controller_enabled = false;
     state.display_enabled = false;
+    invalidated_generation
 }
 
-fn handle_suspend_transition() {
-    reset_protocol_state();
+fn handle_suspend_transition() -> Option<u64> {
+    let invalidated_generation = reset_protocol_state();
     reset_status();
+    invalidated_generation
 }
 
-fn handle_resume_transition() {
+fn handle_resume_transition() -> Option<u64> {
     reset_connector_status_changed();
-    reset_protocol_state();
+    let invalidated_generation = reset_protocol_state();
     reset_status();
+    invalidated_generation
 }
 
 fn latch_status(status: u8) {
@@ -568,7 +642,10 @@ fn validate_state_check_payload(payload: &[u8]) -> anyhow::Result<DisplayState> 
         header.format
     );
     ensure!(
-        validation.modes.contains(&header.mode),
+        validation
+            .modes
+            .iter()
+            .any(|mode| modes_have_same_user_timing(mode, &header.mode)),
         "unsupported mode {}x{}",
         header.mode.hdisplay,
         header.mode.vdisplay
@@ -581,18 +658,33 @@ fn validate_state_check_payload(payload: &[u8]) -> anyhow::Result<DisplayState> 
     })
 }
 
-fn store_pending_state(state: DisplayState) {
+fn store_pending_state(state: DisplayState) -> anyhow::Result<DisplayStateSnapshot> {
     let mut protocol = protocol_state()
         .lock()
         .expect("protocol state lock poisoned");
-    protocol.pending_state = Some(state);
+    let generation = protocol
+        .next_generation
+        .checked_add(1)
+        .context("pending-state generation exhausted")?;
+    protocol.next_generation = generation;
+    let snapshot = DisplayStateSnapshot {
+        mode: state.mode,
+        format: state.format,
+        connector: state.connector,
+        generation,
+    };
+    protocol.pending_state = Some(snapshot.clone());
+    Ok(snapshot)
 }
 
-fn clear_pending_state() {
+fn clear_pending_state() -> Option<u64> {
     let mut protocol = protocol_state()
         .lock()
         .expect("protocol state lock poisoned");
-    protocol.pending_state = None;
+    protocol
+        .pending_state
+        .take()
+        .map(|snapshot| snapshot.generation)
 }
 
 fn update_controller_enabled(enable: bool) {
@@ -636,7 +728,7 @@ fn parse_enable_request(payload: &[u8], request_name: &str) -> anyhow::Result<bo
     }
 }
 
-fn commit_pending_state() -> anyhow::Result<()> {
+fn commit_pending_state() -> anyhow::Result<DisplayStateSnapshot> {
     let mut protocol = protocol_state()
         .lock()
         .expect("protocol state lock poisoned");
@@ -644,8 +736,8 @@ fn commit_pending_state() -> anyhow::Result<()> {
         .pending_state
         .take()
         .context("no checked state available to commit")?;
-    protocol.committed_state = Some(pending);
-    Ok(())
+    protocol.committed_state = Some(pending.clone());
+    Ok(pending)
 }
 
 pub fn active_scanout_state() -> Option<ActiveScanoutState> {
@@ -750,14 +842,22 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
         custom::Event::Enable => {
             reset_connector_status_changed();
             reset_status();
-            reset_protocol_state();
+            let generation = reset_protocol_state();
             debug!("Enable event received");
+            return Ok(Some(Event::ProtocolStateInvalidated {
+                generation,
+                reason: ProtocolInvalidationReason::Enable,
+            }));
         }
         custom::Event::Bind => {
             reset_connector_status_changed();
             reset_status();
-            reset_protocol_state();
+            let generation = reset_protocol_state();
             debug!("Bind event received");
+            return Ok(Some(Event::ProtocolStateInvalidated {
+                generation,
+                reason: ProtocolInvalidationReason::Bind,
+            }));
         }
         custom::Event::SetupDeviceToHost(req) => {
             let ctrl_req = req.ctrl_req();
@@ -828,15 +928,33 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 GUD_REQ_SET_STATE_CHECK => {
                     let payload = req.recv_all().context("recv set state check")?;
                     match validate_state_check_payload(payload.as_slice()) {
-                        Ok(state) => {
-                            store_pending_state(state);
-                            debug!("received valid state check");
-                            mark_success();
-                        }
+                        Ok(state) => match store_pending_state(state) {
+                            Ok(snapshot) => {
+                                debug!(
+                                    generation = snapshot.generation,
+                                    "received valid state check"
+                                );
+                                mark_success();
+                                return Ok(Some(Event::StateChecked(snapshot)));
+                            }
+                            Err(err) => {
+                                let generation = clear_pending_state();
+                                latch_status(GUD_STATUS_INVALID_PARAMETER);
+                                warn!("rejected state check: {}", err);
+                                return Ok(Some(Event::ProtocolStateInvalidated {
+                                    generation,
+                                    reason: ProtocolInvalidationReason::InvalidStateCheck,
+                                }));
+                            }
+                        },
                         Err(err) => {
-                            clear_pending_state();
+                            let generation = clear_pending_state();
                             latch_status(GUD_STATUS_INVALID_PARAMETER);
                             warn!("rejected state check: {}", err);
+                            return Ok(Some(Event::ProtocolStateInvalidated {
+                                generation,
+                                reason: ProtocolInvalidationReason::InvalidStateCheck,
+                            }));
                         }
                     }
                 }
@@ -876,13 +994,18 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 GUD_REQ_SET_STATE_COMMIT => {
                     req.recv_all().context("recv set state commit")?;
                     match commit_pending_state() {
-                        Ok(()) => {
-                            debug!("committed checked state");
+                        Ok(snapshot) => {
+                            debug!(generation = snapshot.generation, "committed checked state");
                             mark_success();
+                            return Ok(Some(Event::StateCommitted(snapshot)));
                         }
                         Err(err) => {
                             latch_status(GUD_STATUS_INVALID_PARAMETER);
                             warn!("rejected state commit: {}", err);
+                            return Ok(Some(Event::ProtocolStateInvalidated {
+                                generation: None,
+                                reason: ProtocolInvalidationReason::CommitWithoutPending,
+                            }));
                         }
                     }
                 }
@@ -910,17 +1033,28 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
             }
         }
         custom::Event::Suspend => {
-            handle_suspend_transition();
+            let generation = handle_suspend_transition();
             debug!("Suspend event received");
+            return Ok(Some(Event::ProtocolStateInvalidated {
+                generation,
+                reason: ProtocolInvalidationReason::Suspend,
+            }));
         }
         custom::Event::Resume => {
-            handle_resume_transition();
+            let generation = handle_resume_transition();
             debug!("Resume event received");
+            return Ok(Some(Event::ProtocolStateInvalidated {
+                generation,
+                reason: ProtocolInvalidationReason::Resume,
+            }));
         }
         custom::Event::Disable => {
-            handle_suspend_transition();
+            let generation = handle_suspend_transition();
             debug!("Disable event received");
-            return Ok(Some(Event::Disconnected));
+            return Ok(Some(Event::ProtocolStateInvalidated {
+                generation,
+                reason: ProtocolInvalidationReason::Disconnected,
+            }));
         }
         other_event => {
             warn!("unhandled event {:?}", other_event);
@@ -1314,21 +1448,22 @@ impl PixelDataEndpoint {
 #[cfg(test)]
 mod tests {
     use super::{
-        active_scanout_state, build_display_descriptor, commit_pending_state,
+        active_scanout_state, build_display_descriptor, clear_pending_state, commit_pending_state,
         configure_state_check_validation, current_status, handle_resume_transition,
-        handle_suspend_transition, latch_status, mark_success, next_connector_status,
-        parse_enable_request, read_functionfs_payload, reset_connector_status_changed,
-        reset_protocol_state, reset_status, serialize_connector_descriptors,
-        serialize_display_descriptor, serialize_display_modes, store_pending_state,
-        update_controller_enabled, update_display_enabled, usb_packet_estimate,
-        validate_buffer_request, validate_functionfs_read_size, validate_state_check_payload,
-        ActiveScanoutState, ConnectorDescriptor, DisplayMode, DisplayState, PixelDataEndpoint,
-        SetBuffer, DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE, FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE,
-        GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
-        GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_MAGIC, GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK,
-        GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        handle_suspend_transition, latch_status, mark_success, modes_have_same_user_timing,
+        next_connector_status, parse_enable_request, read_functionfs_payload,
+        reset_connector_status_changed, reset_protocol_state, reset_status,
+        serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
+        store_pending_state, update_controller_enabled, update_display_enabled,
+        usb_packet_estimate, validate_buffer_request, validate_functionfs_read_size,
+        validate_state_check_payload, ActiveScanoutState, ConnectorDescriptor, DisplayMode,
+        DisplayState, PixelDataEndpoint, SetBuffer, DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE, GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED,
+        GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET,
+        GUD_DISPLAY_MAGIC, GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK,
+        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
-    use crate::{event, Event};
+    use crate::{event, Event, ProtocolInvalidationReason};
     use bytes::BytesMut;
     use serde::Serialize;
     use std::io::{self, Cursor, Read};
@@ -1432,6 +1567,7 @@ mod tests {
             build_display_descriptor(640, 480, 1080, 2280, GUD_COMPRESSION_LZ4, None).unwrap();
 
         assert_eq!(descriptor.flags, 0);
+        assert_eq!(descriptor.flags & GUD_DISPLAY_FLAG_STATUS_ON_SET, 0);
         assert_eq!(descriptor.compression, GUD_COMPRESSION_LZ4);
     }
 
@@ -1514,6 +1650,20 @@ mod tests {
         assert_eq!(&buf[0..4], &174_359_u32.to_le_bytes());
         assert_eq!(&buf[4..6], &1080_u16.to_le_bytes());
         assert_eq!(&buf[12..14], &2280_u16.to_le_bytes());
+    }
+
+    #[test]
+    fn serialize_display_mode_masks_private_flags_and_preserves_preferred_metadata() {
+        let mut mode = sample_mode();
+        mode.flags = GUD_DISPLAY_MODE_FLAG_USER_MASK | GUD_DISPLAY_MODE_FLAG_PREFERRED | (1 << 31);
+
+        let buf = serialize_display_modes(&[mode]).unwrap();
+        let serialized_flags = u32::from_le_bytes(buf[20..24].try_into().unwrap());
+
+        assert_eq!(
+            serialized_flags,
+            GUD_DISPLAY_MODE_FLAG_USER_MASK | GUD_DISPLAY_MODE_FLAG_PREFERRED
+        );
     }
 
     #[test]
@@ -1772,6 +1922,29 @@ mod tests {
     }
 
     #[test]
+    fn validate_state_check_uses_normalized_full_timing_membership() {
+        let mut advertised = sample_mode();
+        advertised.flags =
+            GUD_DISPLAY_MODE_FLAG_PREFERRED | GUD_DISPLAY_MODE_FLAG_USER_MASK | (1 << 31);
+        configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[advertised.clone()]);
+        reset_protocol_state();
+
+        let mut echoed = advertised.clone();
+        echoed.flags = GUD_DISPLAY_MODE_FLAG_USER_MASK | (1 << 30);
+        let payload = serialize_state_check_request(echoed, GUD_PIXEL_FORMAT_RGB565, 0);
+        validate_state_check_payload(&payload).unwrap();
+
+        let mut different_timing = advertised;
+        different_timing.clock += 1;
+        assert!(!modes_have_same_user_timing(
+            &sample_mode(),
+            &different_timing
+        ));
+        let payload = serialize_state_check_request(different_timing, GUD_PIXEL_FORMAT_RGB565, 0);
+        assert!(validate_state_check_payload(&payload).is_err());
+    }
+
+    #[test]
     fn validate_state_check_rejects_unknown_format() {
         let mode = sample_mode();
         configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
@@ -1818,13 +1991,118 @@ mod tests {
     }
 
     #[test]
+    fn state_generations_are_monotonic_across_replacement_and_resets() {
+        reset_protocol_state();
+        let first = store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        })
+        .unwrap();
+        let replacement = store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        })
+        .unwrap();
+        assert!(replacement.generation > first.generation);
+
+        assert_eq!(clear_pending_state(), Some(replacement.generation));
+        let after_invalid_check = store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        })
+        .unwrap();
+        assert!(after_invalid_check.generation > replacement.generation);
+
+        assert_eq!(
+            handle_suspend_transition(),
+            Some(after_invalid_check.generation)
+        );
+        let after_suspend = store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        })
+        .unwrap();
+        assert!(after_suspend.generation > after_invalid_check.generation);
+
+        assert_eq!(handle_resume_transition(), Some(after_suspend.generation));
+        let after_resume = store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        })
+        .unwrap();
+        assert!(after_resume.generation > after_suspend.generation);
+    }
+
+    #[test]
+    fn successful_check_commit_promotes_the_same_generation() {
+        reset_protocol_state();
+        let checked = store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        })
+        .unwrap();
+
+        let committed = commit_pending_state().unwrap();
+
+        assert_eq!(committed, checked);
+        assert_eq!(clear_pending_state(), None);
+
+        let repeated = store_pending_state(DisplayState {
+            mode: sample_mode(),
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+        })
+        .unwrap();
+        assert!(repeated.generation > committed.generation);
+        assert_eq!(commit_pending_state().unwrap(), repeated);
+    }
+
+    #[test]
+    fn every_lifecycle_reset_reports_the_invalidated_generation() {
+        for (custom_event, reason) in [
+            (custom::Event::Bind, ProtocolInvalidationReason::Bind),
+            (custom::Event::Enable, ProtocolInvalidationReason::Enable),
+            (custom::Event::Suspend, ProtocolInvalidationReason::Suspend),
+            (custom::Event::Resume, ProtocolInvalidationReason::Resume),
+            (
+                custom::Event::Disable,
+                ProtocolInvalidationReason::Disconnected,
+            ),
+        ] {
+            let pending = store_pending_state(DisplayState {
+                mode: sample_mode(),
+                format: GUD_PIXEL_FORMAT_RGB565,
+                connector: 0,
+            })
+            .unwrap();
+
+            let lifecycle_event = event(custom_event).unwrap().unwrap();
+
+            assert!(matches!(
+                lifecycle_event,
+                Event::ProtocolStateInvalidated {
+                    generation: Some(generation),
+                    reason: actual_reason,
+                } if generation == pending.generation && actual_reason == reason
+            ));
+        }
+    }
+
+    #[test]
     fn active_scanout_state_reports_committed_mode() {
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
             format: GUD_PIXEL_FORMAT_RGB565,
             connector: 0,
-        });
+        })
+        .unwrap();
         commit_pending_state().unwrap();
 
         assert_eq!(
@@ -1845,7 +2123,8 @@ mod tests {
             mode: sample_mode(),
             format: GUD_PIXEL_FORMAT_RGB565,
             connector: 0,
-        });
+        })
+        .unwrap();
         commit_pending_state().unwrap();
         update_controller_enabled(true);
         update_display_enabled(true).unwrap();
@@ -1870,7 +2149,8 @@ mod tests {
             mode: sample_mode(),
             format: GUD_PIXEL_FORMAT_RGB565,
             connector: 0,
-        });
+        })
+        .unwrap();
         commit_pending_state().unwrap();
         update_controller_enabled(true);
         update_display_enabled(true).unwrap();
@@ -1913,7 +2193,8 @@ mod tests {
             mode: sample_mode(),
             format: GUD_PIXEL_FORMAT_RGB565,
             connector: 0,
-        });
+        })
+        .unwrap();
         commit_pending_state().unwrap();
         update_controller_enabled(true);
         update_display_enabled(true).unwrap();
@@ -1939,7 +2220,8 @@ mod tests {
             mode: sample_mode(),
             format: GUD_PIXEL_FORMAT_RGB565,
             connector: 0,
-        });
+        })
+        .unwrap();
         commit_pending_state().unwrap();
         update_controller_enabled(true);
         update_display_enabled(true).unwrap();
@@ -1965,7 +2247,8 @@ mod tests {
             mode: sample_mode(),
             format: GUD_PIXEL_FORMAT_RGB565,
             connector: 0,
-        });
+        })
+        .unwrap();
         commit_pending_state().unwrap();
         update_controller_enabled(true);
         update_display_enabled(true).unwrap();
@@ -1991,7 +2274,8 @@ mod tests {
             mode: sample_mode(),
             format: GUD_PIXEL_FORMAT_RGB565,
             connector: 0,
-        });
+        })
+        .unwrap();
         commit_pending_state().unwrap();
         update_controller_enabled(true);
         update_display_enabled(true).unwrap();
@@ -2029,7 +2313,8 @@ mod tests {
             mode: sample_mode(),
             format: GUD_PIXEL_FORMAT_RGB565,
             connector: 0,
-        });
+        })
+        .unwrap();
         commit_pending_state().unwrap();
         update_controller_enabled(true);
         update_display_enabled(true).unwrap();
@@ -2056,7 +2341,8 @@ mod tests {
             mode: sample_mode(),
             format: GUD_PIXEL_FORMAT_RGB565,
             connector: 0,
-        });
+        })
+        .unwrap();
         commit_pending_state().unwrap();
         update_controller_enabled(true);
 
@@ -2089,7 +2375,8 @@ mod tests {
             mode: sample_mode(),
             format: GUD_PIXEL_FORMAT_RGB565,
             connector: 0,
-        });
+        })
+        .unwrap();
         commit_pending_state().unwrap();
 
         handle_suspend_transition();
@@ -2126,6 +2413,40 @@ mod tests {
     #[test]
     fn disable_event_maps_to_disconnected() {
         let event = event(custom::Event::Disable).unwrap();
-        assert!(matches!(event, Some(Event::Disconnected)));
+        assert!(matches!(
+            event,
+            Some(Event::ProtocolStateInvalidated {
+                reason: ProtocolInvalidationReason::Disconnected,
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn lifecycle_invalidations_do_not_count_as_host_activity() {
+        for reason in [
+            ProtocolInvalidationReason::Bind,
+            ProtocolInvalidationReason::Enable,
+            ProtocolInvalidationReason::Suspend,
+            ProtocolInvalidationReason::Resume,
+            ProtocolInvalidationReason::Disconnected,
+        ] {
+            let event = Event::ProtocolStateInvalidated {
+                generation: None,
+                reason,
+            };
+            assert!(!event.is_host_activity(), "{reason:?}");
+        }
+
+        for reason in [
+            ProtocolInvalidationReason::InvalidStateCheck,
+            ProtocolInvalidationReason::CommitWithoutPending,
+        ] {
+            let event = Event::ProtocolStateInvalidated {
+                generation: None,
+                reason,
+            };
+            assert!(event.is_host_activity(), "{reason:?}");
+        }
     }
 }
