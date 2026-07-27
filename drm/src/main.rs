@@ -1143,6 +1143,20 @@ fn parse_test_max_buffer_size(raw: Option<&OsStr>) -> anyhow::Result<Option<u32>
     Ok(Some(max_buffer_size))
 }
 
+fn parse_test_dynamic_mode_match(raw: Option<&OsStr>) -> anyhow::Result<bool> {
+    let Some(raw) = raw else {
+        return Ok(false);
+    };
+    let raw = raw
+        .to_str()
+        .context("GUD_TEST_DYNAMIC_MODE_MATCH must be valid UTF-8")?;
+    ensure!(
+        raw == "1",
+        "invalid GUD_TEST_DYNAMIC_MODE_MATCH={raw:?}; expected exactly \"1\""
+    );
+    Ok(true)
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct TestOutputMode {
     width: u16,
@@ -1195,6 +1209,17 @@ fn select_output_mode(
         })
 }
 
+fn validate_test_mode_policy(
+    dynamic_mode_match: bool,
+    test_output_mode: Option<TestOutputMode>,
+) -> anyhow::Result<()> {
+    ensure!(
+        !(dynamic_mode_match && test_output_mode.is_some()),
+        "GUD_TEST_DYNAMIC_MODE_MATCH and GUD_TEST_OUTPUT_MODE are mutually exclusive"
+    );
+    Ok(())
+}
+
 fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(fmt::layer())
@@ -1211,10 +1236,13 @@ fn main() -> anyhow::Result<()> {
     let test_compression_raw = var_os("GUD_TEST_COMPRESSION");
     let test_max_buffer_size_raw = var_os("GUD_TEST_MAX_BUFFER_SIZE");
     let test_output_mode_raw = var_os("GUD_TEST_OUTPUT_MODE");
+    let test_dynamic_mode_match_raw = var_os("GUD_TEST_DYNAMIC_MODE_MATCH");
     let descriptor_compression = parse_test_compression(test_compression_raw.as_deref())?;
     let descriptor_max_buffer_size =
         parse_test_max_buffer_size(test_max_buffer_size_raw.as_deref())?;
     let test_output_mode = parse_test_output_mode(test_output_mode_raw.as_deref())?;
+    let dynamic_mode_match = parse_test_dynamic_mode_match(test_dynamic_mode_match_raw.as_deref())?;
+    validate_test_mode_policy(dynamic_mode_match, test_output_mode)?;
     let (mut gud_data, gud_data_ep) =
         gud_gadget::PixelDataEndpoint::new_with_read_size(functionfs_read_size)
             .context("configure FunctionFS bulk OUT read size")?;
@@ -1256,6 +1284,12 @@ fn main() -> anyhow::Result<()> {
             height = output_mode.height,
             "TEST-ONLY physical DRM output-mode override enabled; normal mode selection is unchanged \
              when GUD_TEST_OUTPUT_MODE is absent"
+        );
+    }
+    if dynamic_mode_match {
+        warn!(
+            "TEST-ONLY dynamic physical-mode matching enabled; this is not normal/default \
+             behavior and requires the XDISP-P2.1 hardware gates before promotion"
         );
     }
     info!("Opening DRM device: {}", card_path);
@@ -1321,6 +1355,26 @@ fn main() -> anyhow::Result<()> {
     min_height = min_height.min(480);
     max_width = max_width.max(1920);
     max_height = max_height.max(1080);
+    let serialized_max_buffer_size = descriptor_max_buffer_size.unwrap_or(
+        max_width
+            .checked_mul(max_height)
+            .and_then(|pixels| pixels.checked_mul(4))
+            .context("serialized descriptor maximum buffer size overflow")?,
+    );
+    info!(
+        event = "descriptor_config",
+        magic = "0x1d50614d",
+        version = 1,
+        flags = 0,
+        compression = descriptor_compression,
+        max_buffer_size = serialized_max_buffer_size,
+        min_width,
+        max_width,
+        min_height,
+        max_height,
+        dynamic_mode_match,
+        "Serialized GUD display descriptor fields"
+    );
 
     usb_gadget::remove_all().expect("UDC init failed");
     info!("USB gadgets removed");
@@ -1466,8 +1520,9 @@ fn main() -> anyhow::Result<()> {
         width = mode.size().0,
         height = mode.size().1,
         test_override = test_output_mode.is_some(),
+        dynamic_mode_match,
         ?mode,
-        "Picked physical DRM output mode"
+        "Picked deterministic physical DRM startup/fallback mode"
     );
 
     let mut backend = DrmScanoutBackend {
@@ -2255,11 +2310,12 @@ fn main() -> anyhow::Result<()> {
 mod tests {
     use super::{
         advertised_preferred_mode_index, compute_scaled_layout, derive_mode_from_native,
-        parse_functionfs_read_size, parse_test_compression, parse_test_max_buffer_size,
-        parse_test_output_mode, record_host_activity, render_waiting_screen,
-        should_restart_after_clean_detach, waiting_scene_glyph, BulkReceiveSession,
-        BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome,
-        ScaledLayout, TestOutputMode, RGB565_BLACK, RGB565_GREEN, RGB565_WHITE,
+        parse_functionfs_read_size, parse_test_compression, parse_test_dynamic_mode_match,
+        parse_test_max_buffer_size, parse_test_output_mode, record_host_activity,
+        render_waiting_screen, should_restart_after_clean_detach, validate_test_mode_policy,
+        waiting_scene_glyph, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
+        GadgetUnbind, GadgetUnbindOutcome, ScaledLayout, TestOutputMode, RGB565_BLACK,
+        RGB565_GREEN, RGB565_WHITE,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
@@ -2306,6 +2362,18 @@ mod tests {
     }
 
     #[test]
+    fn dynamic_mode_match_parser_accepts_exact_test_value_only() {
+        assert!(!parse_test_dynamic_mode_match(None).unwrap());
+        assert!(parse_test_dynamic_mode_match(Some(OsStr::new("1"))).unwrap());
+        for value in ["", "0", "true", "yes", "01", "1\n"] {
+            assert!(
+                parse_test_dynamic_mode_match(Some(OsStr::new(value))).is_err(),
+                "unexpectedly accepted {value:?}"
+            );
+        }
+    }
+
+    #[test]
     fn test_output_mode_parser_preserves_default_and_accepts_exact_dimensions() {
         assert_eq!(parse_test_output_mode(None).unwrap(), None);
         assert_eq!(
@@ -2325,6 +2393,28 @@ mod tests {
                 "unexpectedly accepted {value:?}"
             );
         }
+    }
+
+    #[test]
+    fn dynamic_and_fixed_output_test_policies_are_mutually_exclusive() {
+        assert!(validate_test_mode_policy(false, None).is_ok());
+        assert!(validate_test_mode_policy(
+            false,
+            Some(TestOutputMode {
+                width: 1280,
+                height: 720,
+            })
+        )
+        .is_ok());
+        assert!(validate_test_mode_policy(true, None).is_ok());
+        assert!(validate_test_mode_policy(
+            true,
+            Some(TestOutputMode {
+                width: 1280,
+                height: 720,
+            })
+        )
+        .is_err());
     }
 
     #[test]
