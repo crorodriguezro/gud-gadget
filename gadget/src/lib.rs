@@ -1016,7 +1016,22 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                         ssmarshal::deserialize(req.as_slice()).context("deserialize set buffer")?;
                     match validate_buffer_request(&v) {
                         Ok(()) => {
-                            debug!("validated set buffer: {:?}", v);
+                            let expected_bulk_bytes = if v.compression > 0 {
+                                v.compressed_length
+                            } else {
+                                v.length
+                            };
+                            debug!(
+                                x = v.x,
+                                y = v.y,
+                                width = v.width,
+                                height = v.height,
+                                length = v.length,
+                                compressed_length = v.compressed_length,
+                                compression = v.compression,
+                                expected_bulk_bytes,
+                                "received and validated GUD SET_BUFFER; awaiting bulk OUT"
+                            );
                             mark_success();
                             return Ok(Some(Event::Buffer(v)));
                         }
@@ -1240,6 +1255,12 @@ impl PixelDataEndpoint {
         } else {
             let bulk_ep = self.bulk_endpoint()?;
             let mut bulk_reader = bulk_ep.as_ref();
+            debug!(
+                payload_seq,
+                payload_len = len,
+                read_size = self.read_size,
+                "FunctionFS bulk OUT endpoint is armed for blocking read"
+            );
             read_functionfs_payload(
                 &mut bulk_reader,
                 &mut self.buf,
