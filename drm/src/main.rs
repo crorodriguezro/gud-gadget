@@ -326,9 +326,16 @@ impl ScanoutBackend for DrmScanoutBackend {
     }
 
     fn create_buffer(&mut self, width: u32, height: u32) -> anyhow::Result<Self::Buffer> {
+        let format = TransferFormat::from_env();
+        let fourcc = match format {
+            TransferFormat::Rgb565 => drm::buffer::DrmFourcc::Rgb565,
+            TransferFormat::Rgb888 => drm::buffer::DrmFourcc::Rgb888,
+            TransferFormat::Xrgb8888 => drm::buffer::DrmFourcc::Xrgb8888,
+        };
+        let bpp = format.bytes_per_pixel() * 8;
         self.card
-            .create_dumb_buffer((width, height), drm::buffer::DrmFourcc::Rgb565, 16)
-            .context("create RGB565 dumb buffer")
+            .create_dumb_buffer((width, height), fourcc, bpp)
+            .context("create dumb buffer")
     }
 
     fn buffer_pitch(&self, buffer: &Self::Buffer) -> u32 {
@@ -336,9 +343,10 @@ impl ScanoutBackend for DrmScanoutBackend {
     }
 
     fn add_framebuffer(&mut self, buffer: &Self::Buffer) -> anyhow::Result<Self::Framebuffer> {
+        let bpp = TransferFormat::from_env().bytes_per_pixel() * 8;
         self.card
-            .add_framebuffer(buffer, 16, 16)
-            .context("add RGB565 framebuffer")
+            .add_framebuffer(buffer, bpp, bpp)
+            .context("add DRM framebuffer")
     }
 
     fn map_buffer<'a>(
@@ -616,6 +624,7 @@ impl PatternMode {
 enum TransferFormat {
     Rgb565,
     Rgb888,
+    Xrgb8888,
 }
 
 impl TransferFormat {
@@ -627,6 +636,7 @@ impl TransferFormat {
         match raw.to_string_lossy().trim().to_ascii_lowercase().as_str() {
             "rgb565" => Self::Rgb565,
             "rgb888" => Self::Rgb888,
+            "xrgb8888" => Self::Xrgb8888,
             other => {
                 warn!("Unknown GUD_TRANSFER_FORMAT={other:?}, defaulting to rgb565");
                 Self::Rgb565
@@ -638,6 +648,7 @@ impl TransferFormat {
         match self {
             Self::Rgb565 => gud_gadget::GUD_PIXEL_FORMAT_RGB565,
             Self::Rgb888 => gud_gadget::GUD_PIXEL_FORMAT_RGB888,
+            Self::Xrgb8888 => gud_gadget::GUD_PIXEL_FORMAT_XRGB8888,
         }
     }
 
@@ -645,6 +656,7 @@ impl TransferFormat {
         match self {
             Self::Rgb565 => 2,
             Self::Rgb888 => 3,
+            Self::Xrgb8888 => 4,
         }
     }
 }
@@ -968,45 +980,6 @@ fn fill_diagnostic_pattern_rect(
     Ok(())
 }
 
-fn rgb888_to_rgb565(r: u8, g: u8, b: u8) -> u16 {
-    (((r as u16) & 0xf8) << 8) | (((g as u16) & 0xfc) << 3) | ((b as u16) >> 3)
-}
-
-fn copy_rgb888_to_rgb565_framebuffer(
-    info: &gud_gadget::SetBuffer,
-    buf: &[u8],
-    fb: &mut [u8],
-    fb_pitch: usize,
-) -> anyhow::Result<()> {
-    let width = info.width as usize;
-    let height = info.height as usize;
-    let expected_len = width * height * 3;
-    ensure!(
-        buf.len() >= expected_len,
-        "RGB888 payload too short: got {} bytes, expected at least {}",
-        buf.len(),
-        expected_len
-    );
-
-    let line_start = info.x as usize * 2;
-    let mut buf_pos = 0usize;
-    for y in info.y as usize..(info.y + info.height) as usize {
-        let fb_row = y * fb_pitch + line_start;
-        for x in 0..width {
-            let r = buf[buf_pos];
-            let g = buf[buf_pos + 1];
-            let b = buf[buf_pos + 2];
-            let pixel = rgb888_to_rgb565(r, g, b).to_le_bytes();
-            let dst = fb_row + x * 2;
-            fb[dst] = pixel[0];
-            fb[dst + 1] = pixel[1];
-            buf_pos += 3;
-        }
-    }
-
-    Ok(())
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct ScaledLayout {
     dst_x: usize,
@@ -1061,8 +1034,9 @@ impl ShadowFramebuffer {
         &mut self,
         identity: ShadowRasterIdentity,
     ) -> anyhow::Result<ShadowActivation> {
+        let bpp = gud_gadget::bytes_per_pixel(identity.format)?;
         let pitch = (identity.width as usize)
-            .checked_mul(2)
+            .checked_mul(bpp)
             .context("source shadow pitch overflow")?;
         let len = pitch
             .checked_mul(identity.height as usize)
@@ -1927,13 +1901,15 @@ fn main() -> anyhow::Result<()> {
         advertised_modes
             .iter()
             .map(|mode| (mode.hdisplay.into(), mode.vdisplay.into())),
+        transfer_format.bytes_per_pixel(),
     )
     .context("calculate catalog-derived logical memory estimate")?;
     info!(
         logical_scanout_estimate_bytes = logical_memory.scanout_bytes,
         max_shadow_bytes = logical_memory.max_shadow_bytes,
         logical_peak_estimate_bytes = logical_memory.peak_bytes,
-        "Catalog-derived RGB565 memory estimate; actual DRM pitch/mapping lengths are recorded \
+        transfer_format = ?transfer_format,
+        "Catalog-derived memory estimate; actual DRM pitch/mapping lengths are recorded \
          per allocation"
     );
     let mut shadow = if dynamic_mode_match {
@@ -3060,17 +3036,32 @@ fn main() -> anyhow::Result<()> {
                                             }
                                             Err(err) => Err(err),
                                         },
-                                        TransferFormat::Rgb888 => {
-                                            let copy_start = std::time::Instant::now();
-                                            let result = copy_rgb888_to_rgb565_framebuffer(
-                                                &info,
-                                                payload,
-                                                shadow.pixels.as_mut_slice(),
-                                                shadow.pitch,
-                                            );
-                                            copy_ms = copy_start.elapsed().as_millis();
-                                            result
-                                        }
+                                        TransferFormat::Rgb888 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
+                                            &info,
+                                            payload,
+                                            shadow.pixels.as_mut_slice(),
+                                            shadow.pitch,
+                                            3,
+                                        ) {
+                                            Ok(stats) => {
+                                                copy_ms = stats.copy_ms;
+                                                Ok(())
+                                            }
+                                            Err(err) => Err(err),
+                                        },
+                                        TransferFormat::Xrgb8888 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
+                                            &info,
+                                            payload,
+                                            shadow.pixels.as_mut_slice(),
+                                            shadow.pitch,
+                                            4,
+                                        ) {
+                                            Ok(stats) => {
+                                                copy_ms = stats.copy_ms;
+                                                Ok(())
+                                            }
+                                            Err(err) => Err(err),
+                                        },
                                     };
                                     match copy_result {
                                         Ok(()) => {}
@@ -3120,17 +3111,32 @@ fn main() -> anyhow::Result<()> {
                                             }
                                             Err(err) => Err(err),
                                         },
-                                        TransferFormat::Rgb888 => {
-                                            let copy_start = std::time::Instant::now();
-                                            let result = copy_rgb888_to_rgb565_framebuffer(
-                                                &info,
-                                                payload,
-                                                active.front_buffer_mut(),
-                                                physical_pitch as usize,
-                                            );
-                                            copy_ms = copy_start.elapsed().as_millis();
-                                            result
-                                        }
+                                        TransferFormat::Rgb888 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
+                                            &info,
+                                            payload,
+                                            active.front_buffer_mut(),
+                                            physical_pitch as usize,
+                                            3,
+                                        ) {
+                                            Ok(stats) => {
+                                                copy_ms = stats.copy_ms;
+                                                Ok(())
+                                            }
+                                            Err(err) => Err(err),
+                                        },
+                                        TransferFormat::Xrgb8888 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
+                                            &info,
+                                            payload,
+                                            active.front_buffer_mut(),
+                                            physical_pitch as usize,
+                                            4,
+                                        ) {
+                                            Ok(stats) => {
+                                                copy_ms = stats.copy_ms;
+                                                Ok(())
+                                            }
+                                            Err(err) => Err(err),
+                                        },
                                     };
                                     match copy_result {
                                         Ok(()) => true,

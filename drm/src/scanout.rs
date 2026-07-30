@@ -10,7 +10,6 @@ use crate::modes::ModeKey;
 
 pub(crate) const SCANOUT_SLOT_COUNT: usize = 3;
 pub(crate) const BUFFERS_PER_SCANOUT: usize = 2;
-const RGB565_BYTES_PER_PIXEL: usize = 2;
 
 pub(crate) type ScanoutSlot<B> = Option<Box<ScanoutAllocation<B>>>;
 
@@ -111,17 +110,18 @@ pub(crate) struct LogicalMemoryEstimate {
 pub(crate) fn logical_memory_estimate(
     physical_sizes: impl IntoIterator<Item = (u32, u32)>,
     advertised_sizes: impl IntoIterator<Item = (u32, u32)>,
+    bytes_per_pixel: usize,
 ) -> anyhow::Result<LogicalMemoryEstimate> {
     let largest_physical = physical_sizes
         .into_iter()
-        .map(|(width, height)| checked_rgb565_bytes(width, height))
+        .map(|(width, height)| checked_bytes(width, height, bytes_per_pixel))
         .collect::<anyhow::Result<Vec<_>>>()?
         .into_iter()
         .max()
         .context("physical mode catalog is empty")?;
     let max_shadow_bytes = advertised_sizes
         .into_iter()
-        .map(|(width, height)| checked_rgb565_bytes(width, height))
+        .map(|(width, height)| checked_bytes(width, height, bytes_per_pixel))
         .collect::<anyhow::Result<Vec<_>>>()?
         .into_iter()
         .max()
@@ -140,11 +140,11 @@ pub(crate) fn logical_memory_estimate(
     })
 }
 
-fn checked_rgb565_bytes(width: u32, height: u32) -> anyhow::Result<usize> {
+fn checked_bytes(width: u32, height: u32, bytes_per_pixel: usize) -> anyhow::Result<usize> {
     (width as usize)
         .checked_mul(height as usize)
-        .and_then(|pixels| pixels.checked_mul(RGB565_BYTES_PER_PIXEL))
-        .context("RGB565 mode byte calculation overflow")
+        .and_then(|pixels| pixels.checked_mul(bytes_per_pixel))
+        .context("mode byte calculation overflow")
 }
 
 fn checked_add_live_bytes(current: usize, addition: usize) -> anyhow::Result<usize> {
@@ -1559,7 +1559,7 @@ mod tests {
     #[test]
     fn logical_estimates_cover_1080p_4k_and_overflow() {
         let estimate =
-            logical_memory_estimate([(1920, 1080), (1280, 720)], [(1920, 1080), (3840, 2160)])
+            logical_memory_estimate([(1920, 1080), (1280, 720)], [(1920, 1080), (3840, 2160)], 2)
                 .unwrap();
 
         assert_eq!(estimate.max_shadow_bytes, 3840 * 2160 * 2);
@@ -1568,9 +1568,9 @@ mod tests {
             estimate.peak_bytes,
             estimate.scanout_bytes + estimate.max_shadow_bytes
         );
-        assert!(logical_memory_estimate([(u32::MAX, u32::MAX)], [(1, 1)]).is_err());
-        assert!(logical_memory_estimate([], [(1, 1)]).is_err());
-        assert!(logical_memory_estimate([(1, 1)], []).is_err());
+        assert!(logical_memory_estimate([(u32::MAX, u32::MAX)], [(1, 1)], 2).is_err());
+        assert!(logical_memory_estimate([], [(1, 1)], 2).is_err());
+        assert!(logical_memory_estimate([(1, 1)], [], 2).is_err());
     }
 
     #[test]

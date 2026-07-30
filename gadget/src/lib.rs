@@ -594,7 +594,7 @@ pub fn configure_state_check_validation(
     validation.modes = modes.to_vec();
 }
 
-fn bytes_per_pixel(format: u8) -> anyhow::Result<usize> {
+pub fn bytes_per_pixel(format: u8) -> anyhow::Result<usize> {
     match format {
         GUD_PIXEL_FORMAT_RGB565 => Ok(2),
         GUD_PIXEL_FORMAT_RGB888 => Ok(3),
