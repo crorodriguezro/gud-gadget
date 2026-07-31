@@ -348,7 +348,7 @@ impl ScanoutBackend for DrmScanoutBackend {
     ) -> anyhow::Result<Self::Mapping<'a>> {
         self.card
             .map_dumb_buffer(buffer)
-            .context("map RGB565 dumb buffer")
+            .context("map DRM scanout buffer")
     }
 
     fn remove_framebuffer(&mut self, framebuffer: Self::Framebuffer) -> anyhow::Result<()> {
@@ -401,10 +401,18 @@ fn dump_pixel_buffer_ppm(
     pitch: usize,
     width: u32,
     height: u32,
-    bpp: usize,
+    format: TransferFormat,
 ) -> anyhow::Result<()> {
     let width = width as usize;
     let height = height as usize;
+    validate_raster(
+        fb,
+        pitch,
+        width,
+        height,
+        format.bytes_per_pixel(),
+        "framebuffer dump",
+    )?;
     let file_name = path
         .file_name()
         .and_then(|name| name.to_str())
@@ -414,25 +422,9 @@ fn dump_pixel_buffer_ppm(
     write!(writer, "P6\n{} {}\n255\n", width, height)?;
 
     for y in 0..height {
-        let row = &fb[(y * pitch)..(y * pitch + width * bpp)];
         for x in 0..width {
-            let offset = x * bpp;
-            let rgb = match bpp {
-                2 => {
-                    let pixel = u16::from_le_bytes([row[offset], row[offset + 1]]);
-                    let red = ((pixel >> 11) & 0x1f) as u8;
-                    let green = ((pixel >> 5) & 0x3f) as u8;
-                    let blue = (pixel & 0x1f) as u8;
-                    [
-                        (red << 3) | (red >> 2),
-                        (green << 2) | (green >> 4),
-                        (blue << 3) | (blue >> 2),
-                    ]
-                }
-                4 => [row[offset + 2], row[offset + 1], row[offset]],
-                _ => anyhow::bail!("unsupported bytes-per-pixel for dump: {}", bpp),
-            };
-            writer.write_all(&rgb)?;
+            let color = read_pixel(fb, pitch, x, y, format)?;
+            writer.write_all(&[color.r, color.g, color.b])?;
         }
     }
 
@@ -459,10 +451,10 @@ fn dump_framebuffer_if_enabled(
     pitch: usize,
     width: u32,
     height: u32,
-    bpp: usize,
+    format: TransferFormat,
 ) {
     if let Some(path) = dump_path {
-        if let Err(err) = dump_pixel_buffer_ppm(path, fb, pitch, width, height, bpp) {
+        if let Err(err) = dump_pixel_buffer_ppm(path, fb, pitch, width, height, format) {
             warn!("Failed to dump framebuffer to {}: {}", path.display(), err);
         } else {
             debug!("Wrote framebuffer dump to {}", path.display());
@@ -556,17 +548,8 @@ fn derive_mode_from_native(
     }
 }
 
-const RGB565_BLUE: u16 = 0x001f;
 const RGB565_GREEN: u16 = 0x07e0;
-const RGB565_CYAN: u16 = 0x07ff;
-const RGB565_RED: u16 = 0xf800;
-const RGB565_MAGENTA: u16 = 0xf81f;
-const RGB565_YELLOW: u16 = 0xffe0;
 const RGB565_WHITE: u16 = 0xffff;
-const RGB565_DARK_GRAY: u16 = 0x4208;
-const RGB565_LIGHT_GRAY: u16 = 0xc618;
-const RGB565_ORANGE: u16 = 0xfd20;
-const RGB565_BLACK: u16 = 0x0000;
 
 const WAITING_SCREEN_LINES: [&str; 5] = [
     "   _~_        .------------.",
@@ -621,19 +604,25 @@ enum TransferFormat {
 }
 
 impl TransferFormat {
-    fn from_env() -> Self {
-        let Some(raw) = var_os("GUD_TRANSFER_FORMAT") else {
-            return Self::Rgb565;
+    fn from_env() -> anyhow::Result<Self> {
+        Self::from_env_value(var_os("GUD_TRANSFER_FORMAT").as_deref())
+    }
+
+    fn from_env_value(raw: Option<&OsStr>) -> anyhow::Result<Self> {
+        let Some(raw) = raw else {
+            return Ok(Self::Rgb565);
         };
 
-        match raw.to_string_lossy().trim().to_ascii_lowercase().as_str() {
-            "rgb565" => Self::Rgb565,
-            "rgb888" => Self::Rgb888,
-            "xrgb8888" => Self::Xrgb8888,
-            other => {
-                warn!("Unknown GUD_TRANSFER_FORMAT={other:?}, defaulting to rgb565");
-                Self::Rgb565
-            }
+        let raw = raw
+            .to_str()
+            .context("GUD_TRANSFER_FORMAT must be valid UTF-8")?;
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "rgb565" => Ok(Self::Rgb565),
+            "rgb888" => Ok(Self::Rgb888),
+            "xrgb8888" => Ok(Self::Xrgb8888),
+            _ => anyhow::bail!(
+                "invalid GUD_TRANSFER_FORMAT={raw:?}; supported values: rgb565, rgb888, xrgb8888"
+            ),
         }
     }
 
@@ -676,6 +665,172 @@ impl TransferFormat {
             Self::Xrgb8888 => 4,
         }
     }
+
+    fn drm_fourcc_name(self) -> &'static str {
+        match self {
+            Self::Rgb565 => "Rgb565",
+            Self::Rgb888 => "Rgb888",
+            Self::Xrgb8888 => "Xrgb8888",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct RgbColor {
+    r: u8,
+    g: u8,
+    b: u8,
+}
+
+const COLOR_BLACK: RgbColor = RgbColor { r: 0, g: 0, b: 0 };
+const COLOR_BLUE: RgbColor = RgbColor { r: 0, g: 0, b: 255 };
+const COLOR_GREEN: RgbColor = RgbColor { r: 0, g: 255, b: 0 };
+const COLOR_CYAN: RgbColor = RgbColor {
+    r: 0,
+    g: 255,
+    b: 255,
+};
+const COLOR_RED: RgbColor = RgbColor { r: 255, g: 0, b: 0 };
+const COLOR_MAGENTA: RgbColor = RgbColor {
+    r: 255,
+    g: 0,
+    b: 255,
+};
+const COLOR_YELLOW: RgbColor = RgbColor {
+    r: 255,
+    g: 255,
+    b: 0,
+};
+const COLOR_WHITE: RgbColor = RgbColor {
+    r: 255,
+    g: 255,
+    b: 255,
+};
+const COLOR_DARK_GRAY: RgbColor = RgbColor {
+    r: 66,
+    g: 65,
+    b: 66,
+};
+const COLOR_LIGHT_GRAY: RgbColor = RgbColor {
+    r: 198,
+    g: 195,
+    b: 198,
+};
+const COLOR_ORANGE: RgbColor = RgbColor {
+    r: 255,
+    g: 166,
+    b: 0,
+};
+
+fn pixel_offset(fb: &[u8], pitch: usize, x: usize, y: usize, bpp: usize) -> anyhow::Result<usize> {
+    ensure!(bpp > 0, "bytes per pixel must be greater than zero");
+    let offset = y
+        .checked_mul(pitch)
+        .and_then(|offset| {
+            x.checked_mul(bpp)
+                .and_then(|x_offset| offset.checked_add(x_offset))
+        })
+        .context("pixel offset overflow")?;
+    let end = offset
+        .checked_add(bpp)
+        .context("pixel end offset overflow")?;
+    ensure!(
+        end <= fb.len(),
+        "pixel ({x}, {y}) exceeds buffer length {}",
+        fb.len()
+    );
+    Ok(offset)
+}
+
+fn write_pixel(
+    fb: &mut [u8],
+    pitch: usize,
+    x: usize,
+    y: usize,
+    format: TransferFormat,
+    color: RgbColor,
+) -> anyhow::Result<()> {
+    let bpp = format.bytes_per_pixel();
+    let offset = pixel_offset(fb, pitch, x, y, bpp)?;
+    match format {
+        TransferFormat::Rgb565 => {
+            let pixel = ((color.r as u16 >> 3) << 11)
+                | ((color.g as u16 >> 2) << 5)
+                | (color.b as u16 >> 3);
+            fb[offset..offset + 2].copy_from_slice(&pixel.to_le_bytes());
+        }
+        // DRM_FORMAT_RGB888 is [23:0] R:G:B, so little-endian memory is B, G, R.
+        TransferFormat::Rgb888 => {
+            fb[offset..offset + 3].copy_from_slice(&[color.b, color.g, color.r])
+        }
+        // DRM_FORMAT_XRGB8888 is [31:0] x:R:G:B, so little-endian memory is B, G, R, x.
+        TransferFormat::Xrgb8888 => {
+            fb[offset..offset + 4].copy_from_slice(&[color.b, color.g, color.r, 0]);
+        }
+    }
+    Ok(())
+}
+
+fn read_pixel(
+    fb: &[u8],
+    pitch: usize,
+    x: usize,
+    y: usize,
+    format: TransferFormat,
+) -> anyhow::Result<RgbColor> {
+    let offset = pixel_offset(fb, pitch, x, y, format.bytes_per_pixel())?;
+    Ok(match format {
+        TransferFormat::Rgb565 => {
+            let pixel = u16::from_le_bytes([fb[offset], fb[offset + 1]]);
+            let red = ((pixel >> 11) & 0x1f) as u8;
+            let green = ((pixel >> 5) & 0x3f) as u8;
+            let blue = (pixel & 0x1f) as u8;
+            RgbColor {
+                r: (red << 3) | (red >> 2),
+                g: (green << 2) | (green >> 4),
+                b: (blue << 3) | (blue >> 2),
+            }
+        }
+        TransferFormat::Rgb888 => RgbColor {
+            r: fb[offset + 2],
+            g: fb[offset + 1],
+            b: fb[offset],
+        },
+        TransferFormat::Xrgb8888 => RgbColor {
+            r: fb[offset + 2],
+            g: fb[offset + 1],
+            b: fb[offset],
+        },
+    })
+}
+
+fn validate_raster(
+    pixels: &[u8],
+    pitch: usize,
+    width: usize,
+    height: usize,
+    bpp: usize,
+    name: &str,
+) -> anyhow::Result<()> {
+    ensure!(width > 0, "{name} width must be greater than zero");
+    ensure!(height > 0, "{name} height must be greater than zero");
+    ensure!(bpp > 0, "{name} bytes per pixel must be greater than zero");
+    let minimum_pitch = width
+        .checked_mul(bpp)
+        .context("{name} minimum pitch overflow")?;
+    ensure!(
+        pitch >= minimum_pitch,
+        "{name} pitch {pitch} is smaller than required {minimum_pitch}"
+    );
+    let required_len = pitch
+        .checked_mul(height)
+        .context("{name} required length overflow")?;
+    ensure!(
+        pixels.len() >= required_len,
+        "{name} is too short: got {} bytes, need at least {required_len}",
+        pixels.len()
+    );
+    Ok(())
 }
 
 fn write_rgb565_pixel(fb: &mut [u8], pitch: usize, x: usize, y: usize, color: u16) {
@@ -685,18 +840,28 @@ fn write_rgb565_pixel(fb: &mut [u8], pitch: usize, x: usize, y: usize, color: u1
     fb[offset + 1] = hi;
 }
 
-fn fill_solid(fb: &mut [u8], pitch: usize, width: usize, height: usize, bpp: usize, color: u32) {
-    let mut pixel = [0u8; 4];
-    for i in 0..bpp {
-        pixel[i] = ((color >> (8 * i)) & 0xff) as u8;
-    }
+fn fill_solid(
+    fb: &mut [u8],
+    pitch: usize,
+    width: usize,
+    height: usize,
+    format: TransferFormat,
+    color: RgbColor,
+) -> anyhow::Result<()> {
+    validate_raster(
+        fb,
+        pitch,
+        width,
+        height,
+        format.bytes_per_pixel(),
+        "solid fill",
+    )?;
     for y in 0..height {
-        let row_start = y * pitch;
         for x in 0..width {
-            let offset = row_start + x * bpp;
-            fb[offset..offset + bpp].copy_from_slice(&pixel[..bpp]);
+            write_pixel(fb, pitch, x, y, format, color)?;
         }
     }
+    Ok(())
 }
 
 fn fill_rgb565_rect(
@@ -797,14 +962,13 @@ fn render_waiting_screen(
 ) -> anyhow::Result<()> {
     let width = width as usize;
     let height = height as usize;
-    let bpp = format.bytes_per_pixel();
 
     if format != TransferFormat::Rgb565 {
-        fill_solid(fb, pitch, width, height, bpp, 0);
+        fill_solid(fb, pitch, width, height, format, COLOR_BLACK)?;
         return Ok(());
     }
 
-    fill_solid(fb, pitch, width, height, bpp, RGB565_BLACK as u32);
+    fill_solid(fb, pitch, width, height, format, COLOR_BLACK)?;
 
     let line_count = WAITING_SCREEN_LINES.len();
     let max_cols = WAITING_SCREEN_LINES
@@ -888,7 +1052,7 @@ fn present_waiting_screen<B: ScanoutBackend>(
         pitch,
         width,
         height,
-        format.bytes_per_pixel(),
+        format,
     );
     dump_framebuffer_raw_if_enabled(dump_raw_path, active.front_buffer_mut());
 
@@ -906,7 +1070,7 @@ fn udc_is_detached(udc: &Udc) -> bool {
     }
 }
 
-fn diagnostic_pattern_color(x: usize, y: usize, width: usize, height: usize) -> u16 {
+fn diagnostic_pattern_color(x: usize, y: usize, width: usize, height: usize) -> RgbColor {
     const BORDER: usize = 48;
     const CORNER: usize = 128;
     const CENTER_THICKNESS: usize = 24;
@@ -914,50 +1078,51 @@ fn diagnostic_pattern_color(x: usize, y: usize, width: usize, height: usize) -> 
     const GRID_Y_STEP: usize = 240;
     const GRID_THICKNESS: usize = 4;
 
-    let mut color = RGB565_DARK_GRAY;
+    let mut color = COLOR_DARK_GRAY;
 
     if y < BORDER {
-        color = RGB565_RED;
+        color = COLOR_RED;
     }
     if x >= width.saturating_sub(BORDER) {
-        color = RGB565_YELLOW;
+        color = COLOR_YELLOW;
     }
     if y >= height.saturating_sub(BORDER) {
-        color = RGB565_GREEN;
+        color = COLOR_GREEN;
     }
     if x < BORDER {
-        color = RGB565_BLUE;
+        color = COLOR_BLUE;
     }
 
     if x < CORNER && y < CORNER {
-        color = RGB565_WHITE;
+        color = COLOR_WHITE;
     }
     if x >= width.saturating_sub(CORNER) && y < CORNER {
-        color = RGB565_CYAN;
+        color = COLOR_CYAN;
     }
     if x < CORNER && y >= height.saturating_sub(CORNER) {
-        color = RGB565_MAGENTA;
+        color = COLOR_MAGENTA;
     }
     if x >= width.saturating_sub(CORNER) && y >= height.saturating_sub(CORNER) {
-        color = RGB565_ORANGE;
+        color = COLOR_ORANGE;
     }
 
     let center_x = width / 2;
     let center_y = height / 2;
     if x >= center_x.saturating_sub(CENTER_THICKNESS / 2) && x < center_x + (CENTER_THICKNESS / 2) {
-        color = RGB565_WHITE;
+        color = COLOR_WHITE;
     }
     if y >= center_y.saturating_sub(CENTER_THICKNESS / 2) && y < center_y + (CENTER_THICKNESS / 2) {
-        color = RGB565_MAGENTA;
+        color = COLOR_MAGENTA;
     }
 
     if x % GRID_X_STEP < GRID_THICKNESS || y % GRID_Y_STEP < GRID_THICKNESS {
-        color = RGB565_LIGHT_GRAY;
+        color = COLOR_LIGHT_GRAY;
     }
 
     color
 }
 
+#[allow(clippy::too_many_arguments)] // Rectangle geometry and destination raster are intentionally explicit.
 fn fill_diagnostic_pattern_rect(
     fb: &mut [u8],
     pitch: usize,
@@ -982,14 +1147,20 @@ fn fill_diagnostic_pattern_rect(
         fb_height
     );
     ensure!(
-        rect_x + rect_width <= fb_width,
+        rect_x
+            .checked_add(rect_width)
+            .context("diagnostic rectangle x extent overflow")?
+            <= fb_width,
         "rect width {} at x {} exceeds fb width {}",
         rect_width,
         rect_x,
         fb_width
     );
     ensure!(
-        rect_y + rect_height <= fb_height,
+        rect_y
+            .checked_add(rect_height)
+            .context("diagnostic rectangle y extent overflow")?
+            <= fb_height,
         "rect height {} at y {} exceeds fb height {}",
         rect_height,
         rect_y,
@@ -1003,22 +1174,19 @@ fn fill_diagnostic_pattern_rect(
     let rect_width = rect_width as usize;
     let rect_height = rect_height as usize;
 
-    if format != TransferFormat::Rgb565 {
-        fill_solid(
-            fb,
-            pitch,
-            fb_width,
-            fb_height,
-            format.bytes_per_pixel(),
-            0,
-        );
-        return Ok(());
-    }
+    validate_raster(
+        fb,
+        pitch,
+        fb_width,
+        fb_height,
+        format.bytes_per_pixel(),
+        "diagnostic framebuffer",
+    )?;
 
     for y in rect_y..(rect_y + rect_height) {
         for x in rect_x..(rect_x + rect_width) {
             let color = diagnostic_pattern_color(x, y, fb_width, fb_height);
-            write_rgb565_pixel(fb, pitch, x, y, color);
+            write_pixel(fb, pitch, x, y, format, color)?;
         }
     }
 
@@ -1066,7 +1234,7 @@ impl ShadowFramebuffer {
         let mut pixels = Vec::new();
         pixels
             .try_reserve_exact(max_capacity)
-            .context("allocate maximum RGB565 source shadow")?;
+            .context("allocate maximum source shadow")?;
         pixels.resize(max_capacity, 0);
         Ok(Self {
             pixels,
@@ -1156,6 +1324,7 @@ fn compute_scaled_layout(
     })
 }
 
+#[allow(clippy::too_many_arguments)] // Source and destination raster metadata must be independently validated.
 fn scale_to_fit(
     src: &[u8],
     src_pitch: usize,
@@ -1171,7 +1340,30 @@ fn scale_to_fit(
     let layout = compute_scaled_layout(src_width, src_height, dst_width, dst_height)?;
 
     let bpp = format.bytes_per_pixel();
-    fill_solid(dst, dst_pitch, dst_width as usize, dst_height as usize, bpp, 0);
+    validate_raster(
+        src,
+        src_pitch,
+        src_width as usize,
+        src_height as usize,
+        bpp,
+        "scale source",
+    )?;
+    validate_raster(
+        dst,
+        dst_pitch,
+        dst_width as usize,
+        dst_height as usize,
+        bpp,
+        "scale destination",
+    )?;
+    fill_solid(
+        dst,
+        dst_pitch,
+        dst_width as usize,
+        dst_height as usize,
+        format,
+        COLOR_BLACK,
+    )?;
 
     let src_width = src_width as usize;
     let src_height = src_height as usize;
@@ -1336,6 +1528,7 @@ fn release_dynamic_candidate_in_available_slots<B: ScanoutBackend>(
     }
 }
 
+#[allow(dead_code, clippy::too_many_arguments)] // Active/candidate slots must remain explicit for borrow safety.
 fn prepare_dynamic_check_in_available_slots<B: ScanoutBackend>(
     backend: &mut B,
     runtime: &mut ScanoutRuntime<'_, B>,
@@ -1532,6 +1725,25 @@ where
     Ok(())
 }
 
+fn invalidate_dynamic_pending_in_available_slots<B: ScanoutBackend>(
+    backend: &mut B,
+    runtime: &mut ScanoutRuntime<'_, B>,
+    primary_index: usize,
+    primary: &mut ScanoutSlot<B>,
+    mut secondary: Option<(usize, &mut ScanoutSlot<B>)>,
+) -> anyhow::Result<()> {
+    release_dynamic_candidate_in_available_slots(
+        backend,
+        runtime,
+        primary_index,
+        primary,
+        &mut secondary,
+    )?;
+    runtime.dynamic_routes_mut()?.invalidate_pending();
+    Ok(())
+}
+
+#[allow(dead_code)]
 fn prepare_dynamic_check<B: ScanoutBackend>(
     backend: &mut B,
     runtime: &mut ScanoutRuntime<'_, B>,
@@ -1556,24 +1768,7 @@ where
     )
 }
 
-fn invalidate_dynamic_pending_in_available_slots<B: ScanoutBackend>(
-    backend: &mut B,
-    runtime: &mut ScanoutRuntime<'_, B>,
-    primary_index: usize,
-    primary: &mut ScanoutSlot<B>,
-    mut secondary: Option<(usize, &mut ScanoutSlot<B>)>,
-) -> anyhow::Result<()> {
-    release_dynamic_candidate_in_available_slots(
-        backend,
-        runtime,
-        primary_index,
-        primary,
-        &mut secondary,
-    )?;
-    runtime.dynamic_routes_mut()?.invalidate_pending();
-    Ok(())
-}
-
+#[allow(dead_code)]
 fn invalidate_dynamic_pending_off_baseline<B: ScanoutBackend>(
     backend: &mut B,
     runtime: &mut ScanoutRuntime<'_, B>,
@@ -1675,8 +1870,7 @@ fn main() -> anyhow::Result<()> {
     info!("gud-drm starting (XDISP-P0.1 lifecycle and read-size repair)");
 
     let card_path = args()
-        .skip(1)
-        .next()
+        .nth(1)
         .expect("specify full path to /dev/dri/cardN as program argument");
     let functionfs_read_size = parse_functionfs_read_size(var_os("GUD_FFS_READ_SIZE").as_deref())?;
     let test_compression_raw = var_os("GUD_TEST_COMPRESSION");
@@ -1695,7 +1889,7 @@ fn main() -> anyhow::Result<()> {
     let dump_path = var_os("GUD_DUMP_FB_PATH").map(PathBuf::from);
     let dump_raw_path = var_os("GUD_DUMP_FB_RAW_PATH").map(PathBuf::from);
     let pattern_mode = PatternMode::from_env();
-    let transfer_format = TransferFormat::from_env();
+    let transfer_format = TransferFormat::from_env()?;
     if let Some(path) = dump_path.as_deref() {
         info!("Framebuffer dumps enabled: {}", path.display());
     }
@@ -1704,9 +1898,13 @@ fn main() -> anyhow::Result<()> {
     }
     info!("Pattern mode: {:?}", pattern_mode);
     info!(
-        "Transfer format: {:?} ({} bytes/pixel)",
-        transfer_format,
-        transfer_format.bytes_per_pixel()
+        transfer_format = ?transfer_format,
+        gud_format = format_args!("{:#04x}", transfer_format.gud_pixel_format()),
+        drm_fourcc = transfer_format.drm_fourcc_name(),
+        depth = transfer_format.depth(),
+        bpp = transfer_format.bpp(),
+        bytes_per_pixel = transfer_format.bytes_per_pixel(),
+        "Selected transfer format"
     );
     info!(
         "FunctionFS bulk OUT read ceiling: {} bytes; conservative receive safety deadline: {} ms",
@@ -1963,7 +2161,7 @@ fn main() -> anyhow::Result<()> {
             .context("preallocate dynamic-mode fallback shadow before UDC bind")?;
         info!(
             max_shadow_bytes = logical_memory.max_shadow_bytes,
-            "Preallocated maximum RGB565 fallback shadow before UDC bind"
+            "Preallocated maximum source shadow before UDC bind"
         );
         shadow
     } else {
@@ -2097,7 +2295,7 @@ fn main() -> anyhow::Result<()> {
         pitch as usize,
         width,
         height,
-        transfer_format.bytes_per_pixel(),
+        transfer_format,
     );
     dump_framebuffer_raw_if_enabled(dump_raw_path.as_deref(), active.front_buffer_mut());
 
@@ -3074,37 +3272,37 @@ fn main() -> anyhow::Result<()> {
                                         );
                                         continue;
                                     }
-                                  let copy_result = gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
+                                    let copy_result = gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
                                       &info,
                                       payload,
                                       shadow.pixels.as_mut_slice(),
                                       shadow.pitch,
                                       transfer_format.bytes_per_pixel(),
                                   );
-                                  match copy_result {
-                                      Ok(stats) => {
-                                          copy_ms = stats.copy_ms;
-                                      }
-                                      Err(err) => {
-                                          tracing::error!(
-                                              "Failed to copy buffer to shadow framebuffer: {}",
-                                              err
-                                          );
-                                          continue;
-                                      }
-                                  }
+                                    match copy_result {
+                                        Ok(stats) => {
+                                            copy_ms = stats.copy_ms;
+                                        }
+                                        Err(err) => {
+                                            tracing::error!(
+                                                "Failed to copy buffer to shadow framebuffer: {}",
+                                                err
+                                            );
+                                            continue;
+                                        }
+                                    }
 
-                                  match scale_to_fit(
-                                      shadow.pixels.as_slice(),
-                                      shadow.pitch,
-                                      source_width,
-                                      source_height,
-                                      active.back_buffer_mut(),
-                                      physical_pitch as usize,
-                                      physical_width,
-                                      physical_height,
-                                      transfer_format,
-                                  ) {
+                                    match scale_to_fit(
+                                        shadow.pixels.as_slice(),
+                                        shadow.pitch,
+                                        source_width,
+                                        source_height,
+                                        active.back_buffer_mut(),
+                                        physical_pitch as usize,
+                                        physical_width,
+                                        physical_height,
+                                        transfer_format,
+                                    ) {
                                         Ok((_layout, elapsed_ms)) => {
                                             scale_ms = elapsed_ms;
                                             true
@@ -3135,7 +3333,7 @@ fn main() -> anyhow::Result<()> {
                                                 "Failed to copy buffer to framebuffer: {}",
                                                 err
                                             );
-                                            continue
+                                            continue;
                                         }
                                     }
                                 }
@@ -3286,7 +3484,7 @@ fn main() -> anyhow::Result<()> {
                             physical_pitch as usize,
                             physical_width,
                             physical_height,
-                            transfer_format.bytes_per_pixel(),
+                            transfer_format,
                         );
                         dump_framebuffer_raw_if_enabled(
                             dump_raw_path.as_deref(),
@@ -3426,21 +3624,26 @@ fn main() -> anyhow::Result<()> {
 mod tests {
     use super::{
         advertised_preferred_mode_index, compute_scaled_layout, derive_mode_from_native,
+        diagnostic_pattern_color, dump_pixel_buffer_ppm, fill_diagnostic_pattern_rect,
         parse_functionfs_read_size, parse_test_compression, parse_test_dynamic_mode_match,
-        parse_test_max_buffer_size, parse_test_output_mode, record_host_activity,
-        render_waiting_screen, should_restart_after_clean_detach, validate_test_mode_policy,
-        waiting_scene_glyph, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
-        GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind, ScaledLayout,
-        ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, TestOutputMode, RGB565_BLACK,
-        RGB565_GREEN, RGB565_WHITE, TransferFormat,
+        parse_test_max_buffer_size, parse_test_output_mode, read_pixel, record_host_activity,
+        render_waiting_screen, scale_to_fit, should_restart_after_clean_detach,
+        validate_test_mode_policy, waiting_scene_glyph, write_pixel, BulkReceiveSession,
+        BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey,
+        PendingPlan, PendingPlanKind, ScaledLayout, ShadowActivation, ShadowFramebuffer,
+        ShadowRasterIdentity, TestOutputMode, TransferFormat, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN,
+        COLOR_DARK_GRAY, COLOR_GREEN, COLOR_LIGHT_GRAY, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE,
+        COLOR_YELLOW, RGB565_GREEN, RGB565_WHITE,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
-        DisplayStateSnapshot, Event, ProtocolInvalidationReason, GUD_DISPLAY_MODE_FLAG_PREFERRED,
-        GUD_PIXEL_FORMAT_RGB565,
+        DisplayStateSnapshot, Event, ProtocolInvalidationReason, SetBuffer,
+        GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_PIXEL_FORMAT_RGB565,
     };
     use std::ffi::OsStr;
+    use std::fs;
     use std::io;
+    use std::path::PathBuf;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::{Arc, Barrier};
     use std::time::Duration;
@@ -3456,6 +3659,138 @@ mod tests {
             16_384
         );
         assert!(parse_functionfs_read_size(Some(OsStr::new("not-a-size"))).is_err());
+    }
+
+    #[test]
+    fn transfer_format_parser_defaults_and_fails_closed() {
+        assert_eq!(
+            TransferFormat::from_env_value(None).unwrap(),
+            TransferFormat::Rgb565
+        );
+        assert_eq!(
+            TransferFormat::from_env_value(Some(OsStr::new("rgb565"))).unwrap(),
+            TransferFormat::Rgb565
+        );
+        assert_eq!(
+            TransferFormat::from_env_value(Some(OsStr::new("rgb888"))).unwrap(),
+            TransferFormat::Rgb888
+        );
+        assert_eq!(
+            TransferFormat::from_env_value(Some(OsStr::new("xrgb8888"))).unwrap(),
+            TransferFormat::Xrgb8888
+        );
+        let err = TransferFormat::from_env_value(Some(OsStr::new("bgr565"))).unwrap_err();
+        assert!(err.to_string().contains("bgr565"));
+        assert!(err.to_string().contains("rgb565, rgb888, xrgb8888"));
+    }
+
+    #[test]
+    fn transfer_format_metadata_matches_drm_and_gud() {
+        assert_eq!(
+            (
+                TransferFormat::Rgb565.gud_pixel_format(),
+                TransferFormat::Rgb565.drm_fourcc(),
+                TransferFormat::Rgb565.depth(),
+                TransferFormat::Rgb565.bpp(),
+                TransferFormat::Rgb565.bytes_per_pixel(),
+            ),
+            (
+                gud_gadget::GUD_PIXEL_FORMAT_RGB565,
+                drm::buffer::DrmFourcc::Rgb565,
+                16,
+                16,
+                2,
+            )
+        );
+        assert_eq!(
+            (
+                TransferFormat::Rgb888.gud_pixel_format(),
+                TransferFormat::Rgb888.drm_fourcc(),
+                TransferFormat::Rgb888.depth(),
+                TransferFormat::Rgb888.bpp(),
+                TransferFormat::Rgb888.bytes_per_pixel(),
+            ),
+            (
+                gud_gadget::GUD_PIXEL_FORMAT_RGB888,
+                drm::buffer::DrmFourcc::Rgb888,
+                24,
+                24,
+                3,
+            )
+        );
+        assert_eq!(
+            (
+                TransferFormat::Xrgb8888.gud_pixel_format(),
+                TransferFormat::Xrgb8888.drm_fourcc(),
+                TransferFormat::Xrgb8888.depth(),
+                TransferFormat::Xrgb8888.bpp(),
+                TransferFormat::Xrgb8888.bytes_per_pixel(),
+            ),
+            (
+                gud_gadget::GUD_PIXEL_FORMAT_XRGB8888,
+                drm::buffer::DrmFourcc::Xrgb8888,
+                24,
+                32,
+                4,
+            )
+        );
+    }
+
+    #[test]
+    fn pixel_encoding_has_expected_little_endian_drm_layout() {
+        let colors = [
+            (COLOR_BLACK, [0, 0, 0, 0]),
+            (COLOR_WHITE, [255, 255, 255, 0]),
+            (COLOR_RED, [0, 0, 255, 0]),
+            (COLOR_GREEN, [0, 255, 0, 0]),
+            (COLOR_BLUE, [255, 0, 0, 0]),
+            (COLOR_CYAN, [255, 255, 0, 0]),
+            (COLOR_MAGENTA, [255, 0, 255, 0]),
+            (COLOR_YELLOW, [0, 255, 255, 0]),
+        ];
+
+        for (color, xrgb_bytes) in colors {
+            for format in [
+                TransferFormat::Rgb565,
+                TransferFormat::Rgb888,
+                TransferFormat::Xrgb8888,
+            ] {
+                let mut fb = vec![0; format.bytes_per_pixel()];
+                let pitch = fb.len();
+                write_pixel(&mut fb, pitch, 0, 0, format, color).unwrap();
+                match format {
+                    TransferFormat::Rgb565 => {
+                        let expected = ((color.r as u16 >> 3) << 11)
+                            | ((color.g as u16 >> 2) << 5)
+                            | (color.b as u16 >> 3);
+                        assert_eq!(fb, expected.to_le_bytes());
+                    }
+                    TransferFormat::Rgb888 => assert_eq!(&fb, &xrgb_bytes[..3]),
+                    TransferFormat::Xrgb8888 => assert_eq!(&fb, &xrgb_bytes),
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn ppm_dump_decodes_all_supported_formats_in_logical_rgb_order() {
+        let path = PathBuf::from(format!("/tmp/gud-drm-ppm-{}.ppm", std::process::id()));
+        for format in [
+            TransferFormat::Rgb565,
+            TransferFormat::Rgb888,
+            TransferFormat::Xrgb8888,
+        ] {
+            let bpp = format.bytes_per_pixel();
+            let mut fb = vec![0; 2 * bpp];
+            write_pixel(&mut fb, 2 * bpp, 0, 0, format, COLOR_RED).unwrap();
+            write_pixel(&mut fb, 2 * bpp, 1, 0, format, COLOR_CYAN).unwrap();
+            dump_pixel_buffer_ppm(&path, &fb, 2 * bpp, 2, 1, format).unwrap();
+            let ppm = fs::read(&path).unwrap();
+            assert_eq!(&ppm[..11], b"P6\n2 1\n255\n");
+            assert_eq!(&ppm[11..14], &[255, 0, 0]);
+            assert_eq!(&ppm[14..17], &[0, 255, 255]);
+        }
+        fs::remove_file(path).unwrap();
     }
 
     #[test]
@@ -3806,6 +4141,174 @@ mod tests {
     }
 
     #[test]
+    fn diagnostic_pattern_is_equivalent_and_partial_updates_stay_in_rect() {
+        let width = 400usize;
+        let height = 300usize;
+        let mut rgb565 = vec![0xaa; width * height * 2];
+        let mut xrgb = vec![0xaa; width * height * 4];
+        fill_diagnostic_pattern_rect(
+            &mut rgb565,
+            width * 2,
+            width as u32,
+            height as u32,
+            0,
+            0,
+            width as u32,
+            height as u32,
+            TransferFormat::Rgb565,
+        )
+        .unwrap();
+        fill_diagnostic_pattern_rect(
+            &mut xrgb,
+            width * 4,
+            width as u32,
+            height as u32,
+            0,
+            0,
+            width as u32,
+            height as u32,
+            TransferFormat::Xrgb8888,
+        )
+        .unwrap();
+
+        for (x, y, expected) in [
+            (180, 100, COLOR_LIGHT_GRAY),
+            (50, 50, COLOR_WHITE),
+            (350, 50, COLOR_CYAN),
+            (50, 250, COLOR_MAGENTA),
+            (350, 250, super::COLOR_ORANGE),
+            (160, 100, COLOR_DARK_GRAY),
+            (200, 150, COLOR_MAGENTA),
+        ] {
+            assert_eq!(
+                read_pixel(&xrgb, width * 4, x, y, TransferFormat::Xrgb8888).unwrap(),
+                expected
+            );
+            let decoded = read_pixel(&rgb565, width * 2, x, y, TransferFormat::Rgb565).unwrap();
+            assert!((decoded.r as i16 - expected.r as i16).abs() <= 7);
+            assert!((decoded.g as i16 - expected.g as i16).abs() <= 3);
+            assert!((decoded.b as i16 - expected.b as i16).abs() <= 7);
+        }
+
+        let mut partial = vec![0x5a; width * height * 4];
+        fill_diagnostic_pattern_rect(
+            &mut partial,
+            width * 4,
+            width as u32,
+            height as u32,
+            100,
+            100,
+            50,
+            50,
+            TransferFormat::Xrgb8888,
+        )
+        .unwrap();
+        assert!(partial[..100 * width * 4].iter().all(|byte| *byte == 0x5a));
+        assert_eq!(
+            read_pixel(&partial, width * 4, 120, 120, TransferFormat::Xrgb8888).unwrap(),
+            diagnostic_pattern_color(120, 120, width, height)
+        );
+    }
+
+    #[test]
+    fn scale_to_fit_copies_pixels_and_preserves_padding_for_supported_formats() {
+        for format in [TransferFormat::Rgb565, TransferFormat::Xrgb8888] {
+            let bpp = format.bytes_per_pixel();
+            let src_pitch = 2 * bpp + 3;
+            let mut src = vec![0xee; src_pitch * 2];
+            write_pixel(&mut src, src_pitch, 0, 0, format, COLOR_RED).unwrap();
+            write_pixel(&mut src, src_pitch, 1, 0, format, COLOR_GREEN).unwrap();
+            write_pixel(&mut src, src_pitch, 0, 1, format, COLOR_BLUE).unwrap();
+            write_pixel(&mut src, src_pitch, 1, 1, format, COLOR_WHITE).unwrap();
+            let dst_pitch = 4 * bpp + 5;
+            let mut dst = vec![0xcc; dst_pitch * 4];
+            let (layout, _) =
+                scale_to_fit(&src, src_pitch, 2, 2, &mut dst, dst_pitch, 4, 4, format).unwrap();
+            assert_eq!(
+                layout,
+                ScaledLayout {
+                    dst_x: 0,
+                    dst_y: 0,
+                    dst_width: 4,
+                    dst_height: 4
+                }
+            );
+            assert_eq!(
+                read_pixel(&dst, dst_pitch, 0, 0, format).unwrap(),
+                COLOR_RED
+            );
+            assert_eq!(
+                read_pixel(&dst, dst_pitch, 3, 0, format).unwrap(),
+                COLOR_GREEN
+            );
+            assert_eq!(
+                read_pixel(&dst, dst_pitch, 0, 3, format).unwrap(),
+                COLOR_BLUE
+            );
+            assert_eq!(
+                read_pixel(&dst, dst_pitch, 3, 3, format).unwrap(),
+                COLOR_WHITE
+            );
+            assert!(dst
+                .chunks_exact(dst_pitch)
+                .all(|row| row[4 * bpp..].iter().all(|byte| *byte == 0xcc)));
+        }
+    }
+
+    #[test]
+    fn scale_to_fit_centers_and_letterboxes_and_rejects_invalid_rasters() {
+        let mut src = vec![0; 4 * 2];
+        write_pixel(&mut src, 4, 0, 0, TransferFormat::Rgb565, COLOR_RED).unwrap();
+        write_pixel(&mut src, 4, 1, 0, TransferFormat::Rgb565, COLOR_GREEN).unwrap();
+        let mut dst = vec![0xff; 4 * 4 * 2];
+        let (layout, _) =
+            scale_to_fit(&src, 4, 2, 1, &mut dst, 8, 4, 4, TransferFormat::Rgb565).unwrap();
+        assert_eq!(
+            layout,
+            ScaledLayout {
+                dst_x: 0,
+                dst_y: 1,
+                dst_width: 4,
+                dst_height: 2
+            }
+        );
+        assert_eq!(
+            read_pixel(&dst, 8, 0, 0, TransferFormat::Rgb565).unwrap(),
+            COLOR_BLACK
+        );
+        assert_eq!(
+            read_pixel(&dst, 8, 0, 1, TransferFormat::Rgb565).unwrap(),
+            COLOR_RED
+        );
+        assert!(scale_to_fit(
+            &src[..3],
+            4,
+            2,
+            1,
+            &mut dst,
+            8,
+            4,
+            4,
+            TransferFormat::Rgb565
+        )
+        .is_err());
+        assert!(scale_to_fit(&src, 3, 2, 1, &mut dst, 8, 4, 4, TransferFormat::Rgb565).is_err());
+        assert!(scale_to_fit(
+            &src,
+            4,
+            2,
+            1,
+            &mut dst[..7],
+            8,
+            4,
+            4,
+            TransferFormat::Rgb565
+        )
+        .is_err());
+        assert!(scale_to_fit(&src, 4, 2, 1, &mut dst, 7, 4, 4, TransferFormat::Rgb565).is_err());
+    }
+
+    #[test]
     fn compute_scaled_layout_keeps_native_mode_fullscreen() {
         assert_eq!(
             compute_scaled_layout(1080, 2280, 1080, 2280).unwrap(),
@@ -4006,6 +4509,33 @@ mod tests {
     }
 
     #[test]
+    fn memory_accounting_and_shadow_capacity_cover_format_sizes() {
+        let dimensions = [(1280, 720)];
+        let rgb565 = crate::scanout::logical_memory_estimate(dimensions, dimensions, 2).unwrap();
+        let rgb888 = crate::scanout::logical_memory_estimate(dimensions, dimensions, 3).unwrap();
+        let xrgb8888 = crate::scanout::logical_memory_estimate(dimensions, dimensions, 4).unwrap();
+        assert_eq!(rgb888.max_shadow_bytes * 2, rgb565.max_shadow_bytes * 3);
+        assert_eq!(xrgb8888.max_shadow_bytes, rgb565.max_shadow_bytes * 2);
+
+        let mut adequate = ShadowFramebuffer::preallocated(1280 * 720 * 4).unwrap();
+        assert!(adequate
+            .activate_scaled(ShadowRasterIdentity {
+                width: 1280,
+                height: 720,
+                format: gud_gadget::GUD_PIXEL_FORMAT_XRGB8888,
+            })
+            .is_ok());
+        let mut insufficient = ShadowFramebuffer::preallocated(1280 * 720 * 4 - 1).unwrap();
+        assert!(insufficient
+            .activate_scaled(ShadowRasterIdentity {
+                width: 1280,
+                height: 720,
+                format: gud_gadget::GUD_PIXEL_FORMAT_XRGB8888,
+            })
+            .is_err());
+    }
+
+    #[test]
     fn waiting_scene_supports_all_glyphs() {
         for line in super::WAITING_SCREEN_LINES {
             for ch in line.chars() {
@@ -4025,14 +4555,21 @@ mod tests {
         let pitch = width * 2;
         let mut fb = vec![0u8; pitch * height];
 
-        render_waiting_screen(&mut fb, pitch, width as u32, height as u32, TransferFormat::Rgb565).unwrap();
+        render_waiting_screen(
+            &mut fb,
+            pitch,
+            width as u32,
+            height as u32,
+            TransferFormat::Rgb565,
+        )
+        .unwrap();
 
         let mut has_black = false;
         let mut has_white = false;
         let mut has_green = false;
         for chunk in fb.chunks_exact(2) {
             let pixel = u16::from_le_bytes([chunk[0], chunk[1]]);
-            has_black |= pixel == RGB565_BLACK;
+            has_black |= pixel == 0;
             has_white |= pixel == RGB565_WHITE;
             has_green |= pixel == RGB565_GREEN;
         }
@@ -4040,5 +4577,59 @@ mod tests {
         assert!(has_black);
         assert!(has_white);
         assert!(has_green);
+    }
+
+    #[test]
+    fn xrgb_waiting_screen_is_completely_black_and_bounded() {
+        let width = 3usize;
+        let height = 2usize;
+        let pitch = width * 4 + 3;
+        let mut fb = vec![0xa5; pitch * height];
+        render_waiting_screen(
+            &mut fb,
+            pitch,
+            width as u32,
+            height as u32,
+            TransferFormat::Xrgb8888,
+        )
+        .unwrap();
+        for row in fb.chunks_exact(pitch) {
+            assert!(row[..width * 4].iter().all(|byte| *byte == 0));
+            assert!(row[width * 4..].iter().all(|byte| *byte == 0xa5));
+        }
+    }
+
+    #[test]
+    fn copy_path_accepts_all_supported_pixel_widths_and_rejects_short_destination() {
+        let info = SetBuffer {
+            x: 1,
+            y: 1,
+            width: 2,
+            height: 1,
+            length: 0,
+            compression: 0,
+            compressed_length: 0,
+        };
+        for bpp in [2, 3, 4] {
+            let src = (0..2 * bpp).map(|value| value as u8).collect::<Vec<_>>();
+            let mut dst = vec![0; 4 * bpp * 2];
+            gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer(
+                &info,
+                &src,
+                &mut dst,
+                4 * bpp,
+                bpp,
+            )
+            .unwrap();
+            assert_eq!(&dst[5 * bpp..7 * bpp], &src);
+            assert!(gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer(
+                &info,
+                &src,
+                &mut dst[..4 * bpp],
+                4 * bpp,
+                bpp,
+            )
+            .is_err());
+        }
     }
 }

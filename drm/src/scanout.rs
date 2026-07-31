@@ -15,7 +15,6 @@ pub(crate) type ScanoutSlot<B> = Option<Box<ScanoutAllocation<B>>>;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum FallbackReason {
-    NoMatch,
     PrepareFailed,
     SwitchFailed,
     BaselineSwitchFailed,
@@ -70,7 +69,6 @@ pub(crate) struct DynamicRouteState<M> {
     pub(crate) committed_snapshot: Option<DisplayStateSnapshot>,
     pub(crate) presentation_route: Option<PresentationRoute>,
     pub(crate) current_physical_key: ModeKey,
-    pub(crate) baseline_physical_key: ModeKey,
     pub(crate) candidate_key: Option<ModeKey>,
 }
 
@@ -82,7 +80,6 @@ impl<M> DynamicRouteState<M> {
             committed_snapshot: None,
             presentation_route: None,
             current_physical_key: baseline_physical_key,
-            baseline_physical_key,
             candidate_key: None,
         }
     }
@@ -373,6 +370,7 @@ impl<B: ScanoutBackend> ScanoutAllocation<B> {
         Ok(allocation)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn mode(&self) -> B::Mode {
         self.mode
     }
@@ -534,6 +532,7 @@ impl<'a, B: ScanoutBackend + 'a> MappedActive<'a, B> {
         self.mapping_lengths
     }
 
+    #[allow(dead_code)]
     pub(crate) fn front_index(&self) -> usize {
         *self.front_buffer_index
     }
@@ -617,6 +616,7 @@ impl<'a, B: ScanoutBackend + 'a> StableMappedActive<'a, B> {
         self.mapped().mapping_lengths()
     }
 
+    #[allow(dead_code)]
     pub(crate) fn front_index(&self) -> usize {
         self.mapped().front_index()
     }
@@ -650,6 +650,7 @@ impl<'a, B: ScanoutBackend + 'a> StableMappedActive<'a, B> {
     }
 }
 
+#[cfg(test)]
 pub(crate) struct MappedTransition<'old, 'target, B: ScanoutBackend + 'old + 'target> {
     pub(crate) old: MappedActive<'old, B>,
     pub(crate) target: MappedActive<'target, B>,
@@ -681,16 +682,19 @@ impl<B: ScanoutBackend> ScanoutPool<B> {
         }
     }
 
+    #[cfg(test)]
     pub(crate) fn roles(&self) -> ScanoutRoles {
         self.roles
     }
 
+    #[cfg(test)]
     pub(crate) fn active_mut(&mut self) -> &mut ScanoutAllocation<B> {
         self.slots[self.roles.active]
             .as_deref_mut()
             .expect("active scanout slot is empty")
     }
 
+    #[cfg(test)]
     pub(crate) fn candidate(&self) -> Option<&ScanoutAllocation<B>> {
         self.roles.candidate.map(|index| {
             self.slots[index]
@@ -699,6 +703,7 @@ impl<B: ScanoutBackend> ScanoutPool<B> {
         })
     }
 
+    #[cfg(test)]
     pub(crate) fn replace_candidate(
         &mut self,
         backend: &mut B,
@@ -714,6 +719,7 @@ impl<B: ScanoutBackend> ScanoutPool<B> {
         Ok(index)
     }
 
+    #[cfg(test)]
     pub(crate) fn release_candidate(
         &mut self,
         backend: &mut B,
@@ -732,6 +738,7 @@ impl<B: ScanoutBackend> ScanoutPool<B> {
         allocation.release(backend, counters)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn promote_candidate(&mut self) -> anyhow::Result<(usize, usize)> {
         let candidate = self
             .roles
@@ -743,6 +750,7 @@ impl<B: ScanoutBackend> ScanoutPool<B> {
         Ok((old_active, candidate))
     }
 
+    #[cfg(test)]
     pub(crate) fn release_inactive(
         &mut self,
         backend: &mut B,
@@ -852,22 +860,27 @@ impl<B: ScanoutBackend> ScanoutManager<B> {
         self.counters.snapshot()
     }
 
+    #[cfg(test)]
     pub(crate) fn roles(&self) -> ScanoutRoles {
         self.pool.roles()
     }
 
+    #[cfg(test)]
     pub(crate) fn active_mut(&mut self) -> &mut ScanoutAllocation<B> {
         self.pool.active_mut()
     }
 
+    #[cfg(test)]
     pub(crate) fn current_live_bytes(&self) -> usize {
         self.current_live_bytes
     }
 
+    #[cfg(test)]
     pub(crate) fn observed_peak_live_bytes(&self) -> usize {
         self.observed_peak_live_bytes
     }
 
+    #[cfg(test)]
     pub(crate) fn stage_candidate(
         &mut self,
         backend: &mut B,
@@ -899,6 +912,7 @@ impl<B: ScanoutBackend> ScanoutManager<B> {
         Ok(index)
     }
 
+    #[cfg(test)]
     pub(crate) fn release_candidate(&mut self, backend: &mut B) -> anyhow::Result<()> {
         if let Some(candidate) = self.pool.candidate() {
             self.current_live_bytes = self
@@ -909,10 +923,12 @@ impl<B: ScanoutBackend> ScanoutManager<B> {
         self.pool.release_candidate(backend, &self.counters)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn promote_candidate(&mut self) -> anyhow::Result<(usize, usize)> {
         self.pool.promote_candidate()
     }
 
+    #[cfg(test)]
     pub(crate) fn release_replaced_active(
         &mut self,
         backend: &mut B,
@@ -1036,6 +1052,7 @@ impl<B: ScanoutBackend> ScanoutRuntime<'_, B> {
         release_result
     }
 
+    #[allow(dead_code)]
     pub(crate) fn promote_candidate(&mut self) -> anyhow::Result<(usize, usize)> {
         let candidate = self
             .roles
@@ -1817,7 +1834,7 @@ mod tests {
                 },
             ],
             0,
-            &[synthetic_timing.clone()],
+            std::slice::from_ref(&synthetic_timing),
         )
         .unwrap();
         let mut backend = MockBackend::default();

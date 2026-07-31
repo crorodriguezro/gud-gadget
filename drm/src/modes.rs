@@ -42,10 +42,6 @@ impl ModeKey {
     pub(crate) fn from_snapshot(snapshot: &DisplayStateSnapshot) -> Self {
         Self::new(snapshot.connector, &snapshot.mode)
     }
-
-    pub(crate) fn size(self) -> (u32, u32) {
-        (self.hdisplay.into(), self.vdisplay.into())
-    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -171,6 +167,7 @@ impl<M: Copy + Debug + Eq> RouteCatalog<M> {
         self.entry_for_key(ModeKey::from_snapshot(snapshot))
     }
 
+    #[cfg(test)]
     pub(crate) fn entry_for_mode(&self, mode: &DisplayMode) -> Option<&CatalogEntry<M>> {
         self.entry_for_key(ModeKey::new(self.connector, mode))
     }
@@ -296,7 +293,7 @@ mod tests {
             0,
             &[physical(7, physical_mode.clone())],
             0,
-            &[synthetic_mode.clone()],
+            std::slice::from_ref(&synthetic_mode),
         )
         .unwrap();
 

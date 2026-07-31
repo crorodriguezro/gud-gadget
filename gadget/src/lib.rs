@@ -1432,23 +1432,58 @@ impl PixelDataEndpoint {
         bpp: usize,
     ) -> anyhow::Result<CopyStats> {
         let copy_start = Instant::now();
+        ensure!(bpp > 0, "bytes per pixel must be greater than zero");
         let mut y = info.y as usize;
-        let end_y = (info.y + info.height) as usize;
+        let end_y = (info.y as usize)
+            .checked_add(info.height as usize)
+            .context("framebuffer update end row overflow")?;
 
-        let line_len = info.width as usize * bpp;
-        let line_start = info.x as usize * bpp;
-        let expected_len = info.width as usize * info.height as usize * bpp;
+        let line_len = (info.width as usize)
+            .checked_mul(bpp)
+            .context("framebuffer update line length overflow")?;
+        let line_start = (info.x as usize)
+            .checked_mul(bpp)
+            .context("framebuffer update line start overflow")?;
+        let expected_len = line_len
+            .checked_mul(info.height as usize)
+            .context("framebuffer update payload length overflow")?;
         ensure!(
             buf.len() >= expected_len,
             "payload too short: got {} bytes, expected at least {}",
             buf.len(),
             expected_len
         );
+        ensure!(
+            fb_pitch
+                >= line_start
+                    .checked_add(line_len)
+                    .context("framebuffer row length overflow")?,
+            "framebuffer pitch {} is too small for update x={} width={} bpp={}",
+            fb_pitch,
+            info.x,
+            info.width,
+            bpp
+        );
+        let required_fb_len = end_y
+            .checked_mul(fb_pitch)
+            .context("framebuffer update destination length overflow")?;
+        ensure!(
+            fb.len() >= required_fb_len,
+            "framebuffer too short: got {} bytes, need at least {} for update ending at row {}",
+            fb.len(),
+            required_fb_len,
+            end_y
+        );
 
         let mut buf_pos = 0usize;
         while y < end_y {
-            let fb_start = (y * fb_pitch) + line_start;
-            let fb_end = fb_start + line_len;
+            let fb_start = y
+                .checked_mul(fb_pitch)
+                .and_then(|offset| offset.checked_add(line_start))
+                .context("framebuffer update destination offset overflow")?;
+            let fb_end = fb_start
+                .checked_add(line_len)
+                .context("framebuffer update destination end overflow")?;
             fb[fb_start..fb_end].copy_from_slice(&buf[buf_pos..buf_pos + line_len]);
             buf_pos += line_len;
             y += 1;
