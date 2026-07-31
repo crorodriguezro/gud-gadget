@@ -31,6 +31,12 @@ not change `GUD_TRANSFER_FORMAT` in an attached session: stop only from `Idle`,
 set the environment, start once, then detach and reattach so the host reads the
 new single-format descriptor.
 
+For controlled XDISP benchmarks, install exactly one complete drop-in from
+`systemd/test-only/70-xdisp-benchmark-rgb565.conf` or
+`systemd/test-only/71-xdisp-benchmark-xrgb8888.conf`. They keep dumping
+disabled, retain the 16 KiB FunctionFS read size, and force native 1280x720
+scanout. Do not reconstruct this environment from partial format-only drop-ins.
+
 ## RGB565
 
 1. Confirm the prior session is detached and the receiver is `Idle`.
