@@ -211,6 +211,18 @@ size change. This is not a controlled benchmark; defer 512-byte-versus-16 KiB
 performance testing to `XDISP-P2.1` and do not return to 512 bytes as a P0.1
 fallback.
 
+## Read completion classifications
+
+`short_read` means FunctionFS returned a length smaller than the userspace
+request. `invalid_kernel_read_completion` means the returned unsigned length
+exceeds either that request or the payload bytes remaining. The latter can
+represent a wrapped negative DWC2 completion rather than a valid transfer
+result. Known observed signed examples are `-514048` and `-518144`.
+
+This classification records the raw unsigned result and its platform signed
+interpretation only for diagnosis. It does not attribute these values to
+userspace or claim to fix the underlying DWC2 defect.
+
 ## Future improvements
 
 - Upstream a minimal endpoint-file accessor or a supported synchronous receive

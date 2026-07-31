@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
-use tracing::{debug, warn};
+use tracing::{debug, error, warn};
 
 use bytes::BytesMut;
 use usb_gadget::function::custom;
@@ -1085,6 +1085,27 @@ struct BulkReadStats {
     last_request_bytes: usize,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FunctionFsReadCompletion {
+    Exact,
+    Short,
+    InvalidKernelCompletion,
+}
+
+fn classify_functionfs_read_completion(
+    result_bytes: usize,
+    request_bytes: usize,
+    remaining_before: usize,
+) -> FunctionFsReadCompletion {
+    if result_bytes > request_bytes || result_bytes > remaining_before {
+        FunctionFsReadCompletion::InvalidKernelCompletion
+    } else if result_bytes < request_bytes {
+        FunctionFsReadCompletion::Short
+    } else {
+        FunctionFsReadCompletion::Exact
+    }
+}
+
 fn validate_functionfs_read_size(read_size: usize) -> anyhow::Result<()> {
     ensure!(
         (FUNCTIONFS_BULK_OUT_MIN_READ_SIZE..=FUNCTIONFS_BULK_OUT_MAX_READ_SIZE)
@@ -1165,8 +1186,34 @@ fn read_functionfs_payload<R: Read>(
         stats.read_calls += 1;
         stats.last_request_bytes = request_bytes;
 
-        let remaining_after = remaining_before.saturating_sub(bytes_read);
-        let short_read = bytes_read != request_bytes;
+        let completion =
+            classify_functionfs_read_completion(bytes_read, request_bytes, remaining_before);
+        if completion == FunctionFsReadCompletion::InvalidKernelCompletion {
+            let result_bytes_signed = bytes_read as isize;
+            error!(
+                classification = "invalid_kernel_read_completion",
+                payload_seq,
+                payload_len,
+                read_size,
+                read_index,
+                received_bytes_before = received_bytes,
+                remaining_before,
+                request_bytes,
+                result_bytes_raw = bytes_read,
+                result_bytes_signed,
+                "invalid kernel FunctionFS read completion"
+            );
+            bail!(
+                "invalid kernel FunctionFS read completion: payload_seq={payload_seq}, \
+                 payload_len={payload_len}, read_size={read_size}, read_index={read_index}, \
+                 received_bytes_before={received_bytes}, remaining_before={remaining_before}, \
+                 request_bytes={request_bytes}, result_bytes_raw={bytes_read}, \
+                 result_bytes_signed={result_bytes_signed}"
+            );
+        }
+
+        let remaining_after = remaining_before - bytes_read;
+        let short_read = completion == FunctionFsReadCompletion::Short;
         debug!(
             payload_seq,
             payload_len,
@@ -1504,16 +1551,17 @@ impl PixelDataEndpoint {
 #[cfg(test)]
 mod tests {
     use super::{
-        active_scanout_state, build_display_descriptor, clear_pending_state, commit_pending_state,
-        configure_state_check_validation, current_status, handle_resume_transition,
-        handle_suspend_transition, latch_status, mark_success, modes_have_same_user_timing,
-        next_connector_status, parse_enable_request, read_functionfs_payload,
-        reset_connector_status_changed, reset_protocol_state, reset_status,
-        serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
-        store_pending_state, update_controller_enabled, update_display_enabled,
-        usb_packet_estimate, validate_buffer_request, validate_functionfs_read_size,
-        validate_state_check_payload, ActiveScanoutState, ConnectorDescriptor, DisplayMode,
-        DisplayState, PixelDataEndpoint, SetBuffer, DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        active_scanout_state, build_display_descriptor, classify_functionfs_read_completion,
+        clear_pending_state, commit_pending_state, configure_state_check_validation,
+        current_status, handle_resume_transition, handle_suspend_transition, latch_status,
+        mark_success, modes_have_same_user_timing, next_connector_status, parse_enable_request,
+        read_functionfs_payload, reset_connector_status_changed, reset_protocol_state,
+        reset_status, serialize_connector_descriptors, serialize_display_descriptor,
+        serialize_display_modes, store_pending_state, update_controller_enabled,
+        update_display_enabled, usb_packet_estimate, validate_buffer_request,
+        validate_functionfs_read_size, validate_state_check_payload, ActiveScanoutState,
+        ConnectorDescriptor, DisplayMode, DisplayState, FunctionFsReadCompletion,
+        PixelDataEndpoint, SetBuffer, DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
         FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE, GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED,
         GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET,
         GUD_DISPLAY_MAGIC, GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK,
@@ -1528,6 +1576,7 @@ mod tests {
     struct RecordingReader {
         data: Cursor<Vec<u8>>,
         max_result: Option<usize>,
+        reported_result: Option<usize>,
         requests: Vec<usize>,
     }
 
@@ -1536,6 +1585,7 @@ mod tests {
             Self {
                 data: Cursor::new(data),
                 max_result: None,
+                reported_result: None,
                 requests: Vec::new(),
             }
         }
@@ -1544,6 +1594,16 @@ mod tests {
             Self {
                 data: Cursor::new(data),
                 max_result: Some(max_result),
+                reported_result: None,
+                requests: Vec::new(),
+            }
+        }
+
+        fn with_reported_result(data: Vec<u8>, reported_result: usize) -> Self {
+            Self {
+                data: Cursor::new(data),
+                max_result: None,
+                reported_result: Some(reported_result),
                 requests: Vec::new(),
             }
         }
@@ -1553,7 +1613,8 @@ mod tests {
         fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
             self.requests.push(buf.len());
             let result_len = self.max_result.unwrap_or(buf.len()).min(buf.len());
-            self.data.read(&mut buf[..result_len])
+            let bytes_read = self.data.read(&mut buf[..result_len])?;
+            Ok(self.reported_result.unwrap_or(bytes_read))
         }
     }
 
@@ -1734,6 +1795,42 @@ mod tests {
     }
 
     #[test]
+    fn functionfs_read_completion_classifies_exact_short_and_invalid_results() {
+        assert_eq!(
+            classify_functionfs_read_completion(8_192, 8_192, 12_800),
+            FunctionFsReadCompletion::Exact
+        );
+        assert_eq!(
+            classify_functionfs_read_completion(4_096, 8_192, 12_800),
+            FunctionFsReadCompletion::Short
+        );
+        assert_eq!(
+            classify_functionfs_read_completion(0, 8_192, 12_800),
+            FunctionFsReadCompletion::Short
+        );
+        assert_eq!(
+            classify_functionfs_read_completion(8_193, 8_192, 12_800),
+            FunctionFsReadCompletion::InvalidKernelCompletion
+        );
+        assert_eq!(
+            classify_functionfs_read_completion(4_096, 4_096, 2_048),
+            FunctionFsReadCompletion::InvalidKernelCompletion
+        );
+    }
+
+    #[test]
+    fn functionfs_read_completion_classifies_observed_wrapped_dwc2_results() {
+        for signed in [-514_048_isize, -518_144_isize] {
+            let raw = signed as usize;
+            assert_eq!(
+                classify_functionfs_read_completion(raw, 8_192, 12_800),
+                FunctionFsReadCompletion::InvalidKernelCompletion
+            );
+            assert_eq!(raw as isize, signed);
+        }
+    }
+
+    #[test]
     fn functionfs_current_tile_uses_four_staged_reads() {
         let data = vec![0x5a; 64_000];
         let mut reader = RecordingReader::new(data.clone());
@@ -1870,6 +1967,23 @@ mod tests {
 
         assert_eq!(reader.requests, [16_384]);
         assert!(err.to_string().contains("result_bytes=0"));
+    }
+
+    #[test]
+    fn functionfs_invalid_completion_fails_without_advancing_receive_accounting() {
+        let wrapped_result = (-514_048_isize) as usize;
+        let mut reader = RecordingReader::with_reported_result(vec![0x5a; 8_192], wrapped_result);
+        let mut buf = BytesMut::new();
+
+        let err = read_functionfs_payload(&mut reader, &mut buf, 8, 12_800, 8 * 1024).unwrap_err();
+
+        assert_eq!(reader.requests, [8_192]);
+        assert!(err
+            .to_string()
+            .contains("invalid kernel FunctionFS read completion"));
+        assert!(err.to_string().contains("received_bytes_before=0"));
+        assert!(err.to_string().contains("remaining_before=12800"));
+        assert!(err.to_string().contains("result_bytes_signed=-514048"));
     }
 
     #[test]
