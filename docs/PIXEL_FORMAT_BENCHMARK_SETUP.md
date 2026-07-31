@@ -90,3 +90,8 @@ transfer_format=xrgb8888 gud_format=0x80 drm_fourcc=Xrgb8888 depth=24 bpp=32 byt
 - Before any timed benchmark, run only the bounded static diagnostic pattern
   and capture a PPM dump for channel-order inspection. For XRGB8888, vary the
   X padding byte and confirm the visible PPM pixels are unchanged.
+- `GUD_FRAME_DUMP_MODE` defaults to `disabled`; timed benchmarks must retain
+  that setting. `single-frame` permits only an untimed startup dump when one or
+  both legacy dump paths are supplied. The receiver never writes framebuffer
+  dumps after a payload, so no diagnostic disk I/O occurs between `SET_BUFFER`
+  requests during a timed run.

@@ -48,6 +48,28 @@ fn record_host_activity(had_host_session: &mut bool, event: &Event<'_>) {
 const BULK_RECEIVE_DEADLINE: Duration = Duration::from_millis(1_000);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FrameDumpMode {
+    Disabled,
+    SingleFrame,
+}
+
+impl FrameDumpMode {
+    fn from_env(value: Option<&OsStr>) -> anyhow::Result<Self> {
+        match value.and_then(OsStr::to_str).unwrap_or("disabled") {
+            "disabled" => Ok(Self::Disabled),
+            "single-frame" => Ok(Self::SingleFrame),
+            value => {
+                anyhow::bail!("GUD_FRAME_DUMP_MODE must be disabled or single-frame, got {value:?}")
+            }
+        }
+    }
+
+    fn permits_startup_dump(self) -> bool {
+        matches!(self, Self::SingleFrame)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 enum BulkReceiveState {
     Idle = 0,
@@ -1894,15 +1916,35 @@ fn main() -> anyhow::Result<()> {
     let (mut gud_data, gud_data_ep) =
         gud_gadget::PixelDataEndpoint::new_with_read_size(functionfs_read_size)
             .context("configure FunctionFS bulk OUT read size")?;
-    let dump_path = var_os("GUD_DUMP_FB_PATH").map(PathBuf::from);
-    let dump_raw_path = var_os("GUD_DUMP_FB_RAW_PATH").map(PathBuf::from);
+    let frame_dump_mode = FrameDumpMode::from_env(var_os("GUD_FRAME_DUMP_MODE").as_deref())?;
+    let configured_dump_path = var_os("GUD_DUMP_FB_PATH").map(PathBuf::from);
+    let configured_dump_raw_path = var_os("GUD_DUMP_FB_RAW_PATH").map(PathBuf::from);
+    let dump_path = frame_dump_mode
+        .permits_startup_dump()
+        .then(|| configured_dump_path.clone())
+        .flatten();
+    let dump_raw_path = frame_dump_mode
+        .permits_startup_dump()
+        .then(|| configured_dump_raw_path.clone())
+        .flatten();
     let pattern_mode = PatternMode::from_env();
     let transfer_format = TransferFormat::from_env()?;
-    if let Some(path) = dump_path.as_deref() {
-        info!("Framebuffer dumps enabled: {}", path.display());
-    }
-    if let Some(path) = dump_raw_path.as_deref() {
-        info!("Raw framebuffer dumps enabled: {}", path.display());
+    info!(?frame_dump_mode, "Frame dump policy");
+    if frame_dump_mode.permits_startup_dump() {
+        if let Some(path) = dump_path.as_deref() {
+            info!(
+                "Single startup framebuffer dump enabled: {}",
+                path.display()
+            );
+        }
+        if let Some(path) = dump_raw_path.as_deref() {
+            info!(
+                "Single startup raw framebuffer dump enabled: {}",
+                path.display()
+            );
+        }
+    } else if configured_dump_path.is_some() || configured_dump_raw_path.is_some() {
+        info!("Framebuffer dump paths ignored by disabled dump policy");
     }
     info!("Pattern mode: {:?}", pattern_mode);
     info!(
@@ -2297,15 +2339,17 @@ fn main() -> anyhow::Result<()> {
         Ok(()) => info!("Test pattern flushed to display"),
         Err(err) => warn!("Failed to flush test pattern: {}", err),
     }
-    dump_framebuffer_if_enabled(
-        dump_path.as_deref(),
-        active.front_buffer_mut(),
-        pitch as usize,
-        width,
-        height,
-        transfer_format,
-    );
-    dump_framebuffer_raw_if_enabled(dump_raw_path.as_deref(), active.front_buffer_mut());
+    if frame_dump_mode.permits_startup_dump() {
+        dump_framebuffer_if_enabled(
+            dump_path.as_deref(),
+            active.front_buffer_mut(),
+            pitch as usize,
+            width,
+            height,
+            transfer_format,
+        );
+        dump_framebuffer_raw_if_enabled(dump_raw_path.as_deref(), active.front_buffer_mut());
+    }
 
     // Keep the USB gadget disconnected until DRM has a working CRTC and the
     // initial framebuffer is ready. Otherwise a host can begin SET_BUFFER
@@ -3489,18 +3533,6 @@ fn main() -> anyhow::Result<()> {
                             usb_mib_per_s
                         );
 
-                        dump_framebuffer_if_enabled(
-                            dump_path.as_deref(),
-                            active.front_buffer_mut(),
-                            physical_pitch as usize,
-                            physical_width,
-                            physical_height,
-                            transfer_format,
-                        );
-                        dump_framebuffer_raw_if_enabled(
-                            dump_raw_path.as_deref(),
-                            active.front_buffer_mut(),
-                        );
                         if matches!(pattern_mode, PatternMode::Off) {
                             waiting_screen_visible = false;
                         }
