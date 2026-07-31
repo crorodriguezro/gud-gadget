@@ -312,6 +312,7 @@ struct DrmScanoutBackend {
     card: Card,
     crtc: crtc::Handle,
     connector: connector::Handle,
+    format: TransferFormat,
 }
 
 impl ScanoutBackend for DrmScanoutBackend {
@@ -326,15 +327,8 @@ impl ScanoutBackend for DrmScanoutBackend {
     }
 
     fn create_buffer(&mut self, width: u32, height: u32) -> anyhow::Result<Self::Buffer> {
-        let format = TransferFormat::from_env();
-        let fourcc = match format {
-            TransferFormat::Rgb565 => drm::buffer::DrmFourcc::Rgb565,
-            TransferFormat::Rgb888 => drm::buffer::DrmFourcc::Rgb888,
-            TransferFormat::Xrgb8888 => drm::buffer::DrmFourcc::Xrgb8888,
-        };
-        let bpp = format.bytes_per_pixel() * 8;
         self.card
-            .create_dumb_buffer((width, height), fourcc, bpp)
+            .create_dumb_buffer((width, height), self.format.drm_fourcc(), self.format.bpp())
             .context("create dumb buffer")
     }
 
@@ -343,9 +337,8 @@ impl ScanoutBackend for DrmScanoutBackend {
     }
 
     fn add_framebuffer(&mut self, buffer: &Self::Buffer) -> anyhow::Result<Self::Framebuffer> {
-        let bpp = TransferFormat::from_env().bytes_per_pixel() * 8;
         self.card
-            .add_framebuffer(buffer, bpp, bpp)
+            .add_framebuffer(buffer, self.format.depth(), self.format.bpp())
             .context("add DRM framebuffer")
     }
 
@@ -652,6 +645,30 @@ impl TransferFormat {
         }
     }
 
+    fn drm_fourcc(self) -> drm::buffer::DrmFourcc {
+        match self {
+            Self::Rgb565 => drm::buffer::DrmFourcc::Rgb565,
+            Self::Rgb888 => drm::buffer::DrmFourcc::Rgb888,
+            Self::Xrgb8888 => drm::buffer::DrmFourcc::Xrgb8888,
+        }
+    }
+
+    fn depth(self) -> u32 {
+        match self {
+            Self::Rgb565 => 16,
+            Self::Rgb888 => 24,
+            Self::Xrgb8888 => 24,
+        }
+    }
+
+    fn bpp(self) -> u32 {
+        match self {
+            Self::Rgb565 => 16,
+            Self::Rgb888 => 24,
+            Self::Xrgb8888 => 32,
+        }
+    }
+
     fn bytes_per_pixel(self) -> usize {
         match self {
             Self::Rgb565 => 2,
@@ -668,10 +685,16 @@ fn write_rgb565_pixel(fb: &mut [u8], pitch: usize, x: usize, y: usize, color: u1
     fb[offset + 1] = hi;
 }
 
-fn fill_rgb565_solid(fb: &mut [u8], pitch: usize, width: usize, height: usize, color: u16) {
+fn fill_solid(fb: &mut [u8], pitch: usize, width: usize, height: usize, bpp: usize, color: u32) {
+    let mut pixel = [0u8; 4];
+    for i in 0..bpp {
+        pixel[i] = ((color >> (8 * i)) & 0xff) as u8;
+    }
     for y in 0..height {
+        let row_start = y * pitch;
         for x in 0..width {
-            write_rgb565_pixel(fb, pitch, x, y, color);
+            let offset = row_start + x * bpp;
+            fb[offset..offset + bpp].copy_from_slice(&pixel[..bpp]);
         }
     }
 }
@@ -770,10 +793,18 @@ fn render_waiting_screen(
     pitch: usize,
     width: u32,
     height: u32,
+    format: TransferFormat,
 ) -> anyhow::Result<()> {
     let width = width as usize;
     let height = height as usize;
-    fill_rgb565_solid(fb, pitch, width, height, RGB565_BLACK);
+    let bpp = format.bytes_per_pixel();
+
+    if format != TransferFormat::Rgb565 {
+        fill_solid(fb, pitch, width, height, bpp, 0);
+        return Ok(());
+    }
+
+    fill_solid(fb, pitch, width, height, bpp, RGB565_BLACK as u32);
 
     let line_count = WAITING_SCREEN_LINES.len();
     let max_cols = WAITING_SCREEN_LINES
@@ -832,11 +863,12 @@ fn present_waiting_screen<B: ScanoutBackend>(
     active: &mut StableMappedActive<'_, B>,
     dump_path: Option<&Path>,
     dump_raw_path: Option<&Path>,
+    format: TransferFormat,
 ) -> anyhow::Result<()> {
     let (width, height) = active.size();
     let pitch = active.pitch() as usize;
     for index in 0..2 {
-        render_waiting_screen(active.buffer_mut(index), pitch, width, height)?;
+        render_waiting_screen(active.buffer_mut(index), pitch, width, height, format)?;
     }
 
     match backend.dirty_framebuffer(
@@ -856,7 +888,7 @@ fn present_waiting_screen<B: ScanoutBackend>(
         pitch,
         width,
         height,
-        2,
+        format.bytes_per_pixel(),
     );
     dump_framebuffer_raw_if_enabled(dump_raw_path, active.front_buffer_mut());
 
@@ -935,6 +967,7 @@ fn fill_diagnostic_pattern_rect(
     rect_y: u32,
     rect_width: u32,
     rect_height: u32,
+    format: TransferFormat,
 ) -> anyhow::Result<()> {
     ensure!(
         rect_x <= fb_width,
@@ -969,6 +1002,18 @@ fn fill_diagnostic_pattern_rect(
     let rect_y = rect_y as usize;
     let rect_width = rect_width as usize;
     let rect_height = rect_height as usize;
+
+    if format != TransferFormat::Rgb565 {
+        fill_solid(
+            fb,
+            pitch,
+            fb_width,
+            fb_height,
+            format.bytes_per_pixel(),
+            0,
+        );
+        return Ok(());
+    }
 
     for y in rect_y..(rect_y + rect_height) {
         for x in rect_x..(rect_x + rect_width) {
@@ -1111,7 +1156,7 @@ fn compute_scaled_layout(
     })
 }
 
-fn scale_rgb565_to_fit(
+fn scale_to_fit(
     src: &[u8],
     src_pitch: usize,
     src_width: u32,
@@ -1120,11 +1165,13 @@ fn scale_rgb565_to_fit(
     dst_pitch: usize,
     dst_width: u32,
     dst_height: u32,
+    format: TransferFormat,
 ) -> anyhow::Result<(ScaledLayout, u128)> {
     let start = std::time::Instant::now();
     let layout = compute_scaled_layout(src_width, src_height, dst_width, dst_height)?;
 
-    fill_rgb565_solid(dst, dst_pitch, dst_width as usize, dst_height as usize, 0);
+    let bpp = format.bytes_per_pixel();
+    fill_solid(dst, dst_pitch, dst_width as usize, dst_height as usize, bpp, 0);
 
     let src_width = src_width as usize;
     let src_height = src_height as usize;
@@ -1135,10 +1182,9 @@ fn scale_rgb565_to_fit(
         let dst_row = dst_y * dst_pitch;
         for dst_x_rel in 0..layout.dst_width {
             let src_x = dst_x_rel * src_width / layout.dst_width;
-            let src_off = src_row + src_x * 2;
-            let dst_off = dst_row + (layout.dst_x + dst_x_rel) * 2;
-            dst[dst_off] = src[src_off];
-            dst[dst_off + 1] = src[src_off + 1];
+            let src_off = src_row + src_x * bpp;
+            let dst_off = dst_row + (layout.dst_x + dst_x_rel) * bpp;
+            dst[dst_off..dst_off + bpp].copy_from_slice(&src[src_off..src_off + bpp]);
         }
     }
 
@@ -1942,6 +1988,7 @@ fn main() -> anyhow::Result<()> {
         card,
         crtc: crtc.handle(),
         connector: connector_handle,
+        format: transfer_format,
     };
     let mut scanout_manager =
         ScanoutManager::new_baseline(&mut backend, mode).context("create baseline scanout")?;
@@ -2021,9 +2068,10 @@ fn main() -> anyhow::Result<()> {
                 0,
                 width,
                 height,
+                transfer_format,
             )?;
         } else {
-            render_waiting_screen(fb_data, pitch as usize, width, height)?;
+            render_waiting_screen(fb_data, pitch as usize, width, height, transfer_format)?;
         }
     }
     if pattern_mode.uses_startup_pattern() {
@@ -2049,7 +2097,7 @@ fn main() -> anyhow::Result<()> {
         pitch as usize,
         width,
         height,
-        2,
+        transfer_format.bytes_per_pixel(),
     );
     dump_framebuffer_raw_if_enabled(dump_raw_path.as_deref(), active.front_buffer_mut());
 
@@ -2115,6 +2163,7 @@ fn main() -> anyhow::Result<()> {
                         &mut active,
                         dump_path.as_deref(),
                         dump_raw_path.as_deref(),
+                        transfer_format,
                     ) {
                         tracing::error!(
                             "Failed to render waiting screen after event read failure: {}",
@@ -2145,6 +2194,7 @@ fn main() -> anyhow::Result<()> {
                     &mut active,
                     dump_path.as_deref(),
                     dump_raw_path.as_deref(),
+                    transfer_format,
                 ) {
                     tracing::error!("Failed to render waiting screen after detach: {}", err);
                 } else {
@@ -2170,6 +2220,7 @@ fn main() -> anyhow::Result<()> {
                 &mut active,
                 dump_path.as_deref(),
                 dump_raw_path.as_deref(),
+                transfer_format,
             ) {
                 tracing::error!(
                     "Failed to render waiting screen before processing queued event: {}",
@@ -2893,6 +2944,7 @@ fn main() -> anyhow::Result<()> {
                                 &mut active,
                                 dump_path.as_deref(),
                                 dump_raw_path.as_deref(),
+                                transfer_format,
                             ) {
                                 tracing::error!(
                                     "Failed to render waiting screen after disconnect: {}",
@@ -3022,68 +3074,37 @@ fn main() -> anyhow::Result<()> {
                                         );
                                         continue;
                                     }
-                                    let copy_result = match transfer_format {
-                                        TransferFormat::Rgb565 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
-                                            &info,
-                                            payload,
-                                            shadow.pixels.as_mut_slice(),
-                                            shadow.pitch,
-                                            2,
-                                        ) {
-                                            Ok(stats) => {
-                                                copy_ms = stats.copy_ms;
-                                                Ok(())
-                                            }
-                                            Err(err) => Err(err),
-                                        },
-                                        TransferFormat::Rgb888 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
-                                            &info,
-                                            payload,
-                                            shadow.pixels.as_mut_slice(),
-                                            shadow.pitch,
-                                            3,
-                                        ) {
-                                            Ok(stats) => {
-                                                copy_ms = stats.copy_ms;
-                                                Ok(())
-                                            }
-                                            Err(err) => Err(err),
-                                        },
-                                        TransferFormat::Xrgb8888 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
-                                            &info,
-                                            payload,
-                                            shadow.pixels.as_mut_slice(),
-                                            shadow.pitch,
-                                            4,
-                                        ) {
-                                            Ok(stats) => {
-                                                copy_ms = stats.copy_ms;
-                                                Ok(())
-                                            }
-                                            Err(err) => Err(err),
-                                        },
-                                    };
-                                    match copy_result {
-                                        Ok(()) => {}
-                                        Err(err) => {
-                                            tracing::error!(
-                                                "Failed to copy buffer to shadow framebuffer: {}",
-                                                err
-                                            );
-                                            continue;
-                                        }
-                                    }
+                                  let copy_result = gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
+                                      &info,
+                                      payload,
+                                      shadow.pixels.as_mut_slice(),
+                                      shadow.pitch,
+                                      transfer_format.bytes_per_pixel(),
+                                  );
+                                  match copy_result {
+                                      Ok(stats) => {
+                                          copy_ms = stats.copy_ms;
+                                      }
+                                      Err(err) => {
+                                          tracing::error!(
+                                              "Failed to copy buffer to shadow framebuffer: {}",
+                                              err
+                                          );
+                                          continue;
+                                      }
+                                  }
 
-                                    match scale_rgb565_to_fit(
-                                        shadow.pixels.as_slice(),
-                                        shadow.pitch,
-                                        source_width,
-                                        source_height,
-                                        active.back_buffer_mut(),
-                                        physical_pitch as usize,
-                                        physical_width,
-                                        physical_height,
-                                    ) {
+                                  match scale_to_fit(
+                                      shadow.pixels.as_slice(),
+                                      shadow.pitch,
+                                      source_width,
+                                      source_height,
+                                      active.back_buffer_mut(),
+                                      physical_pitch as usize,
+                                      physical_width,
+                                      physical_height,
+                                      transfer_format,
+                                  ) {
                                         Ok((_layout, elapsed_ms)) => {
                                             scale_ms = elapsed_ms;
                                             true
@@ -3097,55 +3118,24 @@ fn main() -> anyhow::Result<()> {
                                         }
                                     }
                                 } else {
-                                    let copy_result = match transfer_format {
-                                        TransferFormat::Rgb565 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
-                                            &info,
-                                            payload,
-                                            active.front_buffer_mut(),
-                                            physical_pitch as usize,
-                                            2,
-                                        ) {
-                                            Ok(stats) => {
-                                                copy_ms = stats.copy_ms;
-                                                Ok(())
-                                            }
-                                            Err(err) => Err(err),
-                                        },
-                                        TransferFormat::Rgb888 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
-                                            &info,
-                                            payload,
-                                            active.front_buffer_mut(),
-                                            physical_pitch as usize,
-                                            3,
-                                        ) {
-                                            Ok(stats) => {
-                                                copy_ms = stats.copy_ms;
-                                                Ok(())
-                                            }
-                                            Err(err) => Err(err),
-                                        },
-                                        TransferFormat::Xrgb8888 => match gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
-                                            &info,
-                                            payload,
-                                            active.front_buffer_mut(),
-                                            physical_pitch as usize,
-                                            4,
-                                        ) {
-                                            Ok(stats) => {
-                                                copy_ms = stats.copy_ms;
-                                                Ok(())
-                                            }
-                                            Err(err) => Err(err),
-                                        },
-                                    };
+                                    let copy_result = gud_gadget::PixelDataEndpoint::copy_buffer_to_framebuffer_with_stats(
+                                        &info,
+                                        payload,
+                                        active.front_buffer_mut(),
+                                        physical_pitch as usize,
+                                        transfer_format.bytes_per_pixel(),
+                                    );
                                     match copy_result {
-                                        Ok(()) => true,
+                                        Ok(stats) => {
+                                            copy_ms = stats.copy_ms;
+                                            true
+                                        }
                                         Err(err) => {
                                             tracing::error!(
                                                 "Failed to copy buffer to framebuffer: {}",
                                                 err
                                             );
-                                            continue;
+                                            continue
                                         }
                                     }
                                 }
@@ -3164,6 +3154,7 @@ fn main() -> anyhow::Result<()> {
                                     info.y,
                                     info.width,
                                     info.height,
+                                    transfer_format,
                                 ) {
                                     Ok(()) => true,
                                     Err(err) => {
@@ -3295,7 +3286,7 @@ fn main() -> anyhow::Result<()> {
                             physical_pitch as usize,
                             physical_width,
                             physical_height,
-                            2,
+                            transfer_format.bytes_per_pixel(),
                         );
                         dump_framebuffer_raw_if_enabled(
                             dump_raw_path.as_deref(),
@@ -3320,6 +3311,7 @@ fn main() -> anyhow::Result<()> {
                         &mut active,
                         dump_path.as_deref(),
                         dump_raw_path.as_deref(),
+                        transfer_format,
                     ) {
                         tracing::error!(
                             "Failed to render waiting screen after control-path failure: {}",
@@ -3440,7 +3432,7 @@ mod tests {
         waiting_scene_glyph, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
         GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind, ScaledLayout,
         ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, TestOutputMode, RGB565_BLACK,
-        RGB565_GREEN, RGB565_WHITE,
+        RGB565_GREEN, RGB565_WHITE, TransferFormat,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
@@ -4033,7 +4025,7 @@ mod tests {
         let pitch = width * 2;
         let mut fb = vec![0u8; pitch * height];
 
-        render_waiting_screen(&mut fb, pitch, width as u32, height as u32).unwrap();
+        render_waiting_screen(&mut fb, pitch, width as u32, height as u32, TransferFormat::Rgb565).unwrap();
 
         let mut has_black = false;
         let mut has_white = false;
