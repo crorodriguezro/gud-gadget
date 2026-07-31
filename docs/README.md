@@ -7,6 +7,7 @@ Core docs:
 - [Checkpoint](./CHECKPOINT_2026-03-10.md)
 - [Known Issues](./KNOWN_ISSUES.md)
 - [Performance Instrumentation](./PERFORMANCE_INSTRUMENTATION.md)
+- [Pixel Format Benchmark Setup](./PIXEL_FORMAT_BENCHMARK_SETUP.md)
 - [Viewer Demo](./VIEWER_DEMO.md)
 - [Comparison](./COMPARISON.md)
 

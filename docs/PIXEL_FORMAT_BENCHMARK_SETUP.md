@@ -4,9 +4,13 @@
 format is set before the service starts with `GUD_TRANSFER_FORMAT`; it cannot be
 changed in an active USB session.
 
-RGB888 remains supported end-to-end. Its DRM native memory order is B, G, R;
-XRGB8888 is B, G, R, X on little-endian Linux DRM targets. PPM dumps decode both
-to logical R, G, B pixels.
+RGB888 remains supported by the Pi implementation for legacy or local use, but
+it is not supported end to end by the current mirgud + OnePlus GUD benchmark
+stack and is outside this benchmark. It advertises GUD format `0x50`, uses DRM
+`Rgb888`, and has three bytes per pixel. Its DRM native memory order is B, G, R.
+XRGB8888 is B, G, R, X on little-endian Linux DRM targets; the X byte is ignored
+when rendering or producing PPM output. PPM dumps decode visible pixels as
+R, G, B.
 
 ## Safety boundary
 
@@ -20,7 +24,14 @@ Changing only the sender command, including `mirgud --pixel-format`, is
 insufficient. The Pi's advertised GUD format, DRM scanout format, and host
 session must all be recreated together.
 
-## RGB565 switch
+## Fresh format switch
+
+Every format selection requires a fresh gadget process and USB enumeration. Do
+not change `GUD_TRANSFER_FORMAT` in an attached session: stop only from `Idle`,
+set the environment, start once, then detach and reattach so the host reads the
+new single-format descriptor.
+
+## RGB565
 
 1. Confirm the prior session is detached and the receiver is `Idle`.
 2. Stop the safe service only when that state permits it. Do not use `restart`.
@@ -31,10 +42,27 @@ session must all be recreated together.
 5. Verify the Pi startup log contains:
 
 ```text
-transfer_format=Rgb565 gud_format=0x40 drm_fourcc=Rgb565 depth=16 bpp=16 bytes_per_pixel=2
+transfer_format=rgb565 gud_format=0x40 drm_fourcc=Rgb565 depth=16 bpp=16 bytes_per_pixel=2
 ```
 
-## XRGB8888 switch
+## RGB888
+
+RGB888 is Pi-only for this benchmark and must not be selected for a mirgud +
+OnePlus GUD comparison run.
+
+1. Confirm the prior session is detached and the receiver is `Idle`.
+2. Stop the safe service only when that state permits it. Do not use `restart`.
+3. Set the service environment to `GUD_TRANSFER_FORMAT=rgb888` and run
+   `systemctl daemon-reload` after changing a drop-in.
+4. Start the service once, then detach and reattach for a fresh USB gadget
+   enumeration. Wait for phone host rediscovery before transmitting data.
+5. Verify the Pi startup log contains:
+
+```text
+transfer_format=rgb888 gud_format=0x50 drm_fourcc=Rgb888 depth=24 bpp=24 bytes_per_pixel=3
+```
+
+## XRGB8888
 
 1. Confirm the prior session is detached and the receiver is `Idle`.
 2. Stop the safe service only when that state permits it. Do not use `restart`.
@@ -45,17 +73,20 @@ transfer_format=Rgb565 gud_format=0x40 drm_fourcc=Rgb565 depth=16 bpp=16 bytes_p
 5. Verify the Pi startup log contains:
 
 ```text
-transfer_format=Xrgb8888 gud_format=0x80 drm_fourcc=Xrgb8888 depth=24 bpp=32 bytes_per_pixel=4
+transfer_format=xrgb8888 gud_format=0x80 drm_fourcc=Xrgb8888 depth=24 bpp=32 bytes_per_pixel=4
 ```
 
 ## Verification checklist
 
 - The Pi startup log records the intended `transfer_format`, GUD format,
   FourCC, depth, bpp, and bytes-per-pixel.
-- The descriptor exposes only the expected GUD format: `0x40` for RGB565 or
-  `0x80` for XRGB8888.
+- The descriptor exposes only the expected GUD format: `0x40` for RGB565,
+  `0x50` for RGB888, or `0x80` for XRGB8888.
 - The phone's GUD DRM framebuffer uses the expected FourCC.
 - The phone has rediscovered a freshly enumerated USB gadget; no prior-format
   session remains.
+- Every `frame_stats` line records the selected lowercase `transfer_format`, its
+  `gud_format`, and `bytes_per_pixel` exactly once.
 - Before any timed benchmark, run only the bounded static diagnostic pattern
-  and capture a PPM dump for channel-order inspection.
+  and capture a PPM dump for channel-order inspection. For XRGB8888, vary the
+  X padding byte and confirm the visible PPM pixels are unchanged.

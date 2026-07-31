@@ -634,6 +634,14 @@ impl TransferFormat {
         }
     }
 
+    fn name(self) -> &'static str {
+        match self {
+            Self::Rgb565 => "rgb565",
+            Self::Rgb888 => "rgb888",
+            Self::Xrgb8888 => "xrgb8888",
+        }
+    }
+
     fn drm_fourcc(self) -> drm::buffer::DrmFourcc {
         match self {
             Self::Rgb565 => drm::buffer::DrmFourcc::Rgb565,
@@ -1898,7 +1906,7 @@ fn main() -> anyhow::Result<()> {
     }
     info!("Pattern mode: {:?}", pattern_mode);
     info!(
-        transfer_format = ?transfer_format,
+        transfer_format = transfer_format.name(),
         gud_format = format_args!("{:#04x}", transfer_format.gud_pixel_format()),
         drm_fourcc = transfer_format.drm_fourcc_name(),
         depth = transfer_format.depth(),
@@ -3451,8 +3459,11 @@ fn main() -> anyhow::Result<()> {
                             0.0
                         };
                         tracing::info!(
-                            "frame_stats payload_seq={} rect={}x{}+{},{} source={}x{} scaled={} transfer_bytes={} output_bytes={} read_size={} read_calls={} first_request_bytes={} last_request_bytes={} usb_packets_est={} compression={} ratio={:.2} recv_ms={} decompress_ms={} copy_ms={} scale_ms={} flush_ms={} total_ms={} usb_mib_s={:.2}",
+                            "frame_stats payload_seq={} transfer_format={} gud_format={:#04x} bytes_per_pixel={} rect={}x{}+{},{} source={}x{} scaled={} transfer_bytes={} output_bytes={} read_size={} read_calls={} first_request_bytes={} last_request_bytes={} usb_packets_est={} compression={} ratio={:.2} recv_ms={} decompress_ms={} copy_ms={} scale_ms={} flush_ms={} total_ms={} usb_mib_s={:.2}",
                             payload_stats.payload_seq,
+                            transfer_format.name(),
+                            transfer_format.gud_pixel_format(),
+                            transfer_format.bytes_per_pixel(),
                             info.width,
                             info.height,
                             info.x,
@@ -3784,6 +3795,10 @@ mod tests {
             let mut fb = vec![0; 2 * bpp];
             write_pixel(&mut fb, 2 * bpp, 0, 0, format, COLOR_RED).unwrap();
             write_pixel(&mut fb, 2 * bpp, 1, 0, format, COLOR_CYAN).unwrap();
+            if format == TransferFormat::Xrgb8888 {
+                fb[3] = 0x7f;
+                fb[7] = 0xa5;
+            }
             dump_pixel_buffer_ppm(&path, &fb, 2 * bpp, 2, 1, format).unwrap();
             let ppm = fs::read(&path).unwrap();
             assert_eq!(&ppm[..11], b"P6\n2 1\n255\n");
