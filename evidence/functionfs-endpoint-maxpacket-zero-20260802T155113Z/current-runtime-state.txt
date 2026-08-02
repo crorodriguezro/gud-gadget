@@ -1,0 +1,11 @@
+Pi SSH at cristian@192.168.1.106: unreachable (No route to host).
+No Pi state, lifecycle, UDC current_speed, UDC maximum_speed, or DWC2 register
+capture was possible in this session.
+
+OnePlus GUD device is present at /sys/bus/usb/devices/1-1.2, authorized, at
+full-speed (12 Mb/s), with no completed configuration value reported.
+
+No service stop/restart, unbind, reboot, deployment, configuration retry,
+atomic commit, SET_BUFFER, FunctionFS bulk read, InFlight transition, Poisoned
+transition, or payload submission was performed during this session.
+Receiver safety state is therefore unknown, not asserted Idle.

@@ -1,0 +1,13 @@
+{
+  "run_id": "functionfs-endpoint-maxpacket-zero-20260802T155113Z",
+  "root_boundary": "userspace_functionfs_descriptor_generation",
+  "successful_speed": "high-speed",
+  "failing_speed": "full-speed",
+  "host_observed_ep1out_wMaxPacketSize": 0,
+  "original_userspace_fs_ep1out_wMaxPacketSize": 0,
+  "corrected_userspace_fs_ep1out_wMaxPacketSize": 64,
+  "payloads_submitted": 0,
+  "receiver_state": "unknown",
+  "irqtrace_deployment_authorized": false,
+  "corrected_local_gud_drm_sha256": "8da043a02825ff2c9ae42d73c50fa43a56971ab6963638eaac610ebf8989e0d5"
+}

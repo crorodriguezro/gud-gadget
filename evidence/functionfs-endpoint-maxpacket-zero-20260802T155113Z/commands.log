@@ -1,0 +1,18 @@
+Repository provenance commands:
+  git status
+  git branch --show-current
+  git log -5 --oneline
+  git diff --check
+
+Offline validation:
+  cargo test -p usb-gadget --lib
+  cargo test -p gud-gadget
+  python3 -m unittest tests/test_validate_functionfs_lifecycle.py
+  cargo build --release -p gud-drm
+
+Non-invasive OnePlus capture:
+  cat /sys/bus/usb/devices/1-1.2/{speed,version,bConfigurationValue,authorized,busnum,devnum,idVendor,idProduct,descriptors}
+
+Pi read-only capture attempt:
+  ssh cristian@192.168.1.106 ...
+  result: No route to host; no Pi lifecycle action was taken.

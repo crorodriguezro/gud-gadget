@@ -1,0 +1,7 @@
+root_boundary=userspace_functionfs_descriptor_generation
+first_zero=userspace_serialized_full_speed_ep1out_wMaxPacketSize
+current_receiver_state=unknown (Pi unreachable)
+physical_recovery_required=false_for_this_no_payload_diagnostic
+payloads_submitted=0
+irqtrace_deployment_authorized=false
+enumeration_qualification=not_attempted

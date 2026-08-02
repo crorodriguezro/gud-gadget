@@ -1,0 +1,14 @@
+gud-gadget
+  branch=pixel-format-benchmark
+  HEAD=0f8935f
+  preserved modifications include the descriptor correction in vendor/usb-gadget/src/function/custom/mod.rs.
+
+mir-android2-platform-gud
+  branch=pixel-format-benchmark
+  HEAD=65908ec
+  preserved modifications include the validator diagnostic-field extension.
+
+gud
+  branch=pixel-format-benchmark
+  HEAD=c36a74d
+  no files modified by this diagnostic.

@@ -1,0 +1,9 @@
+Test suite: python3 -m unittest tests/test_validate_functionfs_lifecycle.py
+Result: 24 tests passed.
+
+Diagnostic fields are optional and do not alter payload classification:
+  negotiated_usb_speed=full
+  host_observed_wMaxPacketSize=0
+  userspace_serialized_wMaxPacketSize=0
+  selected_descriptor_speed=full
+  selected_wMaxPacketSize=0

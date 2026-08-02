@@ -1,0 +1,10 @@
+device=/sys/bus/usb/devices/1-1.2
+speed=12
+usb_speed=full-speed
+version=2.00
+authorized=1
+busnum=1
+devnum=22
+VID=1d50
+PID=614d
+bConfigurationValue=unavailable/empty at failed configuration state

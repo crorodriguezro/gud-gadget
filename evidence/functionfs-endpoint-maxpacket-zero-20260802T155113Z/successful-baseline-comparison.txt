@@ -1,0 +1,21 @@
+Successful exact-read evidence:
+  Pi kernel=6.12.47+rpt-rpi-v8
+  Pi userspace SHA-256=7b7f74a44ce12a4f2bfbc202e6ccbb3548dd39c73996fd1e8b2b7106caa00409
+  OnePlus module SHA-256=6bcf3a989f4e6661562a27a419f9b974cc296feb391b96f31ad4e24063fe4df3
+  UDC state=configured
+  OnePlus path=1-1.2
+  OnePlus log=new high-speed USB device
+  Pi log=new device is high-speed
+  SET_BUFFER accepted and a 12800-byte bulk URB completed.
+
+Current failure:
+  Pi kernel=6.12.47+rpt-rpi-v8-ffs-trace
+  Pi userspace SHA-256=7b7f74a44ce12a4f2bfbc202e6ccbb3548dd39c73996fd1e8b2b7106caa00409
+  OnePlus module SHA-256=6bcf3a989f4e6661562a27a419f9b974cc296feb391b96f31ad4e24063fe4df3
+  OnePlus path=1-1.2
+  OnePlus speed=12 (full-speed)
+  Host configuration endpoint wMaxPacketSize=0
+  Pi rejects selected descriptor at usb_ep_enable(ep1out).
+
+The negotiated-speed change selects the preexisting invalid full-speed section;
+it does not implicate DWC2 endpoint hardware capabilities.

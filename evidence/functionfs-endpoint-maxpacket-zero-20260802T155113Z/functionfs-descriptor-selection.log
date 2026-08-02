@@ -1,0 +1,3 @@
+No new FunctionFS kernel instrumentation was built or deployed. Selection is proven by the negotiated full-speed link, raw host descriptor, and the known FunctionFS selection path.
+Expected failing selection: descriptor index=full-speed, wMaxPacketSize=0.
+Endpoint maxpacket/maxpacket_limit were not captured because Pi was unreachable.

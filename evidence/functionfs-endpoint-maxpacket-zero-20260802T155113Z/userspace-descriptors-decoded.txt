@@ -1,0 +1,19 @@
+Original serialized FunctionFS descriptors for one GUD bulk OUT endpoint:
+  header: magic=3, flags=HAS_FS_DESC|HAS_HS_DESC|HAS_SS_DESC|HAS_MS_OS_DESC
+  full-speed:  type=5 address=0x01 direction=OUT transfer=bulk wMaxPacketSize=0 bInterval=1
+  high-speed:  type=5 address=0x01 direction=OUT transfer=bulk wMaxPacketSize=512 bInterval=1
+  super-speed: type=5 address=0x01 direction=OUT transfer=bulk wMaxPacketSize=1024 bInterval=1
+  super-speed companion: type=0x30 bMaxBurst=0 bmAttributes=0 wBytesPerInterval=0
+  super-speed-plus: not advertised by this FunctionFS v2 builder
+
+Corrected serialized FunctionFS descriptors (unit-test verified):
+  full-speed:  type=5 address=0x01 direction=OUT transfer=bulk wMaxPacketSize=64 bInterval=1
+  high-speed:  type=5 address=0x01 direction=OUT transfer=bulk wMaxPacketSize=512 bInterval=1
+  super-speed: type=5 address=0x01 direction=OUT transfer=bulk wMaxPacketSize=1024 bInterval=1
+  super-speed companion: type=0x30 bMaxBurst=0 bmAttributes=0 wBytesPerInterval=0
+  super-speed-plus: not advertised by this FunctionFS v2 builder
+
+Source provenance:
+  vendor/usb-gadget/src/function/custom/mod.rs
+  Original: ep_desc.max_packet_size=0; fs_descrs.push(ep_desc)
+  Corrected: fs_descrs.push(EndpointDesc { max_packet_size: ep.max_packet_size_fs, ..ep_desc })

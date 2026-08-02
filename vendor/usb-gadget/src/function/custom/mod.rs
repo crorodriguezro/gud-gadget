@@ -267,6 +267,8 @@ pub struct Endpoint {
     pub direction: EndpointDirection,
     /// Transfer type.
     pub transfer: TransferType,
+    /// Maximum packet size for full speed.
+    pub max_packet_size_fs: u16,
     /// Maximum packet size for high speed.
     pub max_packet_size_hs: u16,
     /// Maximum packet size for super speed.
@@ -303,6 +305,7 @@ impl Endpoint {
         Self {
             direction,
             transfer,
+            max_packet_size_fs: 64,
             max_packet_size_hs: 512,
             max_packet_size_ss: 1024,
             max_burst_ss: 0,
@@ -644,7 +647,8 @@ impl CustomBuilder {
                     bytes_per_interval: ep.bytes_per_interval_ss,
                 };
 
-                fs_descrs.push(ep_desc.clone().into());
+                fs_descrs
+                    .push(ffs::EndpointDesc { max_packet_size: ep.max_packet_size_fs, ..ep_desc.clone() }.into());
                 hs_descrs
                     .push(ffs::EndpointDesc { max_packet_size: ep.max_packet_size_hs, ..ep_desc.clone() }.into());
                 ss_descrs
@@ -1044,6 +1048,48 @@ impl Custom {
     /// FunctionFS directory.
     pub fn ffs_dir(&mut self) -> Result<PathBuf> {
         Ok(self.ffs_dir.get()?.clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn endpoint_at_section_start(data: &[u8], offset: usize) -> &[u8] {
+        let interface_len = usize::from(data[offset]);
+        &data[offset + interface_len..offset + interface_len + ffs::EndpointDesc::SIZE]
+    }
+
+    #[test]
+    fn bulk_endpoint_descriptors_have_valid_speed_specific_packet_sizes() {
+        let (_receiver, direction) = EndpointDirection::host_to_device();
+        let builder = Custom::builder().with_interface(
+            Interface::new(Class::vendor_specific(Class::VENDOR_SPECIFIC, 0), "test")
+                .with_endpoint(Endpoint::bulk(direction)),
+        );
+        let (data, _) = builder.ffs_descriptors_and_strings().unwrap();
+
+        // The v2 FunctionFS header is seven little-endian u32 fields when no
+        // eventfd is present. Each speed section begins with one interface.
+        let fs_offset = 28;
+        let fs_endpoint = endpoint_at_section_start(&data, fs_offset);
+        let hs_offset = fs_offset + 9 + 7;
+        let hs_endpoint = endpoint_at_section_start(&data, hs_offset);
+        let ss_offset = hs_offset + 9 + 7;
+        let ss_endpoint = endpoint_at_section_start(&data, ss_offset);
+
+        for endpoint in [fs_endpoint, hs_endpoint, ss_endpoint] {
+            assert_eq!(endpoint[1], ffs::EndpointDesc::TYPE);
+            assert_eq!(endpoint[2], ffs::DIR_OUT | 1);
+            assert_eq!(endpoint[3] & 0x03, 0x02);
+            assert_ne!(u16::from_le_bytes([endpoint[4], endpoint[5]]), 0);
+            assert_eq!(endpoint[6], 1);
+        }
+
+        assert_eq!(u16::from_le_bytes([fs_endpoint[4], fs_endpoint[5]]), 64);
+        assert_eq!(u16::from_le_bytes([hs_endpoint[4], hs_endpoint[5]]), 512);
+        assert_eq!(u16::from_le_bytes([ss_endpoint[4], ss_endpoint[5]]), 1024);
+        assert_eq!(&data[ss_offset + 16..ss_offset + 22], &[6, 0x30, 0, 0, 0, 0]);
     }
 }
 

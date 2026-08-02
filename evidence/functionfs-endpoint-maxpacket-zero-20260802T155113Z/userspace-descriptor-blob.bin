@@ -1,0 +1,12 @@
+FunctionFS v2 serialized descriptor bytes, rendered as hexadecimal because this
+evidence writer preserves text files only:
+03 00 00 00 52 00 00 00 0f 00 00 00 02 00 00 00
+02 00 00 00 03 00 00 00 00 00 00 00
+09 04 00 00 01 ff ff 00 01 07 05 01 02 00 00 01
+09 04 00 00 01 ff ff 00 01 07 05 01 02 00 02 01
+09 04 00 00 01 ff ff 00 01 07 05 01 02 00 04 01
+06 30 00 00 00 00
+
+The bytes above are the original defective serialization: FS=0, HS=512,
+SS=1024. The corrected blob differs only in the FS endpoint packet-size bytes,
+which become 40 00 (64 little-endian).
