@@ -1,0 +1,6 @@
+inactive
+Restart=no
+MainPID=0
+Result=success
+ExecMainStatus=0
+not attached

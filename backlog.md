@@ -12,29 +12,35 @@ That design remains unsafe and must not be restored.
 The newer STATUS_ON_SET path is materially different: it creates one exact
 request only after a valid SET_BUFFER, proves `io_submit()` acceptance before
 GET_STATUS=OK, keeps EP0 nonblocking, and harvests one exact completion. On
-2026-08-17, the OnePlus/Pi hardware gate completed one 12,800-byte XRGB8888
-transaction through host URB, DWC2, FunctionFS AIO, userspace, and framebuffer
-processing. Both the exact transaction and outer guard returned to Idle.
-Evidence is under
-`evidence/functionfs-status-on-set-hs-20260817T165632Z/`.
+2026-08-17, the OnePlus/Pi hardware gates progressed from one exact
+12,800-byte XRGB8888 transaction to two guarded, ordered, uncompressed
+12,800-byte transactions. Each passed through host URB, DWC2, FunctionFS AIO,
+userspace, and framebuffer processing, and both receive guards returned to
+Idle before the next transaction. Sequential evidence is under
+`evidence/functionfs-status-on-set-e1-t02-hs-corrected-20260817T192939Z/`.
 
-This is a one-transaction diagnostic result, not production multi-frame
-qualification. Remaining P0 work is tracked by the roadmap:
+This is a bounded two-transaction diagnostic result, not production
+multi-frame qualification. Remaining P0 work is tracked by the roadmap:
 
 - `E1-T01`: **verified**. Commit `cea9942` completed one exact 12,800-byte
   transaction, returned both guards to Idle, drained the host's chained
   display-disable and controller-disable statuses, and detached with no
   post-success `-71`. Evidence is under
   `evidence/functionfs-status-on-set-e1-t01-hs-20260817T185502Z/`;
-- `E1-T02`: prove two sequential exact transactions;
+- `E1-T02`: **verified**. Commits `93a6364` and `fcde453` completed two exact,
+  uncompressed 12,800-byte transactions in order, returned both receive guards
+  to Idle between them, drained both cleanup statuses for each transaction,
+  and detached after transaction 2 without retry, overlap, `-71`, poison, or
+  unsafe teardown. Evidence is under
+  `evidence/functionfs-status-on-set-e1-t02-hs-corrected-20260817T192939Z/`;
 - `E1-T03`: select native AIO or the qualified blocking path for production;
 - `E1-T04`: implement the chosen long-lived receive path;
 - `E1-T05`: pass disconnect, suspend, timeout, and failure lifecycle gates;
 - `E1-T06`: pass the sustained transport soak.
 
 Keep the 12,800-byte actual-payload operating constraint through these gates.
-Do not represent simulation or the single diagnostic transaction as sustained
-DWC2 validation.
+Do not represent simulation or the bounded two-transaction diagnostic as
+sustained DWC2 validation.
 
 ## P2 — Explain the larger-payload DWC2/FunctionFS boundary
 
