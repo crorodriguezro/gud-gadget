@@ -1,0 +1,9 @@
+Linux raspberrypi 6.12.47+rpt-rpi-v8-ffs-xfercompltrace #2 SMP PREEMPT Sun Aug 16 23:57:59 -05 2026 aarch64 GNU/Linux
+inactive
+Restart=no
+MainPID=0
+Result=success
+ExecMainStatus=0
+not attached
+0fe550c16c9501afb8818df22d78197b635de0575a6d84eede969501e3ab3fc4  /home/cristian/gud-drm
+cristian    1115    1114  4 19:55 ?        00:00:00 bash -c uname -a; systemctl is-active gud-userspace.service; systemctl show gud-userspace.service -p MainPID -p Restart -p Result -p ExecMainStatus --no-pager; cat /sys/class/udc/3f980000.usb/state; sha256sum /home/cristian/gud-drm; find /sys/fs/pstore -mindepth 1 -maxdepth 1 -printf "%f\n" 2>/dev/null; ps -ef | grep "[g]ud-drm" || true

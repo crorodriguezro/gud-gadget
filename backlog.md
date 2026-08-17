@@ -21,7 +21,11 @@ Evidence is under
 This is a one-transaction diagnostic result, not production multi-frame
 qualification. Remaining P0 work is tracked by the roadmap:
 
-- `E1-T01`: drain the trailing status before diagnostic detach;
+- `E1-T01`: **verified**. Commit `cea9942` completed one exact 12,800-byte
+  transaction, returned both guards to Idle, drained the host's chained
+  display-disable and controller-disable statuses, and detached with no
+  post-success `-71`. Evidence is under
+  `evidence/functionfs-status-on-set-e1-t01-hs-20260817T185502Z/`;
 - `E1-T02`: prove two sequential exact transactions;
 - `E1-T03`: select native AIO or the qualified blocking path for production;
 - `E1-T04`: implement the chosen long-lived receive path;

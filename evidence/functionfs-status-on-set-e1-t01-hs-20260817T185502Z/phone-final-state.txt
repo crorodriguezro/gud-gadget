@@ -1,0 +1,17 @@
+Linux ubuntu-phablet 4.9.112-g6b190d86b #1 SMP PREEMPT Thu Mar 12 00:01:48 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
+host
+total 0
+drwxr-xr-x  2 root root        100 Aug 17 13:54 by-path
+crw-rw----+ 1 root video  226,   0 Aug 17 11:54 card0
+crw-rw----  1 root video  226,  64 Jun  5 10:36 controlD64
+crw-rw----+ 1 root render 226, 128 Jun  5 10:36 renderD128
+gud                    45056  0
+12800
+[ 6419.087754] gud_xdisp_lz4_12800 1-1.3:1.0: GUD bulk transfer failed after 0 retries: -16
+[ 6419.087770] gud_xdisp_lz4_12800 1-1.3:1.0: GUD atomic update failed: -16
+[ 7010.938235] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=15360 rect=640x6 format=0x34325258 zero_packet=0
+[ 7010.940358] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=7010940625553 bulk_submit_end_ns=7010940655500 usb_submit_urb_result=0 bulk_completion_callback_ns=7010940979876 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[ 7247.050925] E1_T01_CEA9942_ACCEPTANCE_START
+[ 7247.063082] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=15360 rect=640x6 format=0x34325258 zero_packet=0
+[ 7247.065122] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=7247065394440 bulk_submit_end_ns=7247065428450 usb_submit_urb_result=0 bulk_completion_callback_ns=7247065753815 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[ 7247.071857] E1_T01_CEA9942_ACCEPTANCE_END rc=0
