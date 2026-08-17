@@ -49,11 +49,12 @@ fn record_host_activity(had_host_session: &mut bool, event: &Event<'_>) {
 }
 
 const BULK_RECEIVE_DEADLINE: Duration = Duration::from_millis(1_000);
-const ONE_SHOT_STATUS_DRAIN_DEADLINE: Duration = Duration::from_millis(1_000);
-const ONE_SHOT_TRAILING_STATUS_COUNT: u8 = 2;
+const STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE: Duration = Duration::from_millis(1_000);
+const STATUS_ON_SET_CLEANUP_STATUS_COUNT: u8 = 2;
+const STATUS_ON_SET_DIAGNOSTIC_TRANSACTION_LIMIT: u8 = 2;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum OneShotStatusPhase {
+enum StatusOnSetCleanupPhase {
     AwaitingInitial,
     Receiving {
         trailing_statuses: u8,
@@ -67,73 +68,75 @@ enum OneShotStatusPhase {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum OneShotStatusObservation {
+enum StatusOnSetCleanupObservation {
     Initial,
     TrailingEarly { drained: u8, remaining: u8 },
     TrailingAfterPayload { drained: u8, remaining: u8 },
 }
 
 #[derive(Debug)]
-struct OneShotStatusDrain {
-    phase: OneShotStatusPhase,
+struct StatusOnSetCleanupDrain {
+    transaction: u8,
+    phase: StatusOnSetCleanupPhase,
 }
 
-impl OneShotStatusDrain {
-    fn new() -> Self {
+impl StatusOnSetCleanupDrain {
+    fn new(transaction: u8) -> Self {
         Self {
-            phase: OneShotStatusPhase::AwaitingInitial,
+            transaction,
+            phase: StatusOnSetCleanupPhase::AwaitingInitial,
         }
     }
 
-    fn note_status(&mut self, status: u8) -> anyhow::Result<OneShotStatusObservation> {
+    fn note_status(&mut self, status: u8) -> anyhow::Result<StatusOnSetCleanupObservation> {
         ensure!(
             status == 0,
-            "one-shot STATUS_ON_SET received non-OK status {status}"
+            "STATUS_ON_SET diagnostic STATUS_ON_SET received non-OK status {status}"
         );
         match self.phase {
-            OneShotStatusPhase::AwaitingInitial => {
-                self.phase = OneShotStatusPhase::Receiving {
+            StatusOnSetCleanupPhase::AwaitingInitial => {
+                self.phase = StatusOnSetCleanupPhase::Receiving {
                     trailing_statuses: 0,
                 };
-                Ok(OneShotStatusObservation::Initial)
+                Ok(StatusOnSetCleanupObservation::Initial)
             }
-            OneShotStatusPhase::Receiving { trailing_statuses } => {
+            StatusOnSetCleanupPhase::Receiving { trailing_statuses } => {
                 ensure!(
-                    trailing_statuses < ONE_SHOT_TRAILING_STATUS_COUNT,
-                    "received an extra GET_STATUS while all one-shot trailing statuses were already drained"
+                    trailing_statuses < STATUS_ON_SET_CLEANUP_STATUS_COUNT,
+                    "received an extra GET_STATUS while all STATUS_ON_SET cleanup statuses were already drained"
                 );
                 let drained = trailing_statuses + 1;
-                let remaining = ONE_SHOT_TRAILING_STATUS_COUNT - drained;
-                self.phase = OneShotStatusPhase::Receiving {
+                let remaining = STATUS_ON_SET_CLEANUP_STATUS_COUNT - drained;
+                self.phase = StatusOnSetCleanupPhase::Receiving {
                     trailing_statuses: drained,
                 };
-                Ok(OneShotStatusObservation::TrailingEarly { drained, remaining })
+                Ok(StatusOnSetCleanupObservation::TrailingEarly { drained, remaining })
             }
-            OneShotStatusPhase::AwaitingTrailing {
+            StatusOnSetCleanupPhase::AwaitingTrailing {
                 trailing_statuses,
                 deadline,
             } => {
                 ensure!(
-                    trailing_statuses < ONE_SHOT_TRAILING_STATUS_COUNT,
-                    "received an extra GET_STATUS while all one-shot trailing statuses were already drained"
+                    trailing_statuses < STATUS_ON_SET_CLEANUP_STATUS_COUNT,
+                    "received an extra GET_STATUS while all STATUS_ON_SET cleanup statuses were already drained"
                 );
                 let drained = trailing_statuses + 1;
-                let remaining = ONE_SHOT_TRAILING_STATUS_COUNT - drained;
+                let remaining = STATUS_ON_SET_CLEANUP_STATUS_COUNT - drained;
                 if remaining == 0 {
-                    self.phase = OneShotStatusPhase::Drained;
+                    self.phase = StatusOnSetCleanupPhase::Drained;
                 } else {
-                    self.phase = OneShotStatusPhase::AwaitingTrailing {
+                    self.phase = StatusOnSetCleanupPhase::AwaitingTrailing {
                         trailing_statuses: drained,
                         deadline,
                     };
                 }
-                Ok(OneShotStatusObservation::TrailingAfterPayload { drained, remaining })
+                Ok(StatusOnSetCleanupObservation::TrailingAfterPayload { drained, remaining })
             }
-            OneShotStatusPhase::Drained => anyhow::bail!(
-                "received an extra GET_STATUS after the one-shot trailing status was drained"
+            StatusOnSetCleanupPhase::Drained => anyhow::bail!(
+                "received an extra GET_STATUS after STATUS_ON_SET cleanup was drained"
             ),
-            OneShotStatusPhase::TimedOut => {
-                anyhow::bail!("received GET_STATUS after one-shot trailing-status timeout")
+            StatusOnSetCleanupPhase::TimedOut => {
+                anyhow::bail!("received GET_STATUS after STATUS_ON_SET cleanup timeout")
             }
         }
     }
@@ -142,38 +145,38 @@ impl OneShotStatusDrain {
     /// was in progress, so the diagnostic can detach immediately.
     fn payload_processed(&mut self, now: Instant) -> anyhow::Result<bool> {
         match self.phase {
-            OneShotStatusPhase::Receiving { trailing_statuses }
-                if trailing_statuses == ONE_SHOT_TRAILING_STATUS_COUNT =>
+            StatusOnSetCleanupPhase::Receiving { trailing_statuses }
+                if trailing_statuses == STATUS_ON_SET_CLEANUP_STATUS_COUNT =>
             {
-                self.phase = OneShotStatusPhase::Drained;
+                self.phase = StatusOnSetCleanupPhase::Drained;
                 Ok(true)
             }
-            OneShotStatusPhase::Receiving { trailing_statuses } => {
-                self.phase = OneShotStatusPhase::AwaitingTrailing {
+            StatusOnSetCleanupPhase::Receiving { trailing_statuses } => {
+                self.phase = StatusOnSetCleanupPhase::AwaitingTrailing {
                     trailing_statuses,
-                    deadline: now + ONE_SHOT_STATUS_DRAIN_DEADLINE,
+                    deadline: now + STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE,
                 };
                 Ok(false)
             }
             phase => anyhow::bail!(
-                "one-shot payload processing completed while status phase was {phase:?}"
+                "STATUS_ON_SET diagnostic payload processing completed while status phase was {phase:?}"
             ),
         }
     }
 
     fn timed_out(&mut self, now: Instant) -> bool {
-        let OneShotStatusPhase::AwaitingTrailing { deadline, .. } = self.phase else {
+        let StatusOnSetCleanupPhase::AwaitingTrailing { deadline, .. } = self.phase else {
             return false;
         };
         if now < deadline {
             return false;
         }
-        self.phase = OneShotStatusPhase::TimedOut;
+        self.phase = StatusOnSetCleanupPhase::TimedOut;
         true
     }
 
     fn is_drained(&self) -> bool {
-        self.phase == OneShotStatusPhase::Drained
+        self.phase == StatusOnSetCleanupPhase::Drained
     }
 }
 
@@ -1664,6 +1667,25 @@ fn parse_test_status_on_set_bytes(raw: Option<&OsStr>) -> anyhow::Result<Option<
     Ok(Some(bytes))
 }
 
+fn parse_test_status_on_set_two_transactions_bytes(
+    raw: Option<&OsStr>,
+) -> anyhow::Result<Option<usize>> {
+    let Some(raw) = raw else {
+        return Ok(None);
+    };
+    let raw = raw
+        .to_str()
+        .context("GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES must be valid UTF-8")?;
+    let bytes = raw.parse::<usize>().with_context(|| {
+        format!("invalid GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES={raw:?}")
+    })?;
+    ensure!(
+        bytes == 12_800,
+        "GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES diagnostic mode requires exactly 12800"
+    );
+    Ok(Some(bytes))
+}
+
 fn parse_test_dynamic_mode_match(raw: Option<&OsStr>) -> anyhow::Result<bool> {
     let Some(raw) = raw else {
         return Ok(false);
@@ -2114,14 +2136,32 @@ fn main() -> anyhow::Result<()> {
     let test_max_buffer_size_raw = var_os("GUD_TEST_MAX_BUFFER_SIZE");
     let test_prearm_once_raw = var_os("GUD_TEST_PREARM_ONCE_BYTES");
     let test_status_on_set_raw = var_os("GUD_TEST_STATUS_ON_SET_BYTES");
+    let test_status_on_set_two_transactions_raw =
+        var_os("GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES");
     let test_output_mode_raw = var_os("GUD_TEST_OUTPUT_MODE");
     let test_dynamic_mode_match_raw = var_os("GUD_TEST_DYNAMIC_MODE_MATCH");
     let descriptor_compression = parse_test_compression(test_compression_raw.as_deref())?;
     let descriptor_max_buffer_size =
         parse_test_max_buffer_size(test_max_buffer_size_raw.as_deref())?;
     let test_prearm_once_bytes = parse_test_prearm_once_bytes(test_prearm_once_raw.as_deref())?;
-    let test_status_on_set_bytes =
+    let legacy_status_on_set_bytes =
         parse_test_status_on_set_bytes(test_status_on_set_raw.as_deref())?;
+    let two_transaction_status_on_set_bytes = parse_test_status_on_set_two_transactions_bytes(
+        test_status_on_set_two_transactions_raw.as_deref(),
+    )?;
+    ensure!(
+        legacy_status_on_set_bytes.is_none() || two_transaction_status_on_set_bytes.is_none(),
+        "GUD_TEST_STATUS_ON_SET_BYTES cannot be combined with GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES"
+    );
+    let test_status_on_set_bytes =
+        legacy_status_on_set_bytes.or(two_transaction_status_on_set_bytes);
+    let status_on_set_transaction_limit = if two_transaction_status_on_set_bytes.is_some() {
+        STATUS_ON_SET_DIAGNOSTIC_TRANSACTION_LIMIT
+    } else if test_status_on_set_bytes.is_some() {
+        1
+    } else {
+        0
+    };
     let test_output_mode = parse_test_output_mode(test_output_mode_raw.as_deref())?;
     let dynamic_mode_match = parse_test_dynamic_mode_match(test_dynamic_mode_match_raw.as_deref())?;
     validate_test_mode_policy(dynamic_mode_match, test_output_mode)?;
@@ -2151,6 +2191,15 @@ fn main() -> anyhow::Result<()> {
         ensure!(
             descriptor_compression == 0,
             "GUD_TEST_STATUS_ON_SET_BYTES requires GUD_TEST_COMPRESSION=none"
+        );
+    }
+    gud_gadget::configure_status_on_set_diagnostic(status_on_set_transaction_limit);
+    if status_on_set_transaction_limit > 0 {
+        info!(
+            event = "status_on_set_diagnostic_configured",
+            transaction_limit = status_on_set_transaction_limit,
+            expected_bytes = test_status_on_set_bytes,
+            "configured bounded STATUS_ON_SET diagnostic"
         );
     }
     let (mut gud_data, gud_data_ep) =
@@ -2624,7 +2673,7 @@ fn main() -> anyhow::Result<()> {
     let mut prearmed_receive_started = None;
     let mut pending_exact_receive: Option<(gud_gadget::SetBuffer, std::time::Instant, u64)> = None;
     let mut ready_exact_payload: Option<(gud_gadget::SetBuffer, gud_gadget::PayloadStats)> = None;
-    let mut one_shot_status_drain: Option<OneShotStatusDrain> = None;
+    let mut status_on_set_cleanup_drain: Option<StatusOnSetCleanupDrain> = None;
     let unbind_target: Arc<dyn GadgetUnbind> = reg.clone();
     match gadget_shutdown.publish(&unbind_target) {
         Ok(GadgetUnbindOutcome::Armed) => {}
@@ -2645,18 +2694,18 @@ fn main() -> anyhow::Result<()> {
     drop(unbind_target);
 
     'event_loop: while running.load(Ordering::Relaxed) {
-        if let Some(drain) = one_shot_status_drain.as_mut() {
+        if let Some(drain) = status_on_set_cleanup_drain.as_mut() {
             if drain.timed_out(Instant::now()) {
                 tracing::error!(
                     event = "functionfs_status_on_set_trailing_status_timeout",
-                    timeout_ms = ONE_SHOT_STATUS_DRAIN_DEADLINE.as_millis(),
+                    timeout_ms = STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE.as_millis(),
                     exact_aio_state = ?gud_data.exact_aio_state(),
                     receiver_state = ?bulk_receive_session.current_state(),
-                    "One-shot payload completed but the host never requested its trailing GET_STATUS; ending the diagnostic through explicit containment"
+                    "STATUS_ON_SET diagnostic payload completed but the host never requested its trailing GET_STATUS; ending the diagnostic through explicit containment"
                 );
                 lifecycle_error = Some(anyhow::anyhow!(
-                    "one-shot trailing GET_STATUS did not arrive within {:?}",
-                    ONE_SHOT_STATUS_DRAIN_DEADLINE
+                    "STATUS_ON_SET diagnostic trailing GET_STATUS did not arrive within {:?}",
+                    STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE
                 ));
                 break 'event_loop;
             }
@@ -2710,11 +2759,12 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        let event_timeout = if pending_exact_receive.is_some() || one_shot_status_drain.is_some() {
-            Duration::from_millis(10)
-        } else {
-            Duration::from_millis(100)
-        };
+        let event_timeout =
+            if pending_exact_receive.is_some() || status_on_set_cleanup_drain.is_some() {
+                Duration::from_millis(10)
+            } else {
+                Duration::from_millis(100)
+            };
         let completed_payload = ready_exact_payload.take();
         let event = match completed_payload.as_ref() {
             Some(_) => None,
@@ -2894,23 +2944,27 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                     Event::StatusSent(status) => {
-                        let observation = one_shot_status_drain
+                        let observation = status_on_set_cleanup_drain
                             .as_mut()
                             .map(|drain| drain.note_status(status))
                             .transpose();
                         if let Err(err) = observation {
                             if let Some((_, started, _)) = pending_exact_receive.take() {
                                 gud_data.poison_exact_payload_aio(
-                                    "invalid one-shot GET_STATUS ordering",
+                                    "invalid STATUS_ON_SET diagnostic GET_STATUS ordering",
                                 );
                                 let _ = bulk_receive_session.finish_receive::<()>(
                                     started,
-                                    Err(err.context("validate one-shot GET_STATUS ordering")),
+                                    Err(err.context(
+                                        "validate STATUS_ON_SET diagnostic GET_STATUS ordering",
+                                    )),
                                 );
                                 continue;
                             }
                             lifecycle_error =
-                                Some(err.context("validate one-shot GET_STATUS ordering"));
+                                Some(err.context(
+                                    "validate STATUS_ON_SET diagnostic GET_STATUS ordering",
+                                ));
                             break 'event_loop;
                         }
                         if let Err(err) = gud_data.note_status_sent(status) {
@@ -2925,26 +2979,55 @@ fn main() -> anyhow::Result<()> {
                             }
                             tracing::error!("Invalid status transition");
                         } else if let Some(observation) =
-                            observation.expect("one-shot observation disappeared")
+                            observation.expect("STATUS_ON_SET diagnostic observation disappeared")
                         {
+                            let transaction = status_on_set_cleanup_drain
+                                .as_ref()
+                                .expect("STATUS_ON_SET cleanup drain disappeared")
+                                .transaction;
                             tracing::info!(
                                 event = "functionfs_status_on_set_status_observed",
+                                transaction,
                                 ?observation,
                                 exact_aio_state = ?gud_data.exact_aio_state(),
                                 receiver_state = ?bulk_receive_session.current_state(),
-                                "Observed one-shot STATUS_ON_SET control status"
+                                "Observed STATUS_ON_SET diagnostic control status"
                             );
-                            if one_shot_status_drain
+                            let cleanup_complete = status_on_set_cleanup_drain
                                 .as_ref()
-                                .is_some_and(OneShotStatusDrain::is_drained)
-                            {
+                                .is_some_and(StatusOnSetCleanupDrain::is_drained);
+                            if cleanup_complete {
+                                ensure!(
+                                    gud_data.exact_aio_state() == gud_gadget::ExactAioState::Idle
+                                        && bulk_receive_session.current_state() == BulkReceiveState::Idle,
+                                    "STATUS_ON_SET cleanup drained before both receive guards returned to Idle"
+                                );
+                                gud_gadget::finish_status_on_set_diagnostic_transaction().context(
+                                    "return bounded STATUS_ON_SET receive guard to Idle",
+                                )?;
                                 tracing::info!(
-                                    event = "functionfs_status_on_set_trailing_status_drained",
+                                    event = "status_on_set_cleanup_statuses_drained",
+                                    transaction,
                                     exact_aio_state = ?gud_data.exact_aio_state(),
                                     receiver_state = ?bulk_receive_session.current_state(),
-                                    "Drained the one-shot host trailing GET_STATUS before diagnostic detach"
+                                    "Drained both host cleanup statuses after STATUS_ON_SET payload"
                                 );
-                                break 'event_loop;
+                                if transaction == status_on_set_transaction_limit {
+                                    tracing::info!(
+                                        event = "status_on_set_diagnostic_complete",
+                                        transaction_limit = status_on_set_transaction_limit,
+                                        completion_count = transaction,
+                                        "all bounded STATUS_ON_SET transactions completed; detaching only from Idle"
+                                    );
+                                    break 'event_loop;
+                                }
+                                tracing::info!(
+                                    event = "status_on_set_transaction_returned_idle",
+                                    transaction,
+                                    next_transaction = transaction + 1,
+                                    "transaction cleanup drained; allowing the next intentional host commit"
+                                );
+                                status_on_set_cleanup_drain = None;
                             }
                         }
                     }
@@ -3512,22 +3595,41 @@ fn main() -> anyhow::Result<()> {
                             | ProtocolInvalidationReason::Suspend
                             | ProtocolInvalidationReason::Resume),
                     } => {
+                        let diagnostic_guard = gud_gadget::status_on_set_diagnostic_guard_state();
+                        if diagnostic_guard.transaction_limit > 0
+                            && diagnostic_guard.started_transactions > 0
+                        {
+                            lifecycle_error = Some(anyhow::anyhow!(
+                                "STATUS_ON_SET diagnostic lifecycle invalidation {reason:?} after transaction {} (active={})",
+                                diagnostic_guard.started_transactions,
+                                diagnostic_guard.active
+                            ));
+                            tracing::error!(
+                                event = "status_on_set_lifecycle_containment",
+                                transaction_limit = diagnostic_guard.transaction_limit,
+                                started_transactions = diagnostic_guard.started_transactions,
+                                active = diagnostic_guard.active,
+                                ?reason,
+                                "lifecycle invalidation is contained rather than resetting diagnostic state"
+                            );
+                            break 'event_loop;
+                        }
                         if reason == ProtocolInvalidationReason::Enable {
                             if let Some(prearm_bytes) = test_prearm_once_bytes {
                                 ensure!(
                                     prearmed_receive_started.is_none(),
-                                    "received a second FunctionFS Enable while the one-shot prearmed read was active"
+                                    "received a second FunctionFS Enable while the STATUS_ON_SET diagnostic prearmed read was active"
                                 );
-                                let started = bulk_receive_session
-                                    .begin_receive()
-                                    .context("begin one-shot prearmed FunctionFS receive")?;
+                                let started = bulk_receive_session.begin_receive().context(
+                                    "begin STATUS_ON_SET diagnostic prearmed FunctionFS receive",
+                                )?;
                                 if let Err(err) = gud_data.prearm_payload_read(prearm_bytes) {
                                     let cancel_result = bulk_receive_session
                                         .cancel_receive_before_io()
                                         .context("cancel failed FunctionFS prearm state");
                                     lifecycle_error = Some(match cancel_result {
                                         Ok(()) => err.context(
-                                            "submit one-shot prearmed FunctionFS bulk OUT read",
+                                            "submit STATUS_ON_SET diagnostic prearmed FunctionFS bulk OUT read",
                                         ),
                                         Err(cancel_err) => cancel_err.context(format!(
                                             "prearm submission also failed: {err:#}"
@@ -3539,7 +3641,7 @@ fn main() -> anyhow::Result<()> {
                                 tracing::info!(
                                     event = "functionfs_prearm_ready",
                                     prearm_bytes,
-                                    "One-shot FunctionFS bulk OUT read is active before SET_BUFFER"
+                                    "STATUS_ON_SET diagnostic FunctionFS bulk OUT read is active before SET_BUFFER"
                                 );
                             }
                         }
@@ -3597,6 +3699,24 @@ fn main() -> anyhow::Result<()> {
                         generation,
                         reason: ProtocolInvalidationReason::Disconnected,
                     } => {
+                        let diagnostic_guard = gud_gadget::status_on_set_diagnostic_guard_state();
+                        if diagnostic_guard.transaction_limit > 0
+                            && diagnostic_guard.started_transactions > 0
+                        {
+                            lifecycle_error = Some(anyhow::anyhow!(
+                                "STATUS_ON_SET diagnostic disconnected after transaction {} (active={})",
+                                diagnostic_guard.started_transactions,
+                                diagnostic_guard.active
+                            ));
+                            tracing::error!(
+                                event = "status_on_set_lifecycle_containment",
+                                transaction_limit = diagnostic_guard.transaction_limit,
+                                started_transactions = diagnostic_guard.started_transactions,
+                                active = diagnostic_guard.active,
+                                "disconnect is contained rather than resetting diagnostic state"
+                            );
+                            break 'event_loop;
+                        }
                         if dynamic_mode_match {
                             let result = match active {
                                 StableMappedActive::Slot0(mapped) => {
@@ -3700,8 +3820,37 @@ fn main() -> anyhow::Result<()> {
                                         continue;
                                     }
                                 };
-                                one_shot_status_drain = Some(OneShotStatusDrain::new());
-                                gud_gadget::begin_one_shot_status_guard();
+                                let transaction =
+                                    match gud_gadget::begin_status_on_set_diagnostic_transaction() {
+                                        Ok(transaction) => transaction,
+                                        Err(err) => {
+                                            gud_data.poison_exact_payload_aio(
+                                            "diagnostic receive guard could not claim accepted AIO",
+                                        );
+                                            let _ = bulk_receive_session.finish_receive::<()>(
+                                                started,
+                                                Err(err.context(
+                                                    "claim bounded STATUS_ON_SET transaction",
+                                                )),
+                                            );
+                                            continue;
+                                        }
+                                    };
+                                ensure!(
+                                    u64::from(transaction) == transaction_seq,
+                                    "STATUS_ON_SET transaction number {transaction} does not match AIO sequence {transaction_seq}"
+                                );
+                                status_on_set_cleanup_drain =
+                                    Some(StatusOnSetCleanupDrain::new(transaction));
+                                tracing::info!(
+                                    event = "status_on_set_transaction_armed",
+                                    transaction,
+                                    transaction_limit = status_on_set_transaction_limit,
+                                    expected_bytes = test_status_on_set_bytes,
+                                    aio_sequence = transaction_seq,
+                                    receiver_state = ?bulk_receive_session.current_state(),
+                                    "accepted valid SET_BUFFER and armed exactly one AIO request"
+                                );
                                 pending_exact_receive = Some((info, started, transaction_seq));
                                 continue;
                             }
@@ -3781,7 +3930,7 @@ fn main() -> anyhow::Result<()> {
                                 payload_seq = payload_stats.payload_seq,
                                 transfer_bytes = payload_stats.transfer_bytes,
                                 read_calls = payload_stats.read_calls,
-                                "One-shot prearmed FunctionFS payload completed; leaving the event loop before another SET_BUFFER"
+                                "STATUS_ON_SET diagnostic prearmed FunctionFS payload completed; leaving the event loop before another SET_BUFFER"
                             );
                             break 'event_loop;
                         }
@@ -4045,14 +4194,17 @@ fn main() -> anyhow::Result<()> {
                         );
 
                         if let Some(status_on_set_bytes) = test_status_on_set_bytes {
-                            let drain = one_shot_status_drain
-                                .as_mut()
-                                .expect("one-shot payload completed without a status drain");
+                            let drain = status_on_set_cleanup_drain.as_mut().expect(
+                                "STATUS_ON_SET diagnostic payload completed without a status drain",
+                            );
+                            let transaction = drain.transaction;
                             let trailing_status_was_early = drain
                                 .payload_processed(Instant::now())
-                                .context("advance one-shot trailing-status drain after payload processing")?;
+                                .context("advance STATUS_ON_SET diagnostic trailing-status drain after payload processing")?;
                             tracing::info!(
-                                event = "functionfs_status_on_set_one_shot_payload_complete",
+                                event = "status_on_set_payload_complete",
+                                transaction,
+                                transaction_limit = status_on_set_transaction_limit,
                                 status_on_set_bytes,
                                 payload_seq = payload_stats.payload_seq,
                                 transfer_bytes = payload_stats.transfer_bytes,
@@ -4060,17 +4212,41 @@ fn main() -> anyhow::Result<()> {
                                 exact_aio_state = ?gud_data.exact_aio_state(),
                                 receiver_state = ?bulk_receive_session.current_state(),
                                 trailing_status_was_early,
-                                "One-shot STATUS_ON_SET payload completed; refusing further SET_BUFFERs while final status handling is contained"
+                                "STATUS_ON_SET payload completed; retaining admission guard while host cleanup statuses drain"
                             );
                             if trailing_status_was_early {
+                                ensure!(
+                                    gud_data.exact_aio_state() == gud_gadget::ExactAioState::Idle
+                                        && bulk_receive_session.current_state() == BulkReceiveState::Idle,
+                                    "STATUS_ON_SET early cleanup drain completed before both receive guards returned to Idle"
+                                );
+                                gud_gadget::finish_status_on_set_diagnostic_transaction().context(
+                                    "return bounded STATUS_ON_SET receive guard to Idle",
+                                )?;
                                 tracing::info!(
-                                    event = "functionfs_status_on_set_trailing_status_drained",
+                                    event = "status_on_set_cleanup_statuses_drained",
+                                    transaction,
                                     payload_seq = payload_stats.payload_seq,
                                     exact_aio_state = ?gud_data.exact_aio_state(),
                                     receiver_state = ?bulk_receive_session.current_state(),
-                                    "Trailing GET_STATUS was drained before payload processing completed; detaching now"
+                                    "Both host cleanup statuses arrived before payload processing completed"
                                 );
-                                break 'event_loop;
+                                if transaction == status_on_set_transaction_limit {
+                                    tracing::info!(
+                                        event = "status_on_set_diagnostic_complete",
+                                        transaction_limit = status_on_set_transaction_limit,
+                                        completion_count = transaction,
+                                        "all bounded STATUS_ON_SET transactions completed; detaching only from Idle"
+                                    );
+                                    break 'event_loop;
+                                }
+                                tracing::info!(
+                                    event = "status_on_set_transaction_returned_idle",
+                                    transaction,
+                                    next_transaction = transaction + 1,
+                                    "transaction cleanup drained; allowing the next intentional host commit"
+                                );
+                                status_on_set_cleanup_drain = None;
                             }
                             continue;
                         }
@@ -4219,15 +4395,16 @@ mod tests {
         diagnostic_pattern_color, dump_pixel_buffer_ppm, fill_diagnostic_pattern_rect,
         parse_functionfs_read_size, parse_test_compression, parse_test_dynamic_mode_match,
         parse_test_max_buffer_size, parse_test_output_mode, parse_test_prearm_once_bytes,
-        parse_test_status_on_set_bytes, read_pixel, record_host_activity, render_waiting_screen,
-        scale_to_fit, should_restart_after_clean_detach, validate_test_mode_policy,
-        waiting_scene_glyph, write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode,
-        GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey, OneShotStatusDrain,
-        OneShotStatusObservation, OneShotStatusPhase, PendingPlan, PendingPlanKind, ScaledLayout,
-        ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, TestOutputMode, TransferFormat,
+        parse_test_status_on_set_bytes, parse_test_status_on_set_two_transactions_bytes,
+        read_pixel, record_host_activity, render_waiting_screen, scale_to_fit,
+        should_restart_after_clean_detach, validate_test_mode_policy, waiting_scene_glyph,
+        write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
+        GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind, ScaledLayout,
+        ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, StatusOnSetCleanupDrain,
+        StatusOnSetCleanupObservation, StatusOnSetCleanupPhase, TestOutputMode, TransferFormat,
         COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN, COLOR_LIGHT_GRAY,
-        COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, ONE_SHOT_STATUS_DRAIN_DEADLINE,
-        RGB565_GREEN, RGB565_WHITE,
+        COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, RGB565_GREEN, RGB565_WHITE,
+        STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
@@ -4256,22 +4433,22 @@ mod tests {
     }
 
     #[test]
-    fn one_shot_drain_handles_initial_completion_then_trailing_status() {
-        let mut drain = OneShotStatusDrain::new();
+    fn cleanup_drain_handles_initial_completion_then_trailing_status() {
+        let mut drain = StatusOnSetCleanupDrain::new(1);
 
         assert_eq!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::Initial
+            StatusOnSetCleanupObservation::Initial
         );
 
         assert!(!drain.payload_processed(Instant::now()).unwrap());
         assert!(matches!(
             drain.phase,
-            OneShotStatusPhase::AwaitingTrailing { .. }
+            StatusOnSetCleanupPhase::AwaitingTrailing { .. }
         ));
         assert_eq!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::TrailingAfterPayload {
+            StatusOnSetCleanupObservation::TrailingAfterPayload {
                 drained: 1,
                 remaining: 1,
             }
@@ -4279,25 +4456,25 @@ mod tests {
         assert!(!drain.is_drained());
         assert_eq!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::TrailingAfterPayload {
+            StatusOnSetCleanupObservation::TrailingAfterPayload {
                 drained: 2,
                 remaining: 0,
             }
         );
-        assert_eq!(drain.phase, OneShotStatusPhase::Drained);
+        assert_eq!(drain.phase, StatusOnSetCleanupPhase::Drained);
     }
 
     #[test]
-    fn one_shot_drain_handles_initial_trailing_then_aio_completion() {
-        let mut drain = OneShotStatusDrain::new();
+    fn cleanup_drain_handles_initial_trailing_then_aio_completion() {
+        let mut drain = StatusOnSetCleanupDrain::new(1);
 
         assert_eq!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::Initial
+            StatusOnSetCleanupObservation::Initial
         );
         assert_eq!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::TrailingEarly {
+            StatusOnSetCleanupObservation::TrailingEarly {
                 drained: 1,
                 remaining: 1,
             }
@@ -4306,32 +4483,32 @@ mod tests {
         assert!(!drain.payload_processed(Instant::now()).unwrap());
         assert_eq!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::TrailingAfterPayload {
+            StatusOnSetCleanupObservation::TrailingAfterPayload {
                 drained: 2,
                 remaining: 0,
             }
         );
-        assert_eq!(drain.phase, OneShotStatusPhase::Drained);
+        assert_eq!(drain.phase, StatusOnSetCleanupPhase::Drained);
     }
 
     #[test]
-    fn one_shot_drain_handles_both_trailing_statuses_before_payload_processing() {
-        let mut drain = OneShotStatusDrain::new();
+    fn cleanup_drain_handles_both_trailing_statuses_before_payload_processing() {
+        let mut drain = StatusOnSetCleanupDrain::new(1);
 
         assert_eq!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::Initial
+            StatusOnSetCleanupObservation::Initial
         );
         assert!(matches!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::TrailingEarly {
+            StatusOnSetCleanupObservation::TrailingEarly {
                 drained: 1,
                 remaining: 1,
             }
         ));
         assert!(matches!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::TrailingEarly {
+            StatusOnSetCleanupObservation::TrailingEarly {
                 drained: 2,
                 remaining: 0,
             }
@@ -4342,14 +4519,16 @@ mod tests {
     }
 
     #[test]
-    fn one_shot_drain_missing_trailing_status_times_out_with_containment_state() {
-        let mut drain = OneShotStatusDrain::new();
+    fn cleanup_drain_missing_trailing_status_times_out_with_containment_state() {
+        let mut drain = StatusOnSetCleanupDrain::new(1);
         drain.note_status(0).unwrap();
         let now = Instant::now();
         assert!(!drain.payload_processed(now).unwrap());
-        assert!(!drain.timed_out(now + ONE_SHOT_STATUS_DRAIN_DEADLINE - Duration::from_nanos(1)));
-        assert!(drain.timed_out(now + ONE_SHOT_STATUS_DRAIN_DEADLINE));
-        assert_eq!(drain.phase, OneShotStatusPhase::TimedOut);
+        assert!(
+            !drain.timed_out(now + STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE - Duration::from_nanos(1))
+        );
+        assert!(drain.timed_out(now + STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE));
+        assert_eq!(drain.phase, StatusOnSetCleanupPhase::TimedOut);
     }
 
     #[test]
@@ -4524,7 +4703,7 @@ mod tests {
     }
 
     #[test]
-    fn status_on_set_diagnostic_parser_accepts_only_exact_one_shot_size() {
+    fn status_on_set_diagnostic_parser_accepts_only_exact_qualified_size() {
         assert_eq!(parse_test_status_on_set_bytes(None).unwrap(), None);
         assert_eq!(
             parse_test_status_on_set_bytes(Some(OsStr::new("12800"))).unwrap(),
@@ -4533,6 +4712,20 @@ mod tests {
         for value in ["0", "12799", "12801", "65536", "not-a-size"] {
             assert!(
                 parse_test_status_on_set_bytes(Some(OsStr::new(value))).is_err(),
+                "unexpectedly accepted {value:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn two_transaction_status_on_set_parser_accepts_only_exact_qualified_size() {
+        assert_eq!(
+            parse_test_status_on_set_two_transactions_bytes(Some(OsStr::new("12800"))).unwrap(),
+            Some(12_800)
+        );
+        for value in ["0", "12799", "12801", "65536", "not-a-size"] {
+            assert!(
+                parse_test_status_on_set_two_transactions_bytes(Some(OsStr::new(value))).is_err(),
                 "unexpectedly accepted {value:?}"
             );
         }

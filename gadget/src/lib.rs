@@ -78,7 +78,12 @@ static CLEAR_STATUS_ON_NEXT_SUCCESS: AtomicBool = AtomicBool::new(false);
 // The STATUS_ON_SET diagnostic deliberately permits exactly one payload. This
 // guard is enabled as soon as that payload's AIO request is accepted, so a
 // second SET_BUFFER cannot slip in while EP0 services the trailing status.
-static ONE_SHOT_STATUS_GUARD_ACTIVE: AtomicBool = AtomicBool::new(false);
+// This is deliberately a bounded diagnostic guard, not a production receive
+// queue.  A SET_BUFFER is admitted only while no diagnostic transaction owns
+// the receive path and fewer than the configured number have been armed.
+// `started` advances only after io_submit() accepted the corresponding AIO.
+static STATUS_ON_SET_DIAGNOSTIC_GUARD: OnceLock<Mutex<StatusOnSetDiagnosticGuard>> =
+    OnceLock::new();
 static STATE_CHECK_VALIDATION: OnceLock<Mutex<StateCheckValidation>> = OnceLock::new();
 static PROTOCOL_STATE: OnceLock<Mutex<ProtocolState>> = OnceLock::new();
 // This generation changes only at FunctionFS lifecycle boundaries. It lets the
@@ -122,6 +127,60 @@ pub struct PixelDataEndpoint {
 }
 
 const MAX_EXACT_AIO_PAYLOAD_SIZE: usize = 64 * 1024 * 1024;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct StatusOnSetDiagnosticGuardState {
+    pub transaction_limit: u8,
+    pub started_transactions: u8,
+    pub active: bool,
+}
+
+#[derive(Debug, Default)]
+struct StatusOnSetDiagnosticGuard {
+    transaction_limit: u8,
+    started_transactions: u8,
+    active: bool,
+}
+
+impl StatusOnSetDiagnosticGuard {
+    fn state(&self) -> StatusOnSetDiagnosticGuardState {
+        StatusOnSetDiagnosticGuardState {
+            transaction_limit: self.transaction_limit,
+            started_transactions: self.started_transactions,
+            active: self.active,
+        }
+    }
+
+    fn set_buffer_permitted(&self) -> bool {
+        self.transaction_limit == 0
+            || (!self.active && self.started_transactions < self.transaction_limit)
+    }
+
+    fn begin_after_aio_acceptance(&mut self) -> anyhow::Result<u8> {
+        ensure!(
+            self.transaction_limit > 0,
+            "STATUS_ON_SET diagnostic guard is disabled"
+        );
+        ensure!(
+            !self.active,
+            "STATUS_ON_SET diagnostic transaction already owns receive guard"
+        );
+        ensure!(
+            self.started_transactions < self.transaction_limit,
+            "STATUS_ON_SET diagnostic transaction limit {} reached",
+            self.transaction_limit
+        );
+        self.started_transactions += 1;
+        self.active = true;
+        Ok(self.started_transactions)
+    }
+
+    fn release_after_cleanup(&mut self) -> anyhow::Result<()> {
+        ensure!(self.active, "STATUS_ON_SET diagnostic guard was not active");
+        self.active = false;
+        Ok(())
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ExactAioState {
@@ -746,18 +805,77 @@ fn current_status() -> u8 {
 fn reset_status() {
     STATUS_VALUE.store(GUD_STATUS_OK, Ordering::SeqCst);
     CLEAR_STATUS_ON_NEXT_SUCCESS.store(false, Ordering::SeqCst);
-    ONE_SHOT_STATUS_GUARD_ACTIVE.store(false, Ordering::SeqCst);
 }
 
-/// Refuse further SET_BUFFER requests for the active one-shot STATUS_ON_SET
-/// diagnostic. The caller enables this only after its first AIO request was
-/// accepted, before either initial or trailing GET_STATUS can be observed.
-pub fn begin_one_shot_status_guard() {
-    ONE_SHOT_STATUS_GUARD_ACTIVE.store(true, Ordering::SeqCst);
+fn status_on_set_diagnostic_guard() -> &'static Mutex<StatusOnSetDiagnosticGuard> {
+    STATUS_ON_SET_DIAGNOSTIC_GUARD.get_or_init(|| Mutex::new(StatusOnSetDiagnosticGuard::default()))
 }
 
-fn one_shot_set_buffer_permitted() -> bool {
-    !ONE_SHOT_STATUS_GUARD_ACTIVE.load(Ordering::Acquire)
+/// Configure a bounded test-only STATUS_ON_SET diagnostic.  Production leaves
+/// this at zero and therefore retains its ordinary SET_BUFFER behavior.
+pub fn configure_status_on_set_diagnostic(transaction_limit: u8) {
+    let mut guard = status_on_set_diagnostic_guard()
+        .lock()
+        .expect("STATUS_ON_SET diagnostic guard lock poisoned");
+    *guard = StatusOnSetDiagnosticGuard {
+        transaction_limit,
+        started_transactions: 0,
+        active: false,
+    };
+    debug!(
+        event = "status_on_set_diagnostic_configured",
+        transaction_limit, "configured bounded STATUS_ON_SET diagnostic"
+    );
+}
+
+pub fn status_on_set_diagnostic_guard_state() -> StatusOnSetDiagnosticGuardState {
+    status_on_set_diagnostic_guard()
+        .lock()
+        .expect("STATUS_ON_SET diagnostic guard lock poisoned")
+        .state()
+}
+
+/// Record ownership only after io_submit() accepted the exact receive. This
+/// makes a rejected SET_BUFFER/AIO attempt unable to consume a transaction.
+pub fn begin_status_on_set_diagnostic_transaction() -> anyhow::Result<u8> {
+    let mut guard = status_on_set_diagnostic_guard()
+        .lock()
+        .expect("STATUS_ON_SET diagnostic guard lock poisoned");
+    let transaction = guard.begin_after_aio_acceptance()?;
+    debug!(
+        event = "status_on_set_receive_guard_transition",
+        transaction,
+        transaction_limit = guard.transaction_limit,
+        started_transactions = guard.started_transactions,
+        active = guard.active,
+        "STATUS_ON_SET outer receive guard entered InFlight after AIO acceptance"
+    );
+    Ok(transaction)
+}
+
+/// Release the diagnostic admission guard only after the payload has returned
+/// both receive layers to Idle and its two cleanup statuses have been drained.
+pub fn finish_status_on_set_diagnostic_transaction() -> anyhow::Result<()> {
+    let mut guard = status_on_set_diagnostic_guard()
+        .lock()
+        .expect("STATUS_ON_SET diagnostic guard lock poisoned");
+    guard.release_after_cleanup()?;
+    debug!(
+        event = "status_on_set_receive_guard_transition",
+        transaction = guard.started_transactions,
+        transaction_limit = guard.transaction_limit,
+        started_transactions = guard.started_transactions,
+        active = guard.active,
+        "STATUS_ON_SET outer receive guard returned to Idle after cleanup drain"
+    );
+    Ok(())
+}
+
+fn status_on_set_set_buffer_permitted() -> bool {
+    status_on_set_diagnostic_guard()
+        .lock()
+        .expect("STATUS_ON_SET diagnostic guard lock poisoned")
+        .set_buffer_permitted()
 }
 
 fn reset_protocol_state() -> Option<u64> {
@@ -1244,11 +1362,17 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 }
                 GUD_REQ_SET_BUFFER => {
                     let req = req.recv_all().context("recv set buffer")?;
-                    if !one_shot_set_buffer_permitted() {
+                    if !status_on_set_set_buffer_permitted() {
                         latch_status(GUD_STATUS_BUSY);
+                        let guard = status_on_set_diagnostic_guard_state();
                         warn!(
-                            event = "set_buffer_rejected_one_shot_status_drain",
-                            "rejected SET_BUFFER while one-shot diagnostic drains trailing status"
+                            event = "status_on_set_set_buffer_rejected",
+                            transaction_limit = guard.transaction_limit,
+                            started_transactions = guard.started_transactions,
+                            active = guard.active,
+                            attempted_third_transaction = guard.transaction_limit == 2
+                                && guard.started_transactions >= 2,
+                            "rejected SET_BUFFER outside the bounded STATUS_ON_SET diagnostic admission window"
                         );
                         return Ok(None);
                     }
@@ -1277,6 +1401,16 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                                 expected_bulk_bytes,
                                 "received and validated GUD SET_BUFFER; awaiting bulk OUT"
                             );
+                            let guard = status_on_set_diagnostic_guard_state();
+                            if guard.transaction_limit > 0 {
+                                debug!(
+                                    event = "status_on_set_set_buffer_accepted",
+                                    configured_transaction_limit = guard.transaction_limit,
+                                    transaction_number = guard.started_transactions + 1,
+                                    expected_bulk_bytes,
+                                    "accepted SET_BUFFER for bounded STATUS_ON_SET diagnostic"
+                                );
+                            }
                             return Ok(Some(Event::Buffer(v)));
                         }
                         Err(err) => {
@@ -2108,21 +2242,24 @@ mod tests {
         classify_functionfs_read_completion, clear_pending_state, commit_pending_state,
         configure_state_check_validation, current_status, handle_resume_transition,
         handle_suspend_transition, latch_status, mark_success, modes_have_same_user_timing,
-        next_connector_status, one_shot_set_buffer_permitted, parse_enable_request,
-        read_functionfs_payload, reset_connector_status_changed, reset_protocol_state,
-        reset_status, serialize_connector_descriptors, serialize_display_descriptor,
-        serialize_display_modes, store_pending_state, update_controller_enabled,
-        update_display_enabled, usb_packet_estimate, validate_buffer_request,
-        validate_functionfs_read_size, validate_state_check_payload, ActiveScanoutState,
-        ConnectorDescriptor, DisplayMode, DisplayState, ExactAioState, ExactAioTransaction,
-        FunctionFsReadCompletion, PixelDataEndpoint, SetBuffer,
-        DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE, FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE,
-        GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
-        GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET, GUD_DISPLAY_MAGIC,
-        GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK, GUD_PIXEL_FORMAT_RGB565,
-        GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        next_connector_status, parse_enable_request, read_functionfs_payload,
+        reset_connector_status_changed, reset_protocol_state, reset_status,
+        serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
+        store_pending_state, update_controller_enabled, update_display_enabled,
+        usb_packet_estimate, validate_buffer_request, validate_functionfs_read_size,
+        validate_state_check_payload, ActiveScanoutState, ConnectorDescriptor, DisplayMode,
+        DisplayState, ExactAioState, ExactAioTransaction, FunctionFsReadCompletion,
+        PixelDataEndpoint, SetBuffer, DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE, GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED,
+        GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET,
+        GUD_DISPLAY_MAGIC, GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK,
+        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
-    use crate::{begin_one_shot_status_guard, event, Event, ProtocolInvalidationReason};
+    use crate::{
+        begin_status_on_set_diagnostic_transaction, configure_status_on_set_diagnostic, event,
+        finish_status_on_set_diagnostic_transaction, status_on_set_diagnostic_guard_state,
+        status_on_set_set_buffer_permitted, Event, ProtocolInvalidationReason,
+    };
     use bytes::BytesMut;
     use serde::Serialize;
     use std::io::{self, Cursor, Read};
@@ -2390,40 +2527,142 @@ mod tests {
     }
 
     #[test]
-    fn one_shot_drain_rejects_second_set_without_arming_or_advancing_sequences() {
+    fn bounded_diagnostic_rejects_set_while_inflight_without_advancing_sequences() {
         let _guard = test_global_state();
-        reset_status();
-        begin_one_shot_status_guard();
-        assert!(!one_shot_set_buffer_permitted());
+        configure_status_on_set_diagnostic(2);
+        begin_status_on_set_diagnostic_transaction().unwrap();
+        assert!(!status_on_set_set_buffer_permitted());
 
         let transaction = ExactAioTransaction::default();
         let payload_sequence = 0_u64;
-        if one_shot_set_buffer_permitted() {
-            unreachable!("one-shot SET_BUFFER guard admitted a second receive");
+        if status_on_set_set_buffer_permitted() {
+            unreachable!("bounded STATUS_ON_SET guard admitted an overlapping receive");
         }
         assert_eq!(transaction.state, ExactAioState::Idle);
         assert_eq!(transaction.sequence, 0);
         assert_eq!(payload_sequence, 0);
-        reset_status();
+        configure_status_on_set_diagnostic(0);
     }
 
     #[test]
-    fn lifecycle_reset_clears_one_shot_set_buffer_guard() {
+    fn lifecycle_reset_does_not_hide_bounded_diagnostic_guard() {
         let _guard = test_global_state();
-        reset_status();
-        begin_one_shot_status_guard();
-        assert!(!one_shot_set_buffer_permitted());
+        configure_status_on_set_diagnostic(2);
+        begin_status_on_set_diagnostic_transaction().unwrap();
+        assert!(!status_on_set_set_buffer_permitted());
 
         handle_resume_transition();
 
-        assert!(one_shot_set_buffer_permitted());
+        assert!(!status_on_set_set_buffer_permitted());
+        assert!(status_on_set_diagnostic_guard_state().active);
+        configure_status_on_set_diagnostic(0);
+    }
+
+    #[test]
+    fn bounded_diagnostic_completes_two_transactions_in_order_then_rejects_third() {
+        let _guard = test_global_state();
+        configure_status_on_set_diagnostic(2);
+        let mut transaction = ExactAioTransaction::default();
+
+        for expected_number in 1..=2 {
+            assert!(status_on_set_set_buffer_permitted());
+            assert_eq!(transaction.begin_arm(12_800).unwrap(), expected_number);
+            transaction.submission_accepted().unwrap();
+            assert_eq!(
+                begin_status_on_set_diagnostic_transaction().unwrap(),
+                expected_number as u8
+            );
+            transaction.status_sent(GUD_STATUS_OK).unwrap();
+            transaction.completion(12_800).unwrap();
+            transaction.return_idle().unwrap();
+            assert_eq!(transaction.state, ExactAioState::Idle);
+            assert!(!status_on_set_set_buffer_permitted());
+            finish_status_on_set_diagnostic_transaction().unwrap();
+        }
+
+        assert_eq!(transaction.sequence, 2);
+        assert!(!status_on_set_set_buffer_permitted());
+        let guard_state = status_on_set_diagnostic_guard_state();
+        assert_eq!(guard_state.started_transactions, 2);
+        assert!(!guard_state.active);
+        assert_eq!(transaction.sequence, 2);
+        configure_status_on_set_diagnostic(0);
+    }
+
+    #[test]
+    fn third_set_rejection_does_not_arm_or_advance_the_diagnostic_sequence() {
+        let _guard = test_global_state();
+        configure_status_on_set_diagnostic(2);
+        for _ in 0..2 {
+            begin_status_on_set_diagnostic_transaction().unwrap();
+            finish_status_on_set_diagnostic_transaction().unwrap();
+        }
+        let before = status_on_set_diagnostic_guard_state();
+        assert!(!status_on_set_set_buffer_permitted());
+        assert!(begin_status_on_set_diagnostic_transaction().is_err());
+        assert_eq!(status_on_set_diagnostic_guard_state(), before);
+        configure_status_on_set_diagnostic(0);
+    }
+
+    #[test]
+    fn each_diagnostic_initial_status_follows_its_accepted_aio() {
+        let _guard = test_global_state();
+        configure_status_on_set_diagnostic(2);
+        let mut transaction = ExactAioTransaction::default();
+        let mut operations = Vec::new();
+
+        for number in 1..=2 {
+            transaction.begin_arm(12_800).unwrap();
+            operations.push((number, "arm"));
+            transaction.submission_accepted().unwrap();
+            begin_status_on_set_diagnostic_transaction().unwrap();
+            operations.push((number, "aio_accepted"));
+            transaction.status_sent(GUD_STATUS_OK).unwrap();
+            operations.push((number, "initial_status"));
+            transaction.completion(12_800).unwrap();
+            transaction.return_idle().unwrap();
+            finish_status_on_set_diagnostic_transaction().unwrap();
+        }
+
+        assert_eq!(
+            operations,
+            [
+                (1, "arm"),
+                (1, "aio_accepted"),
+                (1, "initial_status"),
+                (2, "arm"),
+                (2, "aio_accepted"),
+                (2, "initial_status"),
+            ]
+        );
+        configure_status_on_set_diagnostic(0);
+    }
+
+    #[test]
+    fn completion_before_status_poison_is_limited_to_active_transaction() {
+        let _guard = test_global_state();
+        configure_status_on_set_diagnostic(2);
+        let mut active = ExactAioTransaction::default();
+        active.begin_arm(12_800).unwrap();
+        active.submission_accepted().unwrap();
+        begin_status_on_set_diagnostic_transaction().unwrap();
+
+        assert!(active.completion(12_800).is_err());
+        assert_eq!(active.state, ExactAioState::Poisoned);
+        assert_eq!(
+            status_on_set_diagnostic_guard_state().started_transactions,
+            1
+        );
+        assert!(status_on_set_diagnostic_guard_state().active);
+        assert!(!status_on_set_set_buffer_permitted());
+        configure_status_on_set_diagnostic(0);
     }
 
     #[test]
     fn non_diagnostic_sequential_exact_transactions_remain_permitted() {
         let _guard = test_global_state();
         reset_status();
-        assert!(one_shot_set_buffer_permitted());
+        assert!(status_on_set_set_buffer_permitted());
 
         let mut transaction = ExactAioTransaction::default();
         for expected_bytes in [12_800, 12_800] {
