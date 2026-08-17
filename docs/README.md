@@ -3,6 +3,7 @@
 Core docs:
 
 - [Deploy Guide](./DEPLOY.md)
+- [Laptop AArch64 Build](./LAPTOP_AARCH64_BUILD.md)
 - [Working Driver Execution Plan](./WORKING_DRIVER_EXECUTION_PLAN.md)
 - [Checkpoint](./CHECKPOINT_2026-03-10.md)
 - [Known Issues](./KNOWN_ISSUES.md)

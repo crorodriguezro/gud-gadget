@@ -565,6 +565,7 @@ fn main() -> anyhow::Result<()> {
             Ok(Some(gud_event)) => {
                 record_host_activity(&mut had_host_session, &gud_event);
                 match gud_event {
+                    Event::StatusSent(_) => {}
                     Event::GetDescriptor(req) => {
                         req.send_descriptor(
                             640,

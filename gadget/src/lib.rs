@@ -4,8 +4,9 @@ use std::env::var_os;
 use std::fs::{rename, File};
 use std::io::{BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
+use std::sync::{mpsc, Arc, Mutex, OnceLock};
+use std::thread::JoinHandle;
 use std::time::Instant;
 use tracing::{debug, error, warn};
 
@@ -48,8 +49,10 @@ pub const GUD_PIXEL_FORMAT_XRGB8888: u8 = 0x80;
 const GUD_CONNECTOR_TYPE_PANEL: u8 = 0;
 
 const GUD_STATUS_OK: u8 = 0;
+const GUD_STATUS_BUSY: u8 = 0x01;
 const GUD_STATUS_REQUEST_NOT_SUPPORTED: u8 = 0x02;
 const GUD_STATUS_INVALID_PARAMETER: u8 = 0x04;
+const GUD_STATUS_ERROR: u8 = 0x05;
 
 const GUD_STATE_CHECK_HEADER_LEN: usize = 26;
 const GUD_PROPERTY_SIZE: usize = 10;
@@ -74,6 +77,10 @@ static STATUS_VALUE: AtomicU8 = AtomicU8::new(GUD_STATUS_OK);
 static CLEAR_STATUS_ON_NEXT_SUCCESS: AtomicBool = AtomicBool::new(false);
 static STATE_CHECK_VALIDATION: OnceLock<Mutex<StateCheckValidation>> = OnceLock::new();
 static PROTOCOL_STATE: OnceLock<Mutex<ProtocolState>> = OnceLock::new();
+// This generation changes only at FunctionFS lifecycle boundaries. It lets the
+// receive logs prove whether an ep1 FD was opened before the current lifecycle.
+static FUNCTIONFS_LIFECYCLE_GENERATION: AtomicU64 = AtomicU64::new(0);
+static FUNCTIONFS_MONOTONIC_EPOCH: OnceLock<Instant> = OnceLock::new();
 
 // https://github.com/openmoko/openmoko-usb-oui/commit/73bdf541b6f9840b70219626b4088d4e3f164904
 pub const OPENMOKO_GUD_ID: Id = Id::new(0x1d50, 0x614d);
@@ -87,7 +94,7 @@ struct ConnectorDescriptor {
 pub struct PixelDataEndpoint {
     // Keep the receiver alive so usb-gadget can publish the FunctionFS
     // endpoint, but do not use it: its I/O implementation is native AIO.
-    _ep_rx: EndpointReceiver,
+    ep_rx: EndpointReceiver,
     // Retained only for the unrelated viewer demo's historical 512-byte
     // receive behavior.
     legacy_ep_buf: Vec<BytesMut>,
@@ -95,6 +102,11 @@ pub struct PixelDataEndpoint {
     // The FunctionFS endpoint used for ordinary blocking reads. Keeping this
     // separate from EndpointReceiver avoids its Linux AIO receive queue.
     bulk_ep: Option<Arc<File>>,
+    bulk_ep_generation: Option<u64>,
+    // Test-only blocking read submitted at FunctionFS Enable, before the host
+    // can issue SET_BUFFER. This deliberately avoids the native-AIO path.
+    prearmed_read: Option<PrearmedBulkRead>,
+    exact_aio: ExactAioTransaction,
     // Maximum size of one blocking FunctionFS read. Each read is further
     // limited to the exact number of bytes remaining in the GUD payload.
     read_size: usize,
@@ -103,6 +115,134 @@ pub struct PixelDataEndpoint {
     buf: BytesMut,
     // If compression is enabled, the received buffer is decompressed here.
     compress_buf: BytesMut,
+}
+
+const MAX_EXACT_AIO_PAYLOAD_SIZE: usize = 64 * 1024 * 1024;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExactAioState {
+    Idle,
+    Arming,
+    ArmedAwaitStatus,
+    Receiving,
+    Completed,
+    Poisoned,
+}
+
+#[derive(Debug)]
+struct ExactAioTransaction {
+    state: ExactAioState,
+    sequence: u64,
+    expected_bytes: usize,
+    started: Option<Instant>,
+}
+
+impl Default for ExactAioTransaction {
+    fn default() -> Self {
+        Self {
+            state: ExactAioState::Idle,
+            sequence: 0,
+            expected_bytes: 0,
+            started: None,
+        }
+    }
+}
+
+impl ExactAioTransaction {
+    fn begin_arm(&mut self, expected_bytes: usize) -> anyhow::Result<u64> {
+        ensure!(
+            self.state == ExactAioState::Idle,
+            "cannot arm exact FunctionFS AIO receive while transaction is {:?}",
+            self.state
+        );
+        ensure!(expected_bytes > 0, "exact FunctionFS AIO payload is empty");
+        ensure!(
+            expected_bytes <= MAX_EXACT_AIO_PAYLOAD_SIZE,
+            "exact FunctionFS AIO payload {expected_bytes} exceeds guarded maximum {MAX_EXACT_AIO_PAYLOAD_SIZE}"
+        );
+        self.sequence = self.sequence.wrapping_add(1);
+        self.expected_bytes = expected_bytes;
+        self.started = Some(Instant::now());
+        self.state = ExactAioState::Arming;
+        Ok(self.sequence)
+    }
+
+    fn submission_accepted(&mut self) -> anyhow::Result<()> {
+        ensure!(
+            self.state == ExactAioState::Arming,
+            "AIO acceptance outside Arming"
+        );
+        self.state = ExactAioState::ArmedAwaitStatus;
+        Ok(())
+    }
+
+    fn submission_rejected(&mut self) -> anyhow::Result<()> {
+        ensure!(
+            self.state == ExactAioState::Arming,
+            "AIO rejection outside Arming"
+        );
+        self.state = ExactAioState::Idle;
+        self.expected_bytes = 0;
+        self.started = None;
+        Ok(())
+    }
+
+    fn status_sent(&mut self, status: u8) -> anyhow::Result<()> {
+        if self.state != ExactAioState::ArmedAwaitStatus {
+            return Ok(());
+        }
+        ensure!(
+            status == GUD_STATUS_OK,
+            "armed SET_BUFFER received non-OK status {status}"
+        );
+        self.state = ExactAioState::Receiving;
+        Ok(())
+    }
+
+    fn completion(&mut self, actual_bytes: usize) -> anyhow::Result<()> {
+        if self.state != ExactAioState::Receiving {
+            let previous = self.state;
+            self.state = ExactAioState::Poisoned;
+            bail!("exact FunctionFS AIO completion arrived while transaction was {previous:?}");
+        }
+        if actual_bytes != self.expected_bytes {
+            self.state = ExactAioState::Poisoned;
+            bail!(
+                "exact FunctionFS AIO completion length mismatch: expected={}, actual={actual_bytes}",
+                self.expected_bytes
+            );
+        }
+        self.state = ExactAioState::Completed;
+        Ok(())
+    }
+
+    fn return_idle(&mut self) -> anyhow::Result<()> {
+        ensure!(
+            self.state == ExactAioState::Completed,
+            "return to Idle without completion"
+        );
+        self.state = ExactAioState::Idle;
+        self.expected_bytes = 0;
+        self.started = None;
+        Ok(())
+    }
+
+    fn poison(&mut self) {
+        self.state = ExactAioState::Poisoned;
+    }
+}
+
+struct PrearmedBulkRead {
+    request_bytes: usize,
+    lifecycle_generation: u64,
+    result_rx: mpsc::Receiver<std::io::Result<PrearmedBulkReadResult>>,
+    worker: JoinHandle<()>,
+}
+
+struct PrearmedBulkReadResult {
+    buf: BytesMut,
+    bytes_read: usize,
+    read_us: u128,
 }
 
 fn dump_pixel_buffer_ppm(
@@ -303,6 +443,7 @@ pub enum Event<'a> {
         reason: ProtocolInvalidationReason,
     },
     Buffer(SetBuffer),
+    StatusSent(u8),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -335,6 +476,7 @@ impl Event<'_> {
             | Self::StateChecked(_)
             | Self::StateCommitted(_)
             | Self::Buffer(_) => true,
+            Self::StatusSent(_) => false,
             Self::ProtocolStateInvalidated { reason, .. } => reason.is_host_activity(),
         }
     }
@@ -383,13 +525,40 @@ impl<'a> GetDescriptor<'a> {
         compression: u8,
         max_buffer_size: Option<u32>,
     ) -> anyhow::Result<()> {
-        let descriptor = build_display_descriptor(
+        self.send_descriptor_with_options(
             min_width,
             min_height,
             max_width,
             max_height,
             compression,
             max_buffer_size,
+            0,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn send_descriptor_with_options(
+        self,
+        min_width: u32,
+        min_height: u32,
+        max_width: u32,
+        max_height: u32,
+        compression: u8,
+        max_buffer_size: Option<u32>,
+        flags: u32,
+    ) -> anyhow::Result<()> {
+        ensure!(
+            flags & !GUD_DISPLAY_FLAG_STATUS_ON_SET == 0,
+            "unsupported GUD display flags {flags:#x}"
+        );
+        let descriptor = build_display_descriptor_with_flags(
+            min_width,
+            min_height,
+            max_width,
+            max_height,
+            compression,
+            max_buffer_size,
+            flags,
         )?;
         let buf = serialize_display_descriptor(&descriptor)?;
 
@@ -436,6 +605,7 @@ struct DisplayDescriptor {
     max_height: u32,
 }
 
+#[cfg(test)]
 fn build_display_descriptor(
     min_width: u32,
     min_height: u32,
@@ -443,6 +613,26 @@ fn build_display_descriptor(
     max_height: u32,
     compression: u8,
     max_buffer_size: Option<u32>,
+) -> anyhow::Result<DisplayDescriptor> {
+    build_display_descriptor_with_flags(
+        min_width,
+        min_height,
+        max_width,
+        max_height,
+        compression,
+        max_buffer_size,
+        0,
+    )
+}
+
+fn build_display_descriptor_with_flags(
+    min_width: u32,
+    min_height: u32,
+    max_width: u32,
+    max_height: u32,
+    compression: u8,
+    max_buffer_size: Option<u32>,
+    flags: u32,
 ) -> anyhow::Result<DisplayDescriptor> {
     let natural_max_buffer_size = max_width
         .checked_mul(max_height)
@@ -463,7 +653,7 @@ fn build_display_descriptor(
     Ok(DisplayDescriptor {
         magic: GUD_DISPLAY_MAGIC,
         version: 1,
-        flags: 0,
+        flags,
         compression,
         max_height,
         max_width,
@@ -516,6 +706,25 @@ fn modes_have_same_user_timing(left: &DisplayMode, right: &DisplayMode) -> bool 
 
 fn reset_connector_status_changed() {
     CONNECTOR_STATUS_CHANGED_ONCE.store(true, Ordering::SeqCst);
+}
+
+fn functionfs_monotonic_ns() -> u128 {
+    FUNCTIONFS_MONOTONIC_EPOCH
+        .get_or_init(Instant::now)
+        .elapsed()
+        .as_nanos()
+}
+
+fn functionfs_lifecycle_transition(name: &'static str) -> u64 {
+    let generation = FUNCTIONFS_LIFECYCLE_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
+    debug!(
+        event = "functionfs_lifecycle",
+        lifecycle_event = name,
+        lifecycle_generation = generation,
+        monotonic_ns = functionfs_monotonic_ns(),
+        "FunctionFS lifecycle transition"
+    );
+    generation
 }
 
 fn state_check_validation() -> &'static Mutex<StateCheckValidation> {
@@ -840,6 +1049,7 @@ fn validate_buffer_request(info: &SetBuffer) -> anyhow::Result<()> {
 pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
     match event {
         custom::Event::Enable => {
+            functionfs_lifecycle_transition("enable");
             reset_connector_status_changed();
             reset_status();
             let generation = reset_protocol_state();
@@ -850,6 +1060,7 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
             }));
         }
         custom::Event::Bind => {
+            functionfs_lifecycle_transition("bind");
             reset_connector_status_changed();
             reset_status();
             let generation = reset_protocol_state();
@@ -865,7 +1076,13 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 GUD_REQ_GET_STATUS => {
                     let status = current_status();
                     req.send(&[status]).context("send status")?;
-                    debug!("sent status {}", status);
+                    debug!(
+                        event = "status_reply",
+                        monotonic_ns = functionfs_monotonic_ns(),
+                        status,
+                        "sent GUD status"
+                    );
+                    return Ok(Some(Event::StatusSent(status)));
                 }
                 GUD_REQ_GET_DESCRIPTOR => {
                     return Ok(Some(Event::GetDescriptor(GetDescriptor { sender: req })));
@@ -1022,6 +1239,10 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                                 v.length
                             };
                             debug!(
+                                event = "set_buffer_validated",
+                                monotonic_ns = functionfs_monotonic_ns(),
+                                lifecycle_generation =
+                                    FUNCTIONFS_LIFECYCLE_GENERATION.load(Ordering::Acquire),
                                 x = v.x,
                                 y = v.y,
                                 width = v.width,
@@ -1032,7 +1253,6 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                                 expected_bulk_bytes,
                                 "received and validated GUD SET_BUFFER; awaiting bulk OUT"
                             );
-                            mark_success();
                             return Ok(Some(Event::Buffer(v)));
                         }
                         Err(err) => {
@@ -1048,6 +1268,7 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
             }
         }
         custom::Event::Suspend => {
+            functionfs_lifecycle_transition("suspend");
             let generation = handle_suspend_transition();
             debug!("Suspend event received");
             return Ok(Some(Event::ProtocolStateInvalidated {
@@ -1056,6 +1277,7 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
             }));
         }
         custom::Event::Resume => {
+            functionfs_lifecycle_transition("resume");
             let generation = handle_resume_transition();
             debug!("Resume event received");
             return Ok(Some(Event::ProtocolStateInvalidated {
@@ -1064,6 +1286,7 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
             }));
         }
         custom::Event::Disable => {
+            functionfs_lifecycle_transition("disable");
             let generation = handle_suspend_transition();
             debug!("Disable event received");
             return Ok(Some(Event::ProtocolStateInvalidated {
@@ -1165,6 +1388,9 @@ fn read_functionfs_payload<R: Read>(
         }
 
         debug!(
+            event = "exact_read_started",
+            monotonic_ns = functionfs_monotonic_ns(),
+            lifecycle_generation = FUNCTIONFS_LIFECYCLE_GENERATION.load(Ordering::Acquire),
             payload_seq,
             payload_len,
             read_size,
@@ -1183,6 +1409,18 @@ fn read_functionfs_payload<R: Read>(
                 "read blocking bulk ep: payload_seq={payload_seq}, payload_len={payload_len}, read_size={read_size}, read_index={read_index}, received_bytes={received_bytes}, remaining_before={remaining_before}, request_bytes={request_bytes}"
             )
         })?;
+        debug!(
+            event = "pi_functionfs_read_returned",
+            monotonic_ns = functionfs_monotonic_ns(),
+            lifecycle_generation = FUNCTIONFS_LIFECYCLE_GENERATION.load(Ordering::Acquire),
+            payload_seq,
+            read_index,
+            request_bytes,
+            result_bytes_raw = bytes_read,
+            result_bytes_signed = bytes_read as isize,
+            read_us,
+            "FunctionFS raw read returned"
+        );
         stats.read_calls += 1;
         stats.last_request_bytes = request_bytes;
 
@@ -1258,10 +1496,13 @@ impl PixelDataEndpoint {
 
         (
             Self {
-                _ep_rx: ep_rx,
+                ep_rx,
                 legacy_ep_buf: Vec::new(),
                 legacy_512,
                 bulk_ep: None,
+                bulk_ep_generation: None,
+                prearmed_read: None,
+                exact_aio: ExactAioTransaction::default(),
                 read_size,
                 payload_seq: 0,
                 buf: BytesMut::new(),
@@ -1269,6 +1510,162 @@ impl PixelDataEndpoint {
             },
             Endpoint::bulk(ep_dir),
         )
+    }
+
+    pub fn exact_aio_state(&self) -> ExactAioState {
+        self.exact_aio.state
+    }
+
+    pub fn exact_aio_sequence(&self) -> u64 {
+        self.exact_aio.sequence
+    }
+
+    pub fn exact_aio_elapsed(&self) -> Option<std::time::Duration> {
+        self.exact_aio.started.map(|started| started.elapsed())
+    }
+
+    pub fn arm_exact_payload_aio(&mut self, info: &SetBuffer) -> anyhow::Result<u64> {
+        ensure!(
+            !self.legacy_512,
+            "exact FunctionFS AIO is unavailable in legacy mode"
+        );
+        ensure!(
+            self.prearmed_read.is_none(),
+            "old prearm and STATUS_ON_SET AIO cannot coexist"
+        );
+        let expected_bytes = if info.compression > 0 {
+            info.compressed_length as usize
+        } else {
+            info.length as usize
+        };
+        let sequence = self.exact_aio.begin_arm(expected_bytes)?;
+        let buf = BytesMut::zeroed(expected_bytes);
+        if buf.capacity() != expected_bytes {
+            self.exact_aio.submission_rejected()?;
+            bail!(
+                "exact AIO allocation capacity mismatch: expected={expected_bytes}, capacity={}",
+                buf.capacity()
+            );
+        }
+        debug!(
+            event = "aio_submit_enter",
+            monotonic_ns = functionfs_monotonic_ns(),
+            transaction_seq = sequence,
+            expected_bytes,
+            "submitting exact FunctionFS bulk OUT AIO request"
+        );
+        if let Err(err) = self.ep_rx.try_recv(buf) {
+            self.exact_aio.submission_rejected()?;
+            latch_status(GUD_STATUS_ERROR);
+            debug!(
+                event = "aio_submit_return",
+                transaction_seq = sequence,
+                expected_bytes,
+                accepted = false,
+                error = %err,
+                "exact FunctionFS AIO request was not accepted"
+            );
+            return Err(err).context("submit exact FunctionFS bulk OUT AIO request");
+        }
+        self.exact_aio.submission_accepted()?;
+        mark_success();
+        debug!(
+            event = "aio_submit_return",
+            monotonic_ns = functionfs_monotonic_ns(),
+            transaction_seq = sequence,
+            expected_bytes,
+            accepted = true,
+            state = ?self.exact_aio.state,
+            "exact FunctionFS AIO request accepted before GET_STATUS"
+        );
+        Ok(sequence)
+    }
+
+    pub fn note_status_sent(&mut self, status: u8) -> anyhow::Result<()> {
+        self.exact_aio.status_sent(status)?;
+        if self.exact_aio.state == ExactAioState::Receiving {
+            debug!(
+                event = "status_after_arm",
+                monotonic_ns = functionfs_monotonic_ns(),
+                transaction_seq = self.exact_aio.sequence,
+                expected_bytes = self.exact_aio.expected_bytes,
+                status,
+                "successful status sent after exact request acceptance"
+            );
+        }
+        Ok(())
+    }
+
+    pub fn try_complete_exact_payload_aio(
+        &mut self,
+        output_bytes: usize,
+    ) -> anyhow::Result<Option<PayloadStats>> {
+        if !matches!(
+            self.exact_aio.state,
+            ExactAioState::ArmedAwaitStatus | ExactAioState::Receiving
+        ) {
+            return Ok(None);
+        }
+        let Some(buf) = self
+            .ep_rx
+            .try_fetch()
+            .context("harvest exact FunctionFS bulk OUT AIO completion")?
+        else {
+            return Ok(None);
+        };
+        let actual_bytes = buf.len();
+        let sequence = self.exact_aio.sequence;
+        let expected_bytes = self.exact_aio.expected_bytes;
+        self.exact_aio.completion(actual_bytes)?;
+        self.buf = buf;
+        let read_ms = self
+            .exact_aio
+            .started
+            .map(|started| started.elapsed().as_millis())
+            .unwrap_or_default();
+        debug!(
+            event = "aio_completion",
+            monotonic_ns = functionfs_monotonic_ns(),
+            transaction_seq = sequence,
+            expected_bytes,
+            actual_bytes,
+            exact = true,
+            "harvested exact FunctionFS AIO completion"
+        );
+        self.payload_seq = self.payload_seq.wrapping_add(1);
+        let stats = PayloadStats {
+            payload_seq: self.payload_seq,
+            transfer_bytes: expected_bytes,
+            output_bytes,
+            usb_packets_est: usb_packet_estimate(expected_bytes),
+            read_calls: 1,
+            read_size: expected_bytes,
+            first_request_bytes: expected_bytes,
+            last_request_bytes: expected_bytes,
+            read_ms,
+            ..PayloadStats::default()
+        };
+        self.exact_aio.return_idle()?;
+        debug!(
+            event = "exact_aio_state_transition",
+            transaction_seq = sequence,
+            state = ?self.exact_aio.state,
+            "exact FunctionFS AIO transaction returned to Idle"
+        );
+        Ok(Some(stats))
+    }
+
+    pub fn poison_exact_payload_aio(&mut self, reason: &str) {
+        self.exact_aio.poison();
+        latch_status(GUD_STATUS_BUSY);
+        error!(
+            event = "exact_aio_poisoned",
+            transaction_seq = self.exact_aio.sequence,
+            expected_bytes = self.exact_aio.expected_bytes,
+            state = ?self.exact_aio.state,
+            reason,
+            "exact FunctionFS AIO transaction poisoned; preserving accepted request"
+        );
     }
 
     pub fn recv_payload(
@@ -1297,12 +1694,18 @@ impl PixelDataEndpoint {
         );
 
         let read_start = Instant::now();
-        let bulk_stats = if self.legacy_512 {
+        let bulk_stats = if self.prearmed_read.is_some() {
+            self.finish_prearmed_payload_read(len, payload_seq)?
+        } else if self.legacy_512 {
             self.read_legacy_512_payload(len)?
         } else {
             let bulk_ep = self.bulk_endpoint()?;
             let mut bulk_reader = bulk_ep.as_ref();
             debug!(
+                event = "functionfs_read_armed",
+                monotonic_ns = functionfs_monotonic_ns(),
+                lifecycle_generation = FUNCTIONFS_LIFECYCLE_GENERATION.load(Ordering::Acquire),
+                endpoint_open_generation = ?self.bulk_ep_generation,
                 payload_seq,
                 payload_len = len,
                 read_size = self.read_size,
@@ -1337,6 +1740,127 @@ impl PixelDataEndpoint {
             last_request_bytes: bulk_stats.last_request_bytes,
             read_ms,
             ..PayloadStats::default()
+        })
+    }
+
+    /// Queue one fixed-size blocking read before SET_BUFFER is received.
+    ///
+    /// This is a guarded diagnostic for the Pi DWC2 late-request-arming
+    /// hypothesis. The caller must ensure the advertised GUD maximum buffer
+    /// size equals `request_bytes`, and must track the read as in flight before
+    /// allowing teardown.
+    pub fn prearm_payload_read(&mut self, request_bytes: usize) -> anyhow::Result<()> {
+        ensure!(
+            !self.legacy_512,
+            "prearmed FunctionFS reads are unavailable for the legacy 512-byte path"
+        );
+        ensure!(
+            self.prearmed_read.is_none(),
+            "a FunctionFS bulk OUT read is already prearmed"
+        );
+        validate_functionfs_read_size(request_bytes)?;
+        ensure!(
+            request_bytes <= self.read_size,
+            "prearmed FunctionFS read size {request_bytes} exceeds configured read ceiling {}",
+            self.read_size
+        );
+
+        let bulk_ep = self.bulk_endpoint()?;
+        let lifecycle_generation = FUNCTIONFS_LIFECYCLE_GENERATION.load(Ordering::Acquire);
+        let (entered_tx, entered_rx) = mpsc::sync_channel(0);
+        let (result_tx, result_rx) = mpsc::sync_channel(1);
+        let worker = std::thread::Builder::new()
+            .name("gud-ep1-prearm".to_owned())
+            .spawn(move || {
+                let mut buf = BytesMut::zeroed(request_bytes);
+                debug!(
+                    event = "functionfs_prearmed_read_enter",
+                    monotonic_ns = functionfs_monotonic_ns(),
+                    lifecycle_generation,
+                    request_bytes,
+                    "entering test-only prearmed FunctionFS bulk OUT read"
+                );
+                if entered_tx.send(()).is_err() {
+                    return;
+                }
+                let read_start = Instant::now();
+                let mut reader = bulk_ep.as_ref();
+                let result = reader
+                    .read(&mut buf[..])
+                    .map(|bytes_read| PrearmedBulkReadResult {
+                        buf,
+                        bytes_read,
+                        read_us: read_start.elapsed().as_micros(),
+                    });
+                let _ = result_tx.send(result);
+            })
+            .context("spawn prearmed FunctionFS bulk OUT read")?;
+        entered_rx
+            .recv()
+            .context("prearmed FunctionFS read worker exited before syscall entry")?;
+        self.prearmed_read = Some(PrearmedBulkRead {
+            request_bytes,
+            lifecycle_generation,
+            result_rx,
+            worker,
+        });
+        debug!(
+            event = "functionfs_prearmed_read_submitted",
+            monotonic_ns = functionfs_monotonic_ns(),
+            lifecycle_generation,
+            request_bytes,
+            "test-only FunctionFS bulk OUT read submitted before SET_BUFFER"
+        );
+        Ok(())
+    }
+
+    fn finish_prearmed_payload_read(
+        &mut self,
+        payload_len: usize,
+        payload_seq: u64,
+    ) -> anyhow::Result<BulkReadStats> {
+        let prearmed = self
+            .prearmed_read
+            .take()
+            .context("prearmed FunctionFS bulk OUT read disappeared")?;
+        ensure!(
+            payload_len <= prearmed.request_bytes,
+            "SET_BUFFER payload {payload_len} exceeds prearmed read size {}",
+            prearmed.request_bytes
+        );
+        let result = prearmed
+            .result_rx
+            .recv()
+            .context("prearmed FunctionFS read worker exited without a result")?;
+        prearmed
+            .worker
+            .join()
+            .map_err(|_| anyhow::anyhow!("prearmed FunctionFS read worker panicked"))?;
+        let mut result = result.context("read prearmed blocking bulk ep")?;
+        debug!(
+            event = "pi_functionfs_prearmed_read_returned",
+            monotonic_ns = functionfs_monotonic_ns(),
+            lifecycle_generation = prearmed.lifecycle_generation,
+            payload_seq,
+            payload_len,
+            request_bytes = prearmed.request_bytes,
+            result_bytes = result.bytes_read,
+            read_us = result.read_us,
+            "test-only prearmed FunctionFS bulk OUT read returned"
+        );
+        ensure!(
+            result.bytes_read == payload_len,
+            "prearmed FunctionFS read length mismatch: payload_seq={payload_seq}, expected={payload_len}, request_bytes={}, result_bytes={}",
+            prearmed.request_bytes,
+            result.bytes_read
+        );
+        result.buf.truncate(result.bytes_read);
+        self.buf = result.buf;
+
+        Ok(BulkReadStats {
+            read_calls: 1,
+            first_request_bytes: prearmed.request_bytes,
+            last_request_bytes: prearmed.request_bytes,
         })
     }
 
@@ -1443,15 +1967,20 @@ impl PixelDataEndpoint {
 
     fn bulk_endpoint(&mut self) -> anyhow::Result<Arc<File>> {
         if self.bulk_ep.is_none() {
+            let lifecycle_generation = FUNCTIONFS_LIFECYCLE_GENERATION.load(Ordering::Acquire);
             debug!(
+                event = "functionfs_endpoint_open",
+                monotonic_ns = functionfs_monotonic_ns(),
+                lifecycle_generation,
                 path = FUNCTIONFS_BULK_OUT_EP_PATH,
                 "using initialized FunctionFS bulk OUT endpoint for blocking reads"
             );
             self.bulk_ep = Some(
-                self._ep_rx
+                self.ep_rx
                     .file()
                     .context("get initialized FunctionFS bulk OUT endpoint")?,
             );
+            self.bulk_ep_generation = Some(lifecycle_generation);
         }
 
         Ok(Arc::clone(
@@ -1551,16 +2080,17 @@ impl PixelDataEndpoint {
 #[cfg(test)]
 mod tests {
     use super::{
-        active_scanout_state, build_display_descriptor, classify_functionfs_read_completion,
-        clear_pending_state, commit_pending_state, configure_state_check_validation,
-        current_status, handle_resume_transition, handle_suspend_transition, latch_status,
-        mark_success, modes_have_same_user_timing, next_connector_status, parse_enable_request,
-        read_functionfs_payload, reset_connector_status_changed, reset_protocol_state,
-        reset_status, serialize_connector_descriptors, serialize_display_descriptor,
-        serialize_display_modes, store_pending_state, update_controller_enabled,
-        update_display_enabled, usb_packet_estimate, validate_buffer_request,
-        validate_functionfs_read_size, validate_state_check_payload, ActiveScanoutState,
-        ConnectorDescriptor, DisplayMode, DisplayState, FunctionFsReadCompletion,
+        active_scanout_state, build_display_descriptor, build_display_descriptor_with_flags,
+        classify_functionfs_read_completion, clear_pending_state, commit_pending_state,
+        configure_state_check_validation, current_status, handle_resume_transition,
+        handle_suspend_transition, latch_status, mark_success, modes_have_same_user_timing,
+        next_connector_status, parse_enable_request, read_functionfs_payload,
+        reset_connector_status_changed, reset_protocol_state, reset_status,
+        serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
+        store_pending_state, update_controller_enabled, update_display_enabled,
+        usb_packet_estimate, validate_buffer_request, validate_functionfs_read_size,
+        validate_state_check_payload, ActiveScanoutState, ConnectorDescriptor, DisplayMode,
+        DisplayState, ExactAioState, ExactAioTransaction, FunctionFsReadCompletion,
         PixelDataEndpoint, SetBuffer, DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
         FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE, GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED,
         GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET,
@@ -1571,7 +2101,14 @@ mod tests {
     use bytes::BytesMut;
     use serde::Serialize;
     use std::io::{self, Cursor, Read};
+    use std::sync::{Mutex, MutexGuard};
     use usb_gadget::function::custom;
+
+    static TEST_GLOBAL_STATE: Mutex<()> = Mutex::new(());
+
+    fn test_global_state() -> MutexGuard<'static, ()> {
+        TEST_GLOBAL_STATE.lock().expect("test state lock poisoned")
+    }
 
     struct RecordingReader {
         data: Cursor<Vec<u8>>,
@@ -1689,6 +2226,173 @@ mod tests {
     }
 
     #[test]
+    fn guarded_descriptor_advertises_status_on_set_only_when_requested() {
+        let ordinary = build_display_descriptor(640, 480, 1080, 2280, 0, None).unwrap();
+        let guarded = build_display_descriptor_with_flags(
+            640,
+            480,
+            1080,
+            2280,
+            0,
+            Some(12_800),
+            GUD_DISPLAY_FLAG_STATUS_ON_SET,
+        )
+        .unwrap();
+
+        assert_eq!(ordinary.flags, 0);
+        assert_eq!(guarded.flags, GUD_DISPLAY_FLAG_STATUS_ON_SET);
+        assert_eq!(guarded.max_buffer_size, 12_800);
+    }
+
+    #[derive(Debug, PartialEq, Eq)]
+    enum SimulatedOperation {
+        SetBufferValidated(usize),
+        GuardEntered,
+        Submit(usize),
+        SubmitAccepted,
+        StatusOk,
+        Bulk(usize),
+        Completion(usize),
+        Idle,
+    }
+
+    fn simulate_status_on_set(
+        payload_bytes: usize,
+        submit_accepted: bool,
+        completion: Option<usize>,
+    ) -> (ExactAioTransaction, Vec<SimulatedOperation>) {
+        let mut transaction = ExactAioTransaction::default();
+        let mut operations = vec![
+            SimulatedOperation::SetBufferValidated(payload_bytes),
+            SimulatedOperation::GuardEntered,
+        ];
+        transaction.begin_arm(payload_bytes).unwrap();
+        operations.push(SimulatedOperation::Submit(payload_bytes));
+        if !submit_accepted {
+            transaction.submission_rejected().unwrap();
+            return (transaction, operations);
+        }
+        transaction.submission_accepted().unwrap();
+        operations.push(SimulatedOperation::SubmitAccepted);
+        transaction.status_sent(GUD_STATUS_OK).unwrap();
+        operations.push(SimulatedOperation::StatusOk);
+        if let Some(actual) = completion {
+            operations.push(SimulatedOperation::Bulk(actual));
+            operations.push(SimulatedOperation::Completion(actual));
+            if transaction.completion(actual).is_ok() {
+                transaction.return_idle().unwrap();
+                operations.push(SimulatedOperation::Idle);
+            }
+        }
+        (transaction, operations)
+    }
+
+    #[test]
+    fn simulated_host_valid_set_arms_before_status_and_completes_exactly() {
+        let (transaction, operations) = simulate_status_on_set(12_800, true, Some(12_800));
+
+        assert_eq!(transaction.state, ExactAioState::Idle);
+        assert_eq!(
+            operations,
+            [
+                SimulatedOperation::SetBufferValidated(12_800),
+                SimulatedOperation::GuardEntered,
+                SimulatedOperation::Submit(12_800),
+                SimulatedOperation::SubmitAccepted,
+                SimulatedOperation::StatusOk,
+                SimulatedOperation::Bulk(12_800),
+                SimulatedOperation::Completion(12_800),
+                SimulatedOperation::Idle,
+            ]
+        );
+    }
+
+    #[test]
+    fn rejected_set_buffer_never_enters_transaction_or_submits_bulk() {
+        let transaction = ExactAioTransaction::default();
+        assert_eq!(transaction.state, ExactAioState::Idle);
+        assert_eq!(transaction.sequence, 0);
+    }
+
+    #[test]
+    fn aio_submission_failure_is_proven_unaccepted_and_returns_idle() {
+        let (transaction, operations) = simulate_status_on_set(12_800, false, None);
+        assert_eq!(transaction.state, ExactAioState::Idle);
+        assert!(!operations.contains(&SimulatedOperation::SubmitAccepted));
+        assert!(!operations.contains(&SimulatedOperation::StatusOk));
+        assert!(!operations
+            .iter()
+            .any(|op| matches!(op, SimulatedOperation::Bulk(_))));
+    }
+
+    #[test]
+    fn short_zero_and_oversized_completions_poison_transaction() {
+        for actual in [0, 1, 12_799, 12_801, usize::MAX] {
+            let (transaction, _) = simulate_status_on_set(12_800, true, Some(actual));
+            assert_eq!(
+                transaction.state,
+                ExactAioState::Poisoned,
+                "actual={actual}"
+            );
+        }
+    }
+
+    #[test]
+    fn missing_completion_remains_receiving_until_containment_poisons_it() {
+        let (mut transaction, _) = simulate_status_on_set(12_800, true, None);
+        assert_eq!(transaction.state, ExactAioState::Receiving);
+        transaction.poison();
+        assert_eq!(transaction.state, ExactAioState::Poisoned);
+    }
+
+    #[test]
+    fn completion_before_success_status_is_protocol_poison() {
+        let mut transaction = ExactAioTransaction::default();
+        transaction.begin_arm(12_800).unwrap();
+        transaction.submission_accepted().unwrap();
+        assert!(transaction.completion(12_800).is_err());
+        assert_eq!(transaction.state, ExactAioState::Poisoned);
+    }
+
+    #[test]
+    fn overlapping_set_buffer_is_rejected_without_second_sequence() {
+        let mut transaction = ExactAioTransaction::default();
+        let first_sequence = transaction.begin_arm(12_800).unwrap();
+        transaction.submission_accepted().unwrap();
+        assert!(transaction.begin_arm(12_800).is_err());
+        assert_eq!(transaction.sequence, first_sequence);
+        assert_eq!(transaction.state, ExactAioState::ArmedAwaitStatus);
+    }
+
+    #[test]
+    fn suspend_disconnect_timeout_and_explicit_poison_are_terminal() {
+        for _reason in ["suspend", "disconnect", "timeout", "poisoned"] {
+            let mut transaction = ExactAioTransaction::default();
+            transaction.begin_arm(12_800).unwrap();
+            transaction.submission_accepted().unwrap();
+            transaction.poison();
+            assert_eq!(transaction.state, ExactAioState::Poisoned);
+            assert!(transaction.begin_arm(12_800).is_err());
+        }
+    }
+
+    #[test]
+    fn sequential_and_large_payloads_use_exact_independent_transactions() {
+        let mut transaction = ExactAioTransaction::default();
+        for (index, payload_bytes) in [12_800, 12_801, 65_537, 1_048_576].into_iter().enumerate() {
+            assert_eq!(
+                transaction.begin_arm(payload_bytes).unwrap(),
+                u64::try_from(index + 1).unwrap()
+            );
+            transaction.submission_accepted().unwrap();
+            transaction.status_sent(GUD_STATUS_OK).unwrap();
+            transaction.completion(payload_bytes).unwrap();
+            transaction.return_idle().unwrap();
+            assert_eq!(transaction.state, ExactAioState::Idle);
+        }
+    }
+
+    #[test]
     fn build_display_descriptor_accepts_smaller_buffer_size_override() {
         let descriptor =
             build_display_descriptor(640, 480, 1920, 1080, GUD_COMPRESSION_LZ4, Some(64_000))
@@ -1708,6 +2412,7 @@ mod tests {
 
     #[test]
     fn connector_status_reports_changed_only_once() {
+        let _guard = test_global_state();
         reset_connector_status_changed();
 
         let first = next_connector_status();
@@ -1722,6 +2427,7 @@ mod tests {
 
     #[test]
     fn status_latches_until_next_success() {
+        let _guard = test_global_state();
         reset_status();
 
         latch_status(GUD_STATUS_REQUEST_NOT_SUPPORTED);
@@ -2074,8 +2780,13 @@ mod tests {
 
     #[test]
     fn validate_state_check_accepts_advertised_mode_and_format() {
+        let _guard = test_global_state();
         let mode = sample_mode();
-        configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+        configure_state_check_validation(
+            1,
+            &[GUD_PIXEL_FORMAT_RGB565],
+            std::slice::from_ref(&mode),
+        );
         reset_protocol_state();
 
         let payload = serialize_state_check_request(mode, GUD_PIXEL_FORMAT_RGB565, 0);
@@ -2093,6 +2804,7 @@ mod tests {
 
     #[test]
     fn validate_state_check_uses_normalized_full_timing_membership() {
+        let _guard = test_global_state();
         let mut advertised = sample_mode();
         advertised.flags =
             GUD_DISPLAY_MODE_FLAG_PREFERRED | GUD_DISPLAY_MODE_FLAG_USER_MASK | (1 << 31);
@@ -2116,8 +2828,13 @@ mod tests {
 
     #[test]
     fn validate_state_check_rejects_unknown_format() {
+        let _guard = test_global_state();
         let mode = sample_mode();
-        configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+        configure_state_check_validation(
+            1,
+            &[GUD_PIXEL_FORMAT_RGB565],
+            std::slice::from_ref(&mode),
+        );
         reset_protocol_state();
 
         let payload = serialize_state_check_request(mode, 0x80, 0);
@@ -2128,8 +2845,13 @@ mod tests {
 
     #[test]
     fn validate_state_check_rejects_unknown_connector() {
+        let _guard = test_global_state();
         let mode = sample_mode();
-        configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
+        configure_state_check_validation(
+            1,
+            &[GUD_PIXEL_FORMAT_RGB565],
+            std::slice::from_ref(&mode),
+        );
         reset_protocol_state();
 
         let payload = serialize_state_check_request(mode, GUD_PIXEL_FORMAT_RGB565, 1);
@@ -2140,6 +2862,7 @@ mod tests {
 
     #[test]
     fn validate_state_check_rejects_unknown_mode() {
+        let _guard = test_global_state();
         let mut mode = sample_mode();
         configure_state_check_validation(1, &[GUD_PIXEL_FORMAT_RGB565], &[mode.clone()]);
         reset_protocol_state();
@@ -2153,6 +2876,7 @@ mod tests {
 
     #[test]
     fn state_commit_requires_pending_state() {
+        let _guard = test_global_state();
         reset_protocol_state();
 
         let err = commit_pending_state().unwrap_err();
@@ -2162,6 +2886,7 @@ mod tests {
 
     #[test]
     fn state_generations_are_monotonic_across_replacement_and_resets() {
+        let _guard = test_global_state();
         reset_protocol_state();
         let first = store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2210,6 +2935,7 @@ mod tests {
 
     #[test]
     fn successful_check_commit_promotes_the_same_generation() {
+        let _guard = test_global_state();
         reset_protocol_state();
         let checked = store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2235,6 +2961,7 @@ mod tests {
 
     #[test]
     fn every_lifecycle_reset_reports_the_invalidated_generation() {
+        let _guard = test_global_state();
         for (custom_event, reason) in [
             (custom::Event::Bind, ProtocolInvalidationReason::Bind),
             (custom::Event::Enable, ProtocolInvalidationReason::Enable),
@@ -2266,6 +2993,7 @@ mod tests {
 
     #[test]
     fn active_scanout_state_reports_committed_mode() {
+        let _guard = test_global_state();
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2288,6 +3016,7 @@ mod tests {
 
     #[test]
     fn validate_buffer_request_accepts_committed_full_frame() {
+        let _guard = test_global_state();
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2314,6 +3043,7 @@ mod tests {
 
     #[test]
     fn validate_buffer_request_accepts_lz4_metadata() {
+        let _guard = test_global_state();
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2340,6 +3070,7 @@ mod tests {
 
     #[test]
     fn validate_buffer_request_rejects_without_committed_state() {
+        let _guard = test_global_state();
         reset_protocol_state();
 
         let info = SetBuffer {
@@ -2358,6 +3089,7 @@ mod tests {
 
     #[test]
     fn validate_buffer_request_rejects_out_of_bounds_rect() {
+        let _guard = test_global_state();
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2385,6 +3117,7 @@ mod tests {
 
     #[test]
     fn validate_buffer_request_rejects_length_mismatch() {
+        let _guard = test_global_state();
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2412,6 +3145,7 @@ mod tests {
 
     #[test]
     fn validate_buffer_request_rejects_unknown_compression() {
+        let _guard = test_global_state();
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2439,6 +3173,7 @@ mod tests {
 
     #[test]
     fn validate_buffer_request_rejects_compressed_length_larger_than_payload() {
+        let _guard = test_global_state();
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2466,6 +3201,7 @@ mod tests {
 
     #[test]
     fn display_enable_requires_controller_and_commit() {
+        let _guard = test_global_state();
         reset_protocol_state();
 
         let err = update_display_enabled(true).unwrap_err();
@@ -2478,6 +3214,7 @@ mod tests {
 
     #[test]
     fn controller_disable_turns_off_display() {
+        let _guard = test_global_state();
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2506,6 +3243,7 @@ mod tests {
 
     #[test]
     fn buffer_rejected_when_display_disabled() {
+        let _guard = test_global_state();
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2540,6 +3278,7 @@ mod tests {
 
     #[test]
     fn suspend_transition_clears_committed_state() {
+        let _guard = test_global_state();
         reset_protocol_state();
         store_pending_state(DisplayState {
             mode: sample_mode(),
@@ -2568,6 +3307,7 @@ mod tests {
 
     #[test]
     fn resume_transition_reports_connector_changed_again() {
+        let _guard = test_global_state();
         reset_connector_status_changed();
         let _ = next_connector_status();
 
@@ -2582,6 +3322,7 @@ mod tests {
 
     #[test]
     fn disable_event_maps_to_disconnected() {
+        let _guard = test_global_state();
         let event = event(custom::Event::Disable).unwrap();
         assert!(matches!(
             event,

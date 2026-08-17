@@ -1,0 +1,66 @@
+STATUS_ON_SET hardware validation assertions
+captured_utc=2026-08-17T17:05:07Z
+
+enumeration_vid_pid=1d50:614d
+enumeration_speed_phone=480
+enumeration_speed_pi=high-speed
+endpoint_address=0x01
+endpoint_type=bulk
+endpoint_wMaxPacketSize=512
+descriptor_flags=1
+descriptor_compression=0
+descriptor_max_buffer_size=12800
+state_check_format=128
+state_check_format_name=XRGB8888
+state_commit_format=128
+
+set_buffer_validated_count=1
+set_buffer_expected_bulk_bytes=12800
+outer_receiver_inflight_count=1
+aio_submit_enter_count=1
+aio_submit_return_count=1
+aio_submit_accepted=true
+aio_state_before_status=ArmedAwaitStatus
+status_after_arm_count=1
+status_after_arm_status=0
+host_bulk_submit_count=1
+host_bulk_submit_bytes=12800
+host_bulk_completion_count=1
+host_bulk_status=0
+host_bulk_actual_bytes=12800
+dwc2_start_req_programming_count=1
+dwc2_initial_transfer_bytes=12800
+dwc2_initial_packet_count=25
+dwc2_endpoint_maxpacket=512
+dwc2_ep1_xfercompl=1
+dwc2_remaining_bytes=0
+dwc2_remaining_packets=0
+dwc2_giveback_status=0
+dwc2_giveback_actual=12800
+functionfs_aio_completion_count=1
+functionfs_aio_completion_actual=12800
+functionfs_aio_completion_exact=true
+exact_aio_final_state=Idle
+outer_receiver_final_state=Idle
+payload_completed_count=1
+payload_completed_bytes=12800
+payload_completed_read_calls=1
+framebuffer_processing_completed_count=1
+one_shot_complete_count=1
+second_set_buffer_count=0
+poisoned_count=0
+payload_command_count=1
+payload_command_rc=0
+pstore_files=0
+transaction_kernel_faults=0
+
+ordering_aio_accept_monotonic_ns=313704372282
+ordering_status_reply_monotonic_ns=313705148324
+ordering_status_after_arm_monotonic_ns=313705237439
+ordering_aio_accept_precedes_success_status=true
+
+The generic legacy FunctionFS lifecycle validator was also executed, but its
+old blocking-read predicates do not recognize the new native-AIO userspace
+markers and therefore emit contradictory legacy classification fields. The
+assertions above were audited directly against the new STATUS_ON_SET markers,
+the trace-kernel DWC2/FunctionFS events, and the qualified host-module trace.

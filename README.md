@@ -27,6 +27,7 @@ Current project docs:
 
 - [Docs Index](./docs/README.md)
 - [Deploy Guide](./docs/DEPLOY.md)
+- [Laptop AArch64 Build](./docs/LAPTOP_AARCH64_BUILD.md)
 - [Working Driver Execution Plan](./docs/WORKING_DRIVER_EXECUTION_PLAN.md)
 - [Checkpoint](./docs/CHECKPOINT_2026-03-10.md)
 - [Known Issues](./docs/KNOWN_ISSUES.md)

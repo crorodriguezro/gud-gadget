@@ -193,10 +193,28 @@ impl Op {
         assert_eq!(event.data, self.iocb.data);
 
         let result = if event.res >= 0 {
-            unsafe { self.buf.assume_init(event.res.try_into().unwrap()) };
-            Ok(self.buf)
+            match usize::try_from(event.res) {
+                Ok(len) if len <= self.buf.size() => {
+                    unsafe { self.buf.assume_init(len) };
+                    Ok(self.buf)
+                }
+                Ok(len) => Err(Error::new(
+                    ErrorKind::InvalidData,
+                    format!("AIO completion length {len} exceeds submitted buffer size {}", self.buf.size()),
+                )),
+                Err(_) => Err(Error::new(
+                    ErrorKind::InvalidData,
+                    format!("AIO completion result {} does not fit usize", event.res),
+                )),
+            }
         } else {
-            Err(Error::from_raw_os_error(-i32::try_from(event.res).unwrap()))
+            match event.res.checked_neg().and_then(|value| i32::try_from(value).ok()) {
+                Some(errno) => Err(Error::from_raw_os_error(errno)),
+                None => Err(Error::new(
+                    ErrorKind::InvalidData,
+                    format!("invalid negative AIO completion result {}", event.res),
+                )),
+            }
         };
 
         CompletedOp { id: event.data, res: event.res, res2: event.res2, result }
@@ -539,5 +557,48 @@ impl Driver {
 impl Drop for Driver {
     fn drop(&mut self) {
         self.cancel_all();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{sys, Buffer, Op};
+    use bytes::BytesMut;
+    use std::{io::ErrorKind, pin::Pin};
+
+    fn read_op(size: usize, id: u64) -> Op {
+        let mut iocb = sys::IoCb::default();
+        iocb.data = id;
+        Op { iocb: Pin::new(Box::new(iocb)), buf: Buffer::Read(BytesMut::zeroed(size)) }
+    }
+
+    #[test]
+    fn exact_completion_initializes_only_reported_bytes() {
+        let completed =
+            read_op(12_800, 7).complete(sys::IoEvent { data: 7, res: 12_800, ..sys::IoEvent::default() });
+        let buffer = completed.result().unwrap();
+        let Buffer::Read(buffer) = buffer else { panic!("expected read buffer") };
+        assert_eq!(buffer.len(), 12_800);
+    }
+
+    #[test]
+    fn zero_and_short_completions_are_preserved_for_protocol_validation() {
+        for result in [0, 1, 12_799] {
+            let completed =
+                read_op(12_800, 9).complete(sys::IoEvent { data: 9, res: result, ..sys::IoEvent::default() });
+            let Buffer::Read(buffer) = completed.result().unwrap() else { panic!("expected read buffer") };
+            assert_eq!(buffer.len(), usize::try_from(result).unwrap());
+        }
+    }
+
+    #[test]
+    fn oversized_and_invalid_negative_completion_results_are_errors() {
+        let oversized =
+            read_op(12_800, 11).complete(sys::IoEvent { data: 11, res: 12_801, ..sys::IoEvent::default() });
+        assert_eq!(oversized.result().unwrap_err().kind(), ErrorKind::InvalidData);
+
+        let invalid_negative =
+            read_op(12_800, 12).complete(sys::IoEvent { data: 12, res: i64::MIN, ..sys::IoEvent::default() });
+        assert_eq!(invalid_negative.result().unwrap_err().kind(), ErrorKind::InvalidData);
     }
 }

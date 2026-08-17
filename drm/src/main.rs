@@ -7,7 +7,10 @@ use drm::control::{
     connector, crtc, dumbbuffer::DumbBuffer, dumbbuffer::DumbMapping, framebuffer, ClipRect,
     Device, Mode, ModeTypeFlags, PageFlipFlags,
 };
-use gud_gadget::{DisplayMode, Event, ProtocolInvalidationReason, GUD_COMPRESSION_LZ4};
+use gud_gadget::{
+    DisplayMode, Event, ProtocolInvalidationReason, GUD_COMPRESSION_LZ4,
+    GUD_DISPLAY_FLAG_STATUS_ON_SET,
+};
 use modes::{CatalogRoute, ModeKey, PhysicalCatalogMode, RouteCatalog};
 use scanout::{
     logical_memory_estimate, FallbackReason, MappedActive, PendingPlan, PendingPlanKind,
@@ -114,6 +117,11 @@ impl BulkReceiveSession {
     where
         F: FnOnce() -> anyhow::Result<T>,
     {
+        let started = self.begin_receive()?;
+        self.finish_receive(started, receive())
+    }
+
+    fn begin_receive(&self) -> anyhow::Result<std::time::Instant> {
         self.state
             .compare_exchange(
                 BulkReceiveState::Idle as u8,
@@ -128,24 +136,38 @@ impl BulkReceiveSession {
                 )
             })?;
         debug!(
+            event = "receiver_state_transition",
+            receiver_state = "InFlight",
             deadline_ms = self.deadline.as_millis(),
             "FunctionFS bulk receive session entered InFlight"
         );
 
-        let started = std::time::Instant::now();
-        let result = receive();
+        Ok(std::time::Instant::now())
+    }
+
+    fn finish_receive<T>(
+        &self,
+        started: std::time::Instant,
+        result: anyhow::Result<T>,
+    ) -> anyhow::Result<T> {
         let elapsed = started.elapsed();
         match result {
             Err(err) => {
                 self.state
                     .store(BulkReceiveState::Poisoned as u8, Ordering::Release);
-                tracing::error!("FunctionFS bulk receive session entered Poisoned after an error");
+                tracing::error!(
+                    event = "receiver_state_transition",
+                    receiver_state = "Poisoned",
+                    "FunctionFS bulk receive session entered Poisoned after an error"
+                );
                 Err(err)
             }
             Ok(_) if elapsed > self.deadline => {
                 self.state
                     .store(BulkReceiveState::Poisoned as u8, Ordering::Release);
                 tracing::error!(
+                    event = "receiver_state_transition",
+                    receiver_state = "Poisoned",
                     elapsed_ms = elapsed.as_millis(),
                     deadline_ms = self.deadline.as_millis(),
                     "FunctionFS bulk receive session entered Poisoned after a late completion"
@@ -175,12 +197,36 @@ impl BulkReceiveSession {
                         )
                     })?;
                 debug!(
+                    event = "receiver_state_transition",
+                    receiver_state = "Idle",
                     elapsed_ms = elapsed.as_millis(),
                     "FunctionFS bulk receive session returned to Idle"
                 );
                 Ok(value)
             }
         }
+    }
+
+    fn cancel_receive_before_io(&self) -> anyhow::Result<()> {
+        self.state
+            .compare_exchange(
+                BulkReceiveState::InFlight as u8,
+                BulkReceiveState::Idle as u8,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            )
+            .map_err(|raw| {
+                anyhow::anyhow!(
+                    "cannot cancel unsubmitted FunctionFS receive from state {:?}",
+                    BulkReceiveState::from_raw(raw)
+                )
+            })?;
+        debug!(
+            event = "receiver_state_transition",
+            receiver_state = "Idle",
+            "FunctionFS bulk receive prearm failed before I/O submission"
+        );
+        Ok(())
     }
 
     fn begin_shutdown(&self) -> Result<(), BulkReceiveState> {
@@ -1457,6 +1503,40 @@ fn parse_test_max_buffer_size(raw: Option<&OsStr>) -> anyhow::Result<Option<u32>
     Ok(Some(max_buffer_size))
 }
 
+fn parse_test_prearm_once_bytes(raw: Option<&OsStr>) -> anyhow::Result<Option<usize>> {
+    let Some(raw) = raw else {
+        return Ok(None);
+    };
+    let raw = raw
+        .to_str()
+        .context("GUD_TEST_PREARM_ONCE_BYTES must be valid UTF-8")?;
+    let bytes = raw
+        .parse::<usize>()
+        .with_context(|| format!("invalid GUD_TEST_PREARM_ONCE_BYTES={raw:?}"))?;
+    ensure!(
+        (4 * 1024..=64 * 1024).contains(&bytes) && bytes % 512 == 0,
+        "GUD_TEST_PREARM_ONCE_BYTES must be a 512-byte multiple from 4096 through 65536"
+    );
+    Ok(Some(bytes))
+}
+
+fn parse_test_status_on_set_bytes(raw: Option<&OsStr>) -> anyhow::Result<Option<usize>> {
+    let Some(raw) = raw else {
+        return Ok(None);
+    };
+    let raw = raw
+        .to_str()
+        .context("GUD_TEST_STATUS_ON_SET_BYTES must be valid UTF-8")?;
+    let bytes = raw
+        .parse::<usize>()
+        .with_context(|| format!("invalid GUD_TEST_STATUS_ON_SET_BYTES={raw:?}"))?;
+    ensure!(
+        bytes == 12_800,
+        "GUD_TEST_STATUS_ON_SET_BYTES diagnostic mode requires exactly 12800"
+    );
+    Ok(Some(bytes))
+}
+
 fn parse_test_dynamic_mode_match(raw: Option<&OsStr>) -> anyhow::Result<bool> {
     let Some(raw) = raw else {
         return Ok(false);
@@ -1905,14 +1985,47 @@ fn main() -> anyhow::Result<()> {
     let functionfs_read_size = parse_functionfs_read_size(var_os("GUD_FFS_READ_SIZE").as_deref())?;
     let test_compression_raw = var_os("GUD_TEST_COMPRESSION");
     let test_max_buffer_size_raw = var_os("GUD_TEST_MAX_BUFFER_SIZE");
+    let test_prearm_once_raw = var_os("GUD_TEST_PREARM_ONCE_BYTES");
+    let test_status_on_set_raw = var_os("GUD_TEST_STATUS_ON_SET_BYTES");
     let test_output_mode_raw = var_os("GUD_TEST_OUTPUT_MODE");
     let test_dynamic_mode_match_raw = var_os("GUD_TEST_DYNAMIC_MODE_MATCH");
     let descriptor_compression = parse_test_compression(test_compression_raw.as_deref())?;
     let descriptor_max_buffer_size =
         parse_test_max_buffer_size(test_max_buffer_size_raw.as_deref())?;
+    let test_prearm_once_bytes = parse_test_prearm_once_bytes(test_prearm_once_raw.as_deref())?;
+    let test_status_on_set_bytes =
+        parse_test_status_on_set_bytes(test_status_on_set_raw.as_deref())?;
     let test_output_mode = parse_test_output_mode(test_output_mode_raw.as_deref())?;
     let dynamic_mode_match = parse_test_dynamic_mode_match(test_dynamic_mode_match_raw.as_deref())?;
     validate_test_mode_policy(dynamic_mode_match, test_output_mode)?;
+    if let Some(prearm_bytes) = test_prearm_once_bytes {
+        ensure!(
+            descriptor_max_buffer_size == Some(prearm_bytes as u32),
+            "GUD_TEST_PREARM_ONCE_BYTES requires an identical GUD_TEST_MAX_BUFFER_SIZE"
+        );
+        ensure!(
+            descriptor_compression == 0,
+            "GUD_TEST_PREARM_ONCE_BYTES requires GUD_TEST_COMPRESSION=none"
+        );
+        ensure!(
+            prearm_bytes <= functionfs_read_size,
+            "GUD_TEST_PREARM_ONCE_BYTES exceeds GUD_FFS_READ_SIZE"
+        );
+    }
+    if let Some(status_on_set_bytes) = test_status_on_set_bytes {
+        ensure!(
+            test_prearm_once_bytes.is_none(),
+            "GUD_TEST_STATUS_ON_SET_BYTES cannot be combined with old prearm mode"
+        );
+        ensure!(
+            descriptor_max_buffer_size == Some(status_on_set_bytes as u32),
+            "GUD_TEST_STATUS_ON_SET_BYTES requires an identical GUD_TEST_MAX_BUFFER_SIZE"
+        );
+        ensure!(
+            descriptor_compression == 0,
+            "GUD_TEST_STATUS_ON_SET_BYTES requires GUD_TEST_COMPRESSION=none"
+        );
+    }
     let (mut gud_data, gud_data_ep) =
         gud_gadget::PixelDataEndpoint::new_with_read_size(functionfs_read_size)
             .context("configure FunctionFS bulk OUT read size")?;
@@ -1970,6 +2083,12 @@ fn main() -> anyhow::Result<()> {
             },
             ?descriptor_max_buffer_size,
             "TEST-ONLY GUD descriptor override enabled; a fresh USB enumeration is required"
+        );
+    }
+    if let Some(prearm_bytes) = test_prearm_once_bytes {
+        warn!(
+            prearm_bytes,
+            "TEST-ONLY one-payload FunctionFS prearm enabled; the gadget will unbind after one payload"
         );
     }
     if let Some(output_mode) = test_output_mode {
@@ -2055,11 +2174,16 @@ fn main() -> anyhow::Result<()> {
             .and_then(|pixels| pixels.checked_mul(4))
             .context("serialized descriptor maximum buffer size overflow")?,
     );
+    let descriptor_flags = if test_status_on_set_bytes.is_some() {
+        GUD_DISPLAY_FLAG_STATUS_ON_SET
+    } else {
+        0
+    };
     info!(
         event = "descriptor_config",
         magic = "0x1d50614d",
         version = 1,
-        flags = 0,
+        flags = descriptor_flags,
         compression = descriptor_compression,
         max_buffer_size = serialized_max_buffer_size,
         min_width,
@@ -2370,6 +2494,9 @@ fn main() -> anyhow::Result<()> {
     let mut had_host_session = false;
     let mut restart_requested = false;
     let mut lifecycle_error = None;
+    let mut prearmed_receive_started = None;
+    let mut pending_exact_receive: Option<(gud_gadget::SetBuffer, std::time::Instant, u64)> = None;
+    let mut ready_exact_payload: Option<(gud_gadget::SetBuffer, gud_gadget::PayloadStats)> = None;
     let unbind_target: Arc<dyn GadgetUnbind> = reg.clone();
     match gadget_shutdown.publish(&unbind_target) {
         Ok(GadgetUnbindOutcome::Armed) => {}
@@ -2390,50 +2517,126 @@ fn main() -> anyhow::Result<()> {
     drop(unbind_target);
 
     'event_loop: while running.load(Ordering::Relaxed) {
+        if let Some((info, started, _)) = pending_exact_receive.as_ref() {
+            match gud_data.try_complete_exact_payload_aio(info.length as usize) {
+                Ok(Some(stats)) => {
+                    let (info, started, _) = pending_exact_receive
+                        .take()
+                        .expect("pending exact receive disappeared");
+                    match bulk_receive_session.finish_receive(started, Ok(stats)) {
+                        Ok(stats) => ready_exact_payload = Some((info, stats)),
+                        Err(err) => {
+                            gud_data.poison_exact_payload_aio(
+                                "outer receive guard changed during exact completion",
+                            );
+                            tracing::error!(
+                                error = %format_args!("{err:#}"),
+                                "Preserving terminal containment after exact completion raced with lifecycle/shutdown"
+                            );
+                            continue;
+                        }
+                    }
+                }
+                Ok(None) if started.elapsed() <= bulk_receive_session.deadline => {}
+                Ok(None) => {
+                    let (_, started, transaction_seq) = pending_exact_receive
+                        .take()
+                        .expect("timed-out exact receive disappeared");
+                    gud_data.poison_exact_payload_aio("missing completion timeout");
+                    let _ = bulk_receive_session.finish_receive::<()>(
+                        started,
+                        Err(anyhow::anyhow!(
+                            "exact FunctionFS AIO transaction {transaction_seq} exceeded completion deadline"
+                        )),
+                    );
+                    continue;
+                }
+                Err(err) => {
+                    let (_, started, _) = pending_exact_receive
+                        .take()
+                        .expect("invalid exact receive disappeared");
+                    gud_data.poison_exact_payload_aio("invalid AIO completion");
+                    let _ = bulk_receive_session.finish_receive::<()>(started, Err(err));
+                    continue;
+                }
+            }
+        }
         if bulk_receive_session.current_state() == BulkReceiveState::Poisoned {
             std::thread::sleep(Duration::from_millis(100));
             continue;
         }
 
-        let event = match gud.event_timeout(Duration::from_millis(100)) {
-            Ok(event) => event,
-            Err(err) => {
-                tracing::error!("Failed to read GUD event: {}", err);
-                if !running.load(Ordering::Acquire) {
-                    tracing::info!("Control endpoint read cancelled for shutdown");
-                    break 'event_loop;
-                }
-                if waiting_screen_visible || !matches!(pattern_mode, PatternMode::Off) {
-                    continue;
-                }
-                if udc_is_detached(&udc) {
-                    tracing::info!("Rendering waiting screen after event read failure");
-                    if let Err(wait_err) = present_waiting_screen(
-                        &mut backend,
-                        &mut active,
-                        dump_path.as_deref(),
-                        dump_raw_path.as_deref(),
-                        transfer_format,
-                    ) {
-                        tracing::error!(
-                            "Failed to render waiting screen after event read failure: {}",
-                            wait_err
+        let event_timeout = if pending_exact_receive.is_some() {
+            Duration::from_millis(10)
+        } else {
+            Duration::from_millis(100)
+        };
+        let completed_payload = ready_exact_payload.take();
+        let event = match completed_payload.as_ref() {
+            Some(_) => None,
+            None => match gud.event_timeout(event_timeout) {
+                Ok(event) => event,
+                Err(err) => {
+                    if let Some((_, started, _)) = pending_exact_receive.take() {
+                        gud_data
+                            .poison_exact_payload_aio("EP0 event failure while exact AIO accepted");
+                        let _ = bulk_receive_session.finish_receive::<()>(
+                            started,
+                            Err(anyhow::Error::new(err)
+                                .context("process EP0 while exact AIO request was accepted")),
                         );
-                    } else {
-                        waiting_screen_visible = true;
-                        if had_host_session {
-                            tracing::info!(
-                                "Restarting gadget after event read failure on detached UDC"
+                        continue;
+                    }
+                    tracing::error!("Failed to read GUD event: {}", err);
+                    if !running.load(Ordering::Acquire) {
+                        tracing::info!("Control endpoint read cancelled for shutdown");
+                        break 'event_loop;
+                    }
+                    if waiting_screen_visible || !matches!(pattern_mode, PatternMode::Off) {
+                        continue;
+                    }
+                    if udc_is_detached(&udc) {
+                        tracing::info!("Rendering waiting screen after event read failure");
+                        if let Err(wait_err) = present_waiting_screen(
+                            &mut backend,
+                            &mut active,
+                            dump_path.as_deref(),
+                            dump_raw_path.as_deref(),
+                            transfer_format,
+                        ) {
+                            tracing::error!(
+                                "Failed to render waiting screen after event read failure: {}",
+                                wait_err
                             );
-                            restart_requested = true;
-                            break 'event_loop;
+                        } else {
+                            waiting_screen_visible = true;
+                            if had_host_session {
+                                tracing::info!(
+                                    "Restarting gadget after event read failure on detached UDC"
+                                );
+                                restart_requested = true;
+                                break 'event_loop;
+                            }
                         }
                     }
+                    continue;
                 }
-                continue;
-            }
+            },
         };
-        if event.is_none() {
+        if pending_exact_receive.is_some() && udc_is_detached(&udc) {
+            let (_, started, _) = pending_exact_receive
+                .take()
+                .expect("detached exact receive disappeared");
+            gud_data.poison_exact_payload_aio("UDC detached while exact AIO accepted");
+            let _ = bulk_receive_session.finish_receive::<()>(
+                started,
+                Err(anyhow::anyhow!(
+                    "UDC detached while exact FunctionFS AIO request was accepted"
+                )),
+            );
+            continue;
+        }
+        if event.is_none() && completed_payload.is_none() {
             if !waiting_screen_visible
                 && matches!(pattern_mode, PatternMode::Off)
                 && udc_is_detached(&udc)
@@ -2458,9 +2661,8 @@ fn main() -> anyhow::Result<()> {
             }
             continue;
         }
-        let event = event.unwrap();
-        tracing::debug!("Received event: {:?}", event);
-        if !waiting_screen_visible
+        if event.is_some()
+            && !waiting_screen_visible
             && matches!(pattern_mode, PatternMode::Off)
             && udc_is_detached(&udc)
         {
@@ -2488,21 +2690,42 @@ fn main() -> anyhow::Result<()> {
         }
 
         let control_event_start = std::time::Instant::now();
-        let parsed_gud_event = gud_gadget::event(event);
+        let mut ready_payload_stats = None;
+        let parsed_gud_event = if let Some((info, stats)) = completed_payload {
+            ready_payload_stats = Some(stats);
+            Ok(Some(Event::Buffer(info)))
+        } else {
+            let event = event.expect("raw event disappeared");
+            tracing::debug!("Received event: {:?}", event);
+            gud_gadget::event(event)
+        };
         let control_event_ms = control_event_start.elapsed().as_millis();
         match parsed_gud_event {
             Ok(Some(gud_event)) => {
                 tracing::debug!("GUD event: {:?}", gud_event);
                 record_host_activity(&mut had_host_session, &gud_event);
+                if pending_exact_receive.is_some() && !matches!(&gud_event, Event::StatusSent(_)) {
+                    let reason = format!(
+                        "unexpected high-level event while exact AIO accepted: {gud_event:?}"
+                    );
+                    let (_, started, _) = pending_exact_receive
+                        .take()
+                        .expect("pending exact receive disappeared during containment");
+                    gud_data.poison_exact_payload_aio(&reason);
+                    let _ = bulk_receive_session
+                        .finish_receive::<()>(started, Err(anyhow::anyhow!(reason)));
+                    continue;
+                }
                 match gud_event {
                     Event::GetDescriptor(req) => {
-                        if let Err(err) = req.send_descriptor_with_max_buffer_size(
+                        if let Err(err) = req.send_descriptor_with_options(
                             min_width,
                             min_height,
                             max_width,
                             max_height,
                             descriptor_compression,
                             descriptor_max_buffer_size,
+                            descriptor_flags,
                         ) {
                             tracing::error!("Failed to send descriptor: {}", err);
                         } else {
@@ -2524,6 +2747,20 @@ fn main() -> anyhow::Result<()> {
                             tracing::error!("Failed to send modes: {}", err);
                         } else {
                             tracing::debug!("Sent display modes");
+                        }
+                    }
+                    Event::StatusSent(status) => {
+                        if let Err(err) = gud_data.note_status_sent(status) {
+                            if let Some((_, started, _)) = pending_exact_receive.take() {
+                                gud_data.poison_exact_payload_aio(
+                                    "invalid GET_STATUS result after arm",
+                                );
+                                let _ = bulk_receive_session.finish_receive::<()>(
+                                    started,
+                                    Err(err.context("validate GET_STATUS after exact AIO arm")),
+                                );
+                            }
+                            tracing::error!("Invalid status transition");
                         }
                     }
                     Event::StateChecked(snapshot) => {
@@ -3090,6 +3327,37 @@ fn main() -> anyhow::Result<()> {
                             | ProtocolInvalidationReason::Suspend
                             | ProtocolInvalidationReason::Resume),
                     } => {
+                        if reason == ProtocolInvalidationReason::Enable {
+                            if let Some(prearm_bytes) = test_prearm_once_bytes {
+                                ensure!(
+                                    prearmed_receive_started.is_none(),
+                                    "received a second FunctionFS Enable while the one-shot prearmed read was active"
+                                );
+                                let started = bulk_receive_session
+                                    .begin_receive()
+                                    .context("begin one-shot prearmed FunctionFS receive")?;
+                                if let Err(err) = gud_data.prearm_payload_read(prearm_bytes) {
+                                    let cancel_result = bulk_receive_session
+                                        .cancel_receive_before_io()
+                                        .context("cancel failed FunctionFS prearm state");
+                                    lifecycle_error = Some(match cancel_result {
+                                        Ok(()) => err.context(
+                                            "submit one-shot prearmed FunctionFS bulk OUT read",
+                                        ),
+                                        Err(cancel_err) => cancel_err.context(format!(
+                                            "prearm submission also failed: {err:#}"
+                                        )),
+                                    });
+                                    break 'event_loop;
+                                }
+                                prearmed_receive_started = Some(started);
+                                tracing::info!(
+                                    event = "functionfs_prearm_ready",
+                                    prearm_bytes,
+                                    "One-shot FunctionFS bulk OUT read is active before SET_BUFFER"
+                                );
+                            }
+                        }
                         if dynamic_mode_match {
                             let result = match active {
                                 StableMappedActive::Slot0(mapped) => {
@@ -3227,9 +3495,40 @@ fn main() -> anyhow::Result<()> {
                             (info.x + info.width) as u16,
                             (info.y + info.height) as u16,
                         );
-                        let payload_stats = match bulk_receive_session
-                            .receive(|| gud_data.recv_payload_bytes(&info))
-                        {
+                        let receive_result = if test_status_on_set_bytes.is_some() {
+                            if let Some(stats) = ready_payload_stats.take() {
+                                Ok(stats)
+                            } else {
+                                let started = bulk_receive_session
+                                    .begin_receive()
+                                    .context("enter InFlight before exact AIO submission")?;
+                                let transaction_seq = match gud_data.arm_exact_payload_aio(&info) {
+                                    Ok(sequence) => sequence,
+                                    Err(err) => {
+                                        bulk_receive_session
+                                            .cancel_receive_before_io()
+                                            .context("return Idle after rejected AIO submission")?;
+                                        tracing::error!(
+                                            error = %format_args!("{err:#}"),
+                                            "Exact FunctionFS AIO submission was rejected; GET_STATUS will report an error"
+                                        );
+                                        continue;
+                                    }
+                                };
+                                pending_exact_receive = Some((info, started, transaction_seq));
+                                continue;
+                            }
+                        } else if prearmed_receive_started.take().is_some() {
+                            // A prearmed read may wait for the host indefinitely. Apply the
+                            // receive deadline only from the point where SET_BUFFER hands the
+                            // completed (or still pending) read back to the normal event path.
+                            let started = std::time::Instant::now();
+                            let result = gud_data.recv_payload_bytes(&info);
+                            bulk_receive_session.finish_receive(started, result)
+                        } else {
+                            bulk_receive_session.receive(|| gud_data.recv_payload_bytes(&info))
+                        };
+                        let payload_stats = match receive_result {
                             Ok(result) => result,
                             Err(err) => {
                                 if let Some(io_err) = err
@@ -3281,6 +3580,24 @@ fn main() -> anyhow::Result<()> {
                                 continue;
                             }
                         };
+                        tracing::debug!(
+                            event = "payload_completed",
+                            payload_seq = payload_stats.payload_seq,
+                            transfer_bytes = payload_stats.transfer_bytes,
+                            read_calls = payload_stats.read_calls,
+                            "FunctionFS payload completed before framebuffer processing"
+                        );
+                        if let Some(prearm_bytes) = test_prearm_once_bytes {
+                            tracing::info!(
+                                event = "functionfs_prearm_one_shot_complete",
+                                prearm_bytes,
+                                payload_seq = payload_stats.payload_seq,
+                                transfer_bytes = payload_stats.transfer_bytes,
+                                read_calls = payload_stats.read_calls,
+                                "One-shot prearmed FunctionFS payload completed; leaving the event loop before another SET_BUFFER"
+                            );
+                            break 'event_loop;
+                        }
 
                         let active_state = gud_gadget::active_scanout_state();
                         let source_width =
@@ -3532,6 +3849,26 @@ fn main() -> anyhow::Result<()> {
                             total_ms,
                             usb_mib_per_s
                         );
+                        tracing::debug!(
+                            event = "framebuffer_processing_completed",
+                            payload_seq = payload_stats.payload_seq,
+                            transfer_bytes = payload_stats.transfer_bytes,
+                            total_ms,
+                            "Normal userspace payload processing completed"
+                        );
+
+                        if let Some(status_on_set_bytes) = test_status_on_set_bytes {
+                            tracing::info!(
+                                event = "functionfs_status_on_set_one_shot_complete",
+                                status_on_set_bytes,
+                                payload_seq = payload_stats.payload_seq,
+                                transfer_bytes = payload_stats.transfer_bytes,
+                                read_calls = payload_stats.read_calls,
+                                exact_aio_state = ?gud_data.exact_aio_state(),
+                                "One-shot STATUS_ON_SET payload and framebuffer processing completed; leaving the event loop before another SET_BUFFER"
+                            );
+                            break 'event_loop;
+                        }
 
                         if matches!(pattern_mode, PatternMode::Off) {
                             waiting_screen_visible = false;
@@ -3541,6 +3878,13 @@ fn main() -> anyhow::Result<()> {
             }
             Ok(None) => {}
             Err(err) => {
+                if let Some((_, started, _)) = pending_exact_receive.take() {
+                    gud_data.poison_exact_payload_aio(
+                        "GUD protocol parse failure while exact AIO accepted",
+                    );
+                    let _ = bulk_receive_session.finish_receive::<()>(started, Err(err));
+                    continue;
+                }
                 tracing::warn!("Failed to parse GUD event: {}", err);
                 if !waiting_screen_visible
                     && matches!(pattern_mode, PatternMode::Off)
@@ -3669,14 +4013,15 @@ mod tests {
         advertised_preferred_mode_index, compute_scaled_layout, derive_mode_from_native,
         diagnostic_pattern_color, dump_pixel_buffer_ppm, fill_diagnostic_pattern_rect,
         parse_functionfs_read_size, parse_test_compression, parse_test_dynamic_mode_match,
-        parse_test_max_buffer_size, parse_test_output_mode, read_pixel, record_host_activity,
-        render_waiting_screen, scale_to_fit, should_restart_after_clean_detach,
-        validate_test_mode_policy, waiting_scene_glyph, write_pixel, BulkReceiveSession,
-        BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey,
-        PendingPlan, PendingPlanKind, ScaledLayout, ShadowActivation, ShadowFramebuffer,
-        ShadowRasterIdentity, TestOutputMode, TransferFormat, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN,
-        COLOR_DARK_GRAY, COLOR_GREEN, COLOR_LIGHT_GRAY, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE,
-        COLOR_YELLOW, RGB565_GREEN, RGB565_WHITE,
+        parse_test_max_buffer_size, parse_test_output_mode, parse_test_prearm_once_bytes,
+        parse_test_status_on_set_bytes, read_pixel, record_host_activity, render_waiting_screen,
+        scale_to_fit, should_restart_after_clean_detach, validate_test_mode_policy,
+        waiting_scene_glyph, write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode,
+        GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind,
+        ScaledLayout, ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, TestOutputMode,
+        TransferFormat, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN,
+        COLOR_LIGHT_GRAY, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, RGB565_GREEN,
+        RGB565_WHITE,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
@@ -3858,6 +4203,36 @@ mod tests {
         assert!(parse_test_max_buffer_size(Some(OsStr::new("0"))).is_err());
         assert!(parse_test_max_buffer_size(Some(OsStr::new("-1"))).is_err());
         assert!(parse_test_max_buffer_size(Some(OsStr::new("not-a-size"))).is_err());
+    }
+
+    #[test]
+    fn test_prearm_once_parser_accepts_only_safe_functionfs_read_sizes() {
+        assert_eq!(parse_test_prearm_once_bytes(None).unwrap(), None);
+        assert_eq!(
+            parse_test_prearm_once_bytes(Some(OsStr::new("12800"))).unwrap(),
+            Some(12_800)
+        );
+        for value in ["0", "4095", "12801", "66048", "not-a-size"] {
+            assert!(
+                parse_test_prearm_once_bytes(Some(OsStr::new(value))).is_err(),
+                "unexpectedly accepted {value:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn status_on_set_diagnostic_parser_accepts_only_exact_one_shot_size() {
+        assert_eq!(parse_test_status_on_set_bytes(None).unwrap(), None);
+        assert_eq!(
+            parse_test_status_on_set_bytes(Some(OsStr::new("12800"))).unwrap(),
+            Some(12_800)
+        );
+        for value in ["0", "12799", "12801", "65536", "not-a-size"] {
+            assert!(
+                parse_test_status_on_set_bytes(Some(OsStr::new(value))).is_err(),
+                "unexpectedly accepted {value:?}"
+            );
+        }
     }
 
     #[test]
