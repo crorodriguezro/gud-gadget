@@ -50,12 +50,18 @@ fn record_host_activity(had_host_session: &mut bool, event: &Event<'_>) {
 
 const BULK_RECEIVE_DEADLINE: Duration = Duration::from_millis(1_000);
 const ONE_SHOT_STATUS_DRAIN_DEADLINE: Duration = Duration::from_millis(1_000);
+const ONE_SHOT_TRAILING_STATUS_COUNT: u8 = 2;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum OneShotStatusPhase {
     AwaitingInitial,
-    Receiving { trailing_status_drained: bool },
-    AwaitingTrailing { deadline: Instant },
+    Receiving {
+        trailing_statuses: u8,
+    },
+    AwaitingTrailing {
+        trailing_statuses: u8,
+        deadline: Instant,
+    },
     Drained,
     TimedOut,
 }
@@ -63,8 +69,8 @@ enum OneShotStatusPhase {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum OneShotStatusObservation {
     Initial,
-    TrailingEarly,
-    TrailingAfterPayload,
+    TrailingEarly { drained: u8, remaining: u8 },
+    TrailingAfterPayload { drained: u8, remaining: u8 },
 }
 
 #[derive(Debug)]
@@ -87,26 +93,41 @@ impl OneShotStatusDrain {
         match self.phase {
             OneShotStatusPhase::AwaitingInitial => {
                 self.phase = OneShotStatusPhase::Receiving {
-                    trailing_status_drained: false,
+                    trailing_statuses: 0,
                 };
                 Ok(OneShotStatusObservation::Initial)
             }
-            OneShotStatusPhase::Receiving {
-                trailing_status_drained: false,
-            } => {
+            OneShotStatusPhase::Receiving { trailing_statuses } => {
+                ensure!(
+                    trailing_statuses < ONE_SHOT_TRAILING_STATUS_COUNT,
+                    "received an extra GET_STATUS while all one-shot trailing statuses were already drained"
+                );
+                let drained = trailing_statuses + 1;
+                let remaining = ONE_SHOT_TRAILING_STATUS_COUNT - drained;
                 self.phase = OneShotStatusPhase::Receiving {
-                    trailing_status_drained: true,
+                    trailing_statuses: drained,
                 };
-                Ok(OneShotStatusObservation::TrailingEarly)
+                Ok(OneShotStatusObservation::TrailingEarly { drained, remaining })
             }
-            OneShotStatusPhase::Receiving {
-                trailing_status_drained: true,
-            } => anyhow::bail!(
-                "received an extra GET_STATUS while the one-shot trailing status was already drained"
-            ),
-            OneShotStatusPhase::AwaitingTrailing { .. } => {
-                self.phase = OneShotStatusPhase::Drained;
-                Ok(OneShotStatusObservation::TrailingAfterPayload)
+            OneShotStatusPhase::AwaitingTrailing {
+                trailing_statuses,
+                deadline,
+            } => {
+                ensure!(
+                    trailing_statuses < ONE_SHOT_TRAILING_STATUS_COUNT,
+                    "received an extra GET_STATUS while all one-shot trailing statuses were already drained"
+                );
+                let drained = trailing_statuses + 1;
+                let remaining = ONE_SHOT_TRAILING_STATUS_COUNT - drained;
+                if remaining == 0 {
+                    self.phase = OneShotStatusPhase::Drained;
+                } else {
+                    self.phase = OneShotStatusPhase::AwaitingTrailing {
+                        trailing_statuses: drained,
+                        deadline,
+                    };
+                }
+                Ok(OneShotStatusObservation::TrailingAfterPayload { drained, remaining })
             }
             OneShotStatusPhase::Drained => anyhow::bail!(
                 "received an extra GET_STATUS after the one-shot trailing status was drained"
@@ -121,16 +142,15 @@ impl OneShotStatusDrain {
     /// was in progress, so the diagnostic can detach immediately.
     fn payload_processed(&mut self, now: Instant) -> anyhow::Result<bool> {
         match self.phase {
-            OneShotStatusPhase::Receiving {
-                trailing_status_drained: true,
-            } => {
+            OneShotStatusPhase::Receiving { trailing_statuses }
+                if trailing_statuses == ONE_SHOT_TRAILING_STATUS_COUNT =>
+            {
                 self.phase = OneShotStatusPhase::Drained;
                 Ok(true)
             }
-            OneShotStatusPhase::Receiving {
-                trailing_status_drained: false,
-            } => {
+            OneShotStatusPhase::Receiving { trailing_statuses } => {
                 self.phase = OneShotStatusPhase::AwaitingTrailing {
+                    trailing_statuses,
                     deadline: now + ONE_SHOT_STATUS_DRAIN_DEADLINE,
                 };
                 Ok(false)
@@ -142,7 +162,7 @@ impl OneShotStatusDrain {
     }
 
     fn timed_out(&mut self, now: Instant) -> bool {
-        let OneShotStatusPhase::AwaitingTrailing { deadline } = self.phase else {
+        let OneShotStatusPhase::AwaitingTrailing { deadline, .. } = self.phase else {
             return false;
         };
         if now < deadline {
@@ -150,6 +170,10 @@ impl OneShotStatusDrain {
         }
         self.phase = OneShotStatusPhase::TimedOut;
         true
+    }
+
+    fn is_drained(&self) -> bool {
+        self.phase == OneShotStatusPhase::Drained
     }
 }
 
@@ -2910,7 +2934,10 @@ fn main() -> anyhow::Result<()> {
                                 receiver_state = ?bulk_receive_session.current_state(),
                                 "Observed one-shot STATUS_ON_SET control status"
                             );
-                            if observation == OneShotStatusObservation::TrailingAfterPayload {
+                            if one_shot_status_drain
+                                .as_ref()
+                                .is_some_and(OneShotStatusDrain::is_drained)
+                            {
                                 tracing::info!(
                                     event = "functionfs_status_on_set_trailing_status_drained",
                                     exact_aio_state = ?gud_data.exact_aio_state(),
@@ -4244,7 +4271,18 @@ mod tests {
         ));
         assert_eq!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::TrailingAfterPayload
+            OneShotStatusObservation::TrailingAfterPayload {
+                drained: 1,
+                remaining: 1,
+            }
+        );
+        assert!(!drain.is_drained());
+        assert_eq!(
+            drain.note_status(0).unwrap(),
+            OneShotStatusObservation::TrailingAfterPayload {
+                drained: 2,
+                remaining: 0,
+            }
         );
         assert_eq!(drain.phase, OneShotStatusPhase::Drained);
     }
@@ -4259,11 +4297,48 @@ mod tests {
         );
         assert_eq!(
             drain.note_status(0).unwrap(),
-            OneShotStatusObservation::TrailingEarly
+            OneShotStatusObservation::TrailingEarly {
+                drained: 1,
+                remaining: 1,
+            }
         );
 
-        assert!(drain.payload_processed(Instant::now()).unwrap());
+        assert!(!drain.payload_processed(Instant::now()).unwrap());
+        assert_eq!(
+            drain.note_status(0).unwrap(),
+            OneShotStatusObservation::TrailingAfterPayload {
+                drained: 2,
+                remaining: 0,
+            }
+        );
         assert_eq!(drain.phase, OneShotStatusPhase::Drained);
+    }
+
+    #[test]
+    fn one_shot_drain_handles_both_trailing_statuses_before_payload_processing() {
+        let mut drain = OneShotStatusDrain::new();
+
+        assert_eq!(
+            drain.note_status(0).unwrap(),
+            OneShotStatusObservation::Initial
+        );
+        assert!(matches!(
+            drain.note_status(0).unwrap(),
+            OneShotStatusObservation::TrailingEarly {
+                drained: 1,
+                remaining: 1,
+            }
+        ));
+        assert!(matches!(
+            drain.note_status(0).unwrap(),
+            OneShotStatusObservation::TrailingEarly {
+                drained: 2,
+                remaining: 0,
+            }
+        ));
+
+        assert!(drain.payload_processed(Instant::now()).unwrap());
+        assert!(drain.is_drained());
     }
 
     #[test]
