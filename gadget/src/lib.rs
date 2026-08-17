@@ -75,6 +75,10 @@ pub const DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE: usize = 16 * 1024;
 static CONNECTOR_STATUS_CHANGED_ONCE: AtomicBool = AtomicBool::new(true);
 static STATUS_VALUE: AtomicU8 = AtomicU8::new(GUD_STATUS_OK);
 static CLEAR_STATUS_ON_NEXT_SUCCESS: AtomicBool = AtomicBool::new(false);
+// The STATUS_ON_SET diagnostic deliberately permits exactly one payload. This
+// guard is enabled as soon as that payload's AIO request is accepted, so a
+// second SET_BUFFER cannot slip in while EP0 services the trailing status.
+static ONE_SHOT_STATUS_GUARD_ACTIVE: AtomicBool = AtomicBool::new(false);
 static STATE_CHECK_VALIDATION: OnceLock<Mutex<StateCheckValidation>> = OnceLock::new();
 static PROTOCOL_STATE: OnceLock<Mutex<ProtocolState>> = OnceLock::new();
 // This generation changes only at FunctionFS lifecycle boundaries. It lets the
@@ -742,6 +746,18 @@ fn current_status() -> u8 {
 fn reset_status() {
     STATUS_VALUE.store(GUD_STATUS_OK, Ordering::SeqCst);
     CLEAR_STATUS_ON_NEXT_SUCCESS.store(false, Ordering::SeqCst);
+    ONE_SHOT_STATUS_GUARD_ACTIVE.store(false, Ordering::SeqCst);
+}
+
+/// Refuse further SET_BUFFER requests for the active one-shot STATUS_ON_SET
+/// diagnostic. The caller enables this only after its first AIO request was
+/// accepted, before either initial or trailing GET_STATUS can be observed.
+pub fn begin_one_shot_status_guard() {
+    ONE_SHOT_STATUS_GUARD_ACTIVE.store(true, Ordering::SeqCst);
+}
+
+fn one_shot_set_buffer_permitted() -> bool {
+    !ONE_SHOT_STATUS_GUARD_ACTIVE.load(Ordering::Acquire)
 }
 
 fn reset_protocol_state() -> Option<u64> {
@@ -1228,6 +1244,14 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
                 }
                 GUD_REQ_SET_BUFFER => {
                     let req = req.recv_all().context("recv set buffer")?;
+                    if !one_shot_set_buffer_permitted() {
+                        latch_status(GUD_STATUS_BUSY);
+                        warn!(
+                            event = "set_buffer_rejected_one_shot_status_drain",
+                            "rejected SET_BUFFER while one-shot diagnostic drains trailing status"
+                        );
+                        return Ok(None);
+                    }
                     let v: SetBuffer;
                     (v, _) =
                         ssmarshal::deserialize(req.as_slice()).context("deserialize set buffer")?;
@@ -2084,20 +2108,21 @@ mod tests {
         classify_functionfs_read_completion, clear_pending_state, commit_pending_state,
         configure_state_check_validation, current_status, handle_resume_transition,
         handle_suspend_transition, latch_status, mark_success, modes_have_same_user_timing,
-        next_connector_status, parse_enable_request, read_functionfs_payload,
-        reset_connector_status_changed, reset_protocol_state, reset_status,
-        serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
-        store_pending_state, update_controller_enabled, update_display_enabled,
-        usb_packet_estimate, validate_buffer_request, validate_functionfs_read_size,
-        validate_state_check_payload, ActiveScanoutState, ConnectorDescriptor, DisplayMode,
-        DisplayState, ExactAioState, ExactAioTransaction, FunctionFsReadCompletion,
-        PixelDataEndpoint, SetBuffer, DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
-        FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE, GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED,
-        GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET,
-        GUD_DISPLAY_MAGIC, GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK,
-        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        next_connector_status, one_shot_set_buffer_permitted, parse_enable_request,
+        read_functionfs_payload, reset_connector_status_changed, reset_protocol_state,
+        reset_status, serialize_connector_descriptors, serialize_display_descriptor,
+        serialize_display_modes, store_pending_state, update_controller_enabled,
+        update_display_enabled, usb_packet_estimate, validate_buffer_request,
+        validate_functionfs_read_size, validate_state_check_payload, ActiveScanoutState,
+        ConnectorDescriptor, DisplayMode, DisplayState, ExactAioState, ExactAioTransaction,
+        FunctionFsReadCompletion, PixelDataEndpoint, SetBuffer,
+        DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE, FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE,
+        GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
+        GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET, GUD_DISPLAY_MAGIC,
+        GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK, GUD_PIXEL_FORMAT_RGB565,
+        GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
-    use crate::{event, Event, ProtocolInvalidationReason};
+    use crate::{begin_one_shot_status_guard, event, Event, ProtocolInvalidationReason};
     use bytes::BytesMut;
     use serde::Serialize;
     use std::io::{self, Cursor, Read};
@@ -2362,6 +2387,54 @@ mod tests {
         assert!(transaction.begin_arm(12_800).is_err());
         assert_eq!(transaction.sequence, first_sequence);
         assert_eq!(transaction.state, ExactAioState::ArmedAwaitStatus);
+    }
+
+    #[test]
+    fn one_shot_drain_rejects_second_set_without_arming_or_advancing_sequences() {
+        let _guard = test_global_state();
+        reset_status();
+        begin_one_shot_status_guard();
+        assert!(!one_shot_set_buffer_permitted());
+
+        let transaction = ExactAioTransaction::default();
+        let payload_sequence = 0_u64;
+        if one_shot_set_buffer_permitted() {
+            unreachable!("one-shot SET_BUFFER guard admitted a second receive");
+        }
+        assert_eq!(transaction.state, ExactAioState::Idle);
+        assert_eq!(transaction.sequence, 0);
+        assert_eq!(payload_sequence, 0);
+        reset_status();
+    }
+
+    #[test]
+    fn lifecycle_reset_clears_one_shot_set_buffer_guard() {
+        let _guard = test_global_state();
+        reset_status();
+        begin_one_shot_status_guard();
+        assert!(!one_shot_set_buffer_permitted());
+
+        handle_resume_transition();
+
+        assert!(one_shot_set_buffer_permitted());
+    }
+
+    #[test]
+    fn non_diagnostic_sequential_exact_transactions_remain_permitted() {
+        let _guard = test_global_state();
+        reset_status();
+        assert!(one_shot_set_buffer_permitted());
+
+        let mut transaction = ExactAioTransaction::default();
+        for expected_bytes in [12_800, 12_800] {
+            transaction.begin_arm(expected_bytes).unwrap();
+            transaction.submission_accepted().unwrap();
+            transaction.status_sent(GUD_STATUS_OK).unwrap();
+            transaction.completion(expected_bytes).unwrap();
+            transaction.return_idle().unwrap();
+        }
+        assert_eq!(transaction.state, ExactAioState::Idle);
+        assert_eq!(transaction.sequence, 2);
     }
 
     #[test]

@@ -24,7 +24,7 @@ use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, Weak};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tracing::{debug, info, warn};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use usb_gadget::function::custom::{Custom, Interface};
@@ -49,6 +49,109 @@ fn record_host_activity(had_host_session: &mut bool, event: &Event<'_>) {
 }
 
 const BULK_RECEIVE_DEADLINE: Duration = Duration::from_millis(1_000);
+const ONE_SHOT_STATUS_DRAIN_DEADLINE: Duration = Duration::from_millis(1_000);
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum OneShotStatusPhase {
+    AwaitingInitial,
+    Receiving { trailing_status_drained: bool },
+    AwaitingTrailing { deadline: Instant },
+    Drained,
+    TimedOut,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum OneShotStatusObservation {
+    Initial,
+    TrailingEarly,
+    TrailingAfterPayload,
+}
+
+#[derive(Debug)]
+struct OneShotStatusDrain {
+    phase: OneShotStatusPhase,
+}
+
+impl OneShotStatusDrain {
+    fn new() -> Self {
+        Self {
+            phase: OneShotStatusPhase::AwaitingInitial,
+        }
+    }
+
+    fn note_status(&mut self, status: u8) -> anyhow::Result<OneShotStatusObservation> {
+        ensure!(
+            status == 0,
+            "one-shot STATUS_ON_SET received non-OK status {status}"
+        );
+        match self.phase {
+            OneShotStatusPhase::AwaitingInitial => {
+                self.phase = OneShotStatusPhase::Receiving {
+                    trailing_status_drained: false,
+                };
+                Ok(OneShotStatusObservation::Initial)
+            }
+            OneShotStatusPhase::Receiving {
+                trailing_status_drained: false,
+            } => {
+                self.phase = OneShotStatusPhase::Receiving {
+                    trailing_status_drained: true,
+                };
+                Ok(OneShotStatusObservation::TrailingEarly)
+            }
+            OneShotStatusPhase::Receiving {
+                trailing_status_drained: true,
+            } => anyhow::bail!(
+                "received an extra GET_STATUS while the one-shot trailing status was already drained"
+            ),
+            OneShotStatusPhase::AwaitingTrailing { .. } => {
+                self.phase = OneShotStatusPhase::Drained;
+                Ok(OneShotStatusObservation::TrailingAfterPayload)
+            }
+            OneShotStatusPhase::Drained => anyhow::bail!(
+                "received an extra GET_STATUS after the one-shot trailing status was drained"
+            ),
+            OneShotStatusPhase::TimedOut => {
+                anyhow::bail!("received GET_STATUS after one-shot trailing-status timeout")
+            }
+        }
+    }
+
+    /// Returns true when a trailing status arrived while completion/processing
+    /// was in progress, so the diagnostic can detach immediately.
+    fn payload_processed(&mut self, now: Instant) -> anyhow::Result<bool> {
+        match self.phase {
+            OneShotStatusPhase::Receiving {
+                trailing_status_drained: true,
+            } => {
+                self.phase = OneShotStatusPhase::Drained;
+                Ok(true)
+            }
+            OneShotStatusPhase::Receiving {
+                trailing_status_drained: false,
+            } => {
+                self.phase = OneShotStatusPhase::AwaitingTrailing {
+                    deadline: now + ONE_SHOT_STATUS_DRAIN_DEADLINE,
+                };
+                Ok(false)
+            }
+            phase => anyhow::bail!(
+                "one-shot payload processing completed while status phase was {phase:?}"
+            ),
+        }
+    }
+
+    fn timed_out(&mut self, now: Instant) -> bool {
+        let OneShotStatusPhase::AwaitingTrailing { deadline } = self.phase else {
+            return false;
+        };
+        if now < deadline {
+            return false;
+        }
+        self.phase = OneShotStatusPhase::TimedOut;
+        true
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FrameDumpMode {
@@ -2497,6 +2600,7 @@ fn main() -> anyhow::Result<()> {
     let mut prearmed_receive_started = None;
     let mut pending_exact_receive: Option<(gud_gadget::SetBuffer, std::time::Instant, u64)> = None;
     let mut ready_exact_payload: Option<(gud_gadget::SetBuffer, gud_gadget::PayloadStats)> = None;
+    let mut one_shot_status_drain: Option<OneShotStatusDrain> = None;
     let unbind_target: Arc<dyn GadgetUnbind> = reg.clone();
     match gadget_shutdown.publish(&unbind_target) {
         Ok(GadgetUnbindOutcome::Armed) => {}
@@ -2517,6 +2621,22 @@ fn main() -> anyhow::Result<()> {
     drop(unbind_target);
 
     'event_loop: while running.load(Ordering::Relaxed) {
+        if let Some(drain) = one_shot_status_drain.as_mut() {
+            if drain.timed_out(Instant::now()) {
+                tracing::error!(
+                    event = "functionfs_status_on_set_trailing_status_timeout",
+                    timeout_ms = ONE_SHOT_STATUS_DRAIN_DEADLINE.as_millis(),
+                    exact_aio_state = ?gud_data.exact_aio_state(),
+                    receiver_state = ?bulk_receive_session.current_state(),
+                    "One-shot payload completed but the host never requested its trailing GET_STATUS; ending the diagnostic through explicit containment"
+                );
+                lifecycle_error = Some(anyhow::anyhow!(
+                    "one-shot trailing GET_STATUS did not arrive within {:?}",
+                    ONE_SHOT_STATUS_DRAIN_DEADLINE
+                ));
+                break 'event_loop;
+            }
+        }
         if let Some((info, started, _)) = pending_exact_receive.as_ref() {
             match gud_data.try_complete_exact_payload_aio(info.length as usize) {
                 Ok(Some(stats)) => {
@@ -2566,7 +2686,7 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        let event_timeout = if pending_exact_receive.is_some() {
+        let event_timeout = if pending_exact_receive.is_some() || one_shot_status_drain.is_some() {
             Duration::from_millis(10)
         } else {
             Duration::from_millis(100)
@@ -2750,6 +2870,25 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                     Event::StatusSent(status) => {
+                        let observation = one_shot_status_drain
+                            .as_mut()
+                            .map(|drain| drain.note_status(status))
+                            .transpose();
+                        if let Err(err) = observation {
+                            if let Some((_, started, _)) = pending_exact_receive.take() {
+                                gud_data.poison_exact_payload_aio(
+                                    "invalid one-shot GET_STATUS ordering",
+                                );
+                                let _ = bulk_receive_session.finish_receive::<()>(
+                                    started,
+                                    Err(err.context("validate one-shot GET_STATUS ordering")),
+                                );
+                                continue;
+                            }
+                            lifecycle_error =
+                                Some(err.context("validate one-shot GET_STATUS ordering"));
+                            break 'event_loop;
+                        }
                         if let Err(err) = gud_data.note_status_sent(status) {
                             if let Some((_, started, _)) = pending_exact_receive.take() {
                                 gud_data.poison_exact_payload_aio(
@@ -2761,6 +2900,25 @@ fn main() -> anyhow::Result<()> {
                                 );
                             }
                             tracing::error!("Invalid status transition");
+                        } else if let Some(observation) =
+                            observation.expect("one-shot observation disappeared")
+                        {
+                            tracing::info!(
+                                event = "functionfs_status_on_set_status_observed",
+                                ?observation,
+                                exact_aio_state = ?gud_data.exact_aio_state(),
+                                receiver_state = ?bulk_receive_session.current_state(),
+                                "Observed one-shot STATUS_ON_SET control status"
+                            );
+                            if observation == OneShotStatusObservation::TrailingAfterPayload {
+                                tracing::info!(
+                                    event = "functionfs_status_on_set_trailing_status_drained",
+                                    exact_aio_state = ?gud_data.exact_aio_state(),
+                                    receiver_state = ?bulk_receive_session.current_state(),
+                                    "Drained the one-shot host trailing GET_STATUS before diagnostic detach"
+                                );
+                                break 'event_loop;
+                            }
                         }
                     }
                     Event::StateChecked(snapshot) => {
@@ -3515,6 +3673,8 @@ fn main() -> anyhow::Result<()> {
                                         continue;
                                     }
                                 };
+                                one_shot_status_drain = Some(OneShotStatusDrain::new());
+                                gud_gadget::begin_one_shot_status_guard();
                                 pending_exact_receive = Some((info, started, transaction_seq));
                                 continue;
                             }
@@ -3858,16 +4018,34 @@ fn main() -> anyhow::Result<()> {
                         );
 
                         if let Some(status_on_set_bytes) = test_status_on_set_bytes {
+                            let drain = one_shot_status_drain
+                                .as_mut()
+                                .expect("one-shot payload completed without a status drain");
+                            let trailing_status_was_early = drain
+                                .payload_processed(Instant::now())
+                                .context("advance one-shot trailing-status drain after payload processing")?;
                             tracing::info!(
-                                event = "functionfs_status_on_set_one_shot_complete",
+                                event = "functionfs_status_on_set_one_shot_payload_complete",
                                 status_on_set_bytes,
                                 payload_seq = payload_stats.payload_seq,
                                 transfer_bytes = payload_stats.transfer_bytes,
                                 read_calls = payload_stats.read_calls,
                                 exact_aio_state = ?gud_data.exact_aio_state(),
-                                "One-shot STATUS_ON_SET payload and framebuffer processing completed; leaving the event loop before another SET_BUFFER"
+                                receiver_state = ?bulk_receive_session.current_state(),
+                                trailing_status_was_early,
+                                "One-shot STATUS_ON_SET payload completed; refusing further SET_BUFFERs while final status handling is contained"
                             );
-                            break 'event_loop;
+                            if trailing_status_was_early {
+                                tracing::info!(
+                                    event = "functionfs_status_on_set_trailing_status_drained",
+                                    payload_seq = payload_stats.payload_seq,
+                                    exact_aio_state = ?gud_data.exact_aio_state(),
+                                    receiver_state = ?bulk_receive_session.current_state(),
+                                    "Trailing GET_STATUS was drained before payload processing completed; detaching now"
+                                );
+                                break 'event_loop;
+                            }
+                            continue;
                         }
 
                         if matches!(pattern_mode, PatternMode::Off) {
@@ -4017,11 +4195,12 @@ mod tests {
         parse_test_status_on_set_bytes, read_pixel, record_host_activity, render_waiting_screen,
         scale_to_fit, should_restart_after_clean_detach, validate_test_mode_policy,
         waiting_scene_glyph, write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode,
-        GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind,
-        ScaledLayout, ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, TestOutputMode,
-        TransferFormat, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN,
-        COLOR_LIGHT_GRAY, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, RGB565_GREEN,
-        RGB565_WHITE,
+        GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey, OneShotStatusDrain,
+        OneShotStatusObservation, OneShotStatusPhase, PendingPlan, PendingPlanKind, ScaledLayout,
+        ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, TestOutputMode, TransferFormat,
+        COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN, COLOR_LIGHT_GRAY,
+        COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, ONE_SHOT_STATUS_DRAIN_DEADLINE,
+        RGB565_GREEN, RGB565_WHITE,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
@@ -4034,7 +4213,7 @@ mod tests {
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::{Arc, Barrier};
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
 
     #[test]
     fn functionfs_read_size_parser_uses_default_and_accepts_numeric_override() {
@@ -4047,6 +4226,55 @@ mod tests {
             16_384
         );
         assert!(parse_functionfs_read_size(Some(OsStr::new("not-a-size"))).is_err());
+    }
+
+    #[test]
+    fn one_shot_drain_handles_initial_completion_then_trailing_status() {
+        let mut drain = OneShotStatusDrain::new();
+
+        assert_eq!(
+            drain.note_status(0).unwrap(),
+            OneShotStatusObservation::Initial
+        );
+
+        assert!(!drain.payload_processed(Instant::now()).unwrap());
+        assert!(matches!(
+            drain.phase,
+            OneShotStatusPhase::AwaitingTrailing { .. }
+        ));
+        assert_eq!(
+            drain.note_status(0).unwrap(),
+            OneShotStatusObservation::TrailingAfterPayload
+        );
+        assert_eq!(drain.phase, OneShotStatusPhase::Drained);
+    }
+
+    #[test]
+    fn one_shot_drain_handles_initial_trailing_then_aio_completion() {
+        let mut drain = OneShotStatusDrain::new();
+
+        assert_eq!(
+            drain.note_status(0).unwrap(),
+            OneShotStatusObservation::Initial
+        );
+        assert_eq!(
+            drain.note_status(0).unwrap(),
+            OneShotStatusObservation::TrailingEarly
+        );
+
+        assert!(drain.payload_processed(Instant::now()).unwrap());
+        assert_eq!(drain.phase, OneShotStatusPhase::Drained);
+    }
+
+    #[test]
+    fn one_shot_drain_missing_trailing_status_times_out_with_containment_state() {
+        let mut drain = OneShotStatusDrain::new();
+        drain.note_status(0).unwrap();
+        let now = Instant::now();
+        assert!(!drain.payload_processed(now).unwrap());
+        assert!(!drain.timed_out(now + ONE_SHOT_STATUS_DRAIN_DEADLINE - Duration::from_nanos(1)));
+        assert!(drain.timed_out(now + ONE_SHOT_STATUS_DRAIN_DEADLINE));
+        assert_eq!(drain.phase, OneShotStatusPhase::TimedOut);
     }
 
     #[test]
