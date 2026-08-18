@@ -33,7 +33,10 @@ multi-frame qualification. Remaining P0 work is tracked by the roadmap:
   and detached after transaction 2 without retry, overlap, `-71`, poison, or
   unsafe teardown. Evidence is under
   `evidence/functionfs-status-on-set-e1-t02-hs-corrected-20260817T192939Z/`;
-- `E1-T03`: select native AIO or the qualified blocking path for production;
+- `E1-T03`: **in progress**. The proposed decision selects protocol-gated exact
+  native AIO as the production default and retains the qualified blocking
+  receiver as an explicit detached/Idle rollback through E1-T06. Spec:
+  `../gud/docs/superpowers/specs/2026-08-17-e1-t03-production-receive-architecture-design.md`;
 - `E1-T04`: implement the chosen long-lived receive path;
 - `E1-T05`: pass disconnect, suspend, timeout, and failure lifecycle gates;
 - `E1-T06`: pass the sustained transport soak.
