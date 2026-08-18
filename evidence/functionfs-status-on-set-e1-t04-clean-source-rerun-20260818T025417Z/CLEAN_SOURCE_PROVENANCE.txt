@@ -1,0 +1,8 @@
+gud_gadget_worktree=/tmp/opencode/gud-gadget-e1-t04-clean
+gud_gadget_commit=6aea5e73865f3a4cb449c0f817cadf752d721f65
+gud_gadget_status_before_build=clean
+gud_worktree=/tmp/opencode/gud-e1-t04-clean
+gud_commit=6468a4301af8ccd8b1c423283697d3889c126ab1
+gud_status_before_build=clean
+external_target_manifest_sha256=c05195e219417be587d682dfd857258322e268f7e84b6ed8dfaf7a3b8a41587a
+note=The host worktree became unclean only after its locally built ignored gud-kms-stage artifact was created.

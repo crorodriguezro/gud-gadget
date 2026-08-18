@@ -1,0 +1,3 @@
+active
+configured
+2398 /home/cristian/gud-drm /dev/dri/card0

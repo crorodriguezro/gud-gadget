@@ -1,0 +1,813 @@
+host_runner=xdisp-t04-status-on-set-100-frame
+configured_transaction_count=100
+configured_payload_bytes=12800
+remote_runner_result=1
+XDISP_T04_HOST_RESULT transaction=1 payload_bytes=12800 command_result=1 start_ns=1787021650084553245 end_ns=1787021650098176632
+[34265.467498] XDISP_T04_BEGIN payload_bytes=12800 transaction_count=100
+[34265.526335] XDISP_T04_TRANSACTION_1_START payload_bytes=12800 start_ns=1787019901259171477
+[34265.547069] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34265.562993] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34265565855097 bulk_submit_end_ns=34265565899785 usb_submit_urb_result=0 bulk_completion_callback_ns=34265566238691 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34265.632043] XDISP_T04_TRANSACTION_1_END command_result=0 end_ns=1787019901364259092
+[34265.637292] XDISP_T04_TRANSACTION_2_START payload_bytes=12800 start_ns=1787019901369493728
+[34265.658963] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34265.661088] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34265663920680 bulk_submit_end_ns=34265663976722 usb_submit_urb_result=0 bulk_completion_callback_ns=34265664304586 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34265.675763] XDISP_T04_TRANSACTION_2_END command_result=0 end_ns=1787019901408031440
+[34265.680962] XDISP_T04_TRANSACTION_3_START payload_bytes=12800 start_ns=1787019901413258159
+[34265.702012] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34265.704159] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34265706989695 bulk_submit_end_ns=34265707042715 usb_submit_urb_result=0 bulk_completion_callback_ns=34265707376986 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34265.719030] XDISP_T04_TRANSACTION_3_END command_result=0 end_ns=1787019901451351757
+[34265.723964] XDISP_T04_TRANSACTION_4_START payload_bytes=12800 start_ns=1787019901456279986
+[34265.746519] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34265.748668] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34265751445428 bulk_submit_end_ns=34265751506001 usb_submit_urb_result=0 bulk_completion_callback_ns=34265751835376 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34265.763444] XDISP_T04_TRANSACTION_4_END command_result=0 end_ns=1787019901495707907
+[34265.768451] XDISP_T04_TRANSACTION_5_START payload_bytes=12800 start_ns=1787019901500926553
+[34265.789378] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34265.791487] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34265794316318 bulk_submit_end_ns=34265794367516 usb_submit_urb_result=0 bulk_completion_callback_ns=34265794701370 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34265.806789] XDISP_T04_TRANSACTION_5_END command_result=0 end_ns=1787019901538902182
+[34265.811776] XDISP_T04_TRANSACTION_6_START payload_bytes=12800 start_ns=1787019901544215464
+[34265.832954] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34265.835047] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34265837849447 bulk_submit_end_ns=34265837907416 usb_submit_urb_result=0 bulk_completion_callback_ns=34265838252572 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34265.850779] XDISP_T04_TRANSACTION_6_END command_result=0 end_ns=1787019901583027603
+[34265.855755] XDISP_T04_TRANSACTION_7_START payload_bytes=12800 start_ns=1787019901588205416
+[34265.876752] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34265.878385] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34265881214191 bulk_submit_end_ns=34265881267212 usb_submit_urb_result=0 bulk_completion_callback_ns=34265881604972 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34265.892644] XDISP_T04_TRANSACTION_7_END command_result=0 end_ns=1787019901625051670
+[34265.898344] XDISP_T04_TRANSACTION_8_START payload_bytes=12800 start_ns=1787019901630803962
+[34265.918934] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34265.920753] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34265923531018 bulk_submit_end_ns=34265923587581 usb_submit_urb_result=0 bulk_completion_callback_ns=34265923922945 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34265.935875] XDISP_T04_TRANSACTION_8_END command_result=0 end_ns=1787019901668200268
+[34265.941226] XDISP_T04_TRANSACTION_9_START payload_bytes=12800 start_ns=1787019901673728029
+[34265.961579] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34265.963282] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34265966093418 bulk_submit_end_ns=34265966146856 usb_submit_urb_result=0 bulk_completion_callback_ns=34265966493627 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34265.977898] XDISP_T04_TRANSACTION_9_END command_result=0 end_ns=1787019901710085220
+[34265.982924] XDISP_T04_TRANSACTION_10_START payload_bytes=12800 start_ns=1787019901715392096
+[34266.003348] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.005460] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266007779047 bulk_submit_end_ns=34266007815454 usb_submit_urb_result=0 bulk_completion_callback_ns=34266008143683 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.017652] XDISP_T04_TRANSACTION_10_END command_result=0 end_ns=1787019901750008245
+[34266.021710] XDISP_T04_TRANSACTION_11_START payload_bytes=12800 start_ns=1787019901754402204
+[34266.038690] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.040480] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266043238009 bulk_submit_end_ns=34266043378478 usb_submit_urb_result=0 bulk_completion_callback_ns=34266043708322 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.051548] XDISP_T04_TRANSACTION_11_END command_result=0 end_ns=1787019901784126738
+[34266.056177] XDISP_T04_TRANSACTION_12_START payload_bytes=12800 start_ns=1787019901788555592
+[34266.076996] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.078772] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266081541138 bulk_submit_end_ns=34266081602180 usb_submit_urb_result=0 bulk_completion_callback_ns=34266081939472 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.093212] XDISP_T04_TRANSACTION_12_END command_result=0 end_ns=1787019901825495700
+[34266.098458] XDISP_T04_TRANSACTION_13_START payload_bytes=12800 start_ns=1787019901830970128
+[34266.119318] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.121092] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266123913747 bulk_submit_end_ns=34266123970622 usb_submit_urb_result=0 bulk_completion_callback_ns=34266124302913 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.135945] XDISP_T04_TRANSACTION_13_END command_result=0 end_ns=1787019901868219194
+[34266.141203] XDISP_T04_TRANSACTION_14_START payload_bytes=12800 start_ns=1787019901873638309
+[34266.161503] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.163176] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266166016876 bulk_submit_end_ns=34266166062813 usb_submit_urb_result=0 bulk_completion_callback_ns=34266166396667 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.177795] XDISP_T04_TRANSACTION_14_END command_result=0 end_ns=1787019901909290396
+[34266.183046] XDISP_T04_TRANSACTION_15_START payload_bytes=12800 start_ns=1787019901915477845
+[34266.203285] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.205160] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266207981880 bulk_submit_end_ns=34266208032557 usb_submit_urb_result=0 bulk_completion_callback_ns=34266208375786 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.221009] XDISP_T04_TRANSACTION_15_END command_result=0 end_ns=1787019901953226182
+[34266.226146] XDISP_T04_TRANSACTION_16_START payload_bytes=12800 start_ns=1787019901958581964
+[34266.246506] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.248171] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266250996728 bulk_submit_end_ns=34266251053915 usb_submit_urb_result=0 bulk_completion_callback_ns=34266251388134 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.263946] XDISP_T04_TRANSACTION_16_END command_result=0 end_ns=1787019901996167436
+[34266.268985] XDISP_T04_TRANSACTION_17_START payload_bytes=12800 start_ns=1787019902001506082
+[34266.290178] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.291883] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266294667253 bulk_submit_end_ns=34266294722305 usb_submit_urb_result=0 bulk_completion_callback_ns=34266295052409 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.305105] XDISP_T04_TRANSACTION_17_END command_result=0 end_ns=1787019902037599107
+[34266.309545] XDISP_T04_TRANSACTION_18_START payload_bytes=12800 start_ns=1787019902042133066
+[34266.328674] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.330371] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266333166424 bulk_submit_end_ns=34266333213559 usb_submit_urb_result=0 bulk_completion_callback_ns=34266333545122 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.345136] XDISP_T04_TRANSACTION_18_END command_result=0 end_ns=1787019902077393746
+[34266.349786] XDISP_T04_TRANSACTION_19_START payload_bytes=12800 start_ns=1787019902082374007
+[34266.369121] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.370816] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266373651740 bulk_submit_end_ns=34266373699292 usb_submit_urb_result=0 bulk_completion_callback_ns=34266374033042 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.384477] XDISP_T04_TRANSACTION_19_END command_result=0 end_ns=1787019902116789896
+[34266.389005] XDISP_T04_TRANSACTION_20_START payload_bytes=12800 start_ns=1787019902121563803
+[34266.409577] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.411270] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266414084348 bulk_submit_end_ns=34266414140859 usb_submit_urb_result=0 bulk_completion_callback_ns=34266414482473 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.425768] XDISP_T04_TRANSACTION_20_END command_result=0 end_ns=1787019902158167817
+[34266.430288] XDISP_T04_TRANSACTION_21_START payload_bytes=12800 start_ns=1787019902162810994
+[34266.447590] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.449283] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266452137217 bulk_submit_end_ns=34266452177946 usb_submit_urb_result=0 bulk_completion_callback_ns=34266452509300 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.462245] XDISP_T04_TRANSACTION_21_END command_result=0 end_ns=1787019902194781831
+[34266.466148] XDISP_T04_TRANSACTION_22_START payload_bytes=12800 start_ns=1787019902198818238
+[34266.484390] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.486041] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266488887585 bulk_submit_end_ns=34266488932897 usb_submit_urb_result=0 bulk_completion_callback_ns=34266489260554 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.500986] XDISP_T04_TRANSACTION_22_END command_result=0 end_ns=1787019902233103866
+[34266.505909] XDISP_T04_TRANSACTION_23_START payload_bytes=12800 start_ns=1787019902238375325
+[34266.526924] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.528668] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266531493058 bulk_submit_end_ns=34266531544933 usb_submit_urb_result=0 bulk_completion_callback_ns=34266531878162 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.543434] XDISP_T04_TRANSACTION_23_END command_result=0 end_ns=1787019902275722360
+[34266.548276] XDISP_T04_TRANSACTION_24_START payload_bytes=12800 start_ns=1787019902280761423
+[34266.569256] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.570941] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266573753739 bulk_submit_end_ns=34266573812750 usb_submit_urb_result=0 bulk_completion_callback_ns=34266574148896 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.585442] XDISP_T04_TRANSACTION_24_END command_result=0 end_ns=1787019902317802260
+[34266.590907] XDISP_T04_TRANSACTION_25_START payload_bytes=12800 start_ns=1787019902323257521
+[34266.611526] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.615038] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266616875931 bulk_submit_end_ns=34266616929004 usb_submit_urb_result=0 bulk_completion_callback_ns=34266617265046 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.626338] XDISP_T04_TRANSACTION_25_END command_result=0 end_ns=1787019902358977681
+[34266.630164] XDISP_T04_TRANSACTION_26_START payload_bytes=12800 start_ns=1787019902362955806
+[34266.646120] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.647776] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266650611143 bulk_submit_end_ns=34266650651247 usb_submit_urb_result=0 bulk_completion_callback_ns=34266650986612 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.658601] XDISP_T04_TRANSACTION_26_END command_result=0 end_ns=1787019902391228413
+[34266.662228] XDISP_T04_TRANSACTION_27_START payload_bytes=12800 start_ns=1787019902394993830
+[34266.678371] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.679954] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266682810990 bulk_submit_end_ns=34266682855781 usb_submit_urb_result=0 bulk_completion_callback_ns=34266683184583 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.692755] XDISP_T04_TRANSACTION_27_END command_result=0 end_ns=1787019902425256177
+[34266.697998] XDISP_T04_TRANSACTION_28_START payload_bytes=12800 start_ns=1787019902430383625
+[34266.718304] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.720252] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266722796775 bulk_submit_end_ns=34266722849119 usb_submit_urb_result=0 bulk_completion_callback_ns=34266723180265 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.735604] XDISP_T04_TRANSACTION_28_END command_result=0 end_ns=1787019902467891025
+[34266.740375] XDISP_T04_TRANSACTION_29_START payload_bytes=12800 start_ns=1787019902472749671
+[34266.761210] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.762872] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266765699331 bulk_submit_end_ns=34266765751727 usb_submit_urb_result=0 bulk_completion_callback_ns=34266766084852 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.778665] XDISP_T04_TRANSACTION_29_END command_result=0 end_ns=1787019902510870300
+[34266.783826] XDISP_T04_TRANSACTION_30_START payload_bytes=12800 start_ns=1787019902516082123
+[34266.804410] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.806072] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266808902461 bulk_submit_end_ns=34266808953294 usb_submit_urb_result=0 bulk_completion_callback_ns=34266809283659 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.820194] XDISP_T04_TRANSACTION_30_END command_result=0 end_ns=1787019902552486606
+[34266.825148] XDISP_T04_TRANSACTION_31_START payload_bytes=12800 start_ns=1787019902557622909
+[34266.845923] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.847652] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266850464548 bulk_submit_end_ns=34266850514652 usb_submit_urb_result=0 bulk_completion_callback_ns=34266850859600 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.862046] XDISP_T04_TRANSACTION_31_END command_result=0 end_ns=1787019902594371662
+[34266.867082] XDISP_T04_TRANSACTION_32_START payload_bytes=12800 start_ns=1787019902599292132
+[34266.887909] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.889611] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266892427208 bulk_submit_end_ns=34266892480854 usb_submit_urb_result=0 bulk_completion_callback_ns=34266892815125 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.903251] XDISP_T04_TRANSACTION_32_END command_result=0 end_ns=1787019902635645833
+[34266.908371] XDISP_T04_TRANSACTION_33_START payload_bytes=12800 start_ns=1787019902640839584
+[34266.929773] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.931501] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266934321744 bulk_submit_end_ns=34266934377577 usb_submit_urb_result=0 bulk_completion_callback_ns=34266934711796 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.946114] XDISP_T04_TRANSACTION_33_END command_result=0 end_ns=1787019902678491514
+[34266.951205] XDISP_T04_TRANSACTION_34_START payload_bytes=12800 start_ns=1787019902683728442
+[34266.971634] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34266.973674] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34266976166384 bulk_submit_end_ns=34266976216331 usb_submit_urb_result=0 bulk_completion_callback_ns=34266976553936 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34266.988334] XDISP_T04_TRANSACTION_34_END command_result=0 end_ns=1787019902720644435
+[34266.993120] XDISP_T04_TRANSACTION_35_START payload_bytes=12800 start_ns=1787019902725664748
+[34267.014463] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.016100] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267018951023 bulk_submit_end_ns=34267018995607 usb_submit_urb_result=0 bulk_completion_callback_ns=34267019322690 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.029260] XDISP_T04_TRANSACTION_35_END command_result=0 end_ns=1787019902761778814
+[34267.033702] XDISP_T04_TRANSACTION_36_START payload_bytes=12800 start_ns=1787019902766125169
+[34267.055307] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.057142] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267059850767 bulk_submit_end_ns=34267059892590 usb_submit_urb_result=0 bulk_completion_callback_ns=34267060236184 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.069603] XDISP_T04_TRANSACTION_36_END command_result=0 end_ns=1787019902802126162
+[34267.073919] XDISP_T04_TRANSACTION_37_START payload_bytes=12800 start_ns=1787019902806309079
+[34267.093033] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.094685] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267097528375 bulk_submit_end_ns=34267097571344 usb_submit_urb_result=0 bulk_completion_callback_ns=34267097908271 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.108135] XDISP_T04_TRANSACTION_37_END command_result=0 end_ns=1787019902840619395
+[34267.112309] XDISP_T04_TRANSACTION_38_START payload_bytes=12800 start_ns=1787019902844978458
+[34267.132300] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.134525] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267137309525 bulk_submit_end_ns=34267137368431 usb_submit_urb_result=0 bulk_completion_callback_ns=34267137703587 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.148879] XDISP_T04_TRANSACTION_38_END command_result=0 end_ns=1787019902881304191
+[34267.153626] XDISP_T04_TRANSACTION_39_START payload_bytes=12800 start_ns=1787019902885952316
+[34267.174137] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.175821] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267178647289 bulk_submit_end_ns=34267178700622 usb_submit_urb_result=0 bulk_completion_callback_ns=34267179033487 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.190301] XDISP_T04_TRANSACTION_39_END command_result=0 end_ns=1787019902922641799
+[34267.195283] XDISP_T04_TRANSACTION_40_START payload_bytes=12800 start_ns=1787019902927749456
+[34267.215622] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.217594] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267220396356 bulk_submit_end_ns=34267220446043 usb_submit_urb_result=0 bulk_completion_callback_ns=34267220782658 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.230858] XDISP_T04_TRANSACTION_40_END command_result=0 end_ns=1787019902963214251
+[34267.235726] XDISP_T04_TRANSACTION_41_START payload_bytes=12800 start_ns=1787019902968219095
+[34267.256069] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.257642] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267260532193 bulk_submit_end_ns=34267260564485 usb_submit_urb_result=0 bulk_completion_callback_ns=34267260892558 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.265933] XDISP_T04_TRANSACTION_41_END command_result=0 end_ns=1787019902998846026
+[34267.268331] XDISP_T04_TRANSACTION_42_START payload_bytes=12800 start_ns=1787019903001421807
+[34267.279239] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.280904] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267283782143 bulk_submit_end_ns=34267283820737 usb_submit_urb_result=0 bulk_completion_callback_ns=34267284143341 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.290527] XDISP_T04_TRANSACTION_42_END command_result=0 end_ns=1787019903023112018
+[34267.294133] XDISP_T04_TRANSACTION_43_START payload_bytes=12800 start_ns=1787019903026605560
+[34267.314661] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.316401] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267319223657 bulk_submit_end_ns=34267319273136 usb_submit_urb_result=0 bulk_completion_callback_ns=34267319615897 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.330038] XDISP_T04_TRANSACTION_43_END command_result=0 end_ns=1787019903062455251
+[34267.334545] XDISP_T04_TRANSACTION_44_START payload_bytes=12800 start_ns=1787019903066991449
+[34267.355484] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.357231] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267360100172 bulk_submit_end_ns=34267360135276 usb_submit_urb_result=0 bulk_completion_callback_ns=34267360478401 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.366302] XDISP_T04_TRANSACTION_44_END command_result=0 end_ns=1787019903099116296
+[34267.368971] XDISP_T04_TRANSACTION_45_START payload_bytes=12800 start_ns=1787019903102014890
+[34267.381495] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.383077] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267385957414 bulk_submit_end_ns=34267385993716 usb_submit_urb_result=0 bulk_completion_callback_ns=34267386321060 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.394030] XDISP_T04_TRANSACTION_45_END command_result=0 end_ns=1787019903126385257
+[34267.398789] XDISP_T04_TRANSACTION_46_START payload_bytes=12800 start_ns=1787019903131320205
+[34267.418164] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.419803] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267422643303 bulk_submit_end_ns=34267422693043 usb_submit_urb_result=0 bulk_completion_callback_ns=34267423022001 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.434475] XDISP_T04_TRANSACTION_46_END command_result=0 end_ns=1787019903166579740
+[34267.439727] XDISP_T04_TRANSACTION_47_START payload_bytes=12800 start_ns=1787019903172163439
+[34267.461063] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.462739] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267465566224 bulk_submit_end_ns=34267465618568 usb_submit_urb_result=0 bulk_completion_callback_ns=34267465950495 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.478553] XDISP_T04_TRANSACTION_47_END command_result=0 end_ns=1787019903210880734
+[34267.483669] XDISP_T04_TRANSACTION_48_START payload_bytes=12800 start_ns=1787019903216009068
+[34267.503908] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.505552] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267508397947 bulk_submit_end_ns=34267508442374 usb_submit_urb_result=0 bulk_completion_callback_ns=34267508772791 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.520897] XDISP_T04_TRANSACTION_48_END command_result=0 end_ns=1787019903253034280
+[34267.526021] XDISP_T04_TRANSACTION_49_START payload_bytes=12800 start_ns=1787019903258482301
+[34267.546578] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.548364] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267551188680 bulk_submit_end_ns=34267551242691 usb_submit_urb_result=0 bulk_completion_callback_ns=34267551575139 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.562663] XDISP_T04_TRANSACTION_49_END command_result=0 end_ns=1787019903294983503
+[34267.567781] XDISP_T04_TRANSACTION_50_START payload_bytes=12800 start_ns=1787019903299992410
+[34267.588749] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.590554] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267593223789 bulk_submit_end_ns=34267593405299 usb_submit_urb_result=0 bulk_completion_callback_ns=34267593754674 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.604834] XDISP_T04_TRANSACTION_50_END command_result=0 end_ns=1787019903337170278
+[34267.610177] XDISP_T04_TRANSACTION_51_START payload_bytes=12800 start_ns=1787019903342201320
+[34267.631946] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.633971] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267636478845 bulk_submit_end_ns=34267636529626 usb_submit_urb_result=0 bulk_completion_callback_ns=34267636906658 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.648355] XDISP_T04_TRANSACTION_51_END command_result=0 end_ns=1787019903380766220
+[34267.652965] XDISP_T04_TRANSACTION_52_START payload_bytes=12800 start_ns=1787019903385524762
+[34267.670643] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.672313] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267675171818 bulk_submit_end_ns=34267675214370 usb_submit_urb_result=0 bulk_completion_callback_ns=34267675541401 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.686462] XDISP_T04_TRANSACTION_52_END command_result=0 end_ns=1787019903419255130
+[34267.689604] XDISP_T04_TRANSACTION_53_START payload_bytes=12800 start_ns=1787019903422641537
+[34267.702488] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.704119] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267706986248 bulk_submit_end_ns=34267707019165 usb_submit_urb_result=0 bulk_completion_callback_ns=34267707364008 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.714119] XDISP_T04_TRANSACTION_53_END command_result=0 end_ns=1787019903446543466
+[34267.718028] XDISP_T04_TRANSACTION_54_START payload_bytes=12800 start_ns=1787019903450737321
+[34267.735624] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.737914] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267740704741 bulk_submit_end_ns=34267740751095 usb_submit_urb_result=0 bulk_completion_callback_ns=34267741090783 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.751212] XDISP_T04_TRANSACTION_54_END command_result=0 end_ns=1787019903483661022
+[34267.755900] XDISP_T04_TRANSACTION_55_START payload_bytes=12800 start_ns=1787019903488357064
+[34267.777164] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.778859] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267781680995 bulk_submit_end_ns=34267781743703 usb_submit_urb_result=0 bulk_completion_callback_ns=34267782074849 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.791337] XDISP_T04_TRANSACTION_55_END command_result=0 end_ns=1787019903523916182
+[34267.795954] XDISP_T04_TRANSACTION_56_START payload_bytes=12800 start_ns=1787019903528391078
+[34267.816384] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.818181] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267821017718 bulk_submit_end_ns=34267821069072 usb_submit_urb_result=0 bulk_completion_callback_ns=34267821400791 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.832114] XDISP_T04_TRANSACTION_56_END command_result=0 end_ns=1787019903564557019
+[34267.836928] XDISP_T04_TRANSACTION_57_START payload_bytes=12800 start_ns=1787019903569398166
+[34267.855855] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.857442] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267860331524 bulk_submit_end_ns=34267860363295 usb_submit_urb_result=0 bulk_completion_callback_ns=34267860692878 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.867210] XDISP_T04_TRANSACTION_57_END command_result=0 end_ns=1787019903599664106
+[34267.869405] XDISP_T04_TRANSACTION_58_START payload_bytes=12800 start_ns=1787019903602409159
+[34267.880486] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.882082] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267884968297 bulk_submit_end_ns=34267885001266 usb_submit_urb_result=0 bulk_completion_callback_ns=34267885330276 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.891352] XDISP_T04_TRANSACTION_58_END command_result=0 end_ns=1787019903624149786
+[34267.894595] XDISP_T04_TRANSACTION_59_START payload_bytes=12800 start_ns=1787019903627239265
+[34267.912129] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.914095] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267916925488 bulk_submit_end_ns=34267916970019 usb_submit_urb_result=0 bulk_completion_callback_ns=34267917307519 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.927509] XDISP_T04_TRANSACTION_59_END command_result=0 end_ns=1787019903659734737
+[34267.931642] XDISP_T04_TRANSACTION_60_START payload_bytes=12800 start_ns=1787019903664225311
+[34267.952163] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.954360] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267956929867 bulk_submit_end_ns=34267956981273 usb_submit_urb_result=0 bulk_completion_callback_ns=34267957314867 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34267.968841] XDISP_T04_TRANSACTION_60_END command_result=0 end_ns=1787019903701231564
+[34267.973623] XDISP_T04_TRANSACTION_61_START payload_bytes=12800 start_ns=1787019903705886669
+[34267.994666] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34267.996420] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34267999235548 bulk_submit_end_ns=34267999287892 usb_submit_urb_result=0 bulk_completion_callback_ns=34267999629454 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.012302] XDISP_T04_TRANSACTION_61_END command_result=0 end_ns=1787019903744593131
+[34268.017827] XDISP_T04_TRANSACTION_62_START payload_bytes=12800 start_ns=1787019903749967350
+[34268.039372] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.041217] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268044038469 bulk_submit_end_ns=34268044090136 usb_submit_urb_result=0 bulk_completion_callback_ns=34268044422584 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.057418] XDISP_T04_TRANSACTION_62_END command_result=0 end_ns=1787019903789557667
+[34268.062513] XDISP_T04_TRANSACTION_63_START payload_bytes=12800 start_ns=1787019903794966105
+[34268.083417] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.085166] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268087980973 bulk_submit_end_ns=34268088034151 usb_submit_urb_result=0 bulk_completion_callback_ns=34268088378421 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.100392] XDISP_T04_TRANSACTION_63_END command_result=0 end_ns=1787019903832688296
+[34268.105311] XDISP_T04_TRANSACTION_64_START payload_bytes=12800 start_ns=1787019903837770692
+[34268.121620] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.123374] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268126180144 bulk_submit_end_ns=34268126215665 usb_submit_urb_result=0 bulk_completion_callback_ns=34268126540352 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.134240] XDISP_T04_TRANSACTION_64_END command_result=0 end_ns=1787019903866608716
+[34268.137036] XDISP_T04_TRANSACTION_65_START payload_bytes=12800 start_ns=1787019903869913977
+[34268.147898] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.149493] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268152374157 bulk_submit_end_ns=34268152411084 usb_submit_urb_result=0 bulk_completion_callback_ns=34268152747334 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.159286] XDISP_T04_TRANSACTION_65_END command_result=0 end_ns=1787019903891965698
+[34268.162910] XDISP_T04_TRANSACTION_66_START payload_bytes=12800 start_ns=1787019903895747313
+[34268.177815] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.179430] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268182295879 bulk_submit_end_ns=34268182335097 usb_submit_urb_result=0 bulk_completion_callback_ns=34268182667702 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.190050] XDISP_T04_TRANSACTION_66_END command_result=0 end_ns=1787019903922614815
+[34268.194295] XDISP_T04_TRANSACTION_67_START payload_bytes=12800 start_ns=1787019903926259451
+[34268.212757] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.214480] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268217315622 bulk_submit_end_ns=34268217364059 usb_submit_urb_result=0 bulk_completion_callback_ns=34268217704528 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.226595] XDISP_T04_TRANSACTION_67_END command_result=0 end_ns=1787019903959132215
+[34268.230912] XDISP_T04_TRANSACTION_68_START payload_bytes=12800 start_ns=1787019903963569715
+[34268.250705] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.252469] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268255291146 bulk_submit_end_ns=34268255343230 usb_submit_urb_result=0 bulk_completion_callback_ns=34268255680053 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.266245] XDISP_T04_TRANSACTION_68_END command_result=0 end_ns=1787019903998691229
+[34268.270700] XDISP_T04_TRANSACTION_69_START payload_bytes=12800 start_ns=1787019904003254667
+[34268.291242] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.293000] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268295820213 bulk_submit_end_ns=34268295874171 usb_submit_urb_result=0 bulk_completion_callback_ns=34268296211203 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.307076] XDISP_T04_TRANSACTION_69_END command_result=0 end_ns=1787019904039386233
+[34268.311771] XDISP_T04_TRANSACTION_70_START payload_bytes=12800 start_ns=1787019904044316911
+[34268.332368] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.334086] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268336911102 bulk_submit_end_ns=34268336961050 usb_submit_urb_result=0 bulk_completion_callback_ns=34268337294332 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.349014] XDISP_T04_TRANSACTION_70_END command_result=0 end_ns=1787019904081310977
+[34268.354164] XDISP_T04_TRANSACTION_71_START payload_bytes=12800 start_ns=1787019904086226551
+[34268.373541] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.375440] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268378231054 bulk_submit_end_ns=34268378288294 usb_submit_urb_result=0 bulk_completion_callback_ns=34268378625221 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.388872] XDISP_T04_TRANSACTION_71_END command_result=0 end_ns=1787019904121255825
+[34268.394052] XDISP_T04_TRANSACTION_72_START payload_bytes=12800 start_ns=1787019904126099107
+[34268.414938] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.416795] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268419490277 bulk_submit_end_ns=34268419537777 usb_submit_urb_result=0 bulk_completion_callback_ns=34268419877934 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.430527] XDISP_T04_TRANSACTION_72_END command_result=0 end_ns=1787019904162601819
+[34268.435445] XDISP_T04_TRANSACTION_73_START payload_bytes=12800 start_ns=1787019904167913225
+[34268.456231] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.457917] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268460741011 bulk_submit_end_ns=34268460797938 usb_submit_urb_result=0 bulk_completion_callback_ns=34268461128875 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.472715] XDISP_T04_TRANSACTION_73_END command_result=0 end_ns=1787019904204929219
+[34268.478348] XDISP_T04_TRANSACTION_74_START payload_bytes=12800 start_ns=1787019904210787761
+[34268.499088] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.500847] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268503666900 bulk_submit_end_ns=34268503721848 usb_submit_urb_result=0 bulk_completion_callback_ns=34268504055754 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.514973] XDISP_T04_TRANSACTION_74_END command_result=0 end_ns=1787019904247239275
+[34268.519868] XDISP_T04_TRANSACTION_75_START payload_bytes=12800 start_ns=1787019904252323078
+[34268.540633] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.542293] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268545105186 bulk_submit_end_ns=34268545157790 usb_submit_urb_result=0 bulk_completion_callback_ns=34268545504248 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.556584] XDISP_T04_TRANSACTION_75_END command_result=0 end_ns=1787019904288906206
+[34268.561676] XDISP_T04_TRANSACTION_76_START payload_bytes=12800 start_ns=1787019904294130113
+[34268.582713] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.584490] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268587306700 bulk_submit_end_ns=34268587358888 usb_submit_urb_result=0 bulk_completion_callback_ns=34268587693367 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.598643] XDISP_T04_TRANSACTION_76_END command_result=0 end_ns=1787019904331004596
+[34268.604512] XDISP_T04_TRANSACTION_77_START payload_bytes=12800 start_ns=1787019904336024648
+[34268.624305] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.625990] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268628811913 bulk_submit_end_ns=34268628866600 usb_submit_urb_result=0 bulk_completion_callback_ns=34268629200507 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.641083] XDISP_T04_TRANSACTION_77_END command_result=0 end_ns=1787019904373294444
+[34268.646054] XDISP_T04_TRANSACTION_78_START payload_bytes=12800 start_ns=1787019904378525121
+[34268.666867] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.668623] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268671449417 bulk_submit_end_ns=34268671501240 usb_submit_urb_result=0 bulk_completion_callback_ns=34268671835667 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.683998] XDISP_T04_TRANSACTION_78_END command_result=0 end_ns=1787019904416093302
+[34268.688994] XDISP_T04_TRANSACTION_79_START payload_bytes=12800 start_ns=1787019904421462782
+[34268.709526] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.711208] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268714030880 bulk_submit_end_ns=34268714083484 usb_submit_urb_result=0 bulk_completion_callback_ns=34268714420255 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.726044] XDISP_T04_TRANSACTION_79_END command_result=0 end_ns=1787019904458421119
+[34268.731043] XDISP_T04_TRANSACTION_80_START payload_bytes=12800 start_ns=1787019904463369661
+[34268.751226] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.752957] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268755789894 bulk_submit_end_ns=34268755840675 usb_submit_urb_result=0 bulk_completion_callback_ns=34268756169946 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.765745] XDISP_T04_TRANSACTION_80_END command_result=0 end_ns=1787019904498234873
+[34268.770514] XDISP_T04_TRANSACTION_81_START payload_bytes=12800 start_ns=1787019904502936957
+[34268.790896] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.792655] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268795474481 bulk_submit_end_ns=34268795528492 usb_submit_urb_result=0 bulk_completion_callback_ns=34268795869169 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.806221] XDISP_T04_TRANSACTION_81_END command_result=0 end_ns=1787019904538663679
+[34268.810750] XDISP_T04_TRANSACTION_82_START payload_bytes=12800 start_ns=1787019904543182325
+[34268.830049] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.831700] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268834538027 bulk_submit_end_ns=34268834588652 usb_submit_urb_result=0 bulk_completion_callback_ns=34268834918131 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.845572] XDISP_T04_TRANSACTION_82_END command_result=0 end_ns=1787019904578015818
+[34268.849776] XDISP_T04_TRANSACTION_83_START payload_bytes=12800 start_ns=1787019904582345662
+[34268.870085] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.871730] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268874562458 bulk_submit_end_ns=34268874611312 usb_submit_urb_result=0 bulk_completion_callback_ns=34268874939281 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.885645] XDISP_T04_TRANSACTION_83_END command_result=0 end_ns=1787019904618070562
+[34268.890350] XDISP_T04_TRANSACTION_84_START payload_bytes=12800 start_ns=1787019904622732333
+[34268.910404] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.912082] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268914906629 bulk_submit_end_ns=34268914960066 usb_submit_urb_result=0 bulk_completion_callback_ns=34268915294962 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.926918] XDISP_T04_TRANSACTION_84_END command_result=0 end_ns=1787019904659234628
+[34268.931543] XDISP_T04_TRANSACTION_85_START payload_bytes=12800 start_ns=1787019904664098796
+[34268.951796] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.953648] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268956299810 bulk_submit_end_ns=34268956346216 usb_submit_urb_result=0 bulk_completion_callback_ns=34268956818612 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34268.966865] XDISP_T04_TRANSACTION_85_END command_result=0 end_ns=1787019904699266091
+[34268.971357] XDISP_T04_TRANSACTION_86_START payload_bytes=12800 start_ns=1787019904703898175
+[34268.990350] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34268.992002] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34268994827262 bulk_submit_end_ns=34268994876689 usb_submit_urb_result=0 bulk_completion_callback_ns=34268995209605 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.004682] XDISP_T04_TRANSACTION_86_END command_result=0 end_ns=1787019904737095105
+[34269.008643] XDISP_T04_TRANSACTION_87_START payload_bytes=12800 start_ns=1787019904741336720
+[34269.028296] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.030082] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269032786328 bulk_submit_end_ns=34269032841588 usb_submit_urb_result=0 bulk_completion_callback_ns=34269033179609 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.044971] XDISP_T04_TRANSACTION_87_END command_result=0 end_ns=1787019904777248911
+[34269.050124] XDISP_T04_TRANSACTION_88_START payload_bytes=12800 start_ns=1787019904782536672
+[34269.070744] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.072535] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269075363624 bulk_submit_end_ns=34269075414666 usb_submit_urb_result=0 bulk_completion_callback_ns=34269075752478 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.086157] XDISP_T04_TRANSACTION_88_END command_result=0 end_ns=1787019904818612353
+[34269.090705] XDISP_T04_TRANSACTION_89_START payload_bytes=12800 start_ns=1787019904823077770
+[34269.110661] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.112399] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269115212430 bulk_submit_end_ns=34269115266128 usb_submit_urb_result=0 bulk_completion_callback_ns=34269115606961 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.126116] XDISP_T04_TRANSACTION_89_END command_result=0 end_ns=1787019904858561940
+[34269.130557] XDISP_T04_TRANSACTION_90_START payload_bytes=12800 start_ns=1787019904863018451
+[34269.149151] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.150858] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269153693319 bulk_submit_end_ns=34269153745194 usb_submit_urb_result=0 bulk_completion_callback_ns=34269154075090 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.164481] XDISP_T04_TRANSACTION_90_END command_result=0 end_ns=1787019904896572933
+[34269.169030] XDISP_T04_TRANSACTION_91_START payload_bytes=12800 start_ns=1787019904901602205
+[34269.189159] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.190931] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269193753896 bulk_submit_end_ns=34269193810771 usb_submit_urb_result=0 bulk_completion_callback_ns=34269194141709 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.205325] XDISP_T04_TRANSACTION_91_END command_result=0 end_ns=1787019904937698510
+[34269.210165] XDISP_T04_TRANSACTION_92_START payload_bytes=12800 start_ns=1787019904942517938
+[34269.230486] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.232166] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269234983067 bulk_submit_end_ns=34269235034317 usb_submit_urb_result=0 bulk_completion_callback_ns=34269235378223 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.246388] XDISP_T04_TRANSACTION_92_END command_result=0 end_ns=1787019904978847525
+[34269.250998] XDISP_T04_TRANSACTION_93_START payload_bytes=12800 start_ns=1787019904983594036
+[34269.269521] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.271202] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269274030987 bulk_submit_end_ns=34269274082237 usb_submit_urb_result=0 bulk_completion_callback_ns=34269274419321 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.284580] XDISP_T04_TRANSACTION_93_END command_result=0 end_ns=1787019905016775966
+[34269.289012] XDISP_T04_TRANSACTION_94_START payload_bytes=12800 start_ns=1787019905021586748
+[34269.309225] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.310940] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269313760471 bulk_submit_end_ns=34269313815991 usb_submit_urb_result=0 bulk_completion_callback_ns=34269314152971 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.325280] XDISP_T04_TRANSACTION_94_END command_result=0 end_ns=1787019905057638210
+[34269.330182] XDISP_T04_TRANSACTION_95_START payload_bytes=12800 start_ns=1787019905062569773
+[34269.351260] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.353001] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269355825162 bulk_submit_end_ns=34269355878808 usb_submit_urb_result=0 bulk_completion_callback_ns=34269356211412 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.366705] XDISP_T04_TRANSACTION_95_END command_result=0 end_ns=1787019905099096964
+[34269.371234] XDISP_T04_TRANSACTION_96_START payload_bytes=12800 start_ns=1787019905103803996
+[34269.392256] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.394295] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269397074021 bulk_submit_end_ns=34269397137771 usb_submit_urb_result=0 bulk_completion_callback_ns=34269397482406 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.408423] XDISP_T04_TRANSACTION_96_END command_result=0 end_ns=1787019905140880041
+[34269.412920] XDISP_T04_TRANSACTION_97_START payload_bytes=12800 start_ns=1787019905145469364
+[34269.433254] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.435483] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269438315900 bulk_submit_end_ns=34269438362306 usb_submit_urb_result=0 bulk_completion_callback_ns=34269438698295 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.449919] XDISP_T04_TRANSACTION_97_END command_result=0 end_ns=1787019905182339056
+[34269.454771] XDISP_T04_TRANSACTION_98_START payload_bytes=12800 start_ns=1787019905187278483
+[34269.475098] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.476872] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269479690956 bulk_submit_end_ns=34269479734081 usb_submit_urb_result=0 bulk_completion_callback_ns=34269480066581 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.490260] XDISP_T04_TRANSACTION_98_END command_result=0 end_ns=1787019905222337237
+[34269.496107] XDISP_T04_TRANSACTION_99_START payload_bytes=12800 start_ns=1787019905228340883
+[34269.516496] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.518098] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269520985804 bulk_submit_end_ns=34269521019033 usb_submit_urb_result=0 bulk_completion_callback_ns=34269521354450 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.526254] XDISP_T04_TRANSACTION_99_END command_result=0 end_ns=1787019905259155886
+[34269.528562] XDISP_T04_TRANSACTION_100_START payload_bytes=12800 start_ns=1787019905261610626
+[34269.540500] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34269.542077] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34269544969869 bulk_submit_end_ns=34269545005702 usb_submit_urb_result=0 bulk_completion_callback_ns=34269545321796 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34269.552594] XDISP_T04_TRANSACTION_100_END command_result=0 end_ns=1787019905285286566
+[34269.553166] XDISP_T04_END result=0
+[34351.248170] XDISP_T04_BEGIN payload_bytes=12800 transaction_count=100
+[34351.306234] XDISP_T04_TRANSACTION_1_START payload_bytes=12800 start_ns=1787019987039182106
+[34351.316800] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.319326] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351322231296 bulk_submit_end_ns=34351322258432 usb_submit_urb_result=0 bulk_completion_callback_ns=34351322587859 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.327478] XDISP_T04_TRANSACTION_1_END command_result=0 end_ns=1787019987060533879
+[34351.329406] XDISP_T04_TRANSACTION_2_START payload_bytes=12800 start_ns=1787019987062473983
+[34351.343719] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.346000] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351348884632 bulk_submit_end_ns=34351348917914 usb_submit_urb_result=0 bulk_completion_callback_ns=34351349255518 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.357233] XDISP_T04_TRANSACTION_2_END command_result=0 end_ns=1787019987089580757
+[34351.361102] XDISP_T04_TRANSACTION_3_START payload_bytes=12800 start_ns=1787019987093691903
+[34351.380792] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.383162] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351385980469 bulk_submit_end_ns=34351386038646 usb_submit_urb_result=0 bulk_completion_callback_ns=34351386386251 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.400652] XDISP_T04_TRANSACTION_3_END command_result=0 end_ns=1787019987132329407
+[34351.406025] XDISP_T04_TRANSACTION_4_START payload_bytes=12800 start_ns=1787019987138197168
+[34351.425929] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.427607] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351430453026 bulk_submit_end_ns=34351430502401 usb_submit_urb_result=0 bulk_completion_callback_ns=34351430832036 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.442043] XDISP_T04_TRANSACTION_4_END command_result=0 end_ns=1787019987174468213
+[34351.446785] XDISP_T04_TRANSACTION_5_START payload_bytes=12800 start_ns=1787019987179268005
+[34351.467072] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.468869] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351471693342 bulk_submit_end_ns=34351471747978 usb_submit_urb_result=0 bulk_completion_callback_ns=34351472082978 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.484641] XDISP_T04_TRANSACTION_5_END command_result=0 end_ns=1787019987216944884
+[34351.489607] XDISP_T04_TRANSACTION_6_START payload_bytes=12800 start_ns=1787019987222055509
+[34351.510012] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.511702] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351514538763 bulk_submit_end_ns=34351514590899 usb_submit_urb_result=0 bulk_completion_callback_ns=34351514925638 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.526557] XDISP_T04_TRANSACTION_6_END command_result=0 end_ns=1787019987258833117
+[34351.531688] XDISP_T04_TRANSACTION_7_START payload_bytes=12800 start_ns=1787019987264164160
+[34351.551559] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.553268] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351556071684 bulk_submit_end_ns=34351556122518 usb_submit_urb_result=0 bulk_completion_callback_ns=34351556455955 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.567342] XDISP_T04_TRANSACTION_7_END command_result=0 end_ns=1787019987299569267
+[34351.571914] XDISP_T04_TRANSACTION_8_START payload_bytes=12800 start_ns=1787019987304502028
+[34351.592875] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.594576] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351597424970 bulk_submit_end_ns=34351597474449 usb_submit_urb_result=0 bulk_completion_callback_ns=34351597801949 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.608779] XDISP_T04_TRANSACTION_8_END command_result=0 end_ns=1787019987341174428
+[34351.613471] XDISP_T04_TRANSACTION_9_START payload_bytes=12800 start_ns=1787019987345875053
+[34351.633251] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.635077] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351637936484 bulk_submit_end_ns=34351637982369 usb_submit_urb_result=0 bulk_completion_callback_ns=34351638310182 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.647877] XDISP_T04_TRANSACTION_9_END command_result=0 end_ns=1787019987380436671
+[34351.652136] XDISP_T04_TRANSACTION_10_START payload_bytes=12800 start_ns=1787019987384796619
+[34351.673022] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.674783] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351677626332 bulk_submit_end_ns=34351677677738 usb_submit_urb_result=0 bulk_completion_callback_ns=34351678009926 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.688485] XDISP_T04_TRANSACTION_10_END command_result=0 end_ns=1787019987420869748
+[34351.693449] XDISP_T04_TRANSACTION_11_START payload_bytes=12800 start_ns=1787019987425826780
+[34351.714151] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.715857] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351718699565 bulk_submit_end_ns=34351718749825 usb_submit_urb_result=0 bulk_completion_callback_ns=34351719082065 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.730227] XDISP_T04_TRANSACTION_11_END command_result=0 end_ns=1787019987462509804
+[34351.735049] XDISP_T04_TRANSACTION_12_START payload_bytes=12800 start_ns=1787019987467491159
+[34351.755941] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.757633] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351760473736 bulk_submit_end_ns=34351760523580 usb_submit_urb_result=0 bulk_completion_callback_ns=34351760863684 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.770055] XDISP_T04_TRANSACTION_12_END command_result=0 end_ns=1787019987502482048
+[34351.774654] XDISP_T04_TRANSACTION_13_START payload_bytes=12800 start_ns=1787019987507114705
+[34351.794894] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.796575] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351799482906 bulk_submit_end_ns=34351799515198 usb_submit_urb_result=0 bulk_completion_callback_ns=34351799836292 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.804155] XDISP_T04_TRANSACTION_13_END command_result=0 end_ns=1787019987537076635
+[34351.806435] XDISP_T04_TRANSACTION_14_START payload_bytes=12800 start_ns=1787019987539491895
+[34351.818015] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.819626] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351822486502 bulk_submit_end_ns=34351822526450 usb_submit_urb_result=0 bulk_completion_callback_ns=34351822871346 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.829144] XDISP_T04_TRANSACTION_14_END command_result=0 end_ns=1787019987561907575
+[34351.832332] XDISP_T04_TRANSACTION_15_START payload_bytes=12800 start_ns=1787019987565176898
+[34351.848402] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.850110] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351852927287 bulk_submit_end_ns=34351852969110 usb_submit_urb_result=0 bulk_completion_callback_ns=34351853327391 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.863420] XDISP_T04_TRANSACTION_15_END command_result=0 end_ns=1787019987595808672
+[34351.867762] XDISP_T04_TRANSACTION_16_START payload_bytes=12800 start_ns=1787019987600454141
+[34351.885433] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.887420] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351890077186 bulk_submit_end_ns=34351890127395 usb_submit_urb_result=0 bulk_completion_callback_ns=34351890459165 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.899907] XDISP_T04_TRANSACTION_16_END command_result=0 end_ns=1787019987632416905
+[34351.904263] XDISP_T04_TRANSACTION_17_START payload_bytes=12800 start_ns=1787019987636947270
+[34351.921060] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.922692] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351925569169 bulk_submit_end_ns=34351925609794 usb_submit_urb_result=0 bulk_completion_callback_ns=34351925933023 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.934657] XDISP_T04_TRANSACTION_17_END command_result=0 end_ns=1787019987666705189
+[34351.939768] XDISP_T04_TRANSACTION_18_START payload_bytes=12800 start_ns=1787019987672228888
+[34351.960935] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34351.962710] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34351965495110 bulk_submit_end_ns=34351965550996 usb_submit_urb_result=0 bulk_completion_callback_ns=34351965886881 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34351.978094] XDISP_T04_TRANSACTION_18_END command_result=0 end_ns=1787019987710378214
+[34351.983435] XDISP_T04_TRANSACTION_19_START payload_bytes=12800 start_ns=1787019987715836340
+[34352.000172] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.001728] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352004629541 bulk_submit_end_ns=34352004656781 usb_submit_urb_result=0 bulk_completion_callback_ns=34352004992458 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.009183] XDISP_T04_TRANSACTION_19_END command_result=0 end_ns=1787019987742019259
+[34352.011383] XDISP_T04_TRANSACTION_20_START payload_bytes=12800 start_ns=1787019987744454364
+[34352.023425] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.025056] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352027940846 bulk_submit_end_ns=34352027976002 usb_submit_urb_result=0 bulk_completion_callback_ns=34352028305638 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.034842] XDISP_T04_TRANSACTION_20_END command_result=0 end_ns=1787019987767547647
+[34352.038367] XDISP_T04_TRANSACTION_21_START payload_bytes=12800 start_ns=1787019987771167960
+[34352.053556] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.055149] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352058034599 bulk_submit_end_ns=34352058074078 usb_submit_urb_result=0 bulk_completion_callback_ns=34352058400328 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.064963] XDISP_T04_TRANSACTION_21_END command_result=0 end_ns=1787019987797712754
+[34352.068001] XDISP_T04_TRANSACTION_22_START payload_bytes=12800 start_ns=1787019987800880880
+[34352.082901] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.084644] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352087497987 bulk_submit_end_ns=34352087542310 usb_submit_urb_result=0 bulk_completion_callback_ns=34352087882206 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.096316] XDISP_T04_TRANSACTION_22_END command_result=0 end_ns=1787019987828600049
+[34352.101078] XDISP_T04_TRANSACTION_23_START payload_bytes=12800 start_ns=1787019987833591560
+[34352.119658] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.121324] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352124184397 bulk_submit_end_ns=34352124231532 usb_submit_urb_result=0 bulk_completion_callback_ns=34352124560803 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.133980] XDISP_T04_TRANSACTION_23_END command_result=0 end_ns=1787019987866254792
+[34352.138996] XDISP_T04_TRANSACTION_24_START payload_bytes=12800 start_ns=1787019987871310262
+[34352.159869] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.161620] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352164449818 bulk_submit_end_ns=34352164515651 usb_submit_urb_result=0 bulk_completion_callback_ns=34352164844922 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.175872] XDISP_T04_TRANSACTION_24_END command_result=0 end_ns=1787019987908284224
+[34352.181130] XDISP_T04_TRANSACTION_25_START payload_bytes=12800 start_ns=1787019987913178183
+[34352.201923] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.203623] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352206429093 bulk_submit_end_ns=34352206482062 usb_submit_urb_result=0 bulk_completion_callback_ns=34352206813884 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.217826] XDISP_T04_TRANSACTION_25_END command_result=0 end_ns=1787019987950193447
+[34352.222809] XDISP_T04_TRANSACTION_26_START payload_bytes=12800 start_ns=1787019987955290739
+[34352.243487] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.245209] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352248036597 bulk_submit_end_ns=34352248089930 usb_submit_urb_result=0 bulk_completion_callback_ns=34352248427587 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.260657] XDISP_T04_TRANSACTION_26_END command_result=0 end_ns=1787019987992774128
+[34352.265756] XDISP_T04_TRANSACTION_27_START payload_bytes=12800 start_ns=1787019987998217722
+[34352.286260] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.288037] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352290853632 bulk_submit_end_ns=34352290912174 usb_submit_urb_result=0 bulk_completion_callback_ns=34352291252539 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.302810] XDISP_T04_TRANSACTION_27_END command_result=0 end_ns=1787019988035148715
+[34352.308035] XDISP_T04_TRANSACTION_28_START payload_bytes=12800 start_ns=1787019988040514341
+[34352.328723] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.330565] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352333402907 bulk_submit_end_ns=34352333451085 usb_submit_urb_result=0 bulk_completion_callback_ns=34352333781814 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.344600] XDISP_T04_TRANSACTION_28_END command_result=0 end_ns=1787019988076965595
+[34352.349199] XDISP_T04_TRANSACTION_29_START payload_bytes=12800 start_ns=1787019988081699449
+[34352.369758] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.371464] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352374296089 bulk_submit_end_ns=34352374352547 usb_submit_urb_result=0 bulk_completion_callback_ns=34352374687547 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.386403] XDISP_T04_TRANSACTION_29_END command_result=0 end_ns=1787019988118727057
+[34352.391726] XDISP_T04_TRANSACTION_30_START payload_bytes=12800 start_ns=1787019988124190860
+[34352.410719] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.412484] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352415331822 bulk_submit_end_ns=34352415380311 usb_submit_urb_result=0 bulk_completion_callback_ns=34352415707707 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.424469] XDISP_T04_TRANSACTION_30_END command_result=0 end_ns=1787019988156942217
+[34352.428740] XDISP_T04_TRANSACTION_31_START payload_bytes=12800 start_ns=1787019988161412530
+[34352.447416] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.449224] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352452068076 bulk_submit_end_ns=34352452121826 usb_submit_urb_result=0 bulk_completion_callback_ns=34352452455107 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.462494] XDISP_T04_TRANSACTION_31_END command_result=0 end_ns=1787019988194929044
+[34352.467168] XDISP_T04_TRANSACTION_32_START payload_bytes=12800 start_ns=1787019988199684357
+[34352.486931] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.488700] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352491528027 bulk_submit_end_ns=34352491583027 usb_submit_urb_result=0 bulk_completion_callback_ns=34352491917507 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.503825] XDISP_T04_TRANSACTION_32_END command_result=0 end_ns=1787019988236139933
+[34352.508620] XDISP_T04_TRANSACTION_33_START payload_bytes=12800 start_ns=1787019988241080715
+[34352.528890] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.531027] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352533628865 bulk_submit_end_ns=34352533678657 usb_submit_urb_result=0 bulk_completion_callback_ns=34352534013240 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.546159] XDISP_T04_TRANSACTION_33_END command_result=0 end_ns=1787019988278520823
+[34352.551664] XDISP_T04_TRANSACTION_34_START payload_bytes=12800 start_ns=1787019988284111449
+[34352.571868] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.573578] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352576364025 bulk_submit_end_ns=34352576411369 usb_submit_urb_result=0 bulk_completion_callback_ns=34352576791161 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.587695] XDISP_T04_TRANSACTION_34_END command_result=0 end_ns=1787019988319884108
+[34352.592241] XDISP_T04_TRANSACTION_35_START payload_bytes=12800 start_ns=1787019988324797755
+[34352.612787] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.614467] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352617312311 bulk_submit_end_ns=34352617358300 usb_submit_urb_result=0 bulk_completion_callback_ns=34352617688300 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.628730] XDISP_T04_TRANSACTION_35_END command_result=0 end_ns=1787019988361194165
+[34352.633153] XDISP_T04_TRANSACTION_36_START payload_bytes=12800 start_ns=1787019988365744165
+[34352.652509] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.654265] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352657055127 bulk_submit_end_ns=34352657117263 usb_submit_urb_result=0 bulk_completion_callback_ns=34352657452888 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.667498] XDISP_T04_TRANSACTION_36_END command_result=0 end_ns=1787019988399858908
+[34352.672156] XDISP_T04_TRANSACTION_37_START payload_bytes=12800 start_ns=1787019988404735002
+[34352.692304] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.694373] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352697170600 bulk_submit_end_ns=34352697223517 usb_submit_urb_result=0 bulk_completion_callback_ns=34352697556746 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.707420] XDISP_T04_TRANSACTION_37_END command_result=0 end_ns=1787019988439731881
+[34352.712224] XDISP_T04_TRANSACTION_38_START payload_bytes=12800 start_ns=1787019988444812558
+[34352.733150] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.734847] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352737679042 bulk_submit_end_ns=34352737732062 usb_submit_urb_result=0 bulk_completion_callback_ns=34352738063781 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.751796] XDISP_T04_TRANSACTION_38_END command_result=0 end_ns=1787019988484134489
+[34352.756946] XDISP_T04_TRANSACTION_39_START payload_bytes=12800 start_ns=1787019988489340219
+[34352.777073] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.778682] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352781583785 bulk_submit_end_ns=34352781613577 usb_submit_urb_result=0 bulk_completion_callback_ns=34352781942067 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.786380] XDISP_T04_TRANSACTION_39_END command_result=0 end_ns=1787019988519319232
+[34352.788925] XDISP_T04_TRANSACTION_40_START payload_bytes=12800 start_ns=1787019988521949441
+[34352.802252] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.803972] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352806843111 bulk_submit_end_ns=34352806885403 usb_submit_urb_result=0 bulk_completion_callback_ns=34352807216809 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.815809] XDISP_T04_TRANSACTION_40_END command_result=0 end_ns=1787019988548236631
+[34352.820815] XDISP_T04_TRANSACTION_41_START payload_bytes=12800 start_ns=1787019988553085382
+[34352.841480] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.843202] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352846026292 bulk_submit_end_ns=34352846083792 usb_submit_urb_result=0 bulk_completion_callback_ns=34352846418427 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.857354] XDISP_T04_TRANSACTION_41_END command_result=0 end_ns=1787019988589631427
+[34352.862419] XDISP_T04_TRANSACTION_42_START payload_bytes=12800 start_ns=1787019988594891011
+[34352.882846] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.884613] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352887446556 bulk_submit_end_ns=34352887502702 usb_submit_urb_result=0 bulk_completion_callback_ns=34352887834265 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.898612] XDISP_T04_TRANSACTION_42_END command_result=0 end_ns=1787019988630956848
+[34352.903729] XDISP_T04_TRANSACTION_43_START payload_bytes=12800 start_ns=1787019988636132577
+[34352.924879] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.926589] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352929418019 bulk_submit_end_ns=34352929469009 usb_submit_urb_result=0 bulk_completion_callback_ns=34352929803279 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.942052] XDISP_T04_TRANSACTION_43_END command_result=0 end_ns=1787019988674378154
+[34352.948139] XDISP_T04_TRANSACTION_44_START payload_bytes=12800 start_ns=1787019988679532478
+[34352.969474] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34352.971173] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34352974004065 bulk_submit_end_ns=34352974056513 usb_submit_urb_result=0 bulk_completion_callback_ns=34352974389065 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34352.985933] XDISP_T04_TRANSACTION_44_END command_result=0 end_ns=1787019988718276336
+[34352.991181] XDISP_T04_TRANSACTION_45_START payload_bytes=12800 start_ns=1787019988723392430
+[34353.012330] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.014449] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353017232299 bulk_submit_end_ns=34353017284590 usb_submit_urb_result=0 bulk_completion_callback_ns=34353017630840 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.027976] XDISP_T04_TRANSACTION_45_END command_result=0 end_ns=1787019988760358736
+[34353.032817] XDISP_T04_TRANSACTION_46_START payload_bytes=12800 start_ns=1787019988765415142
+[34353.051962] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.053775] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353056498032 bulk_submit_end_ns=34353056545688 usb_submit_urb_result=0 bulk_completion_callback_ns=34353056884542 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.066409] XDISP_T04_TRANSACTION_46_END command_result=0 end_ns=1787019988798944833
+[34353.070878] XDISP_T04_TRANSACTION_47_START payload_bytes=12800 start_ns=1787019988803169938
+[34353.090635] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.092592] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353095424858 bulk_submit_end_ns=34353095484858 usb_submit_urb_result=0 bulk_completion_callback_ns=34353095814233 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.105729] XDISP_T04_TRANSACTION_47_END command_result=0 end_ns=1787019988838273743
+[34353.109695] XDISP_T04_TRANSACTION_48_START payload_bytes=12800 start_ns=1787019988842342754
+[34353.127789] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.129473] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353132321529 bulk_submit_end_ns=34353132363352 usb_submit_urb_result=0 bulk_completion_callback_ns=34353132697570 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.142327] XDISP_T04_TRANSACTION_48_END command_result=0 end_ns=1787019988874731091
+[34353.147189] XDISP_T04_TRANSACTION_49_START payload_bytes=12800 start_ns=1787019988879461352
+[34353.166866] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.168639] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353171452887 bulk_submit_end_ns=34353171512366 usb_submit_urb_result=0 bulk_completion_callback_ns=34353171845439 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.184414] XDISP_T04_TRANSACTION_49_END command_result=0 end_ns=1787019988916521199
+[34353.189613] XDISP_T04_TRANSACTION_50_START payload_bytes=12800 start_ns=1787019988922056043
+[34353.210181] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.212033] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353214858360 bulk_submit_end_ns=34353214913047 usb_submit_urb_result=0 bulk_completion_callback_ns=34353215253829 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.226384] XDISP_T04_TRANSACTION_50_END command_result=0 end_ns=1787019988958844849
+[34353.231340] XDISP_T04_TRANSACTION_51_START payload_bytes=12800 start_ns=1787019988963701360
+[34353.252345] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.254161] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353256935031 bulk_submit_end_ns=34353257008729 usb_submit_urb_result=0 bulk_completion_callback_ns=34353257346385 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.267635] XDISP_T04_TRANSACTION_51_END command_result=0 end_ns=1787019988999923551
+[34353.272231] XDISP_T04_TRANSACTION_52_START payload_bytes=12800 start_ns=1787019989004836625
+[34353.291808] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.293753] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353296342378 bulk_submit_end_ns=34353296392222 usb_submit_urb_result=0 bulk_completion_callback_ns=34353296793368 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.306910] XDISP_T04_TRANSACTION_52_END command_result=0 end_ns=1787019989039297097
+[34353.311580] XDISP_T04_TRANSACTION_53_START payload_bytes=12800 start_ns=1787019989044141316
+[34353.329009] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.330676] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353333526861 bulk_submit_end_ns=34353333569570 usb_submit_urb_result=0 bulk_completion_callback_ns=34353333909049 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.341960] XDISP_T04_TRANSACTION_53_END command_result=0 end_ns=1787019989074492986
+[34353.346167] XDISP_T04_TRANSACTION_54_START payload_bytes=12800 start_ns=1787019989078769132
+[34353.364701] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.366388] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353369222854 bulk_submit_end_ns=34353369275250 usb_submit_urb_result=0 bulk_completion_callback_ns=34353369614938 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.379633] XDISP_T04_TRANSACTION_54_END command_result=0 end_ns=1787019989112091114
+[34353.384654] XDISP_T04_TRANSACTION_55_START payload_bytes=12800 start_ns=1787019989117196115
+[34353.404354] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.406044] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353408870671 bulk_submit_end_ns=34353408919421 usb_submit_urb_result=0 bulk_completion_callback_ns=34353409261608 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.422607] XDISP_T04_TRANSACTION_55_END command_result=0 end_ns=1787019989154854869
+[34353.428237] XDISP_T04_TRANSACTION_56_START payload_bytes=12800 start_ns=1787019989160475234
+[34353.448299] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.450124] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353452829373 bulk_submit_end_ns=34353452881352 usb_submit_urb_result=0 bulk_completion_callback_ns=34353453208332 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.464877] XDISP_T04_TRANSACTION_56_END command_result=0 end_ns=1787019989197208571
+[34353.470079] XDISP_T04_TRANSACTION_57_START payload_bytes=12800 start_ns=1787019989202418832
+[34353.489988] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.491667] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353494491929 bulk_submit_end_ns=34353494544846 usb_submit_urb_result=0 bulk_completion_callback_ns=34353494886200 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.505743] XDISP_T04_TRANSACTION_57_END command_result=0 end_ns=1787019989238189304
+[34353.510721] XDISP_T04_TRANSACTION_58_START payload_bytes=12800 start_ns=1787019989242845398
+[34353.524195] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.525908] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353528754485 bulk_submit_end_ns=34353528803756 usb_submit_urb_result=0 bulk_completion_callback_ns=34353529135058 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.537864] XDISP_T04_TRANSACTION_58_END command_result=0 end_ns=1787019989270686964
+[34353.540674] XDISP_T04_TRANSACTION_59_START payload_bytes=12800 start_ns=1787019989273380870
+[34353.550613] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.552237] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353555142560 bulk_submit_end_ns=34353555167404 usb_submit_urb_result=0 bulk_completion_callback_ns=34353555502144 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.559485] XDISP_T04_TRANSACTION_59_END command_result=0 end_ns=1787019989292470351
+[34353.561770] XDISP_T04_TRANSACTION_60_START payload_bytes=12800 start_ns=1787019989294829206
+[34353.571925] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.573501] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353576415427 bulk_submit_end_ns=34353576443031 usb_submit_urb_result=0 bulk_completion_callback_ns=34353576762979 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.580661] XDISP_T04_TRANSACTION_60_END command_result=0 end_ns=1787019989313370822
+[34353.582846] XDISP_T04_TRANSACTION_61_START payload_bytes=12800 start_ns=1787019989315910197
+[34353.593655] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.595259] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353598143086 bulk_submit_end_ns=34353598179804 usb_submit_urb_result=0 bulk_completion_callback_ns=34353598507461 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.605512] XDISP_T04_TRANSACTION_61_END command_result=0 end_ns=1787019989338291449
+[34353.608584] XDISP_T04_TRANSACTION_62_START payload_bytes=12800 start_ns=1787019989341450252
+[34353.626214] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.627992] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353630814339 bulk_submit_end_ns=34353630873505 usb_submit_urb_result=0 bulk_completion_callback_ns=34353631211891 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.644460] XDISP_T04_TRANSACTION_62_END command_result=0 end_ns=1787019989376509735
+[34353.649709] XDISP_T04_TRANSACTION_63_START payload_bytes=12800 start_ns=1787019989382182339
+[34353.671347] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.673103] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353675903145 bulk_submit_end_ns=34353675954239 usb_submit_urb_result=0 bulk_completion_callback_ns=34353676280593 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.686681] XDISP_T04_TRANSACTION_63_END command_result=0 end_ns=1787019989419068072
+[34353.691480] XDISP_T04_TRANSACTION_64_START payload_bytes=12800 start_ns=1787019989423924427
+[34353.711845] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.713939] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353716377056 bulk_submit_end_ns=34353716429035 usb_submit_urb_result=0 bulk_completion_callback_ns=34353716847004 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.727319] XDISP_T04_TRANSACTION_64_END command_result=0 end_ns=1787019989459749899
+[34353.732100] XDISP_T04_TRANSACTION_65_START payload_bytes=12800 start_ns=1787019989464692816
+[34353.752303] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.753997] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353756840028 bulk_submit_end_ns=34353756889872 usb_submit_urb_result=0 bulk_completion_callback_ns=34353757219404 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.767335] XDISP_T04_TRANSACTION_65_END command_result=0 end_ns=1787019989499573184
+[34353.771890] XDISP_T04_TRANSACTION_66_START payload_bytes=12800 start_ns=1787019989504477143
+[34353.791080] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.793019] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353795849616 bulk_submit_end_ns=34353795899980 usb_submit_urb_result=0 bulk_completion_callback_ns=34353796240189 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.805731] XDISP_T04_TRANSACTION_66_END command_result=0 end_ns=1787019989538279178
+[34353.809842] XDISP_T04_TRANSACTION_67_START payload_bytes=12800 start_ns=1787019989542476730
+[34353.829065] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.830848] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353833679984 bulk_submit_end_ns=34353833726755 usb_submit_urb_result=0 bulk_completion_callback_ns=34353834060297 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.843968] XDISP_T04_TRANSACTION_67_END command_result=0 end_ns=1787019989576337359
+[34353.848557] XDISP_T04_TRANSACTION_68_START payload_bytes=12800 start_ns=1787019989581091682
+[34353.867035] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.868825] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353871673165 bulk_submit_end_ns=34353871721498 usb_submit_urb_result=0 bulk_completion_callback_ns=34353872051707 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.882377] XDISP_T04_TRANSACTION_68_END command_result=0 end_ns=1787019989614799550
+[34353.886746] XDISP_T04_TRANSACTION_69_START payload_bytes=12800 start_ns=1787019989619251217
+[34353.904784] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.906417] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353909278481 bulk_submit_end_ns=34353909322544 usb_submit_urb_result=0 bulk_completion_callback_ns=34353909652804 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.918822] XDISP_T04_TRANSACTION_69_END command_result=0 end_ns=1787019989651370439
+[34353.923422] XDISP_T04_TRANSACTION_70_START payload_bytes=12800 start_ns=1787019989656032106
+[34353.940996] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.942655] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353945526662 bulk_submit_end_ns=34353945566193 usb_submit_urb_result=0 bulk_completion_callback_ns=34353945891974 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.954125] XDISP_T04_TRANSACTION_70_END command_result=0 end_ns=1787019989686339088
+[34353.958315] XDISP_T04_TRANSACTION_71_START payload_bytes=12800 start_ns=1787019989691013047
+[34353.976212] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34353.977884] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34353980735832 bulk_submit_end_ns=34353980781509 usb_submit_urb_result=0 bulk_completion_callback_ns=34353981123280 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34353.989442] XDISP_T04_TRANSACTION_71_END command_result=0 end_ns=1787019989722053050
+[34353.993504] XDISP_T04_TRANSACTION_72_START payload_bytes=12800 start_ns=1787019989726061071
+[34354.010677] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.012367] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354015227815 bulk_submit_end_ns=34354015273856 usb_submit_urb_result=0 bulk_completion_callback_ns=34354015611200 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.024569] XDISP_T04_TRANSACTION_72_END command_result=0 end_ns=1787019989756964460
+[34354.029189] XDISP_T04_TRANSACTION_73_START payload_bytes=12800 start_ns=1787019989761823210
+[34354.048002] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.049678] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354052522870 bulk_submit_end_ns=34354052570423 usb_submit_urb_result=0 bulk_completion_callback_ns=34354052905266 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.063475] XDISP_T04_TRANSACTION_73_END command_result=0 end_ns=1787019989795817016
+[34354.068137] XDISP_T04_TRANSACTION_74_START payload_bytes=12800 start_ns=1787019989800689464
+[34354.087527] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.089201] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354092045270 bulk_submit_end_ns=34354092097666 usb_submit_urb_result=0 bulk_completion_callback_ns=34354092426104 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.102688] XDISP_T04_TRANSACTION_74_END command_result=0 end_ns=1787019989835143478
+[34354.107406] XDISP_T04_TRANSACTION_75_START payload_bytes=12800 start_ns=1787019989839691083
+[34354.126081] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.127735] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354130591784 bulk_submit_end_ns=34354130641889 usb_submit_urb_result=0 bulk_completion_callback_ns=34354130967149 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.140324] XDISP_T04_TRANSACTION_75_END command_result=0 end_ns=1787019989872638378
+[34354.144446] XDISP_T04_TRANSACTION_76_START payload_bytes=12800 start_ns=1787019989877129993
+[34354.162116] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.163884] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354166731423 bulk_submit_end_ns=34354166772101 usb_submit_urb_result=0 bulk_completion_callback_ns=34354167115799 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.176933] XDISP_T04_TRANSACTION_76_END command_result=0 end_ns=1787019989909194215
+[34354.181897] XDISP_T04_TRANSACTION_77_START payload_bytes=12800 start_ns=1787019989914395726
+[34354.202535] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.204290] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354207111375 bulk_submit_end_ns=34354207164813 usb_submit_urb_result=0 bulk_completion_callback_ns=34354207511271 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.218872] XDISP_T04_TRANSACTION_77_END command_result=0 end_ns=1787019989951146511
+[34354.223966] XDISP_T04_TRANSACTION_78_START payload_bytes=12800 start_ns=1787019989956258803
+[34354.244751] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.246455] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354249279661 bulk_submit_end_ns=34354249332890 usb_submit_urb_result=0 bulk_completion_callback_ns=34354249667630 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.261551] XDISP_T04_TRANSACTION_78_END command_result=0 end_ns=1787019989993877192
+[34354.267053] XDISP_T04_TRANSACTION_79_START payload_bytes=12800 start_ns=1787019989999161463
+[34354.287812] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.289488] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354292327738 bulk_submit_end_ns=34354292381071 usb_submit_urb_result=0 bulk_completion_callback_ns=34354292708311 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.305022] XDISP_T04_TRANSACTION_79_END command_result=0 end_ns=1787019990037290894
+[34354.310354] XDISP_T04_TRANSACTION_80_START payload_bytes=12800 start_ns=1787019990042590843
+[34354.331687] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.333480] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354336225555 bulk_submit_end_ns=34354336275711 usb_submit_urb_result=0 bulk_completion_callback_ns=34354336685920 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.347142] XDISP_T04_TRANSACTION_80_END command_result=0 end_ns=1787019990079453398
+[34354.351792] XDISP_T04_TRANSACTION_81_START payload_bytes=12800 start_ns=1787019990084377670
+[34354.372999] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.374661] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354377509674 bulk_submit_end_ns=34354377556965 usb_submit_urb_result=0 bulk_completion_callback_ns=34354377885924 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.388488] XDISP_T04_TRANSACTION_81_END command_result=0 end_ns=1787019990120808663
+[34354.393046] XDISP_T04_TRANSACTION_82_START payload_bytes=12800 start_ns=1787019990125591892
+[34354.414342] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.416100] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354418928584 bulk_submit_end_ns=34354418981813 usb_submit_urb_result=0 bulk_completion_callback_ns=34354419312594 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.430870] XDISP_T04_TRANSACTION_82_END command_result=0 end_ns=1787019990162936271
+[34354.436023] XDISP_T04_TRANSACTION_83_START payload_bytes=12800 start_ns=1787019990168482001
+[34354.456463] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.458079] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354460974369 bulk_submit_end_ns=34354461009265 usb_submit_urb_result=0 bulk_completion_callback_ns=34354461337859 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.465890] XDISP_T04_TRANSACTION_83_END command_result=0 end_ns=1787019990198810389
+[34354.468394] XDISP_T04_TRANSACTION_84_START payload_bytes=12800 start_ns=1787019990201427733
+[34354.480260] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.481884] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354484765934 bulk_submit_end_ns=34354484803330 usb_submit_urb_result=0 bulk_completion_callback_ns=34354485132289 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.492608] XDISP_T04_TRANSACTION_84_END command_result=0 end_ns=1787019990225308465
+[34354.497254] XDISP_T04_TRANSACTION_85_START payload_bytes=12800 start_ns=1787019990229740913
+[34354.516258] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.517943] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354520798698 bulk_submit_end_ns=34354520848750 usb_submit_urb_result=0 bulk_completion_callback_ns=34354521176511 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.530854] XDISP_T04_TRANSACTION_85_END command_result=0 end_ns=1787019990263112531
+[34354.535538] XDISP_T04_TRANSACTION_86_START payload_bytes=12800 start_ns=1787019990267982532
+[34354.556659] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.558323] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354561168338 bulk_submit_end_ns=34354561219015 usb_submit_urb_result=0 bulk_completion_callback_ns=34354561551359 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.572225] XDISP_T04_TRANSACTION_86_END command_result=0 end_ns=1787019990304645608
+[34354.576759] XDISP_T04_TRANSACTION_87_START payload_bytes=12800 start_ns=1787019990309438057
+[34354.597511] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.599179] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354602025008 bulk_submit_end_ns=34354602073342 usb_submit_urb_result=0 bulk_completion_callback_ns=34354602405738 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.612445] XDISP_T04_TRANSACTION_87_END command_result=0 end_ns=1787019990344889935
+[34354.618136] XDISP_T04_TRANSACTION_88_START payload_bytes=12800 start_ns=1787019990350504832
+[34354.638451] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.640318] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354643036263 bulk_submit_end_ns=34354643086731 usb_submit_urb_result=0 bulk_completion_callback_ns=34354643516158 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.653625] XDISP_T04_TRANSACTION_88_END command_result=0 end_ns=1787019990385843637
+[34354.658530] XDISP_T04_TRANSACTION_89_START payload_bytes=12800 start_ns=1787019990391045252
+[34354.678601] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.680359] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354683188819 bulk_submit_end_ns=34354683360433 usb_submit_urb_result=0 bulk_completion_callback_ns=34354683575225 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.695071] XDISP_T04_TRANSACTION_89_END command_result=0 end_ns=1787019990427390308
+[34354.700432] XDISP_T04_TRANSACTION_90_START payload_bytes=12800 start_ns=1787019990432539371
+[34354.720987] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.722702] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354725532729 bulk_submit_end_ns=34354725586062 usb_submit_urb_result=0 bulk_completion_callback_ns=34354725918354 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.737573] XDISP_T04_TRANSACTION_90_END command_result=0 end_ns=1787019990469734531
+[34354.742801] XDISP_T04_TRANSACTION_91_START payload_bytes=12800 start_ns=1787019990475266459
+[34354.763560] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.765272] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354768090077 bulk_submit_end_ns=34354768142838 usb_submit_urb_result=0 bulk_completion_callback_ns=34354768490963 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.779890] XDISP_T04_TRANSACTION_91_END command_result=0 end_ns=1787019990512247452
+[34354.785298] XDISP_T04_TRANSACTION_92_START payload_bytes=12800 start_ns=1787019990517689067
+[34354.806327] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.808178] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354811005706 bulk_submit_end_ns=34354811056696 usb_submit_urb_result=0 bulk_completion_callback_ns=34354811387165 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.822546] XDISP_T04_TRANSACTION_92_END command_result=0 end_ns=1787019990554903602
+[34354.827718] XDISP_T04_TRANSACTION_93_START payload_bytes=12800 start_ns=1787019990560114123
+[34354.848278] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.850166] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354852802169 bulk_submit_end_ns=34354852852481 usb_submit_urb_result=0 bulk_completion_callback_ns=34354853187846 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.865022] XDISP_T04_TRANSACTION_93_END command_result=0 end_ns=1787019990597356471
+[34354.870252] XDISP_T04_TRANSACTION_94_START payload_bytes=12800 start_ns=1787019990602514753
+[34354.890826] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.892604] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354895436131 bulk_submit_end_ns=34354895491184 usb_submit_urb_result=0 bulk_completion_callback_ns=34354895823163 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.905556] XDISP_T04_TRANSACTION_94_END command_result=0 end_ns=1787019990637987204
+[34354.910536] XDISP_T04_TRANSACTION_95_START payload_bytes=12800 start_ns=1787019990642793559
+[34354.929565] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.931278] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354934099208 bulk_submit_end_ns=34354934156500 usb_submit_urb_result=0 bulk_completion_callback_ns=34354934501656 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.944445] XDISP_T04_TRANSACTION_95_END command_result=0 end_ns=1787019990676717052
+[34354.949451] XDISP_T04_TRANSACTION_96_START payload_bytes=12800 start_ns=1787019990681665437
+[34354.970155] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34354.971919] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34354974742806 bulk_submit_end_ns=34354974800098 usb_submit_urb_result=0 bulk_completion_callback_ns=34354975136712 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34354.985955] XDISP_T04_TRANSACTION_96_END command_result=0 end_ns=1787019990718369660
+[34354.990814] XDISP_T04_TRANSACTION_97_START payload_bytes=12800 start_ns=1787019990723041744
+[34355.010833] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34355.012583] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34355015416560 bulk_submit_end_ns=34355015467862 usb_submit_urb_result=0 bulk_completion_callback_ns=34355015801768 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34355.027141] XDISP_T04_TRANSACTION_97_END command_result=0 end_ns=1787019990759501018
+[34355.031827] XDISP_T04_TRANSACTION_98_START payload_bytes=12800 start_ns=1787019990764418414
+[34355.052676] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34355.054527] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34355057306981 bulk_submit_end_ns=34355057366408 usb_submit_urb_result=0 bulk_completion_callback_ns=34355057705054 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34355.066991] XDISP_T04_TRANSACTION_98_END command_result=0 end_ns=1787019990799592272
+[34355.070350] XDISP_T04_TRANSACTION_99_START payload_bytes=12800 start_ns=1787019990803047116
+[34355.084363] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34355.085933] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34355088838390 bulk_submit_end_ns=34355088871047 usb_submit_urb_result=0 bulk_completion_callback_ns=34355089188599 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34355.096829] XDISP_T04_TRANSACTION_99_END command_result=0 end_ns=1787019990829563838
+[34355.099503] XDISP_T04_TRANSACTION_100_START payload_bytes=12800 start_ns=1787019990832480921
+[34355.112500] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[34355.114461] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=34355117353289 bulk_submit_end_ns=34355117390737 usb_submit_urb_result=0 bulk_completion_callback_ns=34355117715216 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[34355.124002] XDISP_T04_TRANSACTION_100_END command_result=0 end_ns=1787019990856575142
+[34355.124512] XDISP_T04_END result=0
+[36014.282127] XDISP_T04_BEGIN payload_bytes=12800 transaction_count=100
+[36014.351562] XDISP_T04_TRANSACTION_1_START payload_bytes=12800 start_ns=1787021650084553245
+[36014.365012] XDISP_T04_TRANSACTION_1_END command_result=1 end_ns=1787021650098176632
+[36014.365482] XDISP_T04_END result=1

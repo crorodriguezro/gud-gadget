@@ -1,0 +1,11 @@
+Aug 18 03:54:29 raspberrypi gud-drm[2398]: 2026-08-18T02:54:29.997563Z DEBUG gud_drm: Received event: SetupDeviceToHost(CtrlSender { ctrl_req: CtrlReq { request_type: 193, request: 1, value: 0, index: 0, length: 30 } })
+Aug 18 03:54:29 raspberrypi gud-drm[2398]: 2026-08-18T02:54:29.997730Z DEBUG gud_drm: GUD event: GetDescriptor(GetDescriptor { sender: CtrlSender { ctrl_req: CtrlReq { request_type: 193, request: 1, value: 0, index: 0, length: 30 } } })
+Aug 18 03:54:29 raspberrypi gud-drm[2398]: 2026-08-18T02:54:29.997893Z DEBUG gud_gadget: sent display descriptor DisplayDescriptor { magic: 491807053, version: 1, flags: 1, compression: 0, max_buffer_size: 12800, min_width: 640, max_width: 1920, min_height: 400, max_height: 1080 }
+Aug 18 03:54:29 raspberrypi gud-drm[2398]: 2026-08-18T02:54:29.997952Z DEBUG gud_drm: Sent descriptor
+Aug 18 03:54:30 raspberrypi gud-drm[2398]: 2026-08-18T02:54:30.017194Z DEBUG gud_drm: Received event: SetupHostToDevice(CtrlReceiver { ctrl_req: CtrlReq { request_type: 65, request: 97, value: 0, index: 0, length: 26 } })
+Aug 18 03:54:30 raspberrypi gud-drm[2398]: 2026-08-18T02:54:30.017418Z  WARN gud_gadget: rejected state check: unsupported pixel format 0x40
+Aug 18 03:54:30 raspberrypi gud-drm[2398]: 2026-08-18T02:54:30.017465Z DEBUG gud_drm: GUD event: ProtocolStateInvalidated { generation: None, reason: InvalidStateCheck }
+Aug 18 03:54:30 raspberrypi gud-drm[2398]: 2026-08-18T02:54:30.017507Z DEBUG gud_drm: Protocol state invalidated generation=None reason=InvalidStateCheck had_host_session=true
+Aug 18 03:54:30 raspberrypi gud-drm[2398]: 2026-08-18T02:54:30.017786Z DEBUG gud_drm: Received event: SetupDeviceToHost(CtrlSender { ctrl_req: CtrlReq { request_type: 193, request: 0, value: 0, index: 0, length: 1 } })
+Aug 18 03:54:30 raspberrypi gud-drm[2398]: 2026-08-18T02:54:30.017968Z DEBUG gud_gadget: sent GUD status event="status_reply" monotonic_ns=1670549882943 status=4
+Aug 18 03:54:30 raspberrypi gud-drm[2398]: 2026-08-18T02:54:30.018018Z DEBUG gud_drm: GUD event: StatusSent(4)
