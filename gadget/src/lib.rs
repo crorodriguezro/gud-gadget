@@ -12,7 +12,9 @@ use tracing::{debug, error, warn};
 
 use bytes::BytesMut;
 use usb_gadget::function::custom;
-use usb_gadget::function::custom::{CtrlSender, Endpoint, EndpointDirection, EndpointReceiver};
+use usb_gadget::function::custom::{
+    CtrlSender, Endpoint, EndpointDirection, EndpointOperation, EndpointReceiver,
+};
 use usb_gadget::Id;
 
 const GUD_DISPLAY_MAGIC: u32 = 0x1d50614d;
@@ -75,13 +77,8 @@ pub const DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE: usize = 16 * 1024;
 static CONNECTOR_STATUS_CHANGED_ONCE: AtomicBool = AtomicBool::new(true);
 static STATUS_VALUE: AtomicU8 = AtomicU8::new(GUD_STATUS_OK);
 static CLEAR_STATUS_ON_NEXT_SUCCESS: AtomicBool = AtomicBool::new(false);
-// The STATUS_ON_SET diagnostic deliberately permits exactly one payload. This
-// guard is enabled as soon as that payload's AIO request is accepted, so a
-// second SET_BUFFER cannot slip in while EP0 services the trailing status.
-// This is deliberately a bounded diagnostic guard, not a production receive
-// queue.  A SET_BUFFER is admitted only while no diagnostic transaction owns
-// the receive path and fewer than the configured number have been armed.
-// `started` advances only after io_submit() accepted the corresponding AIO.
+// One serialized transaction owns EP1 from AIO acceptance through successful
+// processing. A nonzero limit retains the old bounded diagnostic mode only.
 static STATUS_ON_SET_DIAGNOSTIC_GUARD: OnceLock<Mutex<StatusOnSetDiagnosticGuard>> =
     OnceLock::new();
 static STATE_CHECK_VALIDATION: OnceLock<Mutex<StateCheckValidation>> = OnceLock::new();
@@ -152,25 +149,23 @@ impl StatusOnSetDiagnosticGuard {
     }
 
     fn set_buffer_permitted(&self) -> bool {
-        self.transaction_limit == 0
-            || (!self.active && self.started_transactions < self.transaction_limit)
+        !self.active
+            && (self.transaction_limit == 0 || self.started_transactions < self.transaction_limit)
     }
 
     fn begin_after_aio_acceptance(&mut self) -> anyhow::Result<u8> {
         ensure!(
-            self.transaction_limit > 0,
-            "STATUS_ON_SET diagnostic guard is disabled"
-        );
-        ensure!(
             !self.active,
             "STATUS_ON_SET diagnostic transaction already owns receive guard"
         );
-        ensure!(
-            self.started_transactions < self.transaction_limit,
-            "STATUS_ON_SET diagnostic transaction limit {} reached",
-            self.transaction_limit
-        );
-        self.started_transactions += 1;
+        if self.transaction_limit > 0 {
+            ensure!(
+                self.started_transactions < self.transaction_limit,
+                "STATUS_ON_SET diagnostic transaction limit {} reached",
+                self.transaction_limit
+            );
+            self.started_transactions += 1;
+        }
         self.active = true;
         Ok(self.started_transactions)
     }
@@ -186,9 +181,8 @@ impl StatusOnSetDiagnosticGuard {
 pub enum ExactAioState {
     Idle,
     Arming,
-    ArmedAwaitStatus,
-    Receiving,
-    Completed,
+    InFlight,
+    Processing,
     Poisoned,
 }
 
@@ -198,6 +192,10 @@ struct ExactAioTransaction {
     sequence: u64,
     expected_bytes: usize,
     started: Option<Instant>,
+    accepted_at: Option<Instant>,
+    operation: Option<EndpointOperation>,
+    metadata: Option<SetBuffer>,
+    status_ready: bool,
 }
 
 impl Default for ExactAioTransaction {
@@ -207,6 +205,10 @@ impl Default for ExactAioTransaction {
             sequence: 0,
             expected_bytes: 0,
             started: None,
+            accepted_at: None,
+            operation: None,
+            metadata: None,
+            status_ready: false,
         }
     }
 }
@@ -223,19 +225,43 @@ impl ExactAioTransaction {
             expected_bytes <= MAX_EXACT_AIO_PAYLOAD_SIZE,
             "exact FunctionFS AIO payload {expected_bytes} exceeds guarded maximum {MAX_EXACT_AIO_PAYLOAD_SIZE}"
         );
-        self.sequence = self.sequence.wrapping_add(1);
+        self.sequence = self
+            .sequence
+            .checked_add(1)
+            .context("exact FunctionFS AIO sequence exhausted; refusing identifier reuse")?;
         self.expected_bytes = expected_bytes;
         self.started = Some(Instant::now());
         self.state = ExactAioState::Arming;
         Ok(self.sequence)
     }
 
+    fn begin_arm_with_metadata(
+        &mut self,
+        metadata: SetBuffer,
+        expected_bytes: usize,
+    ) -> anyhow::Result<u64> {
+        let sequence = self.begin_arm(expected_bytes)?;
+        self.metadata = Some(metadata);
+        Ok(sequence)
+    }
+
+    #[cfg(test)]
     fn submission_accepted(&mut self) -> anyhow::Result<()> {
+        self.submission_accepted_operation(EndpointOperation::from_id(self.sequence))
+    }
+
+    fn submission_accepted_operation(
+        &mut self,
+        operation: EndpointOperation,
+    ) -> anyhow::Result<()> {
         ensure!(
             self.state == ExactAioState::Arming,
             "AIO acceptance outside Arming"
         );
-        self.state = ExactAioState::ArmedAwaitStatus;
+        self.operation = Some(operation);
+        self.accepted_at = Some(Instant::now());
+        self.status_ready = false;
+        self.state = ExactAioState::InFlight;
         Ok(())
     }
 
@@ -247,26 +273,52 @@ impl ExactAioTransaction {
         self.state = ExactAioState::Idle;
         self.expected_bytes = 0;
         self.started = None;
+        self.accepted_at = None;
+        self.metadata = None;
+        self.status_ready = false;
         Ok(())
     }
 
     fn status_sent(&mut self, status: u8) -> anyhow::Result<()> {
-        if self.state != ExactAioState::ArmedAwaitStatus {
+        if self.state != ExactAioState::InFlight {
             return Ok(());
         }
         ensure!(
             status == GUD_STATUS_OK,
             "armed SET_BUFFER received non-OK status {status}"
         );
-        self.state = ExactAioState::Receiving;
+        self.status_ready = true;
         Ok(())
     }
 
+    #[cfg(test)]
     fn completion(&mut self, actual_bytes: usize) -> anyhow::Result<()> {
-        if self.state != ExactAioState::Receiving {
+        let operation = self
+            .operation
+            .context("completion without accepted AIO identity")?;
+        self.completion_for_operation(operation, actual_bytes)
+    }
+
+    fn completion_for_operation(
+        &mut self,
+        operation: EndpointOperation,
+        actual_bytes: usize,
+    ) -> anyhow::Result<()> {
+        if self.state != ExactAioState::InFlight {
             let previous = self.state;
             self.state = ExactAioState::Poisoned;
             bail!("exact FunctionFS AIO completion arrived while transaction was {previous:?}");
+        }
+        if self.operation != Some(operation) {
+            self.state = ExactAioState::Poisoned;
+            bail!(
+                "exact FunctionFS AIO completion identity {} does not match active transaction",
+                operation.id()
+            );
+        }
+        if !self.status_ready {
+            self.state = ExactAioState::Poisoned;
+            bail!("exact FunctionFS AIO completion arrived before GET_STATUS=OK");
         }
         if actual_bytes != self.expected_bytes {
             self.state = ExactAioState::Poisoned;
@@ -275,19 +327,28 @@ impl ExactAioTransaction {
                 self.expected_bytes
             );
         }
-        self.state = ExactAioState::Completed;
+        self.state = ExactAioState::Processing;
         Ok(())
     }
 
-    fn return_idle(&mut self) -> anyhow::Result<()> {
+    fn finish_processing(&mut self) -> anyhow::Result<()> {
         ensure!(
-            self.state == ExactAioState::Completed,
-            "return to Idle without completion"
+            self.state == ExactAioState::Processing,
+            "return to Idle without successful processing"
         );
         self.state = ExactAioState::Idle;
         self.expected_bytes = 0;
         self.started = None;
+        self.accepted_at = None;
+        self.operation = None;
+        self.metadata = None;
+        self.status_ready = false;
         Ok(())
+    }
+
+    #[cfg(test)]
+    fn return_idle(&mut self) -> anyhow::Result<()> {
+        self.finish_processing()
     }
 
     fn poison(&mut self) {
@@ -462,7 +523,7 @@ struct ProtocolState {
     display_enabled: bool,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq)]
 pub struct SetBuffer {
     pub x: u32,
     pub y: u32,
@@ -1666,7 +1727,8 @@ impl PixelDataEndpoint {
                 buf: BytesMut::new(),
                 compress_buf: BytesMut::new(),
             },
-            Endpoint::bulk(ep_dir),
+            // Production GUD owns exactly one native-AIO receive at a time.
+            Endpoint::bulk(ep_dir.with_queue_len(1)),
         )
     }
 
@@ -1696,7 +1758,9 @@ impl PixelDataEndpoint {
         } else {
             info.length as usize
         };
-        let sequence = self.exact_aio.begin_arm(expected_bytes)?;
+        let sequence = self
+            .exact_aio
+            .begin_arm_with_metadata(info.clone(), expected_bytes)?;
         let buf = BytesMut::zeroed(expected_bytes);
         if buf.capacity() != expected_bytes {
             self.exact_aio.submission_rejected()?;
@@ -1712,20 +1776,23 @@ impl PixelDataEndpoint {
             expected_bytes,
             "submitting exact FunctionFS bulk OUT AIO request"
         );
-        if let Err(err) = self.ep_rx.try_recv(buf) {
-            self.exact_aio.submission_rejected()?;
-            latch_status(GUD_STATUS_ERROR);
-            debug!(
-                event = "aio_submit_return",
-                transaction_seq = sequence,
-                expected_bytes,
-                accepted = false,
-                error = %err,
-                "exact FunctionFS AIO request was not accepted"
-            );
-            return Err(err).context("submit exact FunctionFS bulk OUT AIO request");
-        }
-        self.exact_aio.submission_accepted()?;
+        let operation = match self.ep_rx.try_recv_identified(buf) {
+            Ok(operation) => operation,
+            Err(err) => {
+                self.exact_aio.submission_rejected()?;
+                latch_status(GUD_STATUS_ERROR);
+                debug!(
+                    event = "aio_submit_return",
+                    transaction_seq = sequence,
+                    expected_bytes,
+                    accepted = false,
+                    error = %err,
+                    "exact FunctionFS AIO request was not accepted"
+                );
+                return Err(err).context("submit exact FunctionFS bulk OUT AIO request");
+            }
+        };
+        self.exact_aio.submission_accepted_operation(operation)?;
         mark_success();
         debug!(
             event = "aio_submit_return",
@@ -1741,7 +1808,7 @@ impl PixelDataEndpoint {
 
     pub fn note_status_sent(&mut self, status: u8) -> anyhow::Result<()> {
         self.exact_aio.status_sent(status)?;
-        if self.exact_aio.state == ExactAioState::Receiving {
+        if self.exact_aio.state == ExactAioState::InFlight {
             debug!(
                 event = "status_after_arm",
                 monotonic_ns = functionfs_monotonic_ns(),
@@ -1758,23 +1825,23 @@ impl PixelDataEndpoint {
         &mut self,
         output_bytes: usize,
     ) -> anyhow::Result<Option<PayloadStats>> {
-        if !matches!(
-            self.exact_aio.state,
-            ExactAioState::ArmedAwaitStatus | ExactAioState::Receiving
-        ) {
+        if !matches!(self.exact_aio.state, ExactAioState::InFlight) {
             return Ok(None);
         }
         let Some(buf) = self
             .ep_rx
-            .try_fetch()
+            .try_fetch_identified()
             .context("harvest exact FunctionFS bulk OUT AIO completion")?
         else {
             return Ok(None);
         };
+        let operation = buf.operation();
+        let buf = buf.into_data();
         let actual_bytes = buf.len();
         let sequence = self.exact_aio.sequence;
         let expected_bytes = self.exact_aio.expected_bytes;
-        self.exact_aio.completion(actual_bytes)?;
+        self.exact_aio
+            .completion_for_operation(operation, actual_bytes)?;
         self.buf = buf;
         let read_ms = self
             .exact_aio
@@ -1790,7 +1857,10 @@ impl PixelDataEndpoint {
             exact = true,
             "harvested exact FunctionFS AIO completion"
         );
-        self.payload_seq = self.payload_seq.wrapping_add(1);
+        self.payload_seq = self
+            .payload_seq
+            .checked_add(1)
+            .context("payload sequence exhausted; refusing identifier reuse")?;
         let stats = PayloadStats {
             payload_seq: self.payload_seq,
             transfer_bytes: expected_bytes,
@@ -1803,14 +1873,27 @@ impl PixelDataEndpoint {
             read_ms,
             ..PayloadStats::default()
         };
-        self.exact_aio.return_idle()?;
         debug!(
             event = "exact_aio_state_transition",
             transaction_seq = sequence,
             state = ?self.exact_aio.state,
-            "exact FunctionFS AIO transaction returned to Idle"
+            operation_id = operation.id(),
+            "exact FunctionFS AIO transaction entered Processing"
         );
         Ok(Some(stats))
+    }
+
+    /// Release aggregate transaction ownership only after framebuffer processing.
+    pub fn finish_exact_payload_processing(&mut self) -> anyhow::Result<()> {
+        let sequence = self.exact_aio.sequence;
+        self.exact_aio.finish_processing()?;
+        debug!(
+            event = "exact_aio_state_transition",
+            transaction_seq = sequence,
+            state = ?self.exact_aio.state,
+            "exact FunctionFS AIO transaction returned to Idle after processing"
+        );
+        Ok(())
     }
 
     pub fn poison_exact_payload_aio(&mut self, reason: &str) {
@@ -2248,12 +2331,13 @@ mod tests {
         store_pending_state, update_controller_enabled, update_display_enabled,
         usb_packet_estimate, validate_buffer_request, validate_functionfs_read_size,
         validate_state_check_payload, ActiveScanoutState, ConnectorDescriptor, DisplayMode,
-        DisplayState, ExactAioState, ExactAioTransaction, FunctionFsReadCompletion,
-        PixelDataEndpoint, SetBuffer, DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
-        FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE, GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED,
-        GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET,
-        GUD_DISPLAY_MAGIC, GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK,
-        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        DisplayState, EndpointOperation, ExactAioState, ExactAioTransaction,
+        FunctionFsReadCompletion, PixelDataEndpoint, SetBuffer,
+        DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE, FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE,
+        GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
+        GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET, GUD_DISPLAY_MAGIC,
+        GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK, GUD_PIXEL_FORMAT_RGB565,
+        GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
     use crate::{
         begin_status_on_set_diagnostic_transaction, configure_status_on_set_diagnostic, event,
@@ -2406,6 +2490,13 @@ mod tests {
         assert_eq!(guarded.max_buffer_size, 12_800);
     }
 
+    #[test]
+    fn production_endpoint_enforces_one_aio_queue_slot() {
+        let (_endpoint, descriptor) =
+            PixelDataEndpoint::new_with_read_size(DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE).unwrap();
+        assert_eq!(descriptor.direction.queue_len, 1);
+    }
+
     #[derive(Debug, PartialEq, Eq)]
     enum SimulatedOperation {
         SetBufferValidated(usize),
@@ -2502,7 +2593,7 @@ mod tests {
     #[test]
     fn missing_completion_remains_receiving_until_containment_poisons_it() {
         let (mut transaction, _) = simulate_status_on_set(12_800, true, None);
-        assert_eq!(transaction.state, ExactAioState::Receiving);
+        assert_eq!(transaction.state, ExactAioState::InFlight);
         transaction.poison();
         assert_eq!(transaction.state, ExactAioState::Poisoned);
     }
@@ -2523,7 +2614,61 @@ mod tests {
         transaction.submission_accepted().unwrap();
         assert!(transaction.begin_arm(12_800).is_err());
         assert_eq!(transaction.sequence, first_sequence);
-        assert_eq!(transaction.state, ExactAioState::ArmedAwaitStatus);
+        assert_eq!(transaction.state, ExactAioState::InFlight);
+    }
+
+    #[test]
+    fn processing_retains_metadata_until_successful_finalization() {
+        let mut transaction = ExactAioTransaction::default();
+        let metadata = SetBuffer {
+            x: 1,
+            y: 2,
+            width: 3,
+            height: 4,
+            length: 12_800,
+            compression: 0,
+            compressed_length: 0,
+        };
+        transaction
+            .begin_arm_with_metadata(metadata.clone(), 12_800)
+            .unwrap();
+        transaction
+            .submission_accepted_operation(EndpointOperation::from_id(99))
+            .unwrap();
+        transaction.status_sent(GUD_STATUS_OK).unwrap();
+        transaction
+            .completion_for_operation(EndpointOperation::from_id(99), 12_800)
+            .unwrap();
+
+        assert_eq!(transaction.state, ExactAioState::Processing);
+        assert_eq!(transaction.metadata.as_ref(), Some(&metadata));
+        assert!(transaction.begin_arm(12_800).is_err());
+        transaction.finish_processing().unwrap();
+        assert_eq!(transaction.state, ExactAioState::Idle);
+        assert!(transaction.metadata.is_none());
+    }
+
+    #[test]
+    fn cross_associated_completion_poisons_transaction() {
+        let mut transaction = ExactAioTransaction::default();
+        transaction.begin_arm(12_800).unwrap();
+        transaction
+            .submission_accepted_operation(EndpointOperation::from_id(41))
+            .unwrap();
+        transaction.status_sent(GUD_STATUS_OK).unwrap();
+        assert!(transaction
+            .completion_for_operation(EndpointOperation::from_id(42), 12_800)
+            .is_err());
+        assert_eq!(transaction.state, ExactAioState::Poisoned);
+    }
+
+    #[test]
+    fn sequence_exhaustion_refuses_reuse() {
+        let mut transaction = ExactAioTransaction::default();
+        transaction.sequence = u64::MAX;
+        assert!(transaction.begin_arm(12_800).is_err());
+        assert_eq!(transaction.sequence, u64::MAX);
+        assert_eq!(transaction.state, ExactAioState::Idle);
     }
 
     #[test]

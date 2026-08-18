@@ -1,0 +1,4 @@
+host_runner=xdisp-t04-status-on-set-100-frame
+configured_transaction_count=100
+configured_payload_bytes=12800
+remote_runner_result=0

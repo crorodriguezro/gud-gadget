@@ -1,0 +1,200 @@
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=1 payload_bytes=12800 command_result=0 start_ns=1787019901259171477 end_ns=1787019901364259092
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=2 payload_bytes=12800 command_result=0 start_ns=1787019901369493728 end_ns=1787019901408031440
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=3 payload_bytes=12800 command_result=0 start_ns=1787019901413258159 end_ns=1787019901451351757
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=4 payload_bytes=12800 command_result=0 start_ns=1787019901456279986 end_ns=1787019901495707907
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=5 payload_bytes=12800 command_result=0 start_ns=1787019901500926553 end_ns=1787019901538902182
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=6 payload_bytes=12800 command_result=0 start_ns=1787019901544215464 end_ns=1787019901583027603
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=7 payload_bytes=12800 command_result=0 start_ns=1787019901588205416 end_ns=1787019901625051670
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=8 payload_bytes=12800 command_result=0 start_ns=1787019901630803962 end_ns=1787019901668200268
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=9 payload_bytes=12800 command_result=0 start_ns=1787019901673728029 end_ns=1787019901710085220
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=10 payload_bytes=12800 command_result=0 start_ns=1787019901715392096 end_ns=1787019901750008245
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=11 payload_bytes=12800 command_result=0 start_ns=1787019901754402204 end_ns=1787019901784126738
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=12 payload_bytes=12800 command_result=0 start_ns=1787019901788555592 end_ns=1787019901825495700
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=13 payload_bytes=12800 command_result=0 start_ns=1787019901830970128 end_ns=1787019901868219194
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=14 payload_bytes=12800 command_result=0 start_ns=1787019901873638309 end_ns=1787019901909290396
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=15 payload_bytes=12800 command_result=0 start_ns=1787019901915477845 end_ns=1787019901953226182
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=16 payload_bytes=12800 command_result=0 start_ns=1787019901958581964 end_ns=1787019901996167436
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=17 payload_bytes=12800 command_result=0 start_ns=1787019902001506082 end_ns=1787019902037599107
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=18 payload_bytes=12800 command_result=0 start_ns=1787019902042133066 end_ns=1787019902077393746
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=19 payload_bytes=12800 command_result=0 start_ns=1787019902082374007 end_ns=1787019902116789896
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=20 payload_bytes=12800 command_result=0 start_ns=1787019902121563803 end_ns=1787019902158167817
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=21 payload_bytes=12800 command_result=0 start_ns=1787019902162810994 end_ns=1787019902194781831
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=22 payload_bytes=12800 command_result=0 start_ns=1787019902198818238 end_ns=1787019902233103866
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=23 payload_bytes=12800 command_result=0 start_ns=1787019902238375325 end_ns=1787019902275722360
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=24 payload_bytes=12800 command_result=0 start_ns=1787019902280761423 end_ns=1787019902317802260
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=25 payload_bytes=12800 command_result=0 start_ns=1787019902323257521 end_ns=1787019902358977681
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=26 payload_bytes=12800 command_result=0 start_ns=1787019902362955806 end_ns=1787019902391228413
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=27 payload_bytes=12800 command_result=0 start_ns=1787019902394993830 end_ns=1787019902425256177
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=28 payload_bytes=12800 command_result=0 start_ns=1787019902430383625 end_ns=1787019902467891025
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=29 payload_bytes=12800 command_result=0 start_ns=1787019902472749671 end_ns=1787019902510870300
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=30 payload_bytes=12800 command_result=0 start_ns=1787019902516082123 end_ns=1787019902552486606
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=31 payload_bytes=12800 command_result=0 start_ns=1787019902557622909 end_ns=1787019902594371662
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=32 payload_bytes=12800 command_result=0 start_ns=1787019902599292132 end_ns=1787019902635645833
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=33 payload_bytes=12800 command_result=0 start_ns=1787019902640839584 end_ns=1787019902678491514
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=34 payload_bytes=12800 command_result=0 start_ns=1787019902683728442 end_ns=1787019902720644435
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=35 payload_bytes=12800 command_result=0 start_ns=1787019902725664748 end_ns=1787019902761778814
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=36 payload_bytes=12800 command_result=0 start_ns=1787019902766125169 end_ns=1787019902802126162
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=37 payload_bytes=12800 command_result=0 start_ns=1787019902806309079 end_ns=1787019902840619395
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=38 payload_bytes=12800 command_result=0 start_ns=1787019902844978458 end_ns=1787019902881304191
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=39 payload_bytes=12800 command_result=0 start_ns=1787019902885952316 end_ns=1787019902922641799
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=40 payload_bytes=12800 command_result=0 start_ns=1787019902927749456 end_ns=1787019902963214251
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=41 payload_bytes=12800 command_result=0 start_ns=1787019902968219095 end_ns=1787019902998846026
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=42 payload_bytes=12800 command_result=0 start_ns=1787019903001421807 end_ns=1787019903023112018
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=43 payload_bytes=12800 command_result=0 start_ns=1787019903026605560 end_ns=1787019903062455251
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=44 payload_bytes=12800 command_result=0 start_ns=1787019903066991449 end_ns=1787019903099116296
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=45 payload_bytes=12800 command_result=0 start_ns=1787019903102014890 end_ns=1787019903126385257
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=46 payload_bytes=12800 command_result=0 start_ns=1787019903131320205 end_ns=1787019903166579740
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=47 payload_bytes=12800 command_result=0 start_ns=1787019903172163439 end_ns=1787019903210880734
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=48 payload_bytes=12800 command_result=0 start_ns=1787019903216009068 end_ns=1787019903253034280
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=49 payload_bytes=12800 command_result=0 start_ns=1787019903258482301 end_ns=1787019903294983503
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=50 payload_bytes=12800 command_result=0 start_ns=1787019903299992410 end_ns=1787019903337170278
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=51 payload_bytes=12800 command_result=0 start_ns=1787019903342201320 end_ns=1787019903380766220
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=52 payload_bytes=12800 command_result=0 start_ns=1787019903385524762 end_ns=1787019903419255130
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=53 payload_bytes=12800 command_result=0 start_ns=1787019903422641537 end_ns=1787019903446543466
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=54 payload_bytes=12800 command_result=0 start_ns=1787019903450737321 end_ns=1787019903483661022
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=55 payload_bytes=12800 command_result=0 start_ns=1787019903488357064 end_ns=1787019903523916182
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=56 payload_bytes=12800 command_result=0 start_ns=1787019903528391078 end_ns=1787019903564557019
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=57 payload_bytes=12800 command_result=0 start_ns=1787019903569398166 end_ns=1787019903599664106
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=58 payload_bytes=12800 command_result=0 start_ns=1787019903602409159 end_ns=1787019903624149786
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=59 payload_bytes=12800 command_result=0 start_ns=1787019903627239265 end_ns=1787019903659734737
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=60 payload_bytes=12800 command_result=0 start_ns=1787019903664225311 end_ns=1787019903701231564
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=61 payload_bytes=12800 command_result=0 start_ns=1787019903705886669 end_ns=1787019903744593131
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=62 payload_bytes=12800 command_result=0 start_ns=1787019903749967350 end_ns=1787019903789557667
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=63 payload_bytes=12800 command_result=0 start_ns=1787019903794966105 end_ns=1787019903832688296
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=64 payload_bytes=12800 command_result=0 start_ns=1787019903837770692 end_ns=1787019903866608716
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=65 payload_bytes=12800 command_result=0 start_ns=1787019903869913977 end_ns=1787019903891965698
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=66 payload_bytes=12800 command_result=0 start_ns=1787019903895747313 end_ns=1787019903922614815
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=67 payload_bytes=12800 command_result=0 start_ns=1787019903926259451 end_ns=1787019903959132215
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=68 payload_bytes=12800 command_result=0 start_ns=1787019903963569715 end_ns=1787019903998691229
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=69 payload_bytes=12800 command_result=0 start_ns=1787019904003254667 end_ns=1787019904039386233
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=70 payload_bytes=12800 command_result=0 start_ns=1787019904044316911 end_ns=1787019904081310977
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=71 payload_bytes=12800 command_result=0 start_ns=1787019904086226551 end_ns=1787019904121255825
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=72 payload_bytes=12800 command_result=0 start_ns=1787019904126099107 end_ns=1787019904162601819
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=73 payload_bytes=12800 command_result=0 start_ns=1787019904167913225 end_ns=1787019904204929219
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=74 payload_bytes=12800 command_result=0 start_ns=1787019904210787761 end_ns=1787019904247239275
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=75 payload_bytes=12800 command_result=0 start_ns=1787019904252323078 end_ns=1787019904288906206
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=76 payload_bytes=12800 command_result=0 start_ns=1787019904294130113 end_ns=1787019904331004596
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=77 payload_bytes=12800 command_result=0 start_ns=1787019904336024648 end_ns=1787019904373294444
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=78 payload_bytes=12800 command_result=0 start_ns=1787019904378525121 end_ns=1787019904416093302
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=79 payload_bytes=12800 command_result=0 start_ns=1787019904421462782 end_ns=1787019904458421119
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=80 payload_bytes=12800 command_result=0 start_ns=1787019904463369661 end_ns=1787019904498234873
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=81 payload_bytes=12800 command_result=0 start_ns=1787019904502936957 end_ns=1787019904538663679
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=82 payload_bytes=12800 command_result=0 start_ns=1787019904543182325 end_ns=1787019904578015818
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=83 payload_bytes=12800 command_result=0 start_ns=1787019904582345662 end_ns=1787019904618070562
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=84 payload_bytes=12800 command_result=0 start_ns=1787019904622732333 end_ns=1787019904659234628
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=85 payload_bytes=12800 command_result=0 start_ns=1787019904664098796 end_ns=1787019904699266091
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=86 payload_bytes=12800 command_result=0 start_ns=1787019904703898175 end_ns=1787019904737095105
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=87 payload_bytes=12800 command_result=0 start_ns=1787019904741336720 end_ns=1787019904777248911
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=88 payload_bytes=12800 command_result=0 start_ns=1787019904782536672 end_ns=1787019904818612353
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=89 payload_bytes=12800 command_result=0 start_ns=1787019904823077770 end_ns=1787019904858561940
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=90 payload_bytes=12800 command_result=0 start_ns=1787019904863018451 end_ns=1787019904896572933
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=91 payload_bytes=12800 command_result=0 start_ns=1787019904901602205 end_ns=1787019904937698510
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=92 payload_bytes=12800 command_result=0 start_ns=1787019904942517938 end_ns=1787019904978847525
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=93 payload_bytes=12800 command_result=0 start_ns=1787019904983594036 end_ns=1787019905016775966
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=94 payload_bytes=12800 command_result=0 start_ns=1787019905021586748 end_ns=1787019905057638210
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=95 payload_bytes=12800 command_result=0 start_ns=1787019905062569773 end_ns=1787019905099096964
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=96 payload_bytes=12800 command_result=0 start_ns=1787019905103803996 end_ns=1787019905140880041
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=97 payload_bytes=12800 command_result=0 start_ns=1787019905145469364 end_ns=1787019905182339056
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=98 payload_bytes=12800 command_result=0 start_ns=1787019905187278483 end_ns=1787019905222337237
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=99 payload_bytes=12800 command_result=0 start_ns=1787019905228340883 end_ns=1787019905259155886
+stage=atomic-commit complete
+XDISP_T04_HOST_RESULT transaction=100 payload_bytes=12800 command_result=0 start_ns=1787019905261610626 end_ns=1787019905285286566

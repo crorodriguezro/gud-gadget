@@ -222,6 +222,7 @@ impl Op {
 }
 
 /// AIO operation handle.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OpHandle(u64);
 
 impl OpHandle {
@@ -359,7 +360,10 @@ impl Driver {
         }
 
         let id = self.next_id;
-        self.next_id = self.next_id.wrapping_add(1);
+        self.next_id = self
+            .next_id
+            .checked_add(1)
+            .ok_or_else(|| Error::new(ErrorKind::Other, "AIO operation identifier exhausted; refusing reuse"))?;
 
         let mut buf = buf.into();
         let iocb =

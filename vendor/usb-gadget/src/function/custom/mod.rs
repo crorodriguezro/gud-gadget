@@ -1626,6 +1626,41 @@ impl EndpointSender {
 #[derive(Debug)]
 pub struct EndpointReceiver(value::Receiver<EndpointIo>);
 
+/// Identity returned when one endpoint operation is accepted by Linux AIO.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct EndpointOperation(u64);
+
+impl EndpointOperation {
+    /// Construct an identity for lifecycle validation and tests.
+    pub const fn from_id(id: u64) -> Self {
+        Self(id)
+    }
+
+    /// Stable identity of the accepted operation.
+    pub const fn id(self) -> u64 {
+        self.0
+    }
+}
+
+/// A harvested endpoint completion and the operation that produced it.
+#[derive(Debug)]
+pub struct EndpointCompletion {
+    operation: EndpointOperation,
+    data: BytesMut,
+}
+
+impl EndpointCompletion {
+    /// Identity of the completed operation.
+    pub const fn operation(&self) -> EndpointOperation {
+        self.operation
+    }
+
+    /// Received bytes owned by this completion.
+    pub fn into_data(self) -> BytesMut {
+        self.data
+    }
+}
+
 impl EndpointReceiver {
     /// Gets the FunctionFS endpoint file used by this receiver.
     ///
@@ -1720,10 +1755,14 @@ impl EndpointReceiver {
     ///
     /// Fails if no receive queue space is available.
     pub fn try_recv(&mut self, buf: BytesMut) -> Result<()> {
+        self.try_recv_identified(buf).map(|_| ())
+    }
+
+    /// Enqueue one receive and retain the exact accepted AIO identity.
+    pub fn try_recv_identified(&mut self, buf: BytesMut) -> Result<EndpointOperation> {
         let io = self.0.get()?;
         let file = io.file()?;
-        io.aio.submit(aio::opcode::PREAD, file.as_raw_fd(), buf)?;
-        Ok(())
+        Ok(EndpointOperation(io.aio.submit(aio::opcode::PREAD, file.as_raw_fd(), buf)?.id()))
     }
 
     /// Whether receive queue space is available.
@@ -1789,12 +1828,18 @@ impl EndpointReceiver {
     ///
     /// Does not wait for data to be received.
     pub fn try_fetch(&mut self) -> Result<Option<BytesMut>> {
+        Ok(self.try_fetch_identified()?.map(EndpointCompletion::into_data))
+    }
+
+    /// Harvest one receive completion without discarding its AIO identity.
+    pub fn try_fetch_identified(&mut self) -> Result<Option<EndpointCompletion>> {
         let io = self.0.get()?;
 
         let Some(comp) = io.aio.try_completed() else { return Ok(None) };
+        let operation = EndpointOperation(comp.id());
         let data = comp.result()?;
 
-        Ok(Some(data.try_into().unwrap()))
+        Ok(Some(EndpointCompletion { operation, data: data.try_into().unwrap() }))
     }
 
     /// Removes all buffers from the receive queue and clears all errors.

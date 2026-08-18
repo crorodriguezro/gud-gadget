@@ -206,18 +206,22 @@ impl FrameDumpMode {
 #[repr(u8)]
 enum BulkReceiveState {
     Idle = 0,
-    InFlight = 1,
-    Poisoned = 2,
-    ShuttingDown = 3,
+    Arming = 1,
+    InFlight = 2,
+    Processing = 3,
+    Poisoned = 4,
+    ShuttingDown = 5,
 }
 
 impl BulkReceiveState {
     fn from_raw(raw: u8) -> Self {
         match raw {
             0 => Self::Idle,
-            1 => Self::InFlight,
-            2 => Self::Poisoned,
-            3 => Self::ShuttingDown,
+            1 => Self::Arming,
+            2 => Self::InFlight,
+            3 => Self::Processing,
+            4 => Self::Poisoned,
+            5 => Self::ShuttingDown,
             _ => unreachable!("invalid bulk receive state {raw}"),
         }
     }
@@ -227,6 +231,56 @@ impl BulkReceiveState {
 struct BulkReceiveSession {
     state: Arc<AtomicU8>,
     deadline: Duration,
+}
+
+#[derive(Debug, Default)]
+struct ReceiveTelemetry {
+    set_buffer_seen: u64,
+    accepted: u64,
+    rejected_busy: u64,
+    submit_attempts: u64,
+    submit_accepted: u64,
+    completed: u64,
+    processing_started: u64,
+    processing_completed: u64,
+    processing_failed: u64,
+    poisoned: u64,
+    timed_out: u64,
+    last_sequence: u64,
+    validation_to_accept_ms_total: u128,
+    receive_ms_total: u128,
+    processing_ms_total: u128,
+    transaction_ms_total: u128,
+}
+
+impl ReceiveTelemetry {
+    fn emit(&self, session: &BulkReceiveSession, endpoint: &gud_gadget::PixelDataEndpoint) {
+        info!(
+            event = "production_receive_telemetry",
+            set_buffer_seen = self.set_buffer_seen,
+            accepted_transactions = self.accepted,
+            rejected_busy_transactions = self.rejected_busy,
+            aio_submission_attempts = self.submit_attempts,
+            aio_accepted = self.submit_accepted,
+            aio_completed = self.completed,
+            processing_started = self.processing_started,
+            processing_completed = self.processing_completed,
+            processing_failed = self.processing_failed,
+            poisoned_transactions = self.poisoned,
+            timed_out_transactions = self.timed_out,
+            currently_owned = session.current_state() != BulkReceiveState::Idle,
+            aggregate_state = ?session.current_state(),
+            aio_state = ?endpoint.exact_aio_state(),
+            current_or_last_sequence = endpoint.exact_aio_sequence(),
+            last_sequence = self.last_sequence,
+            validation_to_aio_accept_ms_total = self.validation_to_accept_ms_total,
+            aio_accept_to_status_readiness = "logged per transaction by status_after_arm",
+            receive_ms_total = self.receive_ms_total,
+            processing_ms_total = self.processing_ms_total,
+            complete_transaction_ms_total = self.transaction_ms_total,
+            "cumulative production exact-AIO lifecycle telemetry"
+        );
+    }
 }
 
 impl Default for BulkReceiveSession {
@@ -248,6 +302,7 @@ impl BulkReceiveSession {
         F: FnOnce() -> anyhow::Result<T>,
     {
         let started = self.begin_receive()?;
+        self.submission_accepted()?;
         self.finish_receive(started, receive())
     }
 
@@ -255,7 +310,7 @@ impl BulkReceiveSession {
         self.state
             .compare_exchange(
                 BulkReceiveState::Idle as u8,
-                BulkReceiveState::InFlight as u8,
+                BulkReceiveState::Arming as u8,
                 Ordering::AcqRel,
                 Ordering::Acquire,
             )
@@ -267,12 +322,34 @@ impl BulkReceiveSession {
             })?;
         debug!(
             event = "receiver_state_transition",
-            receiver_state = "InFlight",
+            receiver_state = "Arming",
             deadline_ms = self.deadline.as_millis(),
-            "FunctionFS bulk receive session entered InFlight"
+            "FunctionFS bulk receive session entered Arming"
         );
 
         Ok(std::time::Instant::now())
+    }
+
+    fn submission_accepted(&self) -> anyhow::Result<()> {
+        self.state
+            .compare_exchange(
+                BulkReceiveState::Arming as u8,
+                BulkReceiveState::InFlight as u8,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            )
+            .map_err(|raw| {
+                anyhow::anyhow!(
+                    "cannot record accepted FunctionFS AIO from {:?}",
+                    BulkReceiveState::from_raw(raw)
+                )
+            })?;
+        debug!(
+            event = "receiver_state_transition",
+            receiver_state = "InFlight",
+            "exact AIO accepted"
+        );
+        Ok(())
     }
 
     fn finish_receive<T>(
@@ -283,8 +360,7 @@ impl BulkReceiveSession {
         let elapsed = started.elapsed();
         match result {
             Err(err) => {
-                self.state
-                    .store(BulkReceiveState::Poisoned as u8, Ordering::Release);
+                self.poison();
                 tracing::error!(
                     event = "receiver_state_transition",
                     receiver_state = "Poisoned",
@@ -293,8 +369,7 @@ impl BulkReceiveSession {
                 Err(err)
             }
             Ok(_) if elapsed > self.deadline => {
-                self.state
-                    .store(BulkReceiveState::Poisoned as u8, Ordering::Release);
+                self.poison();
                 tracing::error!(
                     event = "receiver_state_transition",
                     receiver_state = "Poisoned",
@@ -313,7 +388,7 @@ impl BulkReceiveSession {
                 self.state
                     .compare_exchange(
                         BulkReceiveState::InFlight as u8,
-                        BulkReceiveState::Idle as u8,
+                        BulkReceiveState::Processing as u8,
                         Ordering::AcqRel,
                         Ordering::Acquire,
                     )
@@ -328,19 +403,46 @@ impl BulkReceiveSession {
                     })?;
                 debug!(
                     event = "receiver_state_transition",
-                    receiver_state = "Idle",
+                    receiver_state = "Processing",
                     elapsed_ms = elapsed.as_millis(),
-                    "FunctionFS bulk receive session returned to Idle"
+                    "FunctionFS bulk receive completed; processing retains ownership"
                 );
                 Ok(value)
             }
         }
     }
 
+    fn finish_processing(&self) -> anyhow::Result<()> {
+        self.state
+            .compare_exchange(
+                BulkReceiveState::Processing as u8,
+                BulkReceiveState::Idle as u8,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            )
+            .map_err(|raw| {
+                anyhow::anyhow!(
+                    "cannot finalize FunctionFS processing from {:?}",
+                    BulkReceiveState::from_raw(raw)
+                )
+            })?;
+        debug!(
+            event = "receiver_state_transition",
+            receiver_state = "Idle",
+            "processing finalized"
+        );
+        Ok(())
+    }
+
+    fn poison(&self) {
+        self.state
+            .store(BulkReceiveState::Poisoned as u8, Ordering::Release);
+    }
+
     fn cancel_receive_before_io(&self) -> anyhow::Result<()> {
         self.state
             .compare_exchange(
-                BulkReceiveState::InFlight as u8,
+                BulkReceiveState::Arming as u8,
                 BulkReceiveState::Idle as u8,
                 Ordering::AcqRel,
                 Ordering::Acquire,
@@ -376,18 +478,20 @@ impl BulkReceiveSession {
                         return Ok(());
                     }
                 }
-                BulkReceiveState::InFlight => {
+                state @ (BulkReceiveState::Arming
+                | BulkReceiveState::InFlight
+                | BulkReceiveState::Processing) => {
                     if self
                         .state
                         .compare_exchange(
-                            BulkReceiveState::InFlight as u8,
+                            state as u8,
                             BulkReceiveState::Poisoned as u8,
                             Ordering::AcqRel,
                             Ordering::Acquire,
                         )
                         .is_ok()
                     {
-                        return Err(BulkReceiveState::InFlight);
+                        return Err(state);
                     }
                 }
                 state @ (BulkReceiveState::Poisoned | BulkReceiveState::ShuttingDown) => {
@@ -2135,6 +2239,14 @@ fn main() -> anyhow::Result<()> {
     let test_compression_raw = var_os("GUD_TEST_COMPRESSION");
     let test_max_buffer_size_raw = var_os("GUD_TEST_MAX_BUFFER_SIZE");
     let test_prearm_once_raw = var_os("GUD_TEST_PREARM_ONCE_BYTES");
+    let receive_mode = var_os("GUD_RECEIVE_MODE")
+        .and_then(|value| value.into_string().ok())
+        .unwrap_or_else(|| "status-on-set-aio".to_string());
+    ensure!(
+        matches!(receive_mode.as_str(), "status-on-set-aio" | "blocking"),
+        "GUD_RECEIVE_MODE must be status-on-set-aio or blocking"
+    );
+    let aio_mode = receive_mode == "status-on-set-aio";
     let test_status_on_set_raw = var_os("GUD_TEST_STATUS_ON_SET_BYTES");
     let test_status_on_set_two_transactions_raw =
         var_os("GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES");
@@ -2193,7 +2305,22 @@ fn main() -> anyhow::Result<()> {
             "GUD_TEST_STATUS_ON_SET_BYTES requires GUD_TEST_COMPRESSION=none"
         );
     }
+    ensure!(
+        !(aio_mode && test_prearm_once_bytes.is_some()),
+        "status-on-set-aio cannot be combined with old blocking prearm mode"
+    );
+    ensure!(
+        !(!aio_mode && test_status_on_set_bytes.is_some()),
+        "blocking mode cannot be combined with STATUS_ON_SET diagnostics"
+    );
     gud_gadget::configure_status_on_set_diagnostic(status_on_set_transaction_limit);
+    info!(
+        event = "receive_mode",
+        receive_mode = receive_mode.as_str(),
+        status_on_set = aio_mode,
+        aio_queue_depth = if aio_mode { 1 } else { 0 },
+        "selected receive mode before UDC bind"
+    );
     if status_on_set_transaction_limit > 0 {
         info!(
             event = "status_on_set_diagnostic_configured",
@@ -2350,7 +2477,7 @@ fn main() -> anyhow::Result<()> {
             .and_then(|pixels| pixels.checked_mul(4))
             .context("serialized descriptor maximum buffer size overflow")?,
     );
-    let descriptor_flags = if test_status_on_set_bytes.is_some() {
+    let descriptor_flags = if aio_mode {
         GUD_DISPLAY_FLAG_STATUS_ON_SET
     } else {
         0
@@ -2674,6 +2801,7 @@ fn main() -> anyhow::Result<()> {
     let mut pending_exact_receive: Option<(gud_gadget::SetBuffer, std::time::Instant, u64)> = None;
     let mut ready_exact_payload: Option<(gud_gadget::SetBuffer, gud_gadget::PayloadStats)> = None;
     let mut status_on_set_cleanup_drain: Option<StatusOnSetCleanupDrain> = None;
+    let mut receive_telemetry = ReceiveTelemetry::default();
     let unbind_target: Arc<dyn GadgetUnbind> = reg.clone();
     match gadget_shutdown.publish(&unbind_target) {
         Ok(GadgetUnbindOutcome::Armed) => {}
@@ -2713,6 +2841,9 @@ fn main() -> anyhow::Result<()> {
         if let Some((info, started, _)) = pending_exact_receive.as_ref() {
             match gud_data.try_complete_exact_payload_aio(info.length as usize) {
                 Ok(Some(stats)) => {
+                    receive_telemetry.completed += 1;
+                    receive_telemetry.processing_started += 1;
+                    receive_telemetry.receive_ms_total += started.elapsed().as_millis();
                     let (info, started, _) = pending_exact_receive
                         .take()
                         .expect("pending exact receive disappeared");
@@ -2736,6 +2867,8 @@ fn main() -> anyhow::Result<()> {
                         .take()
                         .expect("timed-out exact receive disappeared");
                     gud_data.poison_exact_payload_aio("missing completion timeout");
+                    receive_telemetry.timed_out += 1;
+                    receive_telemetry.poisoned += 1;
                     let _ = bulk_receive_session.finish_receive::<()>(
                         started,
                         Err(anyhow::anyhow!(
@@ -2749,6 +2882,7 @@ fn main() -> anyhow::Result<()> {
                         .take()
                         .expect("invalid exact receive disappeared");
                     gud_data.poison_exact_payload_aio("invalid AIO completion");
+                    receive_telemetry.poisoned += 1;
                     let _ = bulk_receive_session.finish_receive::<()>(started, Err(err));
                     continue;
                 }
@@ -3784,6 +3918,11 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                     Event::Buffer(info) => {
+                        // Completion processing is re-dispatched as Buffer; only EP0 input is
+                        // an actual SET_BUFFER admission attempt.
+                        if ready_payload_stats.is_none() {
+                            receive_telemetry.set_buffer_seen += 1;
+                        }
                         let frame_start = std::time::Instant::now();
                         tracing::debug!(
                             "Buffer: x={} y={} {}x{} len={} compression={}",
@@ -3800,13 +3939,14 @@ fn main() -> anyhow::Result<()> {
                             (info.x + info.width) as u16,
                             (info.y + info.height) as u16,
                         );
-                        let receive_result = if test_status_on_set_bytes.is_some() {
+                        let receive_result = if aio_mode {
                             if let Some(stats) = ready_payload_stats.take() {
                                 Ok(stats)
                             } else {
                                 let started = bulk_receive_session
                                     .begin_receive()
-                                    .context("enter InFlight before exact AIO submission")?;
+                                    .context("enter Arming before exact AIO submission")?;
+                                receive_telemetry.submit_attempts += 1;
                                 let transaction_seq = match gud_data.arm_exact_payload_aio(&info) {
                                     Ok(sequence) => sequence,
                                     Err(err) => {
@@ -3820,6 +3960,14 @@ fn main() -> anyhow::Result<()> {
                                         continue;
                                     }
                                 };
+                                receive_telemetry.accepted += 1;
+                                receive_telemetry.submit_accepted += 1;
+                                receive_telemetry.last_sequence = transaction_seq;
+                                receive_telemetry.validation_to_accept_ms_total +=
+                                    frame_start.elapsed().as_millis();
+                                bulk_receive_session
+                                    .submission_accepted()
+                                    .context("record exact AIO acceptance")?;
                                 let transaction =
                                     match gud_gadget::begin_status_on_set_diagnostic_transaction() {
                                         Ok(transaction) => transaction,
@@ -3836,12 +3984,16 @@ fn main() -> anyhow::Result<()> {
                                             continue;
                                         }
                                     };
-                                ensure!(
-                                    u64::from(transaction) == transaction_seq,
-                                    "STATUS_ON_SET transaction number {transaction} does not match AIO sequence {transaction_seq}"
-                                );
-                                status_on_set_cleanup_drain =
-                                    Some(StatusOnSetCleanupDrain::new(transaction));
+                                if status_on_set_transaction_limit > 0 {
+                                    ensure!(
+                                        u64::from(transaction) == transaction_seq,
+                                        "STATUS_ON_SET transaction number {transaction} does not match AIO sequence {transaction_seq}"
+                                    );
+                                }
+                                if status_on_set_transaction_limit > 0 {
+                                    status_on_set_cleanup_drain =
+                                        Some(StatusOnSetCleanupDrain::new(transaction));
+                                }
                                 tracing::info!(
                                     event = "status_on_set_transaction_armed",
                                     transaction,
@@ -3907,11 +4059,19 @@ fn main() -> anyhow::Result<()> {
                         ) {
                             Ok(result) => result,
                             Err(err) => {
+                                if aio_mode {
+                                    gud_data
+                                        .poison_exact_payload_aio("payload post-processing failed");
+                                    bulk_receive_session.poison();
+                                    receive_telemetry.processing_failed += 1;
+                                    receive_telemetry.poisoned += 1;
+                                    receive_telemetry.emit(&bulk_receive_session, &gud_data);
+                                }
                                 tracing::error!(
                                     error = ?err,
                                     error_chain = %format_args!("{err:#}"),
-                                    "Failed to post-process received buffer payload; FunctionFS \
-                                     receive session remains idle"
+                                    "Failed to post-process received buffer payload; production \
+                                     exact-AIO session is contained"
                                 );
                                 continue;
                             }
@@ -3971,6 +4131,12 @@ fn main() -> anyhow::Result<()> {
                                              STATE_COMMIT"
                                         );
                                     } else if let Err(err) = shadow.ensure_size(identity) {
+                                        if aio_mode {
+                                            gud_data.poison_exact_payload_aio(
+                                                "shadow allocation failed during processing",
+                                            );
+                                            bulk_receive_session.poison();
+                                        }
                                         tracing::error!(
                                             "Failed to activate source shadow framebuffer: {}",
                                             err
@@ -3989,6 +4155,10 @@ fn main() -> anyhow::Result<()> {
                                             copy_ms = stats.copy_ms;
                                         }
                                         Err(err) => {
+                                            if aio_mode {
+                                                gud_data.poison_exact_payload_aio("shadow framebuffer copy failed during processing");
+                                                bulk_receive_session.poison();
+                                            }
                                             tracing::error!(
                                                 "Failed to copy buffer to shadow framebuffer: {}",
                                                 err
@@ -4013,6 +4183,12 @@ fn main() -> anyhow::Result<()> {
                                             true
                                         }
                                         Err(err) => {
+                                            if aio_mode {
+                                                gud_data.poison_exact_payload_aio(
+                                                    "shadow scaling failed during processing",
+                                                );
+                                                bulk_receive_session.poison();
+                                            }
                                             tracing::error!(
                                                 "Failed to scale shadow framebuffer to panel: {}",
                                                 err
@@ -4034,6 +4210,12 @@ fn main() -> anyhow::Result<()> {
                                             true
                                         }
                                         Err(err) => {
+                                            if aio_mode {
+                                                gud_data.poison_exact_payload_aio(
+                                                    "framebuffer copy failed during processing",
+                                                );
+                                                bulk_receive_session.poison();
+                                            }
                                             tracing::error!(
                                                 "Failed to copy buffer to framebuffer: {}",
                                                 err
@@ -4061,6 +4243,10 @@ fn main() -> anyhow::Result<()> {
                                 ) {
                                     Ok(()) => true,
                                     Err(err) => {
+                                        if aio_mode {
+                                            gud_data.poison_exact_payload_aio("diagnostic framebuffer fill failed during processing");
+                                            bulk_receive_session.poison();
+                                        }
                                         tracing::error!(
                                             "Failed to render diagnostic pattern for update rect: {}",
                                             err
@@ -4111,6 +4297,12 @@ fn main() -> anyhow::Result<()> {
                                         );
                                     }
                                     Err(err) => {
+                                        if aio_mode {
+                                            gud_data.poison_exact_payload_aio(
+                                                "framebuffer presentation failed during processing",
+                                            );
+                                            bulk_receive_session.poison();
+                                        }
                                         tracing::error!(
                                             "Failed to present scaled framebuffer: {}",
                                             err
@@ -4194,6 +4386,12 @@ fn main() -> anyhow::Result<()> {
                         );
 
                         if let Some(status_on_set_bytes) = test_status_on_set_bytes {
+                            gud_data.finish_exact_payload_processing().context(
+                                "return diagnostic exact AIO transaction to Idle after framebuffer processing",
+                            )?;
+                            bulk_receive_session.finish_processing().context(
+                                "return diagnostic receive session to Idle after framebuffer processing",
+                            )?;
                             let drain = status_on_set_cleanup_drain.as_mut().expect(
                                 "STATUS_ON_SET diagnostic payload completed without a status drain",
                             );
@@ -4249,6 +4447,23 @@ fn main() -> anyhow::Result<()> {
                                 status_on_set_cleanup_drain = None;
                             }
                             continue;
+                        }
+
+                        if aio_mode {
+                            gud_data.finish_exact_payload_processing().context(
+                                "return exact AIO transaction to Idle after framebuffer processing",
+                            )?;
+                            bulk_receive_session.finish_processing().context(
+                                "return aggregate receive session to Idle after framebuffer processing",
+                            )?;
+                            gud_gadget::finish_status_on_set_diagnostic_transaction()
+                                .context("return production exact AIO admission guard to Idle")?;
+                            receive_telemetry.processing_completed += 1;
+                            receive_telemetry.processing_ms_total +=
+                                frame_start.elapsed().as_millis();
+                            receive_telemetry.transaction_ms_total +=
+                                frame_start.elapsed().as_millis();
+                            receive_telemetry.emit(&bulk_receive_session, &gud_data);
                         }
 
                         if matches!(pattern_mode, PatternMode::Off) {
@@ -4879,7 +5094,7 @@ mod tests {
     }
 
     #[test]
-    fn slow_failed_post_read_work_does_not_poison_idle_session() {
+    fn processing_failure_requires_containment_and_refuses_shutdown() {
         let session = BulkReceiveSession::default();
         session.receive(|| Ok(())).unwrap();
 
@@ -4888,8 +5103,9 @@ mod tests {
             Err(anyhow::anyhow!("injected post-read failure"));
 
         assert!(post_read_result.is_err());
-        assert_eq!(session.current_state(), BulkReceiveState::Idle);
-        assert!(session.begin_shutdown().is_ok());
+        assert_eq!(session.current_state(), BulkReceiveState::Processing);
+        assert_eq!(session.begin_shutdown(), Err(BulkReceiveState::Processing));
+        assert_eq!(session.current_state(), BulkReceiveState::Poisoned);
     }
 
     #[test]

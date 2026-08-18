@@ -39,9 +39,14 @@ multi-frame qualification. Remaining P0 work is tracked by the roadmap:
   qualified blocking receiver as a separate detached/Idle rollback through
   E1-T06. Spec:
   `../gud/docs/superpowers/specs/2026-08-17-e1-t03-production-receive-architecture-design.md`;
-- `E1-T04`: implement the chosen long-lived receive path, including aggregate
-  processing ownership, effective queue depth one, unique completion
-  correlation, and the minimal vendored FunctionFS/AIO semantic audit;
+- `E1-T04`: **verified**. The production candidate uses `GUD_RECEIVE_MODE`
+  with `status-on-set-aio` as its default, aggregate
+  `Idle -> Arming -> InFlight -> Processing -> Idle` ownership, queue depth
+  one, operation-identity correlation, and the semantic audit/runbook in
+  `docs/e1-t04-production-aio-runbook.md`. The OnePlus 6/Pi Zero 2 W gate
+  completed 100 ordered exact 12,800-byte transactions with final aggregate
+  Idle and no poison, timeout, host failure, DWC2 anomaly, or kernel fault.
+  Evidence: `evidence/functionfs-status-on-set-e1-t04-hs-rerun-20260818T022645Z/`;
 - `E1-T05`: pass disconnect, suspend, timeout, and failure lifecycle gates;
 - `E1-T06`: pass the sustained transport soak.
 
