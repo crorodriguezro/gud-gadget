@@ -52,6 +52,80 @@ const BULK_RECEIVE_DEADLINE: Duration = Duration::from_millis(1_000);
 const STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE: Duration = Duration::from_millis(1_000);
 const STATUS_ON_SET_CLEANUP_STATUS_COUNT: u8 = 2;
 const STATUS_ON_SET_DIAGNOSTIC_TRANSACTION_LIMIT: u8 = 2;
+const E1_T05_PROCESSING_BARRIER_DEADLINE: Duration = Duration::from_secs(30);
+
+#[derive(Debug)]
+struct E1T05ProcessingBarrier {
+    directory: PathBuf,
+    used: bool,
+}
+
+impl E1T05ProcessingBarrier {
+    fn from_env() -> anyhow::Result<Option<Self>> {
+        let requested = var_os("GUD_TEST_E1_T05_PROCESSING_BARRIER");
+        let directory = var_os("GUD_TEST_E1_T05_PROCESSING_BARRIER_DIR");
+        ensure!(
+            requested.is_some() == directory.is_some(),
+            "GUD_TEST_E1_T05_PROCESSING_BARRIER and GUD_TEST_E1_T05_PROCESSING_BARRIER_DIR must be set together"
+        );
+        let Some(requested) = requested else {
+            return Ok(None);
+        };
+        ensure!(
+            cfg!(debug_assertions),
+            "GUD_TEST_E1_T05_PROCESSING_BARRIER is unavailable in release builds"
+        );
+        ensure!(
+            requested == "processing-before-idle",
+            "GUD_TEST_E1_T05_PROCESSING_BARRIER must be processing-before-idle"
+        );
+        Ok(Some(Self {
+            directory: PathBuf::from(directory.expect("paired barrier directory")),
+            used: false,
+        }))
+    }
+
+    /// Blocks at one declared Processing boundary without cancelling the
+    /// accepted request. The release marker injects one lifecycle observation.
+    fn inject_once(&mut self, sequence: u64) -> anyhow::Result<bool> {
+        if self.used {
+            return Ok(false);
+        }
+        self.used = true;
+        std::fs::create_dir_all(&self.directory).context("create E1-T05 barrier directory")?;
+        let ready = self
+            .directory
+            .join(format!("processing-ready-seq-{sequence}"));
+        let release = self
+            .directory
+            .join(format!("processing-release-seq-{sequence}"));
+        std::fs::write(&ready, b"ready\n").context("publish E1-T05 Processing barrier")?;
+        tracing::warn!(
+            event = "e1_t05_processing_barrier_entered",
+            transaction_seq = sequence,
+            ready = %ready.display(),
+            release = %release.display(),
+            deadline_ms = E1_T05_PROCESSING_BARRIER_DEADLINE.as_millis(),
+            "TEST-ONLY debug Processing barrier entered"
+        );
+        let deadline = Instant::now() + E1_T05_PROCESSING_BARRIER_DEADLINE;
+        while Instant::now() < deadline {
+            if release.exists() {
+                tracing::warn!(
+                    event = "e1_t05_processing_barrier_injected",
+                    transaction_seq = sequence,
+                    "TEST-ONLY debug Processing lifecycle injection released"
+                );
+                return Ok(true);
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        anyhow::bail!(
+            "E1-T05 Processing barrier timed out after {} ms without release marker",
+            E1_T05_PROCESSING_BARRIER_DEADLINE.as_millis()
+        )
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum StatusOnSetCleanupPhase {
@@ -246,6 +320,10 @@ struct ReceiveTelemetry {
     processing_failed: u64,
     poisoned: u64,
     timed_out: u64,
+    lifecycle_events: u64,
+    cleanup_attempts: u64,
+    restart_attempts: u64,
+    unsafe_teardown_suppressed: u64,
     last_sequence: u64,
     validation_to_accept_ms_total: u128,
     receive_ms_total: u128,
@@ -268,10 +346,15 @@ impl ReceiveTelemetry {
             processing_failed = self.processing_failed,
             poisoned_transactions = self.poisoned,
             timed_out_transactions = self.timed_out,
+            lifecycle_events = self.lifecycle_events,
+            cleanup_attempts = self.cleanup_attempts,
+            restart_attempts = self.restart_attempts,
+            unsafe_teardown_suppressed = self.unsafe_teardown_suppressed,
             currently_owned = session.current_state() != BulkReceiveState::Idle,
             aggregate_state = ?session.current_state(),
             aio_state = ?endpoint.exact_aio_state(),
             current_or_last_sequence = endpoint.exact_aio_sequence(),
+            accepted_operation_id = endpoint.exact_aio_operation_id(),
             last_sequence = self.last_sequence,
             validation_to_aio_accept_ms_total = self.validation_to_accept_ms_total,
             aio_accept_to_status_readiness = "logged per transaction by status_after_arm",
@@ -461,6 +544,35 @@ impl BulkReceiveSession {
         Ok(())
     }
 
+    /// A lifecycle event cannot prove an Arming request was never accepted.
+    /// Ordinary teardown is permitted only when the session was already Idle.
+    fn observe_lifecycle(&self) -> Result<(), BulkReceiveState> {
+        loop {
+            match self.current_state() {
+                BulkReceiveState::Idle => return Ok(()),
+                state @ (BulkReceiveState::Arming
+                | BulkReceiveState::InFlight
+                | BulkReceiveState::Processing) => {
+                    if self
+                        .state
+                        .compare_exchange(
+                            state as u8,
+                            BulkReceiveState::Poisoned as u8,
+                            Ordering::AcqRel,
+                            Ordering::Acquire,
+                        )
+                        .is_ok()
+                    {
+                        return Err(state);
+                    }
+                }
+                state @ (BulkReceiveState::Poisoned | BulkReceiveState::ShuttingDown) => {
+                    return Err(state);
+                }
+            }
+        }
+    }
+
     fn begin_shutdown(&self) -> Result<(), BulkReceiveState> {
         loop {
             match self.current_state() {
@@ -503,6 +615,65 @@ impl BulkReceiveSession {
 
     fn current_state(&self) -> BulkReceiveState {
         BulkReceiveState::from_raw(self.state.load(Ordering::Acquire))
+    }
+}
+
+fn lifecycle_event_name(reason: ProtocolInvalidationReason) -> &'static str {
+    match reason {
+        ProtocolInvalidationReason::InvalidStateCheck => "invalid-state-check",
+        ProtocolInvalidationReason::CommitWithoutPending => "commit-without-pending",
+        ProtocolInvalidationReason::Bind => "bind",
+        ProtocolInvalidationReason::Enable => "enable",
+        ProtocolInvalidationReason::Suspend => "functionfs-suspend",
+        ProtocolInvalidationReason::Resume => "functionfs-resume",
+        ProtocolInvalidationReason::Disconnected => "functionfs-disable-disconnect",
+    }
+}
+
+/// Returns true only when the lifecycle event observed proven Idle ownership.
+fn observe_aio_lifecycle(
+    reason: ProtocolInvalidationReason,
+    session: &BulkReceiveSession,
+    endpoint: &mut gud_gadget::PixelDataEndpoint,
+    telemetry: &mut ReceiveTelemetry,
+) -> bool {
+    telemetry.lifecycle_events += 1;
+    let observed_state = session.current_state();
+    let lifecycle_event = lifecycle_event_name(reason);
+    match session.observe_lifecycle() {
+        Ok(()) => {
+            info!(
+                event = "e1_t05_lifecycle_observed",
+                lifecycle_event,
+                lifecycle_event_state = ?observed_state,
+                aggregate_state = ?session.current_state(),
+                aio_state = ?endpoint.exact_aio_state(),
+                transaction_seq = endpoint.exact_aio_sequence(),
+                accepted_operation_id = endpoint.exact_aio_operation_id(),
+                currently_owned = false,
+                "E1-T05 lifecycle event observed from proven Idle ownership"
+            );
+            true
+        }
+        Err(unsafe_state) => {
+            endpoint.poison_exact_payload_aio("lifecycle event after non-Idle ownership");
+            telemetry.poisoned += 1;
+            telemetry.unsafe_teardown_suppressed += 1;
+            tracing::error!(
+                event = "e1_t05_lifecycle_containment",
+                lifecycle_event,
+                lifecycle_event_state = ?unsafe_state,
+                aggregate_state = ?session.current_state(),
+                aio_state = ?endpoint.exact_aio_state(),
+                transaction_seq = endpoint.exact_aio_sequence(),
+                accepted_operation_id = endpoint.exact_aio_operation_id(),
+                currently_owned = true,
+                unsafe_teardown_suppressed = true,
+                "E1-T05 contained lifecycle event; do not cancel, close, unbind, restart, or fall back"
+            );
+            telemetry.emit(session, endpoint);
+            false
+        }
     }
 }
 
@@ -2252,6 +2423,7 @@ fn main() -> anyhow::Result<()> {
         var_os("GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES");
     let test_output_mode_raw = var_os("GUD_TEST_OUTPUT_MODE");
     let test_dynamic_mode_match_raw = var_os("GUD_TEST_DYNAMIC_MODE_MATCH");
+    let mut e1_t05_processing_barrier = E1T05ProcessingBarrier::from_env()?;
     let descriptor_compression = parse_test_compression(test_compression_raw.as_deref())?;
     let descriptor_max_buffer_size =
         parse_test_max_buffer_size(test_max_buffer_size_raw.as_deref())?;
@@ -2327,6 +2499,14 @@ fn main() -> anyhow::Result<()> {
             transaction_limit = status_on_set_transaction_limit,
             expected_bytes = test_status_on_set_bytes,
             "configured bounded STATUS_ON_SET diagnostic"
+        );
+    }
+    if let Some(barrier) = e1_t05_processing_barrier.as_ref() {
+        warn!(
+            event = "e1_t05_processing_barrier_configured",
+            directory = %barrier.directory.display(),
+            deadline_ms = E1_T05_PROCESSING_BARRIER_DEADLINE.as_millis(),
+            "TEST-ONLY debug E1-T05 Processing barrier enabled"
         );
     }
     let (mut gud_data, gud_data_ep) =
@@ -3729,6 +3909,16 @@ fn main() -> anyhow::Result<()> {
                             | ProtocolInvalidationReason::Suspend
                             | ProtocolInvalidationReason::Resume),
                     } => {
+                        if aio_mode
+                            && !observe_aio_lifecycle(
+                                reason,
+                                &bulk_receive_session,
+                                &mut gud_data,
+                                &mut receive_telemetry,
+                            )
+                        {
+                            continue;
+                        }
                         let diagnostic_guard = gud_gadget::status_on_set_diagnostic_guard_state();
                         if diagnostic_guard.transaction_limit > 0
                             && diagnostic_guard.started_transactions > 0
@@ -3833,6 +4023,16 @@ fn main() -> anyhow::Result<()> {
                         generation,
                         reason: ProtocolInvalidationReason::Disconnected,
                     } => {
+                        if aio_mode
+                            && !observe_aio_lifecycle(
+                                ProtocolInvalidationReason::Disconnected,
+                                &bulk_receive_session,
+                                &mut gud_data,
+                                &mut receive_telemetry,
+                            )
+                        {
+                            continue;
+                        }
                         let diagnostic_guard = gud_gadget::status_on_set_diagnostic_guard_state();
                         if diagnostic_guard.transaction_limit > 0
                             && diagnostic_guard.started_transactions > 0
@@ -4450,6 +4650,33 @@ fn main() -> anyhow::Result<()> {
                         }
 
                         if aio_mode {
+                            if let Some(barrier) = e1_t05_processing_barrier.as_mut() {
+                                match barrier.inject_once(gud_data.exact_aio_sequence()) {
+                                    Ok(true) => {
+                                        let _ = observe_aio_lifecycle(
+                                            ProtocolInvalidationReason::Disconnected,
+                                            &bulk_receive_session,
+                                            &mut gud_data,
+                                            &mut receive_telemetry,
+                                        );
+                                        continue;
+                                    }
+                                    Ok(false) => {}
+                                    Err(err) => {
+                                        gud_data.poison_exact_payload_aio(
+                                            "E1-T05 Processing barrier timed out",
+                                        );
+                                        bulk_receive_session.poison();
+                                        receive_telemetry.poisoned += 1;
+                                        tracing::error!(
+                                            event = "e1_t05_processing_barrier_failed",
+                                            error = %format_args!("{err:#}"),
+                                            "TEST-ONLY Processing barrier failed; session contained"
+                                        );
+                                        continue;
+                                    }
+                                }
+                            }
                             gud_data.finish_exact_payload_processing().context(
                                 "return exact AIO transaction to Idle after framebuffer processing",
                             )?;
@@ -4511,20 +4738,34 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    if should_restart_after_clean_detach(restart_requested, !running.load(Ordering::Acquire)) {
-        if let Err(state) = bulk_receive_session.begin_shutdown() {
+    receive_telemetry.cleanup_attempts += 1;
+    match bulk_receive_session.begin_shutdown() {
+        Ok(()) => info!("Idle FunctionFS bulk session claimed for safe detach teardown"),
+        Err(BulkReceiveState::ShuttingDown) => {
+            info!("Idle FunctionFS bulk session was already claimed for safe teardown")
+        }
+        Err(state) => {
+            receive_telemetry.unsafe_teardown_suppressed += 1;
             tracing::error!(
+                event = "e1_t05_teardown_suppressed",
                 ?state,
-                "Refusing automatic detach teardown because the FunctionFS bulk session is not \
-                 idle; do not stop, restart, reboot, or shut down this service instance, recover \
-                 with a physical/hardware reset"
+                aggregate_state = ?bulk_receive_session.current_state(),
+                aio_state = ?gud_data.exact_aio_state(),
+                transaction_seq = gud_data.exact_aio_sequence(),
+                accepted_operation_id = gud_data.exact_aio_operation_id(),
+                unsafe_teardown_suppressed = true,
+                "Refusing teardown because ownership is not proven Idle; use physical containment"
             );
+            receive_telemetry.emit(&bulk_receive_session, &gud_data);
             loop {
                 std::thread::sleep(Duration::from_secs(1));
             }
         }
-        info!("Idle FunctionFS bulk session claimed for safe detach teardown");
     }
+    if restart_requested {
+        receive_telemetry.restart_attempts += 1;
+    }
+    receive_telemetry.emit(&bulk_receive_session, &gud_data);
 
     tracing::info!("Shutting down");
 
@@ -5106,6 +5347,39 @@ mod tests {
         assert_eq!(session.current_state(), BulkReceiveState::Processing);
         assert_eq!(session.begin_shutdown(), Err(BulkReceiveState::Processing));
         assert_eq!(session.current_state(), BulkReceiveState::Poisoned);
+    }
+
+    #[test]
+    fn idle_lifecycle_observation_permits_cleanup() {
+        let session = BulkReceiveSession::default();
+
+        assert_eq!(session.observe_lifecycle(), Ok(()));
+        assert_eq!(session.current_state(), BulkReceiveState::Idle);
+        assert!(session.begin_shutdown().is_ok());
+    }
+
+    #[test]
+    fn arming_lifecycle_observation_is_ambiguous_and_contained() {
+        let session = BulkReceiveSession::default();
+        session.begin_receive().unwrap();
+
+        assert_eq!(session.observe_lifecycle(), Err(BulkReceiveState::Arming));
+        assert_eq!(session.current_state(), BulkReceiveState::Poisoned);
+        assert_eq!(session.begin_shutdown(), Err(BulkReceiveState::Poisoned));
+    }
+
+    #[test]
+    fn processing_lifecycle_observation_is_contained() {
+        let session = BulkReceiveSession::default();
+        session.receive(|| Ok(())).unwrap();
+        assert_eq!(session.current_state(), BulkReceiveState::Processing);
+
+        assert_eq!(
+            session.observe_lifecycle(),
+            Err(BulkReceiveState::Processing)
+        );
+        assert_eq!(session.current_state(), BulkReceiveState::Poisoned);
+        assert_eq!(session.begin_shutdown(), Err(BulkReceiveState::Poisoned));
     }
 
     #[test]

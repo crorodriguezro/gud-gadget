@@ -50,9 +50,13 @@ multi-frame qualification. Remaining P0 work is tracked by the roadmap:
   `evidence/functionfs-status-on-set-e1-t04-clean-source-passing-rerun-20260818T030651Z/`.
   The retained clean-source diagnostic attempt under
   `evidence/functionfs-status-on-set-e1-t04-clean-source-rerun-20260818T025417Z/`
-  identified and led to the host XRGB8888 stage-format fix. E1-T05 remains
-  planned;
-- `E1-T05`: pass disconnect, suspend, timeout, and failure lifecycle gates;
+   identified and led to the host XRGB8888 stage-format fix;
+- `E1-T05`: **blocked**. The lifecycle ownership matrix and offline containment
+  coverage are defined in `docs/e1-t05-lifecycle-matrix-runbook.md`. The
+  2026-08-18 hardware preflight reached both targets but did not start a case:
+  T05 source was uncommitted, worktrees were dirty, and the required OnePlus
+  sudo credential was unavailable. Hardware normal-reconnect and controlled
+  fault evidence remain outstanding;
 - `E1-T06`: pass the sustained transport soak.
 
 Keep the 12,800-byte actual-payload operating constraint through these gates.

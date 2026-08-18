@@ -1740,6 +1740,11 @@ impl PixelDataEndpoint {
         self.exact_aio.sequence
     }
 
+    /// The accepted AIO operation remains owned until processing reaches Idle.
+    pub fn exact_aio_operation_id(&self) -> Option<u64> {
+        self.exact_aio.operation.map(|operation| operation.id())
+    }
+
     pub fn exact_aio_elapsed(&self) -> Option<std::time::Duration> {
         self.exact_aio.started.map(|started| started.elapsed())
     }
