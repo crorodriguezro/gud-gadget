@@ -74,22 +74,19 @@ source commits and hashes, artifact hashes, exact environment, phone logs, Pi
 userspace and kernel logs, sequence/state/counter summary, and final Idle
 state. Stop and physically contain on any stop condition.
 
-## Result And Reproducibility Status
+## Result
 
-The bounded gate passed on the OnePlus 6 and Pi Zero 2 W with 100 ordered,
-uncompressed 12,800-byte XRGB8888 transactions. The accepted transport result
-is retained in
-`evidence/functionfs-status-on-set-e1-t04-hs-rerun-20260818T022645Z/`:
-100 AIO acceptances, exact completions, Processing finalizations, and ordered
-sequence IDs 1 through 100, ending at aggregate/AIO Idle with zero Busy,
-timeout, processing failure, poison, `-71`, DWC2 anomaly, kernel fault, or
-pstore record.
+The clean-source bounded gate passed on the OnePlus 6 and Pi Zero 2 W with 100
+ordered, uncompressed 12,800-byte XRGB8888 transactions. Canonical evidence:
+`evidence/functionfs-status-on-set-e1-t04-clean-source-passing-rerun-20260818T030651Z/`.
+It records exact source commits and rebuilt artifact hashes, 100 AIO
+acceptances, exact completions, Processing finalizations, sequence IDs 1
+through 100, final aggregate/AIO Idle, and zero Busy, timeout, processing
+failure, poison, `-71`, DWC2 anomaly, kernel fault, or pstore record.
 
-The later clean-source rerun at final commits `6aea5e7` and `6468a43` failed
-before any `SET_BUFFER` or accepted I/O because its clean rebuilt host
-`gud-kms-stage` returned `drmModeAtomicCommit(...): Invalid argument` on the
-first transaction. Evidence is
+The first clean rerun remains historical diagnostic evidence:
 `evidence/functionfs-status-on-set-e1-t04-clean-source-rerun-20260818T025417Z/`.
-The accepted result is therefore not yet cleanly reproducible without
-qualification. Do not start E1-T05 until the host-stage artifact difference is
-explained and this unchanged gate passes from exact clean-source artifacts.
+It found that the committed host stage tool requested RGB565 while the
+production gadget advertises XRGB8888. Commit `bde330d` aligned the stage tool
+format; the unchanged gate then passed from clean source. E1-T05 is still
+planned and has not started.

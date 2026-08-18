@@ -1,0 +1,4 @@
+active
+configured
+2674 /home/cristian/gud-drm /dev/dri/card0
+Aug 18 04:07:13 raspberrypi gud-drm[2674]: 2026-08-18T03:07:13.822945Z  INFO gud_drm: cumulative production exact-AIO lifecycle telemetry event="production_receive_telemetry" set_buffer_seen=100 accepted_transactions=100 rejected_busy_transactions=0 aio_submission_attempts=100 aio_accepted=100 aio_completed=100 processing_started=100 processing_completed=100 processing_failed=0 poisoned_transactions=0 timed_out_transactions=0 currently_owned=false aggregate_state=Idle aio_state=Idle current_or_last_sequence=100 last_sequence=100 validation_to_aio_accept_ms_total=0 aio_accept_to_status_readiness="logged per transaction by status_after_arm" receive_ms_total=196 processing_ms_total=0 complete_transaction_ms_total=0

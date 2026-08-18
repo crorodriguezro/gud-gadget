@@ -1,0 +1,9 @@
+gud_gadget_worktree=/tmp/opencode/gud-gadget-e1-t04-clean
+gud_gadget_commit=6aea5e73865f3a4cb449c0f817cadf752d721f65
+gud_gadget_status_before_build=clean
+gud_worktree=/tmp/opencode/gud-e1-t04-clean-fixed
+gud_commit=bde330da2c5133c80d8be36fdf3e88c5a5386bb8
+gud_status_before_build=clean
+external_target_manifest_sha256=c05195e219417be587d682dfd857258322e268f7e84b6ed8dfaf7a3b8a41587a
+host_stage_format=XRGB8888
+note=The only ignored host output after build was gud-kms-stage itself.

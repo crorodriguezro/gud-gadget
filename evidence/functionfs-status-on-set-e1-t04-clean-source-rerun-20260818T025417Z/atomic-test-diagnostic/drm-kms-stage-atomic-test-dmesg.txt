@@ -1,0 +1,14 @@
+[sudo] password for phablet: [36696.147359] usbcore: deregistering interface driver gud_xdisp_lz4_12800
+[36696.147483] gud_xdisp_lz4_12800 1-1.3:1.0: GUD disconnected
+[36696.200342] gud_xdisp_lz4_12800 1-1.3:1.0: GUD v1 bulk-out=0x01 buffer=12800 compression=0x00 width=640-1920 height=400-1080
+[36696.200382] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP diagnostic variant: compression=0x00 actual bulk payload cap=12800
+[36696.209233] gud_xdisp_lz4_12800 1-1.3:1.0: GUD probe complete for 1d50:614d
+[36696.209758] usbcore: registered new interface driver gud_xdisp_lz4_12800
+[36698.802060] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36698.802111] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36698.802134] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36698.802149] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36698.802168] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36698.802183] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36698.805139] gud_xdisp_lz4_12800 1-1.3:1.0: GUD request 0x61 status: 0x04
+[36698.805160] gud_xdisp_lz4_12800 1-1.3:1.0: GUD state check failed: -22

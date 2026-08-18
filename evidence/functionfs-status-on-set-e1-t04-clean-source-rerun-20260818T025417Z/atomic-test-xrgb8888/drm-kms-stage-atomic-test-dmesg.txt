@@ -1,0 +1,15 @@
+[sudo] password for phablet: [36723.384753] usbcore: deregistering interface driver gud_xdisp_lz4_12800
+[36723.384863] gud_xdisp_lz4_12800 1-1.3:1.0: GUD disconnected
+[36723.437439] gud_xdisp_lz4_12800 1-1.3:1.0: GUD v1 bulk-out=0x01 buffer=12800 compression=0x00 width=640-1920 height=400-1080
+[36723.437476] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP diagnostic variant: compression=0x00 actual bulk payload cap=12800
+[36723.440654] gud_xdisp_lz4_12800 1-1.3:1.0: GUD probe complete for 1d50:614d
+[36723.440789] usbcore: registered new interface driver gud_xdisp_lz4_12800
+[36724.673131] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36724.924036] healthd: battery l=100 v=4288 t=22.7 h=2 st=5 c=-24 fc=2878000 cc=0 chg=
+[36725.995369] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36725.995421] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36725.995441] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36725.995458] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36725.995474] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36725.995489] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36725.997447] R0: [NetworkManager][705224375137] [03:06:01.731185]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected

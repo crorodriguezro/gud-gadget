@@ -1,0 +1,1301 @@
+[36723.384753] usbcore: deregistering interface driver gud_xdisp_lz4_12800
+[36723.384863] gud_xdisp_lz4_12800 1-1.3:1.0: GUD disconnected
+[36723.437439] gud_xdisp_lz4_12800 1-1.3:1.0: GUD v1 bulk-out=0x01 buffer=12800 compression=0x00 width=640-1920 height=400-1080
+[36723.437476] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP diagnostic variant: compression=0x00 actual bulk payload cap=12800
+[36723.440654] gud_xdisp_lz4_12800 1-1.3:1.0: GUD probe complete for 1d50:614d
+[36723.440789] usbcore: registered new interface driver gud_xdisp_lz4_12800
+[36724.673131] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36724.924036] healthd: battery l=100 v=4288 t=22.7 h=2 st=5 c=-24 fc=2878000 cc=0 chg=
+[36725.995369] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36725.995421] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36725.995441] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36725.995458] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36725.995474] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36725.995489] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36725.997447] R0: [NetworkManager][705224375137] [03:06:01.731185]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36728.802002] R0: [cds_mc_thread][705278222404] [03:06:04.535731]  wlan: [3369:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[36728.820624] R0: [cds_mc_thread][705278580008] [03:06:04.554356]  wlan: [3369:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[36728.843876] R0: [cds_mc_thread][705279026377] [03:06:04.577604]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[36728.843929] R0: [cds_mc_thread][705279027585] [03:06:04.577667]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x20
+[36728.844039] R0: [cds_mc_thread][705279029672] [03:06:04.577776]  wlan: [3369:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[36730.287634] R0: [cds_mc_thread][705306746444] [03:06:06.021358]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[36730.287751] R0: [cds_mc_thread][705306747821] [03:06:06.021430]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x20
+[36730.287816] R0: [cds_mc_thread][705306750180] [03:06:06.021552]  wlan: [3369:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[36731.496444] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36731.758808] healthd: battery l=100 v=4332 t=22.8 h=2 st=5 c=97 fc=2878000 cc=0 chg=
+[36732.004971] R0: [NetworkManager][705339719240] [03:06:07.738691]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36738.008423] R0: [NetworkManager][705454985481] [03:06:13.742142]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36738.549233] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36738.798407] healthd: battery l=100 v=4334 t=22.8 h=2 st=5 c=116 fc=2878000 cc=0 chg=
+[36743.727645] init: Received control message 'interface_start' for 'android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default' from pid: 34 (/system/bin/hwservicemanager)
+[36743.727973] init: Could not find service hosting interface android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default
+[36743.728453] init: Received control message 'interface_start' for 'android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default' from pid: 34 (/system/bin/hwservicemanager)
+[36743.728533] init: Could not find service hosting interface android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default
+[36744.010695] R0: [NetworkManager][705570229058] [03:06:19.744412]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36745.586357] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36745.834019] healthd: battery l=100 v=4332 t=22.8 h=2 st=5 c=116 fc=2878000 cc=0 chg=
+[36748.573261] healthd: battery l=100 v=4335 t=22.8 h=2 st=5 c=121 fc=2878000 cc=0 chg=
+[36750.005546] R0: [NetworkManager][705685330222] [03:06:25.739265]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36750.987443] R0: [cds_mc_thread][705704182813] [03:06:26.721171]  wlan: [3369:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[36751.003623] R0: [cds_mc_thread][705704493666] [03:06:26.737361]  wlan: [3369:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[36752.599306] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36752.853710] healthd: battery l=100 v=4323 t=22.8 h=2 st=5 c=100 fc=2878000 cc=0 chg=
+[36756.009371] R0: [NetworkManager][705800603631] [03:06:31.743089]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36759.656420] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36759.905155] healthd: battery l=100 v=4336 t=22.8 h=2 st=5 c=115 fc=2878000 cc=0 chg=
+[36762.005632] R0: [NetworkManager][705915731837] [03:06:37.739350]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36766.024402] R0: [cds_mc_thread][705992892501] [03:06:41.758135]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[36766.024465] R0: [cds_mc_thread][705992893857] [03:06:41.758206]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x20
+[36766.024519] R0: [cds_mc_thread][705992894899] [03:06:41.758260]  wlan: [3369:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[36766.499276] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36766.790119] healthd: battery l=100 v=4323 t=22.8 h=2 st=5 c=113 fc=2878000 cc=0 chg=
+[36766.843454] usb 1-1.3: USB disconnect, device number 14
+[36766.843983] gud_xdisp_lz4_12800 1-1.3:1.0: GUD disconnected
+[36768.007377] R0: [NetworkManager][706030965354] [03:06:43.741096]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36769.808745] R0: [cds_mc_thread][706065547803] [03:06:45.542266]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[36769.808808] R0: [cds_mc_thread][706065553228] [03:06:45.542548]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x20
+[36769.808865] R0: [cds_mc_thread][706065554354] [03:06:45.542607]  wlan: [3369:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[36771.426290] usb 1-1.3: new high-speed USB device number 15 using xhci-hcd
+[36771.538126] usb 1-1.3: New USB device found, idVendor=1d50, idProduct=614d
+[36771.538235] usb 1-1.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[36771.538257] usb 1-1.3: Product: Generic USB Display
+[36771.538276] usb 1-1.3: Manufacturer: The Internet
+[36771.543001] gud_xdisp_lz4_12800 1-1.3:1.0: GUD v1 bulk-out=0x01 buffer=12800 compression=0x00 width=640-1920 height=400-1080
+[36771.543024] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP diagnostic variant: compression=0x00 actual bulk payload cap=12800
+[36771.546778] gud_xdisp_lz4_12800 1-1.3:1.0: GUD probe complete for 1d50:614d
+[36772.680425] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36772.924278] healthd: battery l=100 v=4337 t=22.8 h=2 st=5 c=110 fc=2878000 cc=0 chg=
+[36773.292624] R0: [cds_mc_thread][706132442337] [03:06:49.026356]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[36773.292683] R0: [cds_mc_thread][706132443641] [03:06:49.026424]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x20
+[36773.292737] R0: [cds_mc_thread][706132444704] [03:06:49.026480]  wlan: [3369:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[36773.997734] R0: [NetworkManager][706145980495] [03:06:49.731469]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36774.066497] XDISP_T04_BEGIN payload_bytes=12800 transaction_count=100
+[36774.088262] usbcore: deregistering interface driver gud_xdisp_lz4_12800
+[36774.088424] gud_xdisp_lz4_12800 1-1.3:1.0: GUD disconnected
+[36774.113796] gud_xdisp_lz4_12800 1-1.3:1.0: GUD v1 bulk-out=0x01 buffer=12800 compression=0x00 width=640-1920 height=400-1080
+[36774.113833] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP diagnostic variant: compression=0x00 actual bulk payload cap=12800
+[36774.117224] gud_xdisp_lz4_12800 1-1.3:1.0: GUD probe complete for 1d50:614d
+[36774.117380] usbcore: registered new interface driver gud_xdisp_lz4_12800
+[36774.124890] XDISP_T04_TRANSACTION_1_START payload_bytes=12800 start_ns=1787022409858086016
+[36774.131394] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.131420] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.131429] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.131437] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.131444] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.131449] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.134392] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.136410] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.136782] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=373
+[36774.136792] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774139942185 bulk_submit_end_ns=36774139967081 usb_submit_urb_result=0 bulk_completion_callback_ns=36774140292706 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.146226] XDISP_T04_TRANSACTION_1_END command_result=0 end_ns=1787022409879376434
+[36774.148256] XDISP_T04_TRANSACTION_2_START payload_bytes=12800 start_ns=1787022409881600080
+[36774.155518] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.155549] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.155560] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.155571] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.155583] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.155590] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.159729] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.161738] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.162109] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=372
+[36774.162120] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774165270208 bulk_submit_end_ns=36774165298125 usb_submit_urb_result=0 bulk_completion_callback_ns=36774165618281 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.171326] XDISP_T04_TRANSACTION_2_END command_result=0 end_ns=1787022409904441593
+[36774.174070] XDISP_T04_TRANSACTION_3_START payload_bytes=12800 start_ns=1787022409907191073
+[36774.183782] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.183812] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.183824] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.183835] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.183850] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.183858] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.188494] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.190393] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.190772] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=380
+[36774.190787] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774193922347 bulk_submit_end_ns=36774193954274 usb_submit_urb_result=0 bulk_completion_callback_ns=36774194275941 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.203823] XDISP_T04_TRANSACTION_3_END command_result=0 end_ns=1787022409936078003
+[36774.207486] XDISP_T04_TRANSACTION_4_START payload_bytes=12800 start_ns=1787022409940508993
+[36774.221783] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.221814] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.221835] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.221856] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.221877] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.221894] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.227398] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.229427] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.229859] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=432
+[36774.229888] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774232949434 bulk_submit_end_ns=36774233110580 usb_submit_urb_result=0 bulk_completion_callback_ns=36774233337038 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.243836] XDISP_T04_TRANSACTION_4_END command_result=0 end_ns=1787022409976096444
+[36774.248894] XDISP_T04_TRANSACTION_5_START payload_bytes=12800 start_ns=1787022409981574830
+[36774.264901] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.264962] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.264983] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.265003] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.265023] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.265038] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.269820] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.271063] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.271498] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=435
+[36774.271526] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774274586678 bulk_submit_end_ns=36774274637459 usb_submit_urb_result=0 bulk_completion_callback_ns=36774274981626 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.287849] XDISP_T04_TRANSACTION_5_END command_result=0 end_ns=1787022410020399417
+[36774.293297] XDISP_T04_TRANSACTION_6_START payload_bytes=12800 start_ns=1787022410025772699
+[36774.309455] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.309533] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.309555] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.309576] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.309599] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.309615] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.314133] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.315369] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.315785] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=418
+[36774.315814] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774318892151 bulk_submit_end_ns=36774318941578 usb_submit_urb_result=0 bulk_completion_callback_ns=36774319272828 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.329875] XDISP_T04_TRANSACTION_6_END command_result=0 end_ns=1787022410062300098
+[36774.334584] XDISP_T04_TRANSACTION_7_START payload_bytes=12800 start_ns=1787022410067144213
+[36774.350683] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.350722] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.350745] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.350765] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.350787] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.350803] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.355578] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.356916] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.357344] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=432
+[36774.357375] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774360436270 bulk_submit_end_ns=36774360495332 usb_submit_urb_result=0 bulk_completion_callback_ns=36774360826270 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.371866] XDISP_T04_TRANSACTION_7_END command_result=0 end_ns=1787022410104471873
+[36774.376888] XDISP_T04_TRANSACTION_8_START payload_bytes=12800 start_ns=1787022410109405832
+[36774.392659] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.392706] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.392729] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.392748] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.392772] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.392788] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.397793] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.399020] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.399449] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=431
+[36774.399611] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774402542993 bulk_submit_end_ns=36774402595909 usb_submit_urb_result=0 bulk_completion_callback_ns=36774402928409 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.415478] XDISP_T04_TRANSACTION_8_END command_result=0 end_ns=1787022410148010263
+[36774.420982] XDISP_T04_TRANSACTION_9_START payload_bytes=12800 start_ns=1787022410153674326
+[36774.437261] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.437307] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.437327] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.437348] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.437372] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.437388] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.442304] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.443562] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.444004] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=444
+[36774.444034] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774447084768 bulk_submit_end_ns=36774447137164 usb_submit_urb_result=0 bulk_completion_callback_ns=36774447481487 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.459611] XDISP_T04_TRANSACTION_9_END command_result=0 end_ns=1787022410192106882
+[36774.465028] XDISP_T04_TRANSACTION_10_START payload_bytes=12800 start_ns=1787022410197705424
+[36774.481283] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.481320] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.481341] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.481361] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.481381] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.481397] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.485780] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.487013] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.487435] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=425
+[36774.487466] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774490535137 bulk_submit_end_ns=36774490588783 usb_submit_urb_result=0 bulk_completion_callback_ns=36774490918470 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.502026] XDISP_T04_TRANSACTION_10_END command_result=0 end_ns=1787022410234618449
+[36774.507261] XDISP_T04_TRANSACTION_11_START payload_bytes=12800 start_ns=1787022410239707720
+[36774.523472] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.523503] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.523519] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.523535] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.523552] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.523565] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.527817] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.529135] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.529635] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=498
+[36774.529664] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774532659151 bulk_submit_end_ns=36774532709933 usb_submit_urb_result=0 bulk_completion_callback_ns=36774533098891 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.545080] XDISP_T04_TRANSACTION_11_END command_result=0 end_ns=1787022410277649443
+[36774.549954] XDISP_T04_TRANSACTION_12_START payload_bytes=12800 start_ns=1787022410282507412
+[36774.566123] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.566236] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.566256] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.566350] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.566370] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.566384] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.570782] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.572020] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.572443] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=426
+[36774.572475] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774575542645 bulk_submit_end_ns=36774575592593 usb_submit_urb_result=0 bulk_completion_callback_ns=36774575928479 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.586975] XDISP_T04_TRANSACTION_12_END command_result=0 end_ns=1787022410319151166
+[36774.591405] XDISP_T04_TRANSACTION_13_START payload_bytes=12800 start_ns=1787022410324223875
+[36774.607745] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.607782] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.607802] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.607821] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.607843] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.607859] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.612479] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.613757] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.614170] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=416
+[36774.614197] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774617279472 bulk_submit_end_ns=36774617327962 usb_submit_urb_result=0 bulk_completion_callback_ns=36774617657389 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.627766] XDISP_T04_TRANSACTION_13_END command_result=0 end_ns=1787022410360425180
+[36774.632289] XDISP_T04_TRANSACTION_14_START payload_bytes=12800 start_ns=1787022410365090806
+[36774.648521] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.648568] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.648591] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.648613] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.648633] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.648649] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.653319] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.654582] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.655014] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=434
+[36774.655043] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774658105101 bulk_submit_end_ns=36774658154841 usb_submit_urb_result=0 bulk_completion_callback_ns=36774658501247 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.668600] XDISP_T04_TRANSACTION_14_END command_result=0 end_ns=1787022410401284143
+[36774.673186] XDISP_T04_TRANSACTION_15_START payload_bytes=12800 start_ns=1787022410405712633
+[36774.687904] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.687937] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.687956] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.687973] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.687994] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.688007] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.692428] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.693680] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.694098] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=422
+[36774.694122] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774697203647 bulk_submit_end_ns=36774697249689 usb_submit_urb_result=0 bulk_completion_callback_ns=36774697584011 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.706245] XDISP_T04_TRANSACTION_15_END command_result=0 end_ns=1787022410438879615
+[36774.710307] XDISP_T04_TRANSACTION_16_START payload_bytes=12800 start_ns=1787022410443123209
+[36774.724515] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.724569] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.724587] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.724606] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.724627] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.724643] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.728697] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.729972] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.730389] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=421
+[36774.730418] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774733494223 bulk_submit_end_ns=36774733544640 usb_submit_urb_result=0 bulk_completion_callback_ns=36774733876567 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.744375] XDISP_T04_TRANSACTION_16_END command_result=0 end_ns=1787022410476933733
+[36774.748874] XDISP_T04_TRANSACTION_17_START payload_bytes=12800 start_ns=1787022410481678109
+[36774.762625] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.762651] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.762669] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.762686] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.762703] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.762716] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.766701] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.767918] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.768330] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=414
+[36774.768354] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774771443550 bulk_submit_end_ns=36774771489175 usb_submit_urb_result=0 bulk_completion_callback_ns=36774771822456 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.782161] XDISP_T04_TRANSACTION_17_END command_result=0 end_ns=1787022410514934935
+[36774.787103] XDISP_T04_TRANSACTION_18_START payload_bytes=12800 start_ns=1787022410519790404
+[36774.802006] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.802043] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.802062] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.802083] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.802104] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.802121] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.806383] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.807633] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.808061] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=429
+[36774.808092] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774811155637 bulk_submit_end_ns=36774811207721 usb_submit_urb_result=0 bulk_completion_callback_ns=36774811543971 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.823658] XDISP_T04_TRANSACTION_18_END command_result=0 end_ns=1787022410555779366
+[36774.828504] XDISP_T04_TRANSACTION_19_START payload_bytes=12800 start_ns=1787022410561256815
+[36774.844667] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.844708] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.844726] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.844745] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.844764] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.844780] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.849104] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.850384] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.850803] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=424
+[36774.850835] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774853904444 bulk_submit_end_ns=36774853960902 usb_submit_urb_result=0 bulk_completion_callback_ns=36774854288767 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.864894] XDISP_T04_TRANSACTION_19_END command_result=0 end_ns=1787022410597455829
+[36774.870008] XDISP_T04_TRANSACTION_20_START payload_bytes=12800 start_ns=1787022410602476767
+[36774.873989] R0: [cds_mc_thread][706162804701] [03:06:50.607730]  wlan: [3369:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[36774.876445] R0: [cds_mc_thread][706162851822] [03:06:50.610184]  wlan: [3369:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[36774.886740] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.886770] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.886789] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.886808] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.886828] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.886842] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.891610] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.893099] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.893556] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=457
+[36774.893586] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774896620698 bulk_submit_end_ns=36774896672417 usb_submit_urb_result=0 bulk_completion_callback_ns=36774897003823 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.909248] XDISP_T04_TRANSACTION_20_END command_result=0 end_ns=1787022410641831667
+[36774.914657] XDISP_T04_TRANSACTION_21_START payload_bytes=12800 start_ns=1787022410647340938
+[36774.930570] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.930617] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.930637] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.930657] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.930681] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.930698] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.935274] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.936642] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.937057] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=416
+[36774.937086] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774940165598 bulk_submit_end_ns=36774940214400 usb_submit_urb_result=0 bulk_completion_callback_ns=36774940543098 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.950940] XDISP_T04_TRANSACTION_21_END command_result=0 end_ns=1787022410683513962
+[36774.956551] XDISP_T04_TRANSACTION_22_START payload_bytes=12800 start_ns=1787022410688929171
+[36774.972387] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36774.972418] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36774.972438] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36774.972456] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36774.972477] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36774.972491] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36774.976803] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36774.978034] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36774.978448] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=417
+[36774.978476] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36774981557842 bulk_submit_end_ns=36774981606227 usb_submit_urb_result=0 bulk_completion_callback_ns=36774981937581 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36774.992317] XDISP_T04_TRANSACTION_22_END command_result=0 end_ns=1787022410724952092
+[36774.997678] XDISP_T04_TRANSACTION_23_START payload_bytes=12800 start_ns=1787022410730324800
+[36775.013604] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.013631] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.013649] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.013665] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.013682] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.013694] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.017819] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.019057] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.019580] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=523
+[36775.019605] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775022580763 bulk_submit_end_ns=36775022624981 usb_submit_urb_result=0 bulk_completion_callback_ns=36775022957377 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.033336] XDISP_T04_TRANSACTION_23_END command_result=0 end_ns=1787022410765990221
+[36775.038542] XDISP_T04_TRANSACTION_24_START payload_bytes=12800 start_ns=1787022410771124075
+[36775.054258] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.054305] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.054326] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.054345] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.054367] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.054381] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.058928] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.060173] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.060603] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=432
+[36775.060634] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775063695715 bulk_submit_end_ns=36775063750454 usb_submit_urb_result=0 bulk_completion_callback_ns=36775064086079 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.076028] XDISP_T04_TRANSACTION_24_END command_result=0 end_ns=1787022410808538037
+[36775.081369] XDISP_T04_TRANSACTION_25_START payload_bytes=12800 start_ns=1787022410814048507
+[36775.097589] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.097614] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.097630] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.097647] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.097665] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.097679] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.101891] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.103193] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.103623] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=431
+[36775.103651] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775106716396 bulk_submit_end_ns=36775106766031 usb_submit_urb_result=0 bulk_completion_callback_ns=36775107105198 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.117640] XDISP_T04_TRANSACTION_25_END command_result=0 end_ns=1787022410850075750
+[36775.122489] XDISP_T04_TRANSACTION_26_START payload_bytes=12800 start_ns=1787022410855192469
+[36775.138869] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.138901] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.138922] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.138941] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.138962] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.138978] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.143268] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.144562] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.144997] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=436
+[36775.145028] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775148085098 bulk_submit_end_ns=36775148138015 usb_submit_urb_result=0 bulk_completion_callback_ns=36775148480983 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.159135] XDISP_T04_TRANSACTION_26_END command_result=0 end_ns=1787022410891719816
+[36775.163704] XDISP_T04_TRANSACTION_27_START payload_bytes=12800 start_ns=1787022410896410598
+[36775.179276] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.179310] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.179333] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.179353] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.179374] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.179391] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.184201] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.185462] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.185891] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=430
+[36775.185920] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775188986665 bulk_submit_end_ns=36775189035519 usb_submit_urb_result=0 bulk_completion_callback_ns=36775189377081 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.200692] XDISP_T04_TRANSACTION_27_END command_result=0 end_ns=1787022410933110966
+[36775.206339] XDISP_T04_TRANSACTION_28_START payload_bytes=12800 start_ns=1787022410938800394
+[36775.221467] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.221498] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.221517] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.221534] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.221555] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.221571] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.225705] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.226957] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.227388] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=434
+[36775.227416] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775230479742 bulk_submit_end_ns=36775230528908 usb_submit_urb_result=0 bulk_completion_callback_ns=36775230876096 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.240735] XDISP_T04_TRANSACTION_28_END command_result=0 end_ns=1787022410973433366
+[36775.245208] XDISP_T04_TRANSACTION_29_START payload_bytes=12800 start_ns=1787022410977993679
+[36775.260340] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.260375] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.260396] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.260415] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.260438] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.260453] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.265092] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.266557] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.266991] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=436
+[36775.267025] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775270079277 bulk_submit_end_ns=36775270131048 usb_submit_urb_result=0 bulk_completion_callback_ns=36775270465214 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.281773] XDISP_T04_TRANSACTION_29_END command_result=0 end_ns=1787022411014336183
+[36775.286948] XDISP_T04_TRANSACTION_30_START payload_bytes=12800 start_ns=1787022411019318631
+[36775.303217] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.303250] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.303268] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.303288] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.303306] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.303320] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.307795] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.309099] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.309620] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=522
+[36775.309647] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775312621833 bulk_submit_end_ns=36775312673656 usb_submit_urb_result=0 bulk_completion_callback_ns=36775313002979 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.324153] XDISP_T04_TRANSACTION_30_END command_result=0 end_ns=1787022411056333375
+[36775.329385] XDISP_T04_TRANSACTION_31_START payload_bytes=12800 start_ns=1787022411062110354
+[36775.345749] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.345792] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.345814] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.345835] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.345858] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.345873] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.350420] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.351623] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.352038] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=418
+[36775.352069] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775355145171 bulk_submit_end_ns=36775355195692 usb_submit_urb_result=0 bulk_completion_callback_ns=36775355523140 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.366790] XDISP_T04_TRANSACTION_31_END command_result=0 end_ns=1787022411099213431
+[36775.371642] XDISP_T04_TRANSACTION_32_START payload_bytes=12800 start_ns=1787022411104436140
+[36775.388057] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.388087] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.388107] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.388127] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.388152] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.388166] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.393254] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.394517] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.394928] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=413
+[36775.394954] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775398041633 bulk_submit_end_ns=36775398090956 usb_submit_urb_result=0 bulk_completion_callback_ns=36775398417102 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.408888] XDISP_T04_TRANSACTION_32_END command_result=0 end_ns=1787022411141584008
+[36775.413851] XDISP_T04_TRANSACTION_33_START payload_bytes=12800 start_ns=1787022411146296196
+[36775.429973] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.430002] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.430020] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.430037] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.430057] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.430070] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.434569] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.435811] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.435832] R0: [cds_mc_thread][706173592069] [03:06:51.169572]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[36775.435934] R0: [cds_mc_thread][706173592775] [03:06:51.169609]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x20
+[36775.435991] R0: [cds_mc_thread][706173595172] [03:06:51.169734]  wlan: [3369:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[36775.436392] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=580
+[36775.436421] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775439333877 bulk_submit_end_ns=36775439383044 usb_submit_urb_result=0 bulk_completion_callback_ns=36775439774710 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.450802] XDISP_T04_TRANSACTION_33_END command_result=0 end_ns=1787022411183032241
+[36775.455647] XDISP_T04_TRANSACTION_34_START payload_bytes=12800 start_ns=1787022411188351825
+[36775.471692] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.471725] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.471745] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.471764] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.471787] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.471802] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.476665] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.477926] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.478347] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=425
+[36775.478373] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775481449298 bulk_submit_end_ns=36775481500235 usb_submit_urb_result=0 bulk_completion_callback_ns=36775481834871 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.491827] XDISP_T04_TRANSACTION_34_END command_result=0 end_ns=1787022411224530162
+[36775.496982] XDISP_T04_TRANSACTION_35_START payload_bytes=12800 start_ns=1787022411229555527
+[36775.513075] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.513108] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.513125] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.513142] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.513159] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.513172] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.517400] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.518644] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.519060] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=418
+[36775.519088] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775522167583 bulk_submit_end_ns=36775522217114 usb_submit_urb_result=0 bulk_completion_callback_ns=36775522553052 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.532336] XDISP_T04_TRANSACTION_35_END command_result=0 end_ns=1787022411264993499
+[36775.537611] XDISP_T04_TRANSACTION_36_START payload_bytes=12800 start_ns=1787022411270333656
+[36775.554009] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.554040] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.554060] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.554080] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.554101] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.554119] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.558558] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.560043] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.560509] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=468
+[36775.560543] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775563562275 bulk_submit_end_ns=36775563621337 usb_submit_urb_result=0 bulk_completion_callback_ns=36775563953056 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.575297] XDISP_T04_TRANSACTION_36_END command_result=0 end_ns=1787022411307894181
+[36775.580390] XDISP_T04_TRANSACTION_37_START payload_bytes=12800 start_ns=1787022411312994702
+[36775.596374] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.596408] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.596425] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.596441] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.596456] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.596468] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.600467] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.601747] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.602159] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=414
+[36775.602187] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775605271289 bulk_submit_end_ns=36775605318737 usb_submit_urb_result=0 bulk_completion_callback_ns=36775605647696 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.616073] XDISP_T04_TRANSACTION_37_END command_result=0 end_ns=1787022411348535435
+[36775.621978] XDISP_T04_TRANSACTION_38_START payload_bytes=12800 start_ns=1787022411354618769
+[36775.638676] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.638721] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.638741] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.638763] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.638783] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.638797] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.643713] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.645013] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.645441] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=428
+[36775.645470] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775648536137 bulk_submit_end_ns=36775648588690 usb_submit_urb_result=0 bulk_completion_callback_ns=36775648919835 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.661129] XDISP_T04_TRANSACTION_38_END command_result=0 end_ns=1787022411393658200
+[36775.666460] XDISP_T04_TRANSACTION_39_START payload_bytes=12800 start_ns=1787022411399042367
+[36775.682474] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.682510] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.682530] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.682551] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.682572] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.682589] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.687217] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.688493] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.688906] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=415
+[36775.688936] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775692016506 bulk_submit_end_ns=36775692065308 usb_submit_urb_result=0 bulk_completion_callback_ns=36775692396715 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.704629] XDISP_T04_TRANSACTION_39_END command_result=0 end_ns=1787022411437235183
+[36775.709730] XDISP_T04_TRANSACTION_40_START payload_bytes=12800 start_ns=1787022411442423673
+[36775.726077] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.726113] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.726278] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.726301] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.726322] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.726336] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.730938] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.732152] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.732571] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=421
+[36775.732602] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775735674219 bulk_submit_end_ns=36775735726354 usb_submit_urb_result=0 bulk_completion_callback_ns=36775736054636 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.746406] XDISP_T04_TRANSACTION_40_END command_result=0 end_ns=1787022411478803260
+[36775.750854] XDISP_T04_TRANSACTION_41_START payload_bytes=12800 start_ns=1787022411483657740
+[36775.765643] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.765694] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.765712] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.765730] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.765752] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.765766] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.770012] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.771242] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.771659] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=418
+[36775.771688] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775774766254 bulk_submit_end_ns=36775774814952 usb_submit_urb_result=0 bulk_completion_callback_ns=36775775146567 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.786478] XDISP_T04_TRANSACTION_41_END command_result=0 end_ns=1787022411518868577
+[36775.790899] XDISP_T04_TRANSACTION_42_START payload_bytes=12800 start_ns=1787022411523694202
+[36775.806828] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.806878] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.806895] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.806912] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.806930] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.806943] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.811547] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.813070] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.813503] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=434
+[36775.813532] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775816591779 bulk_submit_end_ns=36775816641102 usb_submit_urb_result=0 bulk_completion_callback_ns=36775816983186 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.829193] XDISP_T04_TRANSACTION_42_END command_result=0 end_ns=1787022411561679623
+[36775.834770] XDISP_T04_TRANSACTION_43_START payload_bytes=12800 start_ns=1787022411567430457
+[36775.851012] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.851047] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.851069] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.851091] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.851113] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.851127] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.855625] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.857007] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.857432] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=427
+[36775.857461] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775860530065 bulk_submit_end_ns=36775860581627 usb_submit_urb_result=0 bulk_completion_callback_ns=36775860919179 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.871158] XDISP_T04_TRANSACTION_43_END command_result=0 end_ns=1787022411603796294
+[36775.875839] XDISP_T04_TRANSACTION_44_START payload_bytes=12800 start_ns=1787022411608575252
+[36775.892172] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.892209] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.892228] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.892250] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.892274] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.892288] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.897294] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.898502] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.898913] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=413
+[36775.898939] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775902026111 bulk_submit_end_ns=36775902075954 usb_submit_urb_result=0 bulk_completion_callback_ns=36775902405746 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.912661] XDISP_T04_TRANSACTION_44_END command_result=0 end_ns=1787022411645284423
+[36775.917782] XDISP_T04_TRANSACTION_45_START payload_bytes=12800 start_ns=1787022411650482392
+[36775.933945] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.933985] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.934007] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.934028] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.934049] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.934065] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.938469] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.939878] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.940307] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=432
+[36775.940338] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775943399709 bulk_submit_end_ns=36775943451584 usb_submit_urb_result=0 bulk_completion_callback_ns=36775943784709 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.955212] XDISP_T04_TRANSACTION_45_END command_result=0 end_ns=1787022411687803906
+[36775.960922] XDISP_T04_TRANSACTION_46_START payload_bytes=12800 start_ns=1787022411693602501
+[36775.976946] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36775.976973] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36775.976990] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36775.977009] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36775.977025] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36775.977037] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36775.981102] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36775.982345] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36775.982764] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=420
+[36775.982793] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36775985869140 bulk_submit_end_ns=36775985918567 usb_submit_urb_result=0 bulk_completion_callback_ns=36775986251327 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36775.996745] XDISP_T04_TRANSACTION_46_END command_result=0 end_ns=1787022411729055629
+[36776.001722] XDISP_T04_TRANSACTION_47_START payload_bytes=12800 start_ns=1787022411734442713
+[36776.018254] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.018291] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.018312] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.018331] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.018352] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.018367] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.022688] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.024133] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.024555] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=427
+[36776.024585] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776027653623 bulk_submit_end_ns=36776027713311 usb_submit_urb_result=0 bulk_completion_callback_ns=36776028044561 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.039218] XDISP_T04_TRANSACTION_47_END command_result=0 end_ns=1787022411771809696
+[36776.044355] XDISP_T04_TRANSACTION_48_START payload_bytes=12800 start_ns=1787022411777082925
+[36776.060381] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.060411] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.060435] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.060454] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.060477] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.060494] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.064800] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.066021] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.066669] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=649
+[36776.066697] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776069543211 bulk_submit_end_ns=36776069596700 usb_submit_urb_result=0 bulk_completion_callback_ns=36776069927534 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.081095] XDISP_T04_TRANSACTION_48_END command_result=0 end_ns=1787022411813683971
+[36776.085883] XDISP_T04_TRANSACTION_49_START payload_bytes=12800 start_ns=1787022411818587096
+[36776.101693] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.101726] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.101747] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.101770] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.101790] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.101805] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.106505] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.107753] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.108175] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=425
+[36776.108206] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776111274934 bulk_submit_end_ns=36776111328527 usb_submit_urb_result=0 bulk_completion_callback_ns=36776111658788 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.122774] XDISP_T04_TRANSACTION_49_END command_result=0 end_ns=1787022411855362412
+[36776.127891] XDISP_T04_TRANSACTION_50_START payload_bytes=12800 start_ns=1787022411860623403
+[36776.144346] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.144391] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.144411] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.144431] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.144455] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.144471] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.149329] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.150640] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.151073] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=437
+[36776.151105] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776154159834 bulk_submit_end_ns=36776154216761 usb_submit_urb_result=0 bulk_completion_callback_ns=36776154555511 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.164295] XDISP_T04_TRANSACTION_50_END command_result=0 end_ns=1787022411896954812
+[36776.168751] XDISP_T04_TRANSACTION_51_START payload_bytes=12800 start_ns=1787022411901543563
+[36776.184275] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.184308] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.184328] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.184351] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.184374] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.184389] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.188786] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.190052] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.190476] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=429
+[36776.190507] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776193572806 bulk_submit_end_ns=36776193629577 usb_submit_urb_result=0 bulk_completion_callback_ns=36776193961452 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.205280] XDISP_T04_TRANSACTION_51_END command_result=0 end_ns=1787022411937789244
+[36776.210664] XDISP_T04_TRANSACTION_52_START payload_bytes=12800 start_ns=1787022411943381536
+[36776.227258] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.227290] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.227307] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.227328] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.227347] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.227360] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.231561] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.233171] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.233595] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=429
+[36776.233623] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776236692029 bulk_submit_end_ns=36776236742081 usb_submit_urb_result=0 bulk_completion_callback_ns=36776237075519 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.246791] XDISP_T04_TRANSACTION_52_END command_result=0 end_ns=1787022411979147008
+[36776.251204] XDISP_T04_TRANSACTION_53_START payload_bytes=12800 start_ns=1787022411983999925
+[36776.267176] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.267208] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.267228] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.267244] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.267264] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.267278] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.271455] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.272754] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.273215] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=461
+[36776.273244] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776276275940 bulk_submit_end_ns=36776276578179 usb_submit_urb_result=0 bulk_completion_callback_ns=36776276698856 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.287317] XDISP_T04_TRANSACTION_53_END command_result=0 end_ns=1787022412019526023
+[36776.291702] XDISP_T04_TRANSACTION_54_START payload_bytes=12800 start_ns=1787022412024521231
+[36776.306485] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.306533] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.306551] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.306567] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.306585] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.306598] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.311606] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.312970] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.313442] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=471
+[36776.313469] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776316494173 bulk_submit_end_ns=36776316539642 usb_submit_urb_result=0 bulk_completion_callback_ns=36776316875787 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.328957] XDISP_T04_TRANSACTION_54_END command_result=0 end_ns=1787022412061479256
+[36776.333879] XDISP_T04_TRANSACTION_55_START payload_bytes=12800 start_ns=1787022412066767225
+[36776.347335] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.347360] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.347376] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.347393] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.347412] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.347424] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.351267] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.352524] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.353049] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=526
+[36776.353073] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776356050270 bulk_submit_end_ns=36776356091937 usb_submit_urb_result=0 bulk_completion_callback_ns=36776356527198 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.364608] XDISP_T04_TRANSACTION_55_END command_result=0 end_ns=1787022412097442541
+[36776.368700] XDISP_T04_TRANSACTION_56_START payload_bytes=12800 start_ns=1787022412101629364
+[36776.383634] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.383665] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.383682] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.383699] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.383718] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.383732] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.388070] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.389403] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.389870] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=466
+[36776.389900] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776392925795 bulk_submit_end_ns=36776392981107 usb_submit_urb_result=0 bulk_completion_callback_ns=36776393314128 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.404739] XDISP_T04_TRANSACTION_56_END command_result=0 end_ns=1787022412137313691
+[36776.410071] XDISP_T04_TRANSACTION_57_START payload_bytes=12800 start_ns=1787022412142605826
+[36776.426766] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.426796] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.426813] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.427000] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.427022] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.427035] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.431353] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.432622] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.433480] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=859
+[36776.433508] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776436144185 bulk_submit_end_ns=36776436195122 usb_submit_urb_result=0 bulk_completion_callback_ns=36776436580956 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.446990] XDISP_T04_TRANSACTION_57_END command_result=0 end_ns=1787022412179434216
+[36776.451506] XDISP_T04_TRANSACTION_58_START payload_bytes=12800 start_ns=1787022412184198070
+[36776.467316] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.467367] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.467387] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.467405] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.467427] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.467444] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.471687] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.473127] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.473568] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=444
+[36776.473596] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776476649970 bulk_submit_end_ns=36776476699137 usb_submit_urb_result=0 bulk_completion_callback_ns=36776477049553 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.488720] XDISP_T04_TRANSACTION_58_END command_result=0 end_ns=1787022412221240105
+[36776.494007] XDISP_T04_TRANSACTION_59_START payload_bytes=12800 start_ns=1787022412226526616
+[36776.510082] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.510111] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.510132] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.510149] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.510172] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.510186] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.514811] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.515987] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.516566] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=578
+[36776.516590] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776519512526 bulk_submit_end_ns=36776519555391 usb_submit_urb_result=0 bulk_completion_callback_ns=36776519888620 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.528521] XDISP_T04_TRANSACTION_59_END command_result=0 end_ns=1787022412261293442
+[36776.532608] XDISP_T04_TRANSACTION_60_START payload_bytes=12800 start_ns=1787022412265532662
+[36776.548890] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.548923] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.548945] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.548965] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.548987] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.549004] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.553477] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.554707] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.555134] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=429
+[36776.555160] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776558232843 bulk_submit_end_ns=36776558279249 usb_submit_urb_result=0 bulk_completion_callback_ns=36776558626593 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.567136] XDISP_T04_TRANSACTION_60_END command_result=0 end_ns=1787022412299574644
+[36776.571182] XDISP_T04_TRANSACTION_61_START payload_bytes=12800 start_ns=1787022412304105113
+[36776.586700] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.586736] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.586754] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.586774] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.586792] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.586805] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.591055] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.592266] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.592685] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=419
+[36776.592715] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776595790138 bulk_submit_end_ns=36776595842221 usb_submit_urb_result=0 bulk_completion_callback_ns=36776596169409 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.606765] XDISP_T04_TRANSACTION_61_END command_result=0 end_ns=1787022412339162773
+[36776.611260] XDISP_T04_TRANSACTION_62_START payload_bytes=12800 start_ns=1787022412344085169
+[36776.626119] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.626377] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.626394] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.626416] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.626434] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.626446] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.630600] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.631794] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.632210] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=418
+[36776.632238] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776635318736 bulk_submit_end_ns=36776635367850 usb_submit_urb_result=0 bulk_completion_callback_ns=36776635699257 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.645202] XDISP_T04_TRANSACTION_62_END command_result=0 end_ns=1787022412377906423
+[36776.649941] XDISP_T04_TRANSACTION_63_START payload_bytes=12800 start_ns=1787022412382675694
+[36776.665669] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.665704] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.665725] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.665752] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.665773] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.665788] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.670442] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.671667] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.672091] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=425
+[36776.672122] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776675190042 bulk_submit_end_ns=36776675242490 usb_submit_urb_result=0 bulk_completion_callback_ns=36776675575459 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.685797] XDISP_T04_TRANSACTION_63_END command_result=0 end_ns=1787022412418474396
+[36776.690568] XDISP_T04_TRANSACTION_64_START payload_bytes=12800 start_ns=1787022412423367834
+[36776.705400] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.705431] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.705450] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.705470] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.705490] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.705505] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.709639] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.710831] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.711253] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=425
+[36776.711281] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776714354837 bulk_submit_end_ns=36776714401504 usb_submit_urb_result=0 bulk_completion_callback_ns=36776714741973 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.724501] XDISP_T04_TRANSACTION_64_END command_result=0 end_ns=1787022412457143566
+[36776.728631] XDISP_T04_TRANSACTION_65_START payload_bytes=12800 start_ns=1787022412461490702
+[36776.743963] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.744003] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.744024] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.744044] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.744066] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.744081] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.748471] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.749803] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.750267] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=468
+[36776.750294] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776753324216 bulk_submit_end_ns=36776753377498 usb_submit_urb_result=0 bulk_completion_callback_ns=36776753750779 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.765202] XDISP_T04_TRANSACTION_65_END command_result=0 end_ns=1787022412497748101
+[36776.770221] XDISP_T04_TRANSACTION_66_START payload_bytes=12800 start_ns=1787022412502846800
+[36776.786571] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.786602] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.786620] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.786637] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.786656] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.786669] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.790968] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.792206] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.792644] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=440
+[36776.792677] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776795729221 bulk_submit_end_ns=36776795781148 usb_submit_urb_result=0 bulk_completion_callback_ns=36776796128231 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.806412] XDISP_T04_TRANSACTION_66_END command_result=0 end_ns=1787022412538814460
+[36776.810756] XDISP_T04_TRANSACTION_67_START payload_bytes=12800 start_ns=1787022412543571596
+[36776.825551] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.825588] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.825607] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.825626] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.825649] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.825663] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.829874] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.831112] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.831534] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=422
+[36776.831563] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776834637454 bulk_submit_end_ns=36776834686985 usb_submit_urb_result=0 bulk_completion_callback_ns=36776835021464 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.844945] XDISP_T04_TRANSACTION_67_END command_result=0 end_ns=1787022412577634411
+[36776.849355] XDISP_T04_TRANSACTION_68_START payload_bytes=12800 start_ns=1787022412582126131
+[36776.865138] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.865173] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.865193] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.865213] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.865238] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.865253] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.869933] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.871148] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.871569] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=423
+[36776.871599] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776874671364 bulk_submit_end_ns=36776874724385 usb_submit_urb_result=0 bulk_completion_callback_ns=36776875054905 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.885839] XDISP_T04_TRANSACTION_68_END command_result=0 end_ns=1787022412618538895
+[36776.891041] XDISP_T04_TRANSACTION_69_START payload_bytes=12800 start_ns=1787022412623786708
+[36776.907553] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.907591] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.907608] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.907623] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.907640] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.907653] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.911731] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.913080] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.913511] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=435
+[36776.913537] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776916601108 bulk_submit_end_ns=36776916650430 usb_submit_urb_result=0 bulk_completion_callback_ns=36776916994597 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.926993] XDISP_T04_TRANSACTION_69_END command_result=0 end_ns=1787022412659367701
+[36776.931927] XDISP_T04_TRANSACTION_70_START payload_bytes=12800 start_ns=1787022412664606087
+[36776.948276] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.948310] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.948332] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.948353] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.948376] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.948393] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.952725] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.954172] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.954592] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=425
+[36776.954620] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776957693507 bulk_submit_end_ns=36776957749497 usb_submit_urb_result=0 bulk_completion_callback_ns=36776958084445 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36776.968926] XDISP_T04_TRANSACTION_70_END command_result=0 end_ns=1787022412701586768
+[36776.973568] XDISP_T04_TRANSACTION_71_START payload_bytes=12800 start_ns=1787022412706191612
+[36776.988105] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36776.988138] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36776.988158] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36776.988176] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36776.988197] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36776.988211] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36776.992177] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36776.993473] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36776.993887] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=415
+[36776.993911] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36776996997991 bulk_submit_end_ns=36776997043251 usb_submit_urb_result=0 bulk_completion_callback_ns=36776997377366 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.006267] XDISP_T04_TRANSACTION_71_END command_result=0 end_ns=1787022412738937709
+[36777.010664] XDISP_T04_TRANSACTION_72_START payload_bytes=12800 start_ns=1787022412743590209
+[36777.026461] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.026497] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.026514] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.026530] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.026548] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.026561] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.030820] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.032014] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.032434] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=422
+[36777.032465] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777035536953 bulk_submit_end_ns=36777035590755 usb_submit_urb_result=0 bulk_completion_callback_ns=36777035919817 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.046546] XDISP_T04_TRANSACTION_72_END command_result=0 end_ns=1787022412778958390
+[36777.051059] XDISP_T04_TRANSACTION_73_START payload_bytes=12800 start_ns=1787022412783858078
+[36777.065653] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.065688] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.065707] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.065727] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.065747] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.065763] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.069972] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.071209] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.071630] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=423
+[36777.071656] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777074733415 bulk_submit_end_ns=36777074783467 usb_submit_urb_result=0 bulk_completion_callback_ns=36777075125082 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.085021] XDISP_T04_TRANSACTION_73_END command_result=0 end_ns=1787022412817681779
+[36777.089454] XDISP_T04_TRANSACTION_74_START payload_bytes=12800 start_ns=1787022412822208967
+[36777.105287] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.105329] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.105350] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.105372] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.105395] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.105411] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.109859] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.111083] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.111519] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=438
+[36777.111552] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777114605815 bulk_submit_end_ns=36777114657846 usb_submit_urb_result=0 bulk_completion_callback_ns=36777115003992 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.126712] XDISP_T04_TRANSACTION_74_END command_result=0 end_ns=1787022412859191887
+[36777.131611] XDISP_T04_TRANSACTION_75_START payload_bytes=12800 start_ns=1787022412864300430
+[36777.147671] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.147722] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.147742] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.147762] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.147785] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.147802] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.152040] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.153410] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.153830] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=423
+[36777.153856] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777156934152 bulk_submit_end_ns=36777156979517 usb_submit_urb_result=0 bulk_completion_callback_ns=36777157316184 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.168557] XDISP_T04_TRANSACTION_75_END command_result=0 end_ns=1787022412901136840
+[36777.173683] XDISP_T04_TRANSACTION_76_START payload_bytes=12800 start_ns=1787022412905947465
+[36777.190063] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.190098] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.190119] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.190141] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.190163] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.190178] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.195181] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.196539] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.196973] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=435
+[36777.196999] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777200062230 bulk_submit_end_ns=36777200115875 usb_submit_urb_result=0 bulk_completion_callback_ns=36777200451813 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.210255] XDISP_T04_TRANSACTION_76_END command_result=0 end_ns=1787022412942836792
+[36777.215000] XDISP_T04_TRANSACTION_77_START payload_bytes=12800 start_ns=1787022412947712209
+[36777.230867] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.230900] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.230920] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.230939] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.230961] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.230976] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.235125] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.236623] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.237087] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=468
+[36777.237117] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777240145411 bulk_submit_end_ns=36777240196556 usb_submit_urb_result=0 bulk_completion_callback_ns=36777240527077 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.250497] XDISP_T04_TRANSACTION_77_END command_result=0 end_ns=1787022412983070494
+[36777.255442] XDISP_T04_TRANSACTION_78_START payload_bytes=12800 start_ns=1787022412988172890
+[36777.271209] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.271256] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.271280] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.271299] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.271321] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.271336] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.275828] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.277151] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.277567] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=418
+[36777.277592] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777280675415 bulk_submit_end_ns=36777280724790 usb_submit_urb_result=0 bulk_completion_callback_ns=36777281053644 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.292066] XDISP_T04_TRANSACTION_78_END command_result=0 end_ns=1787022413024648102
+[36777.297509] XDISP_T04_TRANSACTION_79_START payload_bytes=12800 start_ns=1787022413030150134
+[36777.313972] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.314002] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.314025] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.314045] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.314067] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.314083] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.318897] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.320146] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.320576] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=433
+[36777.320608] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777323667138 bulk_submit_end_ns=36777323719638 usb_submit_urb_result=0 bulk_completion_callback_ns=36777324055471 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.335322] XDISP_T04_TRANSACTION_79_END command_result=0 end_ns=1787022413067919512
+[36777.340603] XDISP_T04_TRANSACTION_80_START payload_bytes=12800 start_ns=1787022413073155815
+[36777.356934] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.356965] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.356984] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.357002] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.357019] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.357032] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.361515] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.362744] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.363235] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=491
+[36777.363265] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777366265788 bulk_submit_end_ns=36777366316986 usb_submit_urb_result=0 bulk_completion_callback_ns=36777366645267 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.377948] XDISP_T04_TRANSACTION_80_END command_result=0 end_ns=1787022413110490350
+[36777.383236] XDISP_T04_TRANSACTION_81_START payload_bytes=12800 start_ns=1787022413115804361
+[36777.399077] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.399106] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.399126] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.399146] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.399169] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.399184] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.403464] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.404777] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.405206] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=430
+[36777.405239] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777408299802 bulk_submit_end_ns=36777408353292 usb_submit_urb_result=0 bulk_completion_callback_ns=36777408689698 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.418938] XDISP_T04_TRANSACTION_81_END command_result=0 end_ns=1787022413151584104
+[36777.424104] XDISP_T04_TRANSACTION_82_START payload_bytes=12800 start_ns=1787022413156509000
+[36777.439309] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.439336] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.439355] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.439369] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.439388] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.439401] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.443205] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.444497] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.444905] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=409
+[36777.444930] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777448023244 bulk_submit_end_ns=36777448068504 usb_submit_urb_result=0 bulk_completion_callback_ns=36777448396473 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.457515] XDISP_T04_TRANSACTION_82_END command_result=0 end_ns=1787022413190031452
+[36777.462083] XDISP_T04_TRANSACTION_83_START payload_bytes=12800 start_ns=1787022413194868015
+[36777.476622] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.476650] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.476664] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.476678] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.476692] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.476704] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.481086] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.482324] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.482752] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=430
+[36777.482779] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777485848821 bulk_submit_end_ns=36777485893508 usb_submit_urb_result=0 bulk_completion_callback_ns=36777486240175 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.495737] XDISP_T04_TRANSACTION_83_END command_result=0 end_ns=1787022413228277810
+[36777.500963] XDISP_T04_TRANSACTION_84_START payload_bytes=12800 start_ns=1787022413233700310
+[36777.517058] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.517089] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.517107] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.517122] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.517140] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.517154] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.521404] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.522624] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.523271] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=645
+[36777.523301] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777526146741 bulk_submit_end_ns=36777526197835 usb_submit_urb_result=0 bulk_completion_callback_ns=36777526558720 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.537845] XDISP_T04_TRANSACTION_84_END command_result=0 end_ns=1787022413270387658
+[36777.543531] XDISP_T04_TRANSACTION_85_START payload_bytes=12800 start_ns=1787022413276001252
+[36777.559734] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.559773] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.559795] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.559818] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.559838] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.559854] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.564104] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.565444] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.565882] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=439
+[36777.565913] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777568966433 bulk_submit_end_ns=36777569020548 usb_submit_urb_result=0 bulk_completion_callback_ns=36777569367058 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.580348] XDISP_T04_TRANSACTION_85_END command_result=0 end_ns=1787022413312782141
+[36777.586074] XDISP_T04_TRANSACTION_86_START payload_bytes=12800 start_ns=1787022413318671308
+[36777.602317] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.602350] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.602369] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.602388] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.602410] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.602426] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.606809] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.608024] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.608449] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=427
+[36777.608481] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777611546125 bulk_submit_end_ns=36777611602010 usb_submit_urb_result=0 bulk_completion_callback_ns=36777611937114 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.623398] XDISP_T04_TRANSACTION_86_END command_result=0 end_ns=1787022413355742927
+[36777.628273] XDISP_T04_TRANSACTION_87_START payload_bytes=12800 start_ns=1787022413360993500
+[36777.644126] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.644179] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.644200] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.644224] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.644247] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.644262] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.649033] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.650283] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.650708] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=427
+[36777.650740] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777653805296 bulk_submit_end_ns=36777653860764 usb_submit_urb_result=0 bulk_completion_callback_ns=36777654190712 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.666920] XDISP_T04_TRANSACTION_87_END command_result=0 end_ns=1787022413399006316
+[36777.671959] XDISP_T04_TRANSACTION_88_START payload_bytes=12800 start_ns=1787022413404700067
+[36777.686966] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.687017] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.687035] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.687056] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.687076] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.687089] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.691158] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.692367] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.692783] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=417
+[36777.693099] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777695891914 bulk_submit_end_ns=36777695939362 usb_submit_urb_result=0 bulk_completion_callback_ns=36777696272071 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.706211] XDISP_T04_TRANSACTION_88_END command_result=0 end_ns=1787022413438835591
+[36777.710596] XDISP_T04_TRANSACTION_89_START payload_bytes=12800 start_ns=1787022413443465644
+[36777.726588] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.726614] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.726631] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.726648] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.726665] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.726678] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.731324] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.732631] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.733411] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=779
+[36777.733437] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777736155616 bulk_submit_end_ns=36777736202752 usb_submit_urb_result=0 bulk_completion_callback_ns=36777736604210 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.746105] XDISP_T04_TRANSACTION_89_END command_result=0 end_ns=1787022413478733460
+[36777.750945] XDISP_T04_TRANSACTION_90_START payload_bytes=12800 start_ns=1787022413483745335
+[36777.766031] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.766067] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.766085] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.766103] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.766262] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.766277] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.770319] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.771524] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.771940] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=418
+[36777.771968] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777775048016 bulk_submit_end_ns=36777775097078 usb_submit_urb_result=0 bulk_completion_callback_ns=36777775428068 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.785604] XDISP_T04_TRANSACTION_90_END command_result=0 end_ns=1787022413518293672
+[36777.790438] XDISP_T04_TRANSACTION_91_START payload_bytes=12800 start_ns=1787022413523150756
+[36777.807050] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.807087] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.807109] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.807129] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.807150] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.807165] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.812143] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.813651] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.814087] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=439
+[36777.814116] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777817173489 bulk_submit_end_ns=36777817221197 usb_submit_urb_result=0 bulk_completion_callback_ns=36777817556301 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.827434] XDISP_T04_TRANSACTION_91_END command_result=0 end_ns=1787022413559774145
+[36777.832088] XDISP_T04_TRANSACTION_92_START payload_bytes=12800 start_ns=1787022413564857583
+[36777.848267] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.848310] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.848333] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.848360] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.848383] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.848398] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.852790] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.854284] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.854699] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=418
+[36777.854724] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777857807764 bulk_submit_end_ns=36777857855160 usb_submit_urb_result=0 bulk_completion_callback_ns=36777858187191 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.868082] XDISP_T04_TRANSACTION_92_END command_result=0 end_ns=1787022413600777378
+[36777.872510] XDISP_T04_TRANSACTION_93_START payload_bytes=12800 start_ns=1787022413605321337
+[36777.888644] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.888679] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.888697] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.888714] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.888731] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.888743] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.893163] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.894408] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.894825] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=420
+[36777.894853] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777897931362 bulk_submit_end_ns=36777897981049 usb_submit_urb_result=0 bulk_completion_callback_ns=36777898313341 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.908876] XDISP_T04_TRANSACTION_93_END command_result=0 end_ns=1787022413641260715
+[36777.914156] XDISP_T04_TRANSACTION_94_START payload_bytes=12800 start_ns=1787022413646845560
+[36777.930222] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.930264] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.930284] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.930304] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.930329] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.930346] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.935052] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.936499] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.937060] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=570
+[36777.937092] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777940013449 bulk_submit_end_ns=36777940079387 usb_submit_urb_result=0 bulk_completion_callback_ns=36777940407980 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.950419] XDISP_T04_TRANSACTION_94_END command_result=0 end_ns=1787022413682974678
+[36777.955211] XDISP_T04_TRANSACTION_95_START payload_bytes=12800 start_ns=1787022413687879418
+[36777.970793] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36777.970838] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36777.970857] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36777.970880] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36777.970901] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36777.970916] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36777.975327] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36777.976704] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36777.977137] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=437
+[36777.977165] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36777980224182 bulk_submit_end_ns=36777980277724 usb_submit_urb_result=0 bulk_completion_callback_ns=36777980618661 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36777.992667] XDISP_T04_TRANSACTION_95_END command_result=0 end_ns=1787022413724990567
+[36777.997847] XDISP_T04_TRANSACTION_96_START payload_bytes=12800 start_ns=1787022413730557599
+[36778.013784] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36778.013814] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36778.013835] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36778.013855] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36778.013875] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36778.013891] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36778.018178] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36778.019409] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36778.020168] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=756
+[36778.020201] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36778022932780 bulk_submit_end_ns=36778022983197 usb_submit_urb_result=0 bulk_completion_callback_ns=36778023312259 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36778.034857] XDISP_T04_TRANSACTION_96_END command_result=0 end_ns=1787022413767424843
+[36778.040144] XDISP_T04_TRANSACTION_97_START payload_bytes=12800 start_ns=1787022413772766666
+[36778.056523] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36778.056554] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36778.056572] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36778.056589] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36778.056607] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36778.056620] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36778.060874] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36778.062154] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36778.062579] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=426
+[36778.062610] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36778065678357 bulk_submit_end_ns=36778065729868 usb_submit_urb_result=0 bulk_completion_callback_ns=36778066064087 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36778.079192] XDISP_T04_TRANSACTION_97_END command_result=0 end_ns=1787022413811822712
+[36778.084032] XDISP_T04_TRANSACTION_98_START payload_bytes=12800 start_ns=1787022413816857920
+[36778.097094] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36778.097117] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36778.097129] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36778.097138] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36778.097148] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36778.097156] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36778.100493] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36778.101720] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36778.102116] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=399
+[36778.102132] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36778105248049 bulk_submit_end_ns=36778105285184 usb_submit_urb_result=0 bulk_completion_callback_ns=36778105620288 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36778.111022] XDISP_T04_TRANSACTION_98_END command_result=0 end_ns=1787022413844113183
+[36778.113911] XDISP_T04_TRANSACTION_99_START payload_bytes=12800 start_ns=1787022413847040111
+[36778.123587] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36778.123610] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36778.123623] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36778.123635] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36778.123650] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36778.123658] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36778.127017] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36778.128222] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36778.128619] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=397
+[36778.128635] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36778131751229 bulk_submit_end_ns=36778131783572 usb_submit_urb_result=0 bulk_completion_callback_ns=36778132121072 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36778.138514] XDISP_T04_TRANSACTION_99_END command_result=0 end_ns=1787022413871412457
+[36778.141921] XDISP_T04_TRANSACTION_100_START payload_bytes=12800 start_ns=1787022413874925114
+[36778.154085] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect enter
+[36778.154112] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: detect status=1
+[36778.154130] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes enter
+[36778.154145] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode created
+[36778.154163] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: mode probed
+[36778.154176] gud_xdisp_lz4_12800 1-1.3:1.0: GUD connector: get_modes complete
+[36778.158801] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE start payload_bytes=12800 raw_bytes=12800 rect=640x5 format=0x34325258 zero_packet=0
+[36778.160010] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 submit length=12800 endpoint=0x01 timeout_ms=3000
+[36778.160410] gud_xdisp_lz4_12800 1-1.3:1.0: GUD trace=1 bulk attempt=0 result=0 actual=12800 elapsed_us=403
+[36778.160431] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP_PROBE complete set_buffer_result=0 bulk_submit_start_ns=36778163535867 bulk_submit_end_ns=36778163580659 usb_submit_urb_result=0 bulk_completion_callback_ns=36778163904878 urb_status=0 urb_actual_length=12800 completion_wait_result=0
+[36778.171756] XDISP_T04_TRANSACTION_100_END command_result=0 end_ns=1787022413904582512
+[36778.172327] XDISP_T04_END result=0
+[36779.460205] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36779.702310] healthd: battery l=100 v=4285 t=22.8 h=2 st=5 c=-28 fc=2878000 cc=0 chg=
+[36779.998600] R0: [NetworkManager][706261196003] [03:06:55.732277]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36785.665817] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36785.919038] healthd: battery l=100 v=4335 t=22.8 h=2 st=5 c=88 fc=2878000 cc=0 chg=
+[36786.000264] R0: [NetworkManager][706376428896] [03:07:01.733991]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36792.010588] R0: [NetworkManager][706491826957] [03:07:07.744307]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36792.502521] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36792.797907] healthd: battery l=100 v=4337 t=22.8 h=2 st=5 c=113 fc=2878000 cc=0 chg=
+[36798.006949] R0: [NetworkManager][706606957329] [03:07:13.740681]  wlan: [1752:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[36798.443189] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[36798.716803] healthd: battery l=100 v=4319 t=22.8 h=2 st=5 c=92 fc=2878000 cc=0 chg=
+[36800.481162] R0: [cds_mc_thread][706654462254] [03:07:16.214897]  wlan: [3369:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[36800.496348] R0: [cds_mc_thread][706654753972] [03:07:16.230090]  wlan: [3369:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[36801.244398] R0: [cds_mc_thread][706669116495] [03:07:16.978138]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[36801.244444] R0: [cds_mc_thread][706669117523] [03:07:16.978192]  wlan: [3369:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x20
+[36801.244484] R0: [cds_mc_thread][706669118298] [03:07:16.978232]  wlan: [3369:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
