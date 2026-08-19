@@ -49,7 +49,7 @@ const STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE: Duration = Duration::from_millis(1_0
 const STATUS_ON_SET_CLEANUP_STATUS_COUNT: u8 = 2;
 const STATUS_ON_SET_DIAGNOSTIC_TRANSACTION_LIMIT: u8 = 2;
 const E1_T05_PROCESSING_BARRIER_DEADLINE: Duration = Duration::from_secs(30);
-const E1_T05_INFLIGHT_DEADLINE_MAX: Duration = Duration::from_secs(30);
+const E1_T05_INFLIGHT_DEADLINE_MAX: Duration = Duration::from_secs(120);
 
 fn parse_e1_t05_inflight_deadline(value: Option<&OsStr>) -> anyhow::Result<Duration> {
     let Some(value) = value else {
@@ -4990,7 +4990,7 @@ mod tests {
             BULK_RECEIVE_DEADLINE
         );
         assert!(parse_e1_t05_inflight_deadline(Some(OsStr::new("1000"))).is_err());
-        assert!(parse_e1_t05_inflight_deadline(Some(OsStr::new("30001"))).is_err());
+        assert!(parse_e1_t05_inflight_deadline(Some(OsStr::new("120001"))).is_err());
         assert!(parse_e1_t05_inflight_deadline(Some(OsStr::new("not-a-number"))).is_err());
         if cfg!(debug_assertions) {
             assert_eq!(
