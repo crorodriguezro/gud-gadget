@@ -84,7 +84,17 @@ multi-frame qualification. Remaining P0 work is tracked by the roadmap:
    exact-AIO sequence with `NRestarts` unchanged. A corrected process completed
    a new exact transaction to Idle, but the next cable/re-role sequence again
   hard-reset the Pi before a post-reconnect transaction. Electrically verify
-  Pi supply and OTG VBUS isolation before another attempt;
+   Pi supply and OTG VBUS isolation before another attempt. The 2026-08-19
+   independently powered data-only run subsequently passed N1 10/10 on gadget
+   commit `828deb3`: PID 974, boot ID, FunctionFS instance, UDC binding, and
+   `NRestarts=0` remained unchanged; activations and exact-AIO sequence advanced
+   1 through 11; every 12,800-byte transfer returned Idle. F2 also passed using
+   a bounded test-only host pause and debug-only Pi deadline: the accepted
+   InFlight request was contained as Poisoned on FunctionFS Suspend, with no
+   payload completion/frame presentation, no restart, and empty pstore. See
+   `docs/e1-t05-lifecycle-matrix-runbook.md` and `/tmp/opencode/e1-t05-*` for
+   the detailed ephemeral host evidence. Remaining E1-T05 rows are F3, F4,
+   F6, and F7; restore the release Pi artifact before further production work.
 - `E1-T06`: pass the sustained transport soak.
 
 Keep the 12,800-byte actual-payload operating constraint through these gates.

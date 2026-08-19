@@ -2,7 +2,7 @@
 
 ## Status and prerequisite
 
-Status: blocked for hardware qualification. E1-T04 is a satisfied prerequisite: its canonical
+Status: N1 and F2 hardware-qualified. E1-T04 is a satisfied prerequisite: its canonical
 clean-source 100-frame result is
 `evidence/functionfs-status-on-set-e1-t04-clean-source-passing-rerun-20260818T030651Z/`.
 It used gadget commit `6aea5e73865f3a4cb449c0f817cadf752d721f65` and host
@@ -54,9 +54,29 @@ session or post-reconnect transaction. Therefore the policy correction is not
 hardware-qualified and N1 remains 0/10. Electrically verify supply continuity
 and OTG VBUS isolation before another hardware attempt.
 
+The 2026-08-19 independent-power/data-only run qualified N1 and F2. The release
+artifact from gadget commit `828deb3` (SHA-256
+`2ac10f2458bec2608d86c38c274de95edc38c14abdb4bf0943bc8ef2115e1687`)
+passed N1 10/10 with PID 974, unchanged boot ID
+`ccd1fa95-f335-4f2b-bb4a-8c58d34862fb`, `NRestarts=0`, activation generation
+1 through 11, exact-AIO sequence 1 through 11, and final Idle. Per-transfer
+host evidence is retained outside the worktree at
+`/tmp/opencode/e1-t05-cycle-{01..10}-20260819T*.`, with the baseline at
+`/tmp/opencode/e1-t05-baseline-after-shutdown-20260819T033440Z`.
+
+F2 used the test-only host pre-bulk pause (`gud` commit `7e75222`) and the
+debug-only Pi deadline override (`gadget` commits `259253f` through `3e8f6dd`).
+The accepted sequence 2 was InFlight when the verified physical data detach
+caused phone device absence and FunctionFS Suspend. The Pi contained it as
+Poisoned without `payload_completed` or `frame_stats` for sequence 2; the
+phone's later bulk submit returned `-19` because the device was absent. Evidence
+is at `/tmp/opencode/e1-t05-f2-debug90-inflight-final-20260819T042101Z`.
+The release artifact was restored and the temporary debug drop-in removed after
+the contained case. pstore was empty and no Pi kernel/DWC2 fault was observed.
+
 This ticket qualifies ownership and containment, not transparent recovery from
 accepted I/O. Run one matrix case per fresh known-safe session. Do not start
-E1-T06 until this document's hardware rows have passed.
+E1-T06 until this document's remaining applicable hardware rows have passed.
 
 ## Invariants
 
@@ -107,10 +127,10 @@ the next case.
 
 | ID | Injection and precondition | Expected result | Allowed action | Forbidden action | Acceptance/evidence |
 | --- | --- | --- | --- | --- | --- |
-| N1 | Ten normal cycles: completed transaction is Idle, then physical data detach and reconnect | Same PID/UDC/FunctionFS objects observe `DISABLE -> WaitingForHost -> ENABLE -> Active`, transfer successfully, and return Idle | Persistent idle transition | Manual repair, restart, unbind, FunctionFS recreation, stale fd/operation/metadata | Per-cycle activation generation, sequence/PID, `NRestarts` unchanged, success, final Idle; no timeout, poison, `-71`, DWC2/kernel/pstore fault |
+| N1 | Passed 2026-08-19: ten completed-Idle physical data detach/reconnect cycles | Same PID/UDC/FunctionFS objects observed `SUSPEND -> DISABLE -> WaitingForHost -> ENABLE -> Active`, transferred successfully, and returned Idle | Persistent idle transition | Manual repair, restart, unbind, FunctionFS recreation, stale fd/operation/metadata | PID 974, boot ID and `NRestarts=0` unchanged; activation 1..11 and sequence 1..11; no timeout, poison, `-71`, DWC2/kernel/pstore fault |
 | N2 | Disable/detach while aggregate and AIO are Idle | Same persistent session renders waiting state; next Enable creates a new host activation | Retain objects | Close/unbind/recreate or containment recovery masquerading as normal | Idle markers before/after, unchanged PID/UDC/FunctionFS, and fresh successful transaction |
 | F1 | Offline only: lifecycle observation immediately after entering Arming, before proven `io_submit` result | Ambiguous Arming becomes Poisoned | Evidence preservation | Arming-to-Idle unless zero acceptance is proved | Focused unit result and rationale: hardware cannot distinguish this boundary safely |
-| F2 | Valid SET_BUFFER, accepted exact request, aggregate InFlight; perform one predeclared physical disconnect/disable | Poisoned containment; no framebuffer processing | Physical containment/reset after capture | Cancel, close, unbind, restart, fallback | State/sequence/operation markers, host result, Pi and phone kernel logs |
+| F2 | Passed 2026-08-19: valid SET_BUFFER/accepted exact sequence 2 held InFlight by test-only host pause, then verified data-path detach | FunctionFS Suspend contained the request as Poisoned; no payload completion or framebuffer processing | Physical containment/reset after capture | Cancel, close, unbind, restart, fallback | Phone absence marker, `-19` post-detach bulk submit, Pi InFlight/operation markers, `e1_t05_lifecycle_containment`, empty pstore, and no Pi kernel fault |
 | F3 | Exact completion then Processing ownership; inject a deterministic test-only processing barrier before finalization, then lifecycle event | Poisoned containment; metadata stays owned; no new admission | Physical containment/reset after capture | Finalize or teardown | Barrier configuration/log, Processing state, sequence/operation, no second SET_BUFFER |
 | F4 | Accepted request exceeds production completion deadline | Timeout increments once and becomes Poisoned | Physical containment/reset after capture | Assume Idle, cancel, fallback, unbind/restart | Timeout marker, active identity, host/Pi result |
 | F5 | Offline deterministic completion/processing errors: short, zero, wrong identity, duplicate/cross association, completion error, processing error | Poisoned; invalid bytes never reach framebuffer processing | Offline unit qualification | USB corruption experiments | Test names/results and state assertions |
