@@ -2,7 +2,8 @@
 
 ## Status and prerequisite
 
-Status: N1 and F2 hardware-qualified. E1-T04 is a satisfied prerequisite: its canonical
+Status: E1-T05 is verified for v1: N1, F1-F5, and F7 are qualified. F6 is deferred P2
+as a target-platform PM limitation. E1-T04 is a satisfied prerequisite: its canonical
 clean-source 100-frame result is
 `evidence/functionfs-status-on-set-e1-t04-clean-source-passing-rerun-20260818T030651Z/`.
 It used gadget commit `6aea5e73865f3a4cb449c0f817cadf752d721f65` and host
@@ -74,9 +75,21 @@ is at `/tmp/opencode/e1-t05-f2-debug90-inflight-final-20260819T042101Z`.
 The release artifact was restored and the temporary debug drop-in removed after
 the contained case. pstore was empty and no Pi kernel/DWC2 fault was observed.
 
+The final F6 diagnostic used the isolated PM-test host artifact from `gud`
+commit `db8ee75` (SHA-256 `2c195d5bdfead8ba225d18e82113453e239d4a379736cbd35944871773f4c44b`).
+It proved real Idle FunctionFS Suspend and Resume, but target runtime-PM resume
+then physically re-enumerated the GUD USB device: stable topology/sysfs path
+`1-1.2` and bus `1` remained, while host device number changed `5 -> 6`.
+The Pi consequently observed `Suspend -> Resume -> Suspend -> Disable -> Enable`
+and activation `2 -> 3`. The host did not log `GUD_PM_TEST resume result=0` or
+`reset_resume`; it logged a fresh PM-test probe. Same-activation persistent
+resume is therefore deferred P2, not required for the v1 qualified envelope.
+Evidence is `/tmp/opencode/e1-t05-f6-final-pm-diagnostic-20260819T051300Z`.
+
 This ticket qualifies ownership and containment, not transparent recovery from
-accepted I/O. Run one matrix case per fresh known-safe session. Do not start
-E1-T06 until this document's remaining applicable hardware rows have passed.
+accepted I/O. Run one matrix case per fresh known-safe session. E1-T06 may use
+the N1-qualified reconnect and exact-AIO envelope; it must not claim F6 resume
+support.
 
 ## Invariants
 
@@ -134,7 +147,7 @@ the next case.
 | F3 | Exact completion then Processing ownership; inject a deterministic test-only processing barrier before finalization, then lifecycle event | Poisoned containment; metadata stays owned; no new admission | Physical containment/reset after capture | Finalize or teardown | Barrier configuration/log, Processing state, sequence/operation, no second SET_BUFFER |
 | F4 | Accepted request exceeds production completion deadline | Timeout increments once and becomes Poisoned | Physical containment/reset after capture | Assume Idle, cancel, fallback, unbind/restart | Timeout marker, active identity, host/Pi result |
 | F5 | Offline deterministic completion/processing errors: short, zero, wrong identity, duplicate/cross association, completion error, processing error | Poisoned; invalid bytes never reach framebuffer processing | Offline unit qualification | USB corruption experiments | Test names/results and state assertions |
-| F6 | In progress 2026-08-19: PM-test host variant produced real Idle FunctionFS Suspend then Resume, but host runtime resume immediately delivered Disable -> Enable/new activation | Do not qualify until Resume retains the same activation without disconnect/reprobe | Retain objects | Generic "suspend" claims or re-enumeration as resume | PM-test callback/sysfs markers, Pi Suspend/Resume, unchanged PID/boot/NRestarts, and a post-resume exact transfer in the same activation |
+| F6 | Deferred P2 2026-08-19: target PM-test runtime resume delivered real Idle Suspend/Resume, then USB device re-enumeration (`devnum 5 -> 6`) caused Disable -> Enable and activation `2 -> 3` | Same-activation persistent resume is not qualified for v1 | Retain objects | Generic "suspend" claims or re-enumeration as resume | Retained PM sysfs/host/Pi evidence classifies the platform limitation; no production PM behavior is enabled |
 | F7 | Passed 2026-08-19 by retained F2 evidence: real FunctionFS Suspend after accepted InFlight ownership | Poisoned containment | Physical containment/reset after capture | Continue old session or forget request | Sequence 2 InFlight/operation markers, FunctionFS Suspend, terminal Poisoned containment, and no payload/frame processing |
 
 `Suspend` in this matrix specifically means the FunctionFS `Suspend` event

@@ -92,9 +92,12 @@ multi-frame qualification. Remaining P0 work is tracked by the roadmap:
    a bounded test-only host pause and debug-only Pi deadline: the accepted
    InFlight request was contained as Poisoned on FunctionFS Suspend, with no
    payload completion/frame presentation, no restart, and empty pstore. See
-   `docs/e1-t05-lifecycle-matrix-runbook.md` and `/tmp/opencode/e1-t05-*` for
-   the detailed ephemeral host evidence. Remaining E1-T05 rows are F3, F4,
-   F6, and F7; restore the release Pi artifact before further production work.
+    `docs/e1-t05-lifecycle-matrix-runbook.md` and `/tmp/opencode/e1-t05-*` for
+    the detailed ephemeral host evidence. F3, F4, and F7 subsequently passed.
+    F6 is deferred P2: the isolated host PM-test variant produced real Idle
+    FunctionFS Suspend/Resume, but target runtime resume re-enumerated the USB
+    device and caused Pi Disable -> Enable/new activation. E1-T05 is verified
+    for the v1 qualified envelope; restore the release Pi artifact before E1-T06.
 - `E1-T06`: pass the sustained transport soak.
 
 Keep the 12,800-byte actual-payload operating constraint through these gates.
