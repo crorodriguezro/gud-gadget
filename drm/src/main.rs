@@ -733,6 +733,14 @@ fn proven_idle_gate(
     }
 }
 
+fn event_timeout_for_ready_payload(event_timeout: Duration, has_ready_payload: bool) -> Duration {
+    if has_ready_payload {
+        Duration::ZERO
+    } else {
+        event_timeout
+    }
+}
+
 struct LifecycleObservation<'a> {
     usb_session: &'a mut UsbSessionState,
     session: &'a BulkReceiveSession,
@@ -2635,7 +2643,7 @@ fn main() -> anyhow::Result<()> {
         "status-on-set-aio cannot be combined with old blocking prearm mode"
     );
     ensure!(
-        !(!aio_mode && test_status_on_set_bytes.is_some()),
+        aio_mode || test_status_on_set_bytes.is_none(),
         "blocking mode cannot be combined with STATUS_ON_SET diagnostics"
     );
     gud_gadget::configure_status_on_set_diagnostic(status_on_set_transaction_limit);
@@ -2844,36 +2852,16 @@ fn main() -> anyhow::Result<()> {
     info!("Built USB gadget");
 
     let running = Arc::new(AtomicBool::new(true));
+    let shutdown_requested = Arc::new(AtomicBool::new(false));
     let gadget_shutdown = GadgetShutdown::default();
     let bulk_receive_session = BulkReceiveSession::default();
 
-    let r = running.clone();
-    let shutdown = gadget_shutdown.clone();
-    let signal_bulk_receive_session = bulk_receive_session.clone();
+    let signal_shutdown_requested = shutdown_requested.clone();
     ctrlc::set_handler(move || {
-        if let Err(state) = signal_bulk_receive_session.begin_shutdown() {
-            tracing::error!(
-                ?state,
-                "Ignoring process shutdown signal because the FunctionFS bulk session is not idle; \
-                 do not stop, restart, reboot, or shut down this service instance, recover with a \
-                 physical/hardware reset"
-            );
-            return;
-        }
-        r.store(false, Ordering::SeqCst);
-        match shutdown.request_unbind() {
-            Ok(GadgetUnbindOutcome::DeferredUntilPublish) => {
-                info!("Shutdown requested before USB gadget bind")
-            }
-            Ok(GadgetUnbindOutcome::Unbound) => {
-                info!("USB gadget unbound by shutdown handler")
-            }
-            Ok(GadgetUnbindOutcome::AlreadyUnbound) => {
-                debug!("USB gadget was already unbound")
-            }
-            Ok(GadgetUnbindOutcome::Armed) => unreachable!(),
-            Err(err) => tracing::error!("Failed to unbind USB gadget during shutdown: {}", err),
-        }
+        signal_shutdown_requested.store(true, Ordering::SeqCst);
+        // Only the event-loop owner may unbind, after proving every FunctionFS
+        // owner is idle. Claiming aggregate ownership here would make that gate fail.
+        info!("Shutdown requested; waiting for the event loop ownership gate");
     })
     .expect("cleanup handler registration failed");
 
@@ -3175,6 +3163,19 @@ fn main() -> anyhow::Result<()> {
                 break 'event_loop;
             }
         }
+        if shutdown_requested.load(Ordering::Acquire)
+            && proven_idle_gate(
+                &bulk_receive_session,
+                &mut gud_data,
+                &pending_exact_receive,
+                &ready_exact_payload,
+                &status_on_set_cleanup_drain,
+            )
+            .is_proven_idle()
+        {
+            info!("Shutdown ownership gate is proven Idle");
+            break 'event_loop;
+        }
         if let Some((info, started, _)) = pending_exact_receive.as_ref() {
             match gud_data.try_complete_exact_payload_aio(info.length as usize) {
                 Ok(Some(stats)) => {
@@ -3231,37 +3232,42 @@ fn main() -> anyhow::Result<()> {
             } else {
                 Duration::from_millis(100)
             };
-        let completed_payload = ready_exact_payload.take();
-        let event = match completed_payload.as_ref() {
-            Some(_) => None,
-            None => match gud.event_timeout(event_timeout) {
-                Ok(event) => event,
-                Err(err) => {
-                    if let Some((_, started, _)) = pending_exact_receive.take() {
-                        gud_data
-                            .poison_exact_payload_aio("EP0 event failure while exact AIO accepted");
-                        let _ = bulk_receive_session.finish_receive::<()>(
-                            started,
-                            Err(anyhow::Error::new(err)
-                                .context("process EP0 while exact AIO request was accepted")),
-                        );
-                        continue;
-                    }
-                    tracing::error!("Failed to read GUD event: {}", err);
-                    if !running.load(Ordering::Acquire) {
-                        tracing::info!("Control endpoint read cancelled for shutdown");
-                        break 'event_loop;
-                    }
-                    if waiting_screen_visible || !matches!(pattern_mode, PatternMode::Off) {
-                        continue;
-                    }
-                    tracing::debug!(
-                        error = %err,
-                        "EP0 read failed without a FunctionFS lifecycle event; retaining persistent session"
+        // A queued DISABLE must win over a completed bulk payload. Otherwise the
+        // payload could be processed to Idle before the disconnect is observed.
+        let event = match gud.event_timeout(event_timeout_for_ready_payload(
+            event_timeout,
+            ready_exact_payload.is_some(),
+        )) {
+            Ok(event) => event,
+            Err(err) => {
+                if let Some((_, started, _)) = pending_exact_receive.take() {
+                    gud_data.poison_exact_payload_aio("EP0 event failure while exact AIO accepted");
+                    let _ = bulk_receive_session.finish_receive::<()>(
+                        started,
+                        Err(anyhow::Error::new(err)
+                            .context("process EP0 while exact AIO request was accepted")),
                     );
                     continue;
                 }
-            },
+                tracing::error!("Failed to read GUD event: {}", err);
+                if !running.load(Ordering::Acquire) {
+                    tracing::info!("Control endpoint read cancelled for shutdown");
+                    break 'event_loop;
+                }
+                if waiting_screen_visible || !matches!(pattern_mode, PatternMode::Off) {
+                    continue;
+                }
+                tracing::debug!(
+                    error = %err,
+                    "EP0 read failed without a FunctionFS lifecycle event; retaining persistent session"
+                );
+                continue;
+            }
+        };
+        let completed_payload = if event.is_none() {
+            ready_exact_payload.take()
+        } else {
+            None
         };
         if event.is_none() && completed_payload.is_none() {
             continue;
@@ -4903,9 +4909,9 @@ mod tests {
     use super::{
         advertised_preferred_mode_index, classify_usb_lifecycle, compute_scaled_layout,
         derive_mode_from_native, diagnostic_pattern_color, dump_pixel_buffer_ppm,
-        fill_diagnostic_pattern_rect, parse_functionfs_read_size, parse_test_compression,
-        parse_test_dynamic_mode_match, parse_test_max_buffer_size, parse_test_output_mode,
-        parse_test_prearm_once_bytes, parse_test_status_on_set_bytes,
+        event_timeout_for_ready_payload, fill_diagnostic_pattern_rect, parse_functionfs_read_size,
+        parse_test_compression, parse_test_dynamic_mode_match, parse_test_max_buffer_size,
+        parse_test_output_mode, parse_test_prearm_once_bytes, parse_test_status_on_set_bytes,
         parse_test_status_on_set_two_transactions_bytes, read_pixel, record_host_activity,
         render_waiting_screen, scale_to_fit, validate_test_mode_policy, waiting_scene_glyph,
         write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
@@ -5446,6 +5452,18 @@ mod tests {
         assert_eq!(
             session.begin_shutdown(),
             Err(BulkReceiveState::ShuttingDown)
+        );
+    }
+
+    #[test]
+    fn ready_payload_polls_ep0_before_processing() {
+        assert_eq!(
+            event_timeout_for_ready_payload(Duration::from_millis(100), true),
+            Duration::ZERO
+        );
+        assert_eq!(
+            event_timeout_for_ready_payload(Duration::from_millis(100), false),
+            Duration::from_millis(100)
         );
     }
 
