@@ -53,10 +53,38 @@ multi-frame qualification. Remaining P0 work is tracked by the roadmap:
    identified and led to the host XRGB8888 stage-format fix;
 - `E1-T05`: **blocked**. The lifecycle ownership matrix and offline containment
   coverage are defined in `docs/e1-t05-lifecycle-matrix-runbook.md`. The
-  2026-08-18 hardware preflight reached both targets but did not start a case:
-  T05 source was uncommitted, worktrees were dirty, and the required OnePlus
-  sudo credential was unavailable. Hardware normal-reconnect and controlled
-  fault evidence remain outstanding;
+  clean-source normal reconnect run retained at
+  `evidence/functionfs-status-on-set-e1-t05-normal-reconnect-20260818T033000Z/`
+  failed at cycle 1 of 10: a completed transaction reached Idle and FunctionFS
+  Suspend was safely observed from Idle, but reattach did not restore the Pi
+  session and the OnePlus later logged descriptor `-110`. A fresh-baseline
+  retry at `evidence/functionfs-status-on-set-e1-t05-normal-reconnect-retry-20260818T034100Z/`
+  reproduced the failure: `1d50:614d` did not return within 45 seconds after
+  safe Idle Suspend. Isolated evidence at
+  `evidence/functionfs-status-on-set-e1-t05-idle-role-power-diagnosis-20260818T041030Z/`
+  shows why: after a successful exact transaction returned to Idle, the phone
+  `host -> device -> host` cycle changed the Pi boot ID, proving the Pi reset
+  rather than preserving a reconnectable FunctionFS/DWC2 session. The new boot
+  then failed `set_crtc` with `Permission denied`, leaving the service failed
+  and UDC `not attached`; phone enumeration consequently ended in descriptor
+  `-110`/address `-62`. The reset occurred during the role/re-enumeration
+  sequence; whether supply was lost or host VBUS/backfeed caused a transient is
+  not yet measured. Isolate Pi power and OTG VBUS, use data-only detach, and
+  prove boot-ID continuity before rerunning N1. The live Pi also booted
+  `6.12.47+rpt-rpi-v8` rather than the pinned `-ffs-xfercompltrace` kernel, so
+  restore and verify the pinned kernel first. Do not run controlled fault cases
+  until normal reconnect passes 10/10. Follow-up evidence at
+  `evidence/functionfs-status-on-set-e1-t05-topology-validation-20260818T042317Z/`
+   restored the pinned kernel and found a second blocker in the superseded
+   restart-on-disconnect design: a proven-Idle detach exited zero after safe
+   teardown, but deployed production/diagnostic drop-ins overrode containment
+   with effective `Restart=no`, preventing fresh process creation. E1-T05 now
+   replaces that model with same-PID persistent FunctionFS reconnect; normal
+   idle `DISABLE -> ENABLE` retains the UDC, FunctionFS files, DRM, and
+   exact-AIO sequence with `NRestarts` unchanged. A corrected process completed
+   a new exact transaction to Idle, but the next cable/re-role sequence again
+  hard-reset the Pi before a post-reconnect transaction. Electrically verify
+  Pi supply and OTG VBUS isolation before another attempt;
 - `E1-T06`: pass the sustained transport soak.
 
 Keep the 12,800-byte actual-payload operating constraint through these gates.

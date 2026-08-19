@@ -86,6 +86,9 @@ static PROTOCOL_STATE: OnceLock<Mutex<ProtocolState>> = OnceLock::new();
 // This generation changes only at FunctionFS lifecycle boundaries. It lets the
 // receive logs prove whether an ep1 FD was opened before the current lifecycle.
 static FUNCTIONFS_LIFECYCLE_GENERATION: AtomicU64 = AtomicU64::new(0);
+// This identifies one host activation, rather than every FunctionFS lifecycle
+// observation. Exact AIO captures it at submission and rejects stale harvests.
+static USB_ACTIVATION_GENERATION: AtomicU64 = AtomicU64::new(0);
 static FUNCTIONFS_MONOTONIC_EPOCH: OnceLock<Instant> = OnceLock::new();
 
 // https://github.com/openmoko/openmoko-usb-oui/commit/73bdf541b6f9840b70219626b4088d4e3f164904
@@ -194,6 +197,7 @@ struct ExactAioTransaction {
     started: Option<Instant>,
     accepted_at: Option<Instant>,
     operation: Option<EndpointOperation>,
+    activation_generation: Option<u64>,
     metadata: Option<SetBuffer>,
     status_ready: bool,
 }
@@ -207,6 +211,7 @@ impl Default for ExactAioTransaction {
             started: None,
             accepted_at: None,
             operation: None,
+            activation_generation: None,
             metadata: None,
             status_ready: false,
         }
@@ -231,6 +236,7 @@ impl ExactAioTransaction {
             .context("exact FunctionFS AIO sequence exhausted; refusing identifier reuse")?;
         self.expected_bytes = expected_bytes;
         self.started = Some(Instant::now());
+        self.activation_generation = Some(USB_ACTIVATION_GENERATION.load(Ordering::Acquire));
         self.state = ExactAioState::Arming;
         Ok(self.sequence)
     }
@@ -274,6 +280,7 @@ impl ExactAioTransaction {
         self.expected_bytes = 0;
         self.started = None;
         self.accepted_at = None;
+        self.activation_generation = None;
         self.metadata = None;
         self.status_ready = false;
         Ok(())
@@ -316,6 +323,14 @@ impl ExactAioTransaction {
                 operation.id()
             );
         }
+        let observed_activation_generation = USB_ACTIVATION_GENERATION.load(Ordering::Acquire);
+        if self.activation_generation != Some(observed_activation_generation) {
+            self.state = ExactAioState::Poisoned;
+            bail!(
+                "exact FunctionFS AIO completion activation generation {:?} does not match active generation {observed_activation_generation}",
+                self.activation_generation
+            );
+        }
         if !self.status_ready {
             self.state = ExactAioState::Poisoned;
             bail!("exact FunctionFS AIO completion arrived before GET_STATUS=OK");
@@ -341,6 +356,7 @@ impl ExactAioTransaction {
         self.started = None;
         self.accepted_at = None;
         self.operation = None;
+        self.activation_generation = None;
         self.metadata = None;
         self.status_ready = false;
         Ok(())
@@ -579,6 +595,7 @@ pub enum ProtocolInvalidationReason {
     Suspend,
     Resume,
     Disconnected,
+    Unbind,
 }
 
 impl ProtocolInvalidationReason {
@@ -847,6 +864,17 @@ fn functionfs_lifecycle_transition(name: &'static str) -> u64 {
         lifecycle_generation = generation,
         monotonic_ns = functionfs_monotonic_ns(),
         "FunctionFS lifecycle transition"
+    );
+    generation
+}
+
+fn usb_activation_transition() -> u64 {
+    let generation = USB_ACTIVATION_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
+    debug!(
+        event = "usb_activation",
+        activation_generation = generation,
+        monotonic_ns = functionfs_monotonic_ns(),
+        "FunctionFS Enable started a USB host activation"
     );
     generation
 }
@@ -1245,10 +1273,11 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
     match event {
         custom::Event::Enable => {
             functionfs_lifecycle_transition("enable");
+            let activation_generation = usb_activation_transition();
             reset_connector_status_changed();
             reset_status();
             let generation = reset_protocol_state();
-            debug!("Enable event received");
+            debug!(activation_generation, "Enable event received");
             return Ok(Some(Event::ProtocolStateInvalidated {
                 generation,
                 reason: ProtocolInvalidationReason::Enable,
@@ -1263,6 +1292,15 @@ pub fn event(event: custom::Event) -> anyhow::Result<Option<Event>> {
             return Ok(Some(Event::ProtocolStateInvalidated {
                 generation,
                 reason: ProtocolInvalidationReason::Bind,
+            }));
+        }
+        custom::Event::Unbind => {
+            functionfs_lifecycle_transition("unbind");
+            let generation = handle_suspend_transition();
+            debug!("Unbind event received");
+            return Ok(Some(Event::ProtocolStateInvalidated {
+                generation,
+                reason: ProtocolInvalidationReason::Unbind,
             }));
         }
         custom::Event::SetupDeviceToHost(req) => {
@@ -1745,6 +1783,23 @@ impl PixelDataEndpoint {
         self.exact_aio.operation.map(|operation| operation.id())
     }
 
+    pub fn exact_aio_activation_generation(&self) -> Option<u64> {
+        self.exact_aio.activation_generation
+    }
+
+    pub fn usb_activation_generation(&self) -> u64 {
+        USB_ACTIVATION_GENERATION.load(Ordering::Acquire)
+    }
+
+    /// True only after every native-AIO completion has been harvested.
+    pub fn exact_aio_queue_is_empty(&mut self) -> bool {
+        self.ep_rx.is_empty()
+    }
+
+    pub fn prearmed_read_is_active(&self) -> bool {
+        self.prearmed_read.is_some()
+    }
+
     pub fn exact_aio_elapsed(&self) -> Option<std::time::Duration> {
         self.exact_aio.started.map(|started| started.elapsed())
     }
@@ -1778,6 +1833,7 @@ impl PixelDataEndpoint {
             event = "aio_submit_enter",
             monotonic_ns = functionfs_monotonic_ns(),
             transaction_seq = sequence,
+            activation_generation = ?self.exact_aio.activation_generation,
             expected_bytes,
             "submitting exact FunctionFS bulk OUT AIO request"
         );
@@ -1789,6 +1845,7 @@ impl PixelDataEndpoint {
                 debug!(
                     event = "aio_submit_return",
                     transaction_seq = sequence,
+                    activation_generation = ?self.exact_aio.activation_generation,
                     expected_bytes,
                     accepted = false,
                     error = %err,
@@ -1803,6 +1860,7 @@ impl PixelDataEndpoint {
             event = "aio_submit_return",
             monotonic_ns = functionfs_monotonic_ns(),
             transaction_seq = sequence,
+            activation_generation = ?self.exact_aio.activation_generation,
             expected_bytes,
             accepted = true,
             state = ?self.exact_aio.state,
@@ -1818,6 +1876,7 @@ impl PixelDataEndpoint {
                 event = "status_after_arm",
                 monotonic_ns = functionfs_monotonic_ns(),
                 transaction_seq = self.exact_aio.sequence,
+                activation_generation = ?self.exact_aio.activation_generation,
                 expected_bytes = self.exact_aio.expected_bytes,
                 status,
                 "successful status sent after exact request acceptance"
@@ -1857,6 +1916,7 @@ impl PixelDataEndpoint {
             event = "aio_completion",
             monotonic_ns = functionfs_monotonic_ns(),
             transaction_seq = sequence,
+            activation_generation = ?self.exact_aio.activation_generation,
             expected_bytes,
             actual_bytes,
             exact = true,
@@ -1881,6 +1941,7 @@ impl PixelDataEndpoint {
         debug!(
             event = "exact_aio_state_transition",
             transaction_seq = sequence,
+            activation_generation = ?self.exact_aio.activation_generation,
             state = ?self.exact_aio.state,
             operation_id = operation.id(),
             "exact FunctionFS AIO transaction entered Processing"
@@ -2348,6 +2409,7 @@ mod tests {
         begin_status_on_set_diagnostic_transaction, configure_status_on_set_diagnostic, event,
         finish_status_on_set_diagnostic_transaction, status_on_set_diagnostic_guard_state,
         status_on_set_set_buffer_permitted, Event, ProtocolInvalidationReason,
+        USB_ACTIVATION_GENERATION,
     };
     use bytes::BytesMut;
     use serde::Serialize;
@@ -2668,9 +2730,58 @@ mod tests {
     }
 
     #[test]
-    fn sequence_exhaustion_refuses_reuse() {
+    fn completion_generation_mismatch_poisons_without_releasing_identity_or_metadata() {
+        let _guard = test_global_state();
+        USB_ACTIVATION_GENERATION.store(10, std::sync::atomic::Ordering::Release);
         let mut transaction = ExactAioTransaction::default();
-        transaction.sequence = u64::MAX;
+        let metadata = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1,
+            length: 4,
+            compression: 0,
+            compressed_length: 0,
+        };
+        transaction
+            .begin_arm_with_metadata(metadata.clone(), 4)
+            .unwrap();
+        let operation = EndpointOperation::from_id(77);
+        transaction
+            .submission_accepted_operation(operation)
+            .unwrap();
+        transaction.status_sent(GUD_STATUS_OK).unwrap();
+        USB_ACTIVATION_GENERATION.store(11, std::sync::atomic::Ordering::Release);
+
+        assert!(transaction.completion_for_operation(operation, 4).is_err());
+        assert_eq!(transaction.state, ExactAioState::Poisoned);
+        assert_eq!(transaction.operation, Some(operation));
+        assert_eq!(transaction.metadata, Some(metadata));
+    }
+
+    #[test]
+    fn each_enable_starts_a_new_activation_for_exact_aio() {
+        let _guard = test_global_state();
+        USB_ACTIVATION_GENERATION.store(0, std::sync::atomic::Ordering::Release);
+        event(custom::Event::Enable).unwrap();
+        let mut first = ExactAioTransaction::default();
+        first.begin_arm(4).unwrap();
+        let first_generation = first.activation_generation;
+
+        event(custom::Event::Enable).unwrap();
+        let mut second = ExactAioTransaction::default();
+        second.begin_arm(4).unwrap();
+
+        assert_eq!(first_generation, Some(1));
+        assert_eq!(second.activation_generation, Some(2));
+    }
+
+    #[test]
+    fn sequence_exhaustion_refuses_reuse() {
+        let mut transaction = ExactAioTransaction {
+            sequence: u64::MAX,
+            ..Default::default()
+        };
         assert!(transaction.begin_arm(12_800).is_err());
         assert_eq!(transaction.sequence, u64::MAX);
         assert_eq!(transaction.state, ExactAioState::Idle);
@@ -3426,6 +3537,7 @@ mod tests {
         let _guard = test_global_state();
         for (custom_event, reason) in [
             (custom::Event::Bind, ProtocolInvalidationReason::Bind),
+            (custom::Event::Unbind, ProtocolInvalidationReason::Unbind),
             (custom::Event::Enable, ProtocolInvalidationReason::Enable),
             (custom::Event::Suspend, ProtocolInvalidationReason::Suspend),
             (custom::Event::Resume, ProtocolInvalidationReason::Resume),
@@ -3796,6 +3908,19 @@ mod tests {
     }
 
     #[test]
+    fn unbind_event_is_not_an_ordinary_disconnect() {
+        let _guard = test_global_state();
+        let event = event(custom::Event::Unbind).unwrap();
+        assert!(matches!(
+            event,
+            Some(Event::ProtocolStateInvalidated {
+                reason: ProtocolInvalidationReason::Unbind,
+                ..
+            })
+        ));
+    }
+
+    #[test]
     fn lifecycle_invalidations_do_not_count_as_host_activity() {
         for reason in [
             ProtocolInvalidationReason::Bind,
@@ -3803,6 +3928,7 @@ mod tests {
             ProtocolInvalidationReason::Suspend,
             ProtocolInvalidationReason::Resume,
             ProtocolInvalidationReason::Disconnected,
+            ProtocolInvalidationReason::Unbind,
         ] {
             let event = Event::ProtocolStateInvalidated {
                 generation: None,

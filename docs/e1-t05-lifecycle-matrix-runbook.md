@@ -8,11 +8,51 @@ clean-source 100-frame result is
 It used gadget commit `6aea5e73865f3a4cb449c0f817cadf752d721f65` and host
 commit `bde330da2c5133c80d8be36fdf3e88c5a5386bb8`.
 
-The 2026-08-18 hardware preflight reached both targets but did not start a
-matrix case: T05 source changes were uncommitted, both worktrees had changes,
-and the OnePlus sudo credential required for the host gate was unavailable.
-Do not deploy, mutate the service, or inject a fault until exact committed
-artifacts, clean-worktree proof, and host privilege are available.
+The 2026-08-18 normal-reconnect run is retained at
+`evidence/functionfs-status-on-set-e1-t05-normal-reconnect-20260818T033000Z/`.
+It failed at cycle 1 of 10 after a completed transaction reached Idle: the
+declared Idle detach produced FunctionFS Suspend, but reattach did not restore
+a usable Pi session and the OnePlus later logged USB descriptor `-110` errors.
+The fresh-baseline retry at
+`evidence/functionfs-status-on-set-e1-t05-normal-reconnect-retry-20260818T034100Z/`
+reproduced the same gate failure: after safe Idle suspend, `1d50:614d` did not
+return within 45 seconds. The isolated diagnosis at
+`evidence/functionfs-status-on-set-e1-t05-idle-role-power-diagnosis-20260818T041030Z/`
+identified the concrete test-topology failure: after a successful 12,800-byte
+transaction returned to Idle, the OnePlus `host -> device -> host` role cycle
+changed the Pi boot ID from `11a762a5-8094-49f5-aad0-0c63f8a7a84b` to
+`35ecfcf3-33ff-4a18-a80f-76133763104a`. The Pi therefore did not survive as a
+FunctionFS/DWC2 session. Its new boot then lost the DRM-master startup race,
+exited after repeated `set_crtc` `Permission denied`, and left the UDC
+`not attached`, while the OnePlus logged descriptor `-110` and address `-62`.
+No orderly Pi shutdown, kernel fault, DWC2 fault, or pstore record was found.
+The rebooted Pi also reported `6.12.47+rpt-rpi-v8`, not the pinned
+`6.12.47+rpt-rpi-v8-ffs-xfercompltrace`; this does not affect the reset
+diagnosis, but it independently disqualifies the attempt as N1 qualification.
+
+Treat OnePlus controller role switching as a topology reset operation, not an
+N1 detach mechanism, until Pi power and the OTG VBUS/backfeed path are isolated
+and boot-ID continuity is demonstrated. The evidence does not distinguish loss
+of Pi supply from a transient when host VBUS and enumeration return. No fault
+case may run until a valid N1 method is established and normal reconnect passes
+10/10.
+
+The follow-up topology and restart-policy validation is retained at
+`evidence/functionfs-status-on-set-e1-t05-topology-validation-20260818T042317Z/`.
+It restored the pinned kernel and proved a second normal-reconnect blocker:
+after a successful exact transaction and Idle Suspend, PID 582 performed safe
+Idle teardown and exited zero, but deployed production/diagnostic drop-ins made
+the effective policy `Restart=no`, so no fresh process was created. The then-
+deployed restart-on-success policy is superseded by the persistent same-PID
+implementation: nonzero exits still remain down, and a normal idle reconnect
+does not exit. The persistent same-PID implementation supersedes that restart
+policy: a proven-idle cable reconnect retains the UDC binding, FunctionFS
+objects, endpoint files, DRM resources, and exact-AIO sequence. A corrected
+PID 3848 completed another exact transaction to Idle,
+but the following cable/re-role sequence hard-reset the Pi before a fresh
+session or post-reconnect transaction. Therefore the policy correction is not
+hardware-qualified and N1 remains 0/10. Electrically verify supply continuity
+and OTG VBUS isolation before another hardware attempt.
 
 This ticket qualifies ownership and containment, not transparent recovery from
 accepted I/O. Run one matrix case per fresh known-safe session. Do not start
@@ -31,8 +71,7 @@ Production configuration is fixed before UDC bind:
 
 The aggregate and AIO state are correlated as
 `Idle -> Arming -> InFlight -> Processing -> Idle`. Sequence IDs are unique
-for a process lifetime; a deliberately recreated process starts a new sequence
-space and its evidence must name the new PID/process instance. An accepted
+for the persistent process lifetime and continue across normal reconnects. An accepted
 operation identity, buffer, and `SET_BUFFER` metadata remain owned through
 Processing. Only a proven `Idle` state may close endpoints, drop the AIO
 driver, unbind/recreate the gadget, or restart normally.
@@ -53,9 +92,10 @@ and suppressed unsafe teardowns.
 | Path | Idle | Arming | InFlight | Processing | Poisoned |
 | --- | --- | --- | --- | --- | --- |
 | SIGTERM/process shutdown | Claim shutdown, then unbind/remove | Poison and suppress | Poison and suppress | Poison and suppress | Suppress |
-| FunctionFS Disable/UDC detach | Normal lifecycle cleanup/recreate | Contain | Contain | Contain | Suppress |
-| FunctionFS Suspend/Resume | Record; new session policy is allowed | Contain | Contain | Contain | Suppress |
-| EP0 read/error | Normal detached handling only | Contain | Contain | Contain | Suppress |
+| FunctionFS Disable | Reset host state, render waiting screen, retain all objects | Contain | Contain | Contain | Suppress |
+| FunctionFS Suspend/Resume | Retain objects; Idle Resume returns to Active | Contain | Contain | Contain | Suppress |
+| FunctionFS Unbind | Controlled fatal lifecycle result | Contain | Contain | Contain | Suppress |
+| EP0 read/error | Retain session; FunctionFS lifecycle events decide state | Contain | Contain | Contain | Suppress |
 | AIO timeout/completion error | N/A | Contain if acceptance is ambiguous | Contain | Contain | Suppress |
 
 No row may prove safety by `io_cancel`, endpoint close/drop, UDC unbind,
@@ -67,14 +107,14 @@ the next case.
 
 | ID | Injection and precondition | Expected result | Allowed action | Forbidden action | Acceptance/evidence |
 | --- | --- | --- | --- | --- | --- |
-| N1 | Ten normal cycles: completed transaction is Idle, then physical detach and reconnect | New FunctionFS/UDC session transfers successfully and returns Idle | Idle cleanup/rebind | Manual repair; stale fd/operation/metadata | Per-cycle descriptor/mode, sequence/PID, success, final Idle; no timeout, poison, `-71`, DWC2/kernel/pstore fault |
-| N2 | Disable/detach while aggregate and AIO are Idle | Normal cleanup and next session succeed | Close/unbind/recreate | Containment recovery masquerading as normal | Idle markers before/after and fresh successful transaction |
+| N1 | Ten normal cycles: completed transaction is Idle, then physical data detach and reconnect | Same PID/UDC/FunctionFS objects observe `DISABLE -> WaitingForHost -> ENABLE -> Active`, transfer successfully, and return Idle | Persistent idle transition | Manual repair, restart, unbind, FunctionFS recreation, stale fd/operation/metadata | Per-cycle activation generation, sequence/PID, `NRestarts` unchanged, success, final Idle; no timeout, poison, `-71`, DWC2/kernel/pstore fault |
+| N2 | Disable/detach while aggregate and AIO are Idle | Same persistent session renders waiting state; next Enable creates a new host activation | Retain objects | Close/unbind/recreate or containment recovery masquerading as normal | Idle markers before/after, unchanged PID/UDC/FunctionFS, and fresh successful transaction |
 | F1 | Offline only: lifecycle observation immediately after entering Arming, before proven `io_submit` result | Ambiguous Arming becomes Poisoned | Evidence preservation | Arming-to-Idle unless zero acceptance is proved | Focused unit result and rationale: hardware cannot distinguish this boundary safely |
 | F2 | Valid SET_BUFFER, accepted exact request, aggregate InFlight; perform one predeclared physical disconnect/disable | Poisoned containment; no framebuffer processing | Physical containment/reset after capture | Cancel, close, unbind, restart, fallback | State/sequence/operation markers, host result, Pi and phone kernel logs |
 | F3 | Exact completion then Processing ownership; inject a deterministic test-only processing barrier before finalization, then lifecycle event | Poisoned containment; metadata stays owned; no new admission | Physical containment/reset after capture | Finalize or teardown | Barrier configuration/log, Processing state, sequence/operation, no second SET_BUFFER |
 | F4 | Accepted request exceeds production completion deadline | Timeout increments once and becomes Poisoned | Physical containment/reset after capture | Assume Idle, cancel, fallback, unbind/restart | Timeout marker, active identity, host/Pi result |
 | F5 | Offline deterministic completion/processing errors: short, zero, wrong identity, duplicate/cross association, completion error, processing error | Poisoned; invalid bytes never reach framebuffer processing | Offline unit qualification | USB corruption experiments | Test names/results and state assertions |
-| F6 | FunctionFS gadget `Suspend` while Idle | Record concrete FunctionFS suspend; resume must establish a fresh normal session unless proven safe | Idle cleanup/new session | Generic "suspend" claims | Event markers and reconnect transfer |
+| F6 | FunctionFS gadget `Suspend` while Idle | Record concrete FunctionFS suspend; Resume returns the persistent session to Active | Retain objects | Generic "suspend" claims | Event markers and reconnect transfer |
 | F7 | FunctionFS gadget `Suspend`, `Resume`, or `Disable` after accepted ownership | Poisoned containment | Physical containment/reset after capture | Continue old session or forget request | Lifecycle event/state and ownership markers |
 
 `Suspend` in this matrix specifically means the FunctionFS `Suspend` event
@@ -100,7 +140,7 @@ bounded and does not cancel I/O. Do not use it in normal reconnect cases.
 
 Current focused coverage establishes:
 
-- Idle lifecycle/shutdown cleanup is allowed.
+- Idle lifecycle reuse is allowed; actual shutdown alone performs UDC-first cleanup.
 - rejected zero-accepted submission returns Idle.
 - Arming lifecycle ambiguity, InFlight shutdown, Processing lifecycle/shutdown,
   timeout, short/zero/wrong completion, processing error, and ordinary cleanup
@@ -128,6 +168,17 @@ both commits, clean-worktree proof, artifact SHA256 values, this runbook
 version, receive configuration, initial Idle state, and prior kernel/pstore
 checks. Capture host logs, Pi userspace/kernel logs, phone kernel logs,
 pstore results, validation summary, and `SHA256SUMS`.
+
+For N1, verify stable independent Pi power, isolate unintended OTG VBUS/backfeed,
+and detach only the data path. Record Pi boot ID and monotonic uptime before
+detach and after reconnect; either a changed boot ID or reset uptime invalidates
+the case as a power/topology reset. Do not use OnePlus
+`host -> device -> host` as the detach while that operation resets the Pi.
+Verify the pinned Pi kernel before each case; a fallback boot is not acceptable.
+Re-enumeration alone is insufficient:
+each cycle requires a FunctionFS Enable/new activation generation in the same
+process and FunctionFS instance, one successful exact 12,800-byte transaction,
+and final aggregate/AIO Idle ownership.
 
 For every fault case, immediately preserve evidence after the declared
 containment marker. Do not invoke normal service stop, unbind, restart, or

@@ -28,14 +28,10 @@ use std::time::{Duration, Instant};
 use tracing::{debug, info, warn};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use usb_gadget::function::custom::{Custom, Interface};
-use usb_gadget::{default_udc, Class, Config, Gadget, RegGadget, Strings, Udc, UdcState};
+use usb_gadget::{default_udc, Class, Config, Gadget, RegGadget, Strings};
 
 const CRTC_SET_RETRIES: usize = 20;
 const CRTC_SET_RETRY_DELAY: Duration = Duration::from_millis(250);
-
-fn should_restart_after_clean_detach(restart_requested: bool, shutdown_requested: bool) -> bool {
-    restart_requested && !shutdown_requested
-}
 
 fn record_host_activity(had_host_session: &mut bool, event: &Event<'_>) {
     if event.is_host_activity() && !*had_host_session {
@@ -287,6 +283,93 @@ enum BulkReceiveState {
     ShuttingDown = 5,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UsbSessionState {
+    WaitingForHost,
+    Active,
+    Suspended,
+    Contained,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UsbLifecycleInput {
+    ProtocolInvalidation,
+    Bind,
+    Enable,
+    Suspend,
+    Resume,
+    Disable,
+    Unbind,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UsbLifecycleResult {
+    Continue(UsbSessionState),
+    Contained,
+    FatalUnbind,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct ProvenIdleGate {
+    aggregate_idle: bool,
+    exact_aio_idle: bool,
+    accepted_operation_absent: bool,
+    aio_queue_empty: bool,
+    pending_exact_receive_absent: bool,
+    ready_exact_payload_absent: bool,
+    cleanup_drain_absent: bool,
+    diagnostic_guard_inactive: bool,
+    prearmed_read_inactive: bool,
+}
+
+impl ProvenIdleGate {
+    fn is_proven_idle(self) -> bool {
+        self.aggregate_idle
+            && self.exact_aio_idle
+            && self.accepted_operation_absent
+            && self.aio_queue_empty
+            && self.pending_exact_receive_absent
+            && self.ready_exact_payload_absent
+            && self.cleanup_drain_absent
+            && self.diagnostic_guard_inactive
+            && self.prearmed_read_inactive
+    }
+}
+
+fn classify_usb_lifecycle(
+    state: UsbSessionState,
+    input: UsbLifecycleInput,
+    proven_idle: bool,
+) -> UsbLifecycleResult {
+    if state == UsbSessionState::Contained || !proven_idle {
+        return UsbLifecycleResult::Contained;
+    }
+    match input {
+        UsbLifecycleInput::ProtocolInvalidation => UsbLifecycleResult::Continue(state),
+        UsbLifecycleInput::Bind => UsbLifecycleResult::Continue(UsbSessionState::WaitingForHost),
+        UsbLifecycleInput::Enable => UsbLifecycleResult::Continue(UsbSessionState::Active),
+        UsbLifecycleInput::Suspend => UsbLifecycleResult::Continue(UsbSessionState::Suspended),
+        UsbLifecycleInput::Resume => UsbLifecycleResult::Continue(UsbSessionState::Active),
+        UsbLifecycleInput::Disable => UsbLifecycleResult::Continue(UsbSessionState::WaitingForHost),
+        UsbLifecycleInput::Unbind => UsbLifecycleResult::FatalUnbind,
+    }
+}
+
+fn usb_lifecycle_input(reason: ProtocolInvalidationReason) -> UsbLifecycleInput {
+    match reason {
+        ProtocolInvalidationReason::Bind => UsbLifecycleInput::Bind,
+        ProtocolInvalidationReason::Enable => UsbLifecycleInput::Enable,
+        ProtocolInvalidationReason::Suspend => UsbLifecycleInput::Suspend,
+        ProtocolInvalidationReason::Resume => UsbLifecycleInput::Resume,
+        ProtocolInvalidationReason::Disconnected => UsbLifecycleInput::Disable,
+        ProtocolInvalidationReason::Unbind => UsbLifecycleInput::Unbind,
+        ProtocolInvalidationReason::InvalidStateCheck
+        | ProtocolInvalidationReason::CommitWithoutPending => {
+            UsbLifecycleInput::ProtocolInvalidation
+        }
+    }
+}
+
 impl BulkReceiveState {
     fn from_raw(raw: u8) -> Self {
         match raw {
@@ -322,7 +405,6 @@ struct ReceiveTelemetry {
     timed_out: u64,
     lifecycle_events: u64,
     cleanup_attempts: u64,
-    restart_attempts: u64,
     unsafe_teardown_suppressed: u64,
     last_sequence: u64,
     validation_to_accept_ms_total: u128,
@@ -348,7 +430,6 @@ impl ReceiveTelemetry {
             timed_out_transactions = self.timed_out,
             lifecycle_events = self.lifecycle_events,
             cleanup_attempts = self.cleanup_attempts,
-            restart_attempts = self.restart_attempts,
             unsafe_teardown_suppressed = self.unsafe_teardown_suppressed,
             currently_owned = session.current_state() != BulkReceiveState::Idle,
             aggregate_state = ?session.current_state(),
@@ -627,53 +708,136 @@ fn lifecycle_event_name(reason: ProtocolInvalidationReason) -> &'static str {
         ProtocolInvalidationReason::Suspend => "functionfs-suspend",
         ProtocolInvalidationReason::Resume => "functionfs-resume",
         ProtocolInvalidationReason::Disconnected => "functionfs-disable-disconnect",
+        ProtocolInvalidationReason::Unbind => "functionfs-unbind",
     }
 }
 
-/// Returns true only when the lifecycle event observed proven Idle ownership.
-fn observe_aio_lifecycle(
-    reason: ProtocolInvalidationReason,
+fn proven_idle_gate(
     session: &BulkReceiveSession,
     endpoint: &mut gud_gadget::PixelDataEndpoint,
+    pending_exact_receive: &Option<(gud_gadget::SetBuffer, Instant, u64)>,
+    ready_exact_payload: &Option<(gud_gadget::SetBuffer, gud_gadget::PayloadStats)>,
+    status_on_set_cleanup_drain: &Option<StatusOnSetCleanupDrain>,
+) -> ProvenIdleGate {
+    let diagnostic_guard = gud_gadget::status_on_set_diagnostic_guard_state();
+    ProvenIdleGate {
+        aggregate_idle: session.current_state() == BulkReceiveState::Idle,
+        exact_aio_idle: endpoint.exact_aio_state() == gud_gadget::ExactAioState::Idle,
+        accepted_operation_absent: endpoint.exact_aio_operation_id().is_none(),
+        aio_queue_empty: endpoint.exact_aio_queue_is_empty(),
+        pending_exact_receive_absent: pending_exact_receive.is_none(),
+        ready_exact_payload_absent: ready_exact_payload.is_none(),
+        cleanup_drain_absent: status_on_set_cleanup_drain.is_none(),
+        diagnostic_guard_inactive: !diagnostic_guard.active,
+        prearmed_read_inactive: !endpoint.prearmed_read_is_active(),
+    }
+}
+
+struct LifecycleObservation<'a> {
+    usb_session: &'a mut UsbSessionState,
+    session: &'a BulkReceiveSession,
+    endpoint: &'a mut gud_gadget::PixelDataEndpoint,
+    pending_exact_receive: &'a Option<(gud_gadget::SetBuffer, Instant, u64)>,
+    ready_exact_payload: &'a Option<(gud_gadget::SetBuffer, gud_gadget::PayloadStats)>,
+    status_on_set_cleanup_drain: &'a Option<StatusOnSetCleanupDrain>,
+}
+
+/// Classifies a lifecycle event without releasing any ownership. Only a full
+/// gate can reuse the FunctionFS objects for the next host activation.
+fn observe_aio_lifecycle(
+    reason: ProtocolInvalidationReason,
+    input: UsbLifecycleInput,
+    observation: LifecycleObservation<'_>,
     telemetry: &mut ReceiveTelemetry,
-) -> bool {
+) -> UsbLifecycleResult {
     telemetry.lifecycle_events += 1;
-    let observed_state = session.current_state();
+    let observed_state = observation.session.current_state();
     let lifecycle_event = lifecycle_event_name(reason);
-    match session.observe_lifecycle() {
-        Ok(()) => {
+    let gate = proven_idle_gate(
+        observation.session,
+        observation.endpoint,
+        observation.pending_exact_receive,
+        observation.ready_exact_payload,
+        observation.status_on_set_cleanup_drain,
+    );
+    let diagnostic_guard = gud_gadget::status_on_set_diagnostic_guard_state();
+    let diagnostic_lifecycle_containment =
+        diagnostic_guard.transaction_limit > 0 && diagnostic_guard.started_transactions > 0;
+    let result = classify_usb_lifecycle(
+        *observation.usb_session,
+        input,
+        gate.is_proven_idle() && !diagnostic_lifecycle_containment,
+    );
+    match result {
+        UsbLifecycleResult::Continue(next_state) => {
+            debug_assert!(observation.session.observe_lifecycle().is_ok());
+            *observation.usb_session = next_state;
             info!(
                 event = "e1_t05_lifecycle_observed",
                 lifecycle_event,
                 lifecycle_event_state = ?observed_state,
-                aggregate_state = ?session.current_state(),
-                aio_state = ?endpoint.exact_aio_state(),
-                transaction_seq = endpoint.exact_aio_sequence(),
-                accepted_operation_id = endpoint.exact_aio_operation_id(),
+                usb_session_state = ?observation.usb_session,
+                aggregate_idle = gate.aggregate_idle,
+                exact_aio_idle = gate.exact_aio_idle,
+                accepted_operation_absent = gate.accepted_operation_absent,
+                aio_queue_empty = gate.aio_queue_empty,
+                pending_exact_receive_absent = gate.pending_exact_receive_absent,
+                ready_exact_payload_absent = gate.ready_exact_payload_absent,
+                cleanup_drain_absent = gate.cleanup_drain_absent,
+                diagnostic_guard_inactive = gate.diagnostic_guard_inactive,
+                diagnostic_lifecycle_containment,
+                prearmed_read_inactive = gate.prearmed_read_inactive,
+                aggregate_state = ?observation.session.current_state(),
+                aio_state = ?observation.endpoint.exact_aio_state(),
+                transaction_seq = observation.endpoint.exact_aio_sequence(),
+                activation_generation = ?observation.endpoint.exact_aio_activation_generation(),
+                accepted_operation_id = observation.endpoint.exact_aio_operation_id(),
                 currently_owned = false,
                 "E1-T05 lifecycle event observed from proven Idle ownership"
             );
-            true
+            UsbLifecycleResult::Continue(next_state)
         }
-        Err(unsafe_state) => {
-            endpoint.poison_exact_payload_aio("lifecycle event after non-Idle ownership");
+        UsbLifecycleResult::Contained => {
+            let unsafe_state = observation
+                .session
+                .observe_lifecycle()
+                .err()
+                .unwrap_or(observed_state);
+            observation.session.poison();
+            observation
+                .endpoint
+                .poison_exact_payload_aio("lifecycle event after non-Idle ownership");
+            *observation.usb_session = UsbSessionState::Contained;
             telemetry.poisoned += 1;
             telemetry.unsafe_teardown_suppressed += 1;
             tracing::error!(
                 event = "e1_t05_lifecycle_containment",
                 lifecycle_event,
                 lifecycle_event_state = ?unsafe_state,
-                aggregate_state = ?session.current_state(),
-                aio_state = ?endpoint.exact_aio_state(),
-                transaction_seq = endpoint.exact_aio_sequence(),
-                accepted_operation_id = endpoint.exact_aio_operation_id(),
+                usb_session_state = ?observation.usb_session,
+                aggregate_idle = gate.aggregate_idle,
+                exact_aio_idle = gate.exact_aio_idle,
+                accepted_operation_absent = gate.accepted_operation_absent,
+                aio_queue_empty = gate.aio_queue_empty,
+                pending_exact_receive_absent = gate.pending_exact_receive_absent,
+                ready_exact_payload_absent = gate.ready_exact_payload_absent,
+                cleanup_drain_absent = gate.cleanup_drain_absent,
+                diagnostic_guard_inactive = gate.diagnostic_guard_inactive,
+                diagnostic_lifecycle_containment,
+                prearmed_read_inactive = gate.prearmed_read_inactive,
+                aggregate_state = ?observation.session.current_state(),
+                aio_state = ?observation.endpoint.exact_aio_state(),
+                transaction_seq = observation.endpoint.exact_aio_sequence(),
+                activation_generation = ?observation.endpoint.exact_aio_activation_generation(),
+                accepted_operation_id = observation.endpoint.exact_aio_operation_id(),
                 currently_owned = true,
                 unsafe_teardown_suppressed = true,
                 "E1-T05 contained lifecycle event; do not cancel, close, unbind, restart, or fall back"
             );
-            telemetry.emit(session, endpoint);
-            false
+            telemetry.emit(observation.session, observation.endpoint);
+            UsbLifecycleResult::Contained
         }
+        UsbLifecycleResult::FatalUnbind => UsbLifecycleResult::FatalUnbind,
     }
 }
 
@@ -1538,17 +1702,6 @@ fn present_waiting_screen<B: ScanoutBackend>(
     dump_framebuffer_raw_if_enabled(dump_raw_path, active.front_buffer_mut());
 
     Ok(())
-}
-
-fn udc_is_detached(udc: &Udc) -> bool {
-    match udc.state() {
-        Ok(UdcState::Configured) => false,
-        Ok(_) => true,
-        Err(err) => {
-            tracing::debug!("Failed to read UDC state: {}", err);
-            false
-        }
-    }
 }
 
 fn diagnostic_pattern_color(x: usize, y: usize, width: usize, height: usize) -> RgbColor {
@@ -2975,7 +3128,7 @@ fn main() -> anyhow::Result<()> {
 
     tracing::info!("Entering main event loop");
     let mut had_host_session = false;
-    let mut restart_requested = false;
+    let mut usb_session = UsbSessionState::WaitingForHost;
     let mut lifecycle_error = None;
     let mut prearmed_receive_started = None;
     let mut pending_exact_receive: Option<(gud_gadget::SetBuffer, std::time::Instant, u64)> = None;
@@ -3002,6 +3155,10 @@ fn main() -> anyhow::Result<()> {
     drop(unbind_target);
 
     'event_loop: while running.load(Ordering::Relaxed) {
+        if bulk_receive_session.current_state() == BulkReceiveState::Poisoned {
+            std::thread::sleep(Duration::from_millis(100));
+            continue;
+        }
         if let Some(drain) = status_on_set_cleanup_drain.as_mut() {
             if drain.timed_out(Instant::now()) {
                 tracing::error!(
@@ -3068,11 +3225,6 @@ fn main() -> anyhow::Result<()> {
                 }
             }
         }
-        if bulk_receive_session.current_state() == BulkReceiveState::Poisoned {
-            std::thread::sleep(Duration::from_millis(100));
-            continue;
-        }
-
         let event_timeout =
             if pending_exact_receive.is_some() || status_on_set_cleanup_drain.is_some() {
                 Duration::from_millis(10)
@@ -3103,97 +3255,15 @@ fn main() -> anyhow::Result<()> {
                     if waiting_screen_visible || !matches!(pattern_mode, PatternMode::Off) {
                         continue;
                     }
-                    if udc_is_detached(&udc) {
-                        tracing::info!("Rendering waiting screen after event read failure");
-                        if let Err(wait_err) = present_waiting_screen(
-                            &mut backend,
-                            &mut active,
-                            dump_path.as_deref(),
-                            dump_raw_path.as_deref(),
-                            transfer_format,
-                        ) {
-                            tracing::error!(
-                                "Failed to render waiting screen after event read failure: {}",
-                                wait_err
-                            );
-                        } else {
-                            waiting_screen_visible = true;
-                            if had_host_session {
-                                tracing::info!(
-                                    "Restarting gadget after event read failure on detached UDC"
-                                );
-                                restart_requested = true;
-                                break 'event_loop;
-                            }
-                        }
-                    }
+                    tracing::debug!(
+                        error = %err,
+                        "EP0 read failed without a FunctionFS lifecycle event; retaining persistent session"
+                    );
                     continue;
                 }
             },
         };
-        if pending_exact_receive.is_some() && udc_is_detached(&udc) {
-            let (_, started, _) = pending_exact_receive
-                .take()
-                .expect("detached exact receive disappeared");
-            gud_data.poison_exact_payload_aio("UDC detached while exact AIO accepted");
-            let _ = bulk_receive_session.finish_receive::<()>(
-                started,
-                Err(anyhow::anyhow!(
-                    "UDC detached while exact FunctionFS AIO request was accepted"
-                )),
-            );
-            continue;
-        }
         if event.is_none() && completed_payload.is_none() {
-            if !waiting_screen_visible
-                && matches!(pattern_mode, PatternMode::Off)
-                && udc_is_detached(&udc)
-            {
-                tracing::info!("Rendering waiting screen after detach");
-                if let Err(err) = present_waiting_screen(
-                    &mut backend,
-                    &mut active,
-                    dump_path.as_deref(),
-                    dump_raw_path.as_deref(),
-                    transfer_format,
-                ) {
-                    tracing::error!("Failed to render waiting screen after detach: {}", err);
-                } else {
-                    waiting_screen_visible = true;
-                    if had_host_session {
-                        tracing::info!("Restarting gadget after detach");
-                        restart_requested = true;
-                        break 'event_loop;
-                    }
-                }
-            }
-            continue;
-        }
-        if event.is_some()
-            && !waiting_screen_visible
-            && matches!(pattern_mode, PatternMode::Off)
-            && udc_is_detached(&udc)
-        {
-            tracing::info!("Rendering waiting screen before processing stale queued event");
-            if let Err(err) = present_waiting_screen(
-                &mut backend,
-                &mut active,
-                dump_path.as_deref(),
-                dump_raw_path.as_deref(),
-                transfer_format,
-            ) {
-                tracing::error!(
-                    "Failed to render waiting screen before processing queued event: {}",
-                    err
-                );
-            } else {
-                waiting_screen_visible = true;
-                if had_host_session {
-                    tracing::info!("Restarting gadget after stale queued event on detached UDC");
-                    restart_requested = true;
-                    break 'event_loop;
-                }
-            }
             continue;
         }
 
@@ -3212,6 +3282,30 @@ fn main() -> anyhow::Result<()> {
             Ok(Some(gud_event)) => {
                 tracing::debug!("GUD event: {:?}", gud_event);
                 record_host_activity(&mut had_host_session, &gud_event);
+                if let Event::ProtocolStateInvalidated { reason, .. } = &gud_event {
+                    match observe_aio_lifecycle(
+                        *reason,
+                        usb_lifecycle_input(*reason),
+                        LifecycleObservation {
+                            usb_session: &mut usb_session,
+                            session: &bulk_receive_session,
+                            endpoint: &mut gud_data,
+                            pending_exact_receive: &pending_exact_receive,
+                            ready_exact_payload: &ready_exact_payload,
+                            status_on_set_cleanup_drain: &status_on_set_cleanup_drain,
+                        },
+                        &mut receive_telemetry,
+                    ) {
+                        UsbLifecycleResult::Continue(_) => {}
+                        UsbLifecycleResult::Contained => continue,
+                        UsbLifecycleResult::FatalUnbind => {
+                            lifecycle_error = Some(anyhow::anyhow!(
+                                "FunctionFS UNBIND observed from proven Idle; administrative removal is not a cable disconnect"
+                            ));
+                            break 'event_loop;
+                        }
+                    }
+                }
                 if pending_exact_receive.is_some() && !matches!(&gud_event, Event::StatusSent(_)) {
                     let reason = format!(
                         "unexpected high-level event while exact AIO accepted: {gud_event:?}"
@@ -3907,27 +4001,13 @@ fn main() -> anyhow::Result<()> {
                             | ProtocolInvalidationReason::Bind
                             | ProtocolInvalidationReason::Enable
                             | ProtocolInvalidationReason::Suspend
-                            | ProtocolInvalidationReason::Resume),
+                            | ProtocolInvalidationReason::Resume
+                            | ProtocolInvalidationReason::Unbind),
                     } => {
-                        if aio_mode
-                            && !observe_aio_lifecycle(
-                                reason,
-                                &bulk_receive_session,
-                                &mut gud_data,
-                                &mut receive_telemetry,
-                            )
-                        {
-                            continue;
-                        }
                         let diagnostic_guard = gud_gadget::status_on_set_diagnostic_guard_state();
                         if diagnostic_guard.transaction_limit > 0
                             && diagnostic_guard.started_transactions > 0
                         {
-                            lifecycle_error = Some(anyhow::anyhow!(
-                                "STATUS_ON_SET diagnostic lifecycle invalidation {reason:?} after transaction {} (active={})",
-                                diagnostic_guard.started_transactions,
-                                diagnostic_guard.active
-                            ));
                             tracing::error!(
                                 event = "status_on_set_lifecycle_containment",
                                 transaction_limit = diagnostic_guard.transaction_limit,
@@ -3936,7 +4016,7 @@ fn main() -> anyhow::Result<()> {
                                 ?reason,
                                 "lifecycle invalidation is contained rather than resetting diagnostic state"
                             );
-                            break 'event_loop;
+                            continue;
                         }
                         if reason == ProtocolInvalidationReason::Enable {
                             if let Some(prearm_bytes) = test_prearm_once_bytes {
@@ -4023,25 +4103,10 @@ fn main() -> anyhow::Result<()> {
                         generation,
                         reason: ProtocolInvalidationReason::Disconnected,
                     } => {
-                        if aio_mode
-                            && !observe_aio_lifecycle(
-                                ProtocolInvalidationReason::Disconnected,
-                                &bulk_receive_session,
-                                &mut gud_data,
-                                &mut receive_telemetry,
-                            )
-                        {
-                            continue;
-                        }
                         let diagnostic_guard = gud_gadget::status_on_set_diagnostic_guard_state();
                         if diagnostic_guard.transaction_limit > 0
                             && diagnostic_guard.started_transactions > 0
                         {
-                            lifecycle_error = Some(anyhow::anyhow!(
-                                "STATUS_ON_SET diagnostic disconnected after transaction {} (active={})",
-                                diagnostic_guard.started_transactions,
-                                diagnostic_guard.active
-                            ));
                             tracing::error!(
                                 event = "status_on_set_lifecycle_containment",
                                 transaction_limit = diagnostic_guard.transaction_limit,
@@ -4049,7 +4114,7 @@ fn main() -> anyhow::Result<()> {
                                 active = diagnostic_guard.active,
                                 "disconnect is contained rather than resetting diagnostic state"
                             );
-                            break 'event_loop;
+                            continue;
                         }
                         if dynamic_mode_match {
                             let result = match active {
@@ -4109,11 +4174,6 @@ fn main() -> anyhow::Result<()> {
                                 );
                             } else {
                                 waiting_screen_visible = true;
-                                if had_host_session {
-                                    tracing::info!("Restarting gadget after host disconnect");
-                                    restart_requested = true;
-                                    break 'event_loop;
-                                }
                             }
                         }
                     }
@@ -4655,8 +4715,16 @@ fn main() -> anyhow::Result<()> {
                                     Ok(true) => {
                                         let _ = observe_aio_lifecycle(
                                             ProtocolInvalidationReason::Disconnected,
-                                            &bulk_receive_session,
-                                            &mut gud_data,
+                                            UsbLifecycleInput::Disable,
+                                            LifecycleObservation {
+                                                usb_session: &mut usb_session,
+                                                session: &bulk_receive_session,
+                                                endpoint: &mut gud_data,
+                                                pending_exact_receive: &pending_exact_receive,
+                                                ready_exact_payload: &ready_exact_payload,
+                                                status_on_set_cleanup_drain:
+                                                    &status_on_set_cleanup_drain,
+                                            },
                                             &mut receive_telemetry,
                                         );
                                         continue;
@@ -4709,36 +4777,36 @@ fn main() -> anyhow::Result<()> {
                     continue;
                 }
                 tracing::warn!("Failed to parse GUD event: {}", err);
-                if !waiting_screen_visible
-                    && matches!(pattern_mode, PatternMode::Off)
-                    && udc_is_detached(&udc)
-                {
-                    tracing::info!("Rendering waiting screen after control-path failure");
-                    if let Err(wait_err) = present_waiting_screen(
-                        &mut backend,
-                        &mut active,
-                        dump_path.as_deref(),
-                        dump_raw_path.as_deref(),
-                        transfer_format,
-                    ) {
-                        tracing::error!(
-                            "Failed to render waiting screen after control-path failure: {}",
-                            wait_err
-                        );
-                    } else {
-                        waiting_screen_visible = true;
-                        if had_host_session {
-                            tracing::info!("Restarting gadget after control-path failure");
-                            restart_requested = true;
-                            break 'event_loop;
-                        }
-                    }
-                }
             }
         }
     }
 
     receive_telemetry.cleanup_attempts += 1;
+    let shutdown_gate = proven_idle_gate(
+        &bulk_receive_session,
+        &mut gud_data,
+        &pending_exact_receive,
+        &ready_exact_payload,
+        &status_on_set_cleanup_drain,
+    );
+    if !shutdown_gate.is_proven_idle() {
+        receive_telemetry.unsafe_teardown_suppressed += 1;
+        tracing::error!(
+            event = "e1_t05_teardown_suppressed",
+            usb_session_state = ?usb_session,
+            ?shutdown_gate,
+            aggregate_state = ?bulk_receive_session.current_state(),
+            aio_state = ?gud_data.exact_aio_state(),
+            transaction_seq = gud_data.exact_aio_sequence(),
+            activation_generation = ?gud_data.exact_aio_activation_generation(),
+            accepted_operation_id = gud_data.exact_aio_operation_id(),
+            "Refusing teardown because centralized ownership gate is not proven Idle; use physical containment"
+        );
+        receive_telemetry.emit(&bulk_receive_session, &gud_data);
+        loop {
+            std::thread::sleep(Duration::from_secs(1));
+        }
+    }
     match bulk_receive_session.begin_shutdown() {
         Ok(()) => info!("Idle FunctionFS bulk session claimed for safe detach teardown"),
         Err(BulkReceiveState::ShuttingDown) => {
@@ -4761,9 +4829,6 @@ fn main() -> anyhow::Result<()> {
                 std::thread::sleep(Duration::from_secs(1));
             }
         }
-    }
-    if restart_requested {
-        receive_telemetry.restart_attempts += 1;
     }
     receive_telemetry.emit(&bulk_receive_session, &gud_data);
 
@@ -4830,34 +4895,24 @@ fn main() -> anyhow::Result<()> {
         return Err(err);
     }
 
-    let shutdown_requested = !running.load(Ordering::Acquire);
-    if restart_requested && shutdown_requested {
-        info!("Intentional shutdown supersedes queued detach restart request");
-    }
-    if should_restart_after_clean_detach(restart_requested, shutdown_requested) {
-        info!(
-            "USB detached after active host session; exiting successfully for policy-controlled \
-             gadget recreation"
-        );
-    }
-
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        advertised_preferred_mode_index, compute_scaled_layout, derive_mode_from_native,
-        diagnostic_pattern_color, dump_pixel_buffer_ppm, fill_diagnostic_pattern_rect,
-        parse_functionfs_read_size, parse_test_compression, parse_test_dynamic_mode_match,
-        parse_test_max_buffer_size, parse_test_output_mode, parse_test_prearm_once_bytes,
-        parse_test_status_on_set_bytes, parse_test_status_on_set_two_transactions_bytes,
-        read_pixel, record_host_activity, render_waiting_screen, scale_to_fit,
-        should_restart_after_clean_detach, validate_test_mode_policy, waiting_scene_glyph,
+        advertised_preferred_mode_index, classify_usb_lifecycle, compute_scaled_layout,
+        derive_mode_from_native, diagnostic_pattern_color, dump_pixel_buffer_ppm,
+        fill_diagnostic_pattern_rect, parse_functionfs_read_size, parse_test_compression,
+        parse_test_dynamic_mode_match, parse_test_max_buffer_size, parse_test_output_mode,
+        parse_test_prearm_once_bytes, parse_test_status_on_set_bytes,
+        parse_test_status_on_set_two_transactions_bytes, read_pixel, record_host_activity,
+        render_waiting_screen, scale_to_fit, validate_test_mode_policy, waiting_scene_glyph,
         write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
-        GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind, ScaledLayout,
-        ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, StatusOnSetCleanupDrain,
-        StatusOnSetCleanupObservation, StatusOnSetCleanupPhase, TestOutputMode, TransferFormat,
+        GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind, ProvenIdleGate,
+        ScaledLayout, ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity,
+        StatusOnSetCleanupDrain, StatusOnSetCleanupObservation, StatusOnSetCleanupPhase,
+        TestOutputMode, TransferFormat, UsbLifecycleInput, UsbLifecycleResult, UsbSessionState,
         COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN, COLOR_LIGHT_GRAY,
         COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, RGB565_GREEN, RGB565_WHITE,
         STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE,
@@ -5395,14 +5450,104 @@ mod tests {
     }
 
     #[test]
-    fn intentional_shutdown_suppresses_clean_detach_restart() {
-        assert!(!should_restart_after_clean_detach(true, true));
+    fn proven_idle_gate_rejects_each_non_idle_component() {
+        let idle = ProvenIdleGate {
+            aggregate_idle: true,
+            exact_aio_idle: true,
+            accepted_operation_absent: true,
+            aio_queue_empty: true,
+            pending_exact_receive_absent: true,
+            ready_exact_payload_absent: true,
+            cleanup_drain_absent: true,
+            diagnostic_guard_inactive: true,
+            prearmed_read_inactive: true,
+        };
+        assert!(idle.is_proven_idle());
+        for non_idle in [
+            ProvenIdleGate {
+                aggregate_idle: false,
+                ..idle
+            },
+            ProvenIdleGate {
+                exact_aio_idle: false,
+                ..idle
+            },
+            ProvenIdleGate {
+                accepted_operation_absent: false,
+                ..idle
+            },
+            ProvenIdleGate {
+                aio_queue_empty: false,
+                ..idle
+            },
+            ProvenIdleGate {
+                pending_exact_receive_absent: false,
+                ..idle
+            },
+            ProvenIdleGate {
+                ready_exact_payload_absent: false,
+                ..idle
+            },
+            ProvenIdleGate {
+                cleanup_drain_absent: false,
+                ..idle
+            },
+            ProvenIdleGate {
+                diagnostic_guard_inactive: false,
+                ..idle
+            },
+            ProvenIdleGate {
+                prearmed_read_inactive: false,
+                ..idle
+            },
+        ] {
+            assert!(!non_idle.is_proven_idle());
+        }
     }
 
     #[test]
-    fn safe_detach_requests_policy_controlled_restart() {
-        assert!(should_restart_after_clean_detach(true, false));
-        assert!(!should_restart_after_clean_detach(false, false));
+    fn persistent_usb_session_transitions_require_proven_idle() {
+        let mut state = UsbSessionState::WaitingForHost;
+        for (input, expected) in [
+            (UsbLifecycleInput::Bind, UsbSessionState::WaitingForHost),
+            (UsbLifecycleInput::Enable, UsbSessionState::Active),
+            (UsbLifecycleInput::Enable, UsbSessionState::Active),
+            (UsbLifecycleInput::Suspend, UsbSessionState::Suspended),
+            (UsbLifecycleInput::Resume, UsbSessionState::Active),
+            (UsbLifecycleInput::Disable, UsbSessionState::WaitingForHost),
+            (UsbLifecycleInput::Enable, UsbSessionState::Active),
+        ] {
+            assert_eq!(
+                classify_usb_lifecycle(state, input, true),
+                UsbLifecycleResult::Continue(expected)
+            );
+            state = expected;
+        }
+        for state in [
+            UsbSessionState::WaitingForHost,
+            UsbSessionState::Active,
+            UsbSessionState::Suspended,
+        ] {
+            for input in [
+                UsbLifecycleInput::Disable,
+                UsbLifecycleInput::Suspend,
+                UsbLifecycleInput::Resume,
+                UsbLifecycleInput::Unbind,
+            ] {
+                assert_eq!(
+                    classify_usb_lifecycle(state, input, false),
+                    UsbLifecycleResult::Contained
+                );
+            }
+        }
+        assert_eq!(
+            classify_usb_lifecycle(UsbSessionState::Active, UsbLifecycleInput::Unbind, true),
+            UsbLifecycleResult::FatalUnbind
+        );
+        assert_eq!(
+            classify_usb_lifecycle(UsbSessionState::Contained, UsbLifecycleInput::Enable, true),
+            UsbLifecycleResult::Contained
+        );
     }
 
     #[test]

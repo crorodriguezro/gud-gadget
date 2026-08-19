@@ -606,7 +606,8 @@ fn main() -> anyhow::Result<()> {
                             | ProtocolInvalidationReason::Bind
                             | ProtocolInvalidationReason::Enable
                             | ProtocolInvalidationReason::Suspend
-                            | ProtocolInvalidationReason::Resume),
+                            | ProtocolInvalidationReason::Resume
+                            | ProtocolInvalidationReason::Unbind),
                     } => {
                         debug!(
                             ?generation,

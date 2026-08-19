@@ -1019,6 +1019,7 @@ impl Custom {
     ///
     /// Blocks until an event becomes available.
     pub fn event_timeout(&mut self, timeout: Duration) -> Result<Option<Event<'_>>> {
+        self.clear_prev_event()?;
         if self.wait_event_sync(Some(timeout))? {
             Ok(Some(self.read_event()?))
         } else {
