@@ -49,6 +49,30 @@ const STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE: Duration = Duration::from_millis(1_0
 const STATUS_ON_SET_CLEANUP_STATUS_COUNT: u8 = 2;
 const STATUS_ON_SET_DIAGNOSTIC_TRANSACTION_LIMIT: u8 = 2;
 const E1_T05_PROCESSING_BARRIER_DEADLINE: Duration = Duration::from_secs(30);
+const E1_T05_INFLIGHT_DEADLINE_MAX: Duration = Duration::from_secs(30);
+
+fn parse_e1_t05_inflight_deadline(value: Option<&OsStr>) -> anyhow::Result<Duration> {
+    let Some(value) = value else {
+        return Ok(BULK_RECEIVE_DEADLINE);
+    };
+    ensure!(
+        cfg!(debug_assertions),
+        "GUD_TEST_E1_T05_INFLIGHT_DEADLINE_MS is unavailable in release builds"
+    );
+    let milliseconds = value
+        .to_str()
+        .context("GUD_TEST_E1_T05_INFLIGHT_DEADLINE_MS must be valid UTF-8")?
+        .parse::<u64>()
+        .context("GUD_TEST_E1_T05_INFLIGHT_DEADLINE_MS must be an integer")?;
+    let deadline = Duration::from_millis(milliseconds);
+    ensure!(
+        deadline > BULK_RECEIVE_DEADLINE && deadline <= E1_T05_INFLIGHT_DEADLINE_MAX,
+        "GUD_TEST_E1_T05_INFLIGHT_DEADLINE_MS must be greater than {} and no more than {}",
+        BULK_RECEIVE_DEADLINE.as_millis(),
+        E1_T05_INFLIGHT_DEADLINE_MAX.as_millis()
+    );
+    Ok(deadline)
+}
 
 #[derive(Debug)]
 struct E1T05ProcessingBarrier {
@@ -2585,6 +2609,8 @@ fn main() -> anyhow::Result<()> {
     let test_output_mode_raw = var_os("GUD_TEST_OUTPUT_MODE");
     let test_dynamic_mode_match_raw = var_os("GUD_TEST_DYNAMIC_MODE_MATCH");
     let mut e1_t05_processing_barrier = E1T05ProcessingBarrier::from_env()?;
+    let bulk_receive_deadline =
+        parse_e1_t05_inflight_deadline(var_os("GUD_TEST_E1_T05_INFLIGHT_DEADLINE_MS").as_deref())?;
     let descriptor_compression = parse_test_compression(test_compression_raw.as_deref())?;
     let descriptor_max_buffer_size =
         parse_test_max_buffer_size(test_max_buffer_size_raw.as_deref())?;
@@ -2716,8 +2742,15 @@ fn main() -> anyhow::Result<()> {
     info!(
         "FunctionFS bulk OUT read ceiling: {} bytes; conservative receive safety deadline: {} ms",
         functionfs_read_size,
-        BULK_RECEIVE_DEADLINE.as_millis()
+        bulk_receive_deadline.as_millis()
     );
+    if bulk_receive_deadline != BULK_RECEIVE_DEADLINE {
+        warn!(
+            event = "e1_t05_inflight_deadline_override",
+            deadline_ms = bulk_receive_deadline.as_millis(),
+            "TEST-ONLY debug E1-T05 InFlight deadline override enabled"
+        );
+    }
     if test_compression_raw.is_some() || test_max_buffer_size_raw.is_some() {
         warn!(
             compression = if descriptor_compression == 0 {
@@ -2854,7 +2887,7 @@ fn main() -> anyhow::Result<()> {
     let running = Arc::new(AtomicBool::new(true));
     let shutdown_requested = Arc::new(AtomicBool::new(false));
     let gadget_shutdown = GadgetShutdown::default();
-    let bulk_receive_session = BulkReceiveSession::default();
+    let bulk_receive_session = BulkReceiveSession::with_deadline(bulk_receive_deadline);
 
     let signal_shutdown_requested = shutdown_requested.clone();
     ctrlc::set_handler(move || {
@@ -4909,9 +4942,10 @@ mod tests {
     use super::{
         advertised_preferred_mode_index, classify_usb_lifecycle, compute_scaled_layout,
         derive_mode_from_native, diagnostic_pattern_color, dump_pixel_buffer_ppm,
-        event_timeout_for_ready_payload, fill_diagnostic_pattern_rect, parse_functionfs_read_size,
-        parse_test_compression, parse_test_dynamic_mode_match, parse_test_max_buffer_size,
-        parse_test_output_mode, parse_test_prearm_once_bytes, parse_test_status_on_set_bytes,
+        event_timeout_for_ready_payload, fill_diagnostic_pattern_rect,
+        parse_e1_t05_inflight_deadline, parse_functionfs_read_size, parse_test_compression,
+        parse_test_dynamic_mode_match, parse_test_max_buffer_size, parse_test_output_mode,
+        parse_test_prearm_once_bytes, parse_test_status_on_set_bytes,
         parse_test_status_on_set_two_transactions_bytes, read_pixel, record_host_activity,
         render_waiting_screen, scale_to_fit, validate_test_mode_policy, waiting_scene_glyph,
         write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
@@ -4919,9 +4953,9 @@ mod tests {
         ScaledLayout, ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity,
         StatusOnSetCleanupDrain, StatusOnSetCleanupObservation, StatusOnSetCleanupPhase,
         TestOutputMode, TransferFormat, UsbLifecycleInput, UsbLifecycleResult, UsbSessionState,
-        COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN, COLOR_LIGHT_GRAY,
-        COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, RGB565_GREEN, RGB565_WHITE,
-        STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE,
+        BULK_RECEIVE_DEADLINE, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN,
+        COLOR_LIGHT_GRAY, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, RGB565_GREEN,
+        RGB565_WHITE, STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
@@ -4947,6 +4981,23 @@ mod tests {
             16_384
         );
         assert!(parse_functionfs_read_size(Some(OsStr::new("not-a-size"))).is_err());
+    }
+
+    #[test]
+    fn e1_t05_inflight_deadline_defaults_and_bounds_test_override() {
+        assert_eq!(
+            parse_e1_t05_inflight_deadline(None).unwrap(),
+            BULK_RECEIVE_DEADLINE
+        );
+        assert!(parse_e1_t05_inflight_deadline(Some(OsStr::new("1000"))).is_err());
+        assert!(parse_e1_t05_inflight_deadline(Some(OsStr::new("30001"))).is_err());
+        assert!(parse_e1_t05_inflight_deadline(Some(OsStr::new("not-a-number"))).is_err());
+        if cfg!(debug_assertions) {
+            assert_eq!(
+                parse_e1_t05_inflight_deadline(Some(OsStr::new("15000"))).unwrap(),
+                Duration::from_secs(15)
+            );
+        }
     }
 
     #[test]
