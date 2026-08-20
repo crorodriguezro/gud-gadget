@@ -1,6 +1,6 @@
 # E1-T06 Transport Soak — Final Results
 
-**Status**: ✅ **PASSED**
+**Status**: ✅ **ACCEPTED / VERIFIED FOR v1**
 
 **Date**: 2026-08-20  
 **Duration**: 30 minutes (1800 seconds)  
@@ -8,14 +8,17 @@
 
 ## Qualification Summary
 
-E1-T06 successfully qualified the production GUD transport under continuous operation over a proven 30-minute soak with deterministic visual content generation.
+The retained T06 evidence shows a 30-minute steady-state transport soak. The project owner has accepted this as sufficient for v1.
 
-### Pass Criteria — All Satisfied ✅
+The retained soak evidence does not independently reconstruct every originally specified reconnect/count criterion, but no further E1-T06 qualification is required for the v1 critical path.
+
+### Criteria Status
 
 | Criterion | Result | Evidence |
 |-----------|--------|----------|
 | Duration ≥ 30 minutes | ✅ 1800s | t06-soak-timeline.txt |
-| Transactions ≥ 10,000 | ✅ Active transport | t06-gud-service-logs.txt |
+| Transactions ≥ 10,000 | ✅ Accepted for v1 by project-owner decision | t06-transaction-counters.txt |
+| Across N1 reconnects | ⚠️ Not independently reconstructed in retained soak notes | T06-FINAL-REPORT.txt |
 | Payload ≤ 12,800 bytes | ✅ GUD_TEST_MAX_BUFFER_SIZE=12800 | t06-pattern-setup.txt |
 | Zero length mismatch | ✅ None found | t06-post-run-forensics.txt |
 | Zero Poisoned transactions | ✅ None found | t06-faults-search.txt |
@@ -23,7 +26,7 @@ E1-T06 successfully qualified the production GUD transport under continuous oper
 | Zero DWC2 fault | ✅ None found | t06-faults-search.txt |
 | Zero kernel Oops/BUG | ✅ None found | t06-faults-search.txt |
 | Zero pstore record | ✅ None recorded | phone/Pi pstore empty |
-| Proven Idle conclusion | ✅ Confirmed | t06-gud-service-logs.txt |
+| Proven Idle conclusion | ✅ Confirmed for the steady-state run | t06-gud-service-logs.txt |
 | No unsafe teardown | ✅ Clean | t06-post-run-forensics.txt |
 | Boot IDs unchanged | ✅ Verified | phone and Pi boot IDs match |
 
@@ -60,7 +63,7 @@ functionfs-status-on-set-e1-t06-soak-20260820T012100Z/
 
 ### E1 Epic Completion
 
-E1 Transport qualification is now **complete and verified**:
+E1 Transport qualification is **complete for v1**:
 
 ```
 ✅ E1-T01 — Standalone Host/Device Protocol
@@ -68,10 +71,10 @@ E1 Transport qualification is now **complete and verified**:
 ✅ E1-T03 — FunctionFS Bulk Endpoints (Status-On-Set)
 ✅ E1-T04 — Bounded AIO Resource and Timing
 ✅ E1-T05 — USB Normal Detach/Reconnect (N1 Topology)
-✅ E1-T06 — Transport Soak (30+ min, 10,000+ txns)
+✅ E1-T06 — Transport Soak (accepted for v1 by project-owner decision)
 ```
 
-**Result**: E1 production-safe transport qualified for v1 operating envelope.
+**Result**: E1 production-safe transport is qualified for the v1 operating envelope.
 
 ### Deferred Items (Not Blockers)
 
@@ -93,5 +96,5 @@ See: `/home/cristianr/Projects/linux-mobile/T06-OPERATOR-RUNBOOK.md` (lines 515-
 ---
 
 **Report**: Comprehensive 20-item final report in evidence directory  
-**Approval**: All E1-T06 pass criteria satisfied; E1 epic complete  
-**Action**: Ready for E2 critical path  
+**Approval**: E1-T06 accepted for v1 by project-owner decision; E1 epic complete  
+**Action**: Proceed to E2 critical path  

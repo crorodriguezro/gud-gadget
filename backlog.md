@@ -98,7 +98,10 @@ multi-frame qualification. Remaining P0 work is tracked by the roadmap:
     FunctionFS Suspend/Resume, but target runtime resume re-enumerated the USB
     device and caused Pi Disable -> Enable/new activation. E1-T05 is verified
     for the v1 qualified envelope; restore the release Pi artifact before E1-T06.
-- `E1-T06`: pass the sustained transport soak.
+- `E1-T06`: **verified for v1 by project-owner decision**. The retained soak evidence directory
+  `evidence/functionfs-status-on-set-e1-t06-soak-20260820T012100Z/` preserves the steady-state
+  transport run; the historical reconnect/count discrepancy is retained in the docs, but no
+  further E1-T06 qualification is required for the v1 critical path.
 
 Keep the 12,800-byte actual-payload operating constraint through these gates.
 Do not represent simulation or the bounded two-transaction diagnostic as
