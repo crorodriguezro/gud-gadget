@@ -1,0 +1,261 @@
+--- a/drivers/usb/gadget/function/f_fs.c
++++ b/drivers/usb/gadget/function/f_fs.c
+@@ -37,6 +37,7 @@
+ 
+ #include <linux/aio.h>
+ #include <linux/kthread.h>
++#include <linux/ktime.h>
+ #include <linux/poll.h>
+ #include <linux/eventfd.h>
+ 
+@@ -738,12 +739,25 @@
+ {
+ 	struct ffs_io_data *io_data = req->context;
+ 
++	if (io_data->read && _ep->address == 1 && req->length == 12800)
++		pr_info("gud_ffs_trace event=ffs_complete_enter ts_ns=%llu req=%px io_data=%px ep=%px ep_name=%s ep_num=%u req_length=%u req_actual=%u req_status=%d io_status_before=%d cpu=%u\n",
++			(unsigned long long)ktime_get_ns(), req, io_data, _ep,
++			_ep->name, _ep->address, req->length, req->actual,
++			req->status, READ_ONCE(io_data->status), raw_smp_processor_id());
++
+ 	if (req->status)
+ 		io_data->status = req->status;
+ 	else
+ 		io_data->status = req->actual;
+ 
++	if (io_data->read && _ep->address == 1 && req->length == 12800)
++		pr_info("gud_ffs_trace event=ffs_complete_wake ts_ns=%llu req=%px io_data=%px ep=%px req_actual=%u req_status=%d io_status=%d\n",
++			(unsigned long long)ktime_get_ns(), req, io_data, _ep,
++			req->actual, req->status, io_data->status);
+ 	complete(&io_data->done);
++	if (io_data->read && _ep->address == 1 && req->length == 12800)
++		pr_info("gud_ffs_trace event=ffs_complete_exit ts_ns=%llu req=%px io_data=%px ep=%px\n",
++			(unsigned long long)ktime_get_ns(), req, io_data, _ep);
+ }
+ 
+ static ssize_t ffs_copy_to_iter(void *data, int data_len, struct iov_iter *iter)
+@@ -996,11 +1010,12 @@
+ static ssize_t ffs_epfile_io(struct file *file, struct ffs_io_data *io_data)
+ {
+ 	struct ffs_epfile *epfile = file->private_data;
+-	struct usb_request *req;
++	struct usb_request *req = NULL;
+ 	struct ffs_ep *ep;
+ 	char *data = NULL;
+ 	ssize_t ret, data_len = -EINVAL;
+ 	int halt;
++	bool trace = false;
+ 
+ 	/* Are we still active? */
+ 	if (WARN_ON(epfile->ffs->state != FFS_ACTIVE))
+@@ -1115,14 +1130,34 @@
+ 		init_completion(&io_data->done);
+ 		req->context  = io_data;
+ 		req->complete = ffs_epfile_io_complete;
++		trace = io_data->read && !epfile->in && ep->num == 1 &&
++			req->length == 12800;
++		if (trace)
++			pr_info("gud_ffs_trace event=ffs_ep_queue_enter ts_ns=%llu req=%px io_data=%px ep=%px ep_name=%s ep_num=%u direction=out req_length=%u req_actual=%u req_status=%d epfile=%px ffs=%px pid=%d comm=%s\n",
++				(unsigned long long)ktime_get_ns(), req, io_data, ep->ep,
++				ep->ep->name, ep->num, req->length, req->actual,
++				req->status, epfile, epfile->ffs, current->pid,
++				current->comm);
+ 
+ 		ret = usb_ep_queue(ep->ep, req, GFP_ATOMIC);
++		if (trace)
++			pr_info("gud_ffs_trace event=ffs_ep_queue_return ts_ns=%llu req=%px io_data=%px ep=%px ret=%zd req_length=%u req_actual=%u req_status=%d\n",
++				(unsigned long long)ktime_get_ns(), req, io_data, ep->ep,
++				ret, req->length, req->actual, req->status);
+ 		if (ret < 0)
+ 			goto error_lock;
+ 
+ 		spin_unlock_irq(&epfile->ffs->eps_lock);
+ 
+-		if (wait_for_completion_interruptible(&io_data->done)) {
++		if (trace)
++			pr_info("gud_ffs_trace event=ffs_wait_enter ts_ns=%llu req=%px io_data=%px ep=%px\n",
++				(unsigned long long)ktime_get_ns(), req, io_data, ep->ep);
++		ret = wait_for_completion_interruptible(&io_data->done);
++		if (trace)
++			pr_info("gud_ffs_trace event=ffs_wait_return ts_ns=%llu req=%px io_data=%px ep=%px wait_ret=%zd io_status=%d req_status=%d req_actual=%u\n",
++				(unsigned long long)ktime_get_ns(), req, io_data, ep->ep,
++				ret, io_data->status, req->status, req->actual);
++		if (ret) {
+ 			spin_lock_irq(&epfile->ffs->eps_lock);
+ 			if (epfile->ep != ep) {
+ 				ret = -ESHUTDOWN;
+@@ -1191,6 +1226,10 @@
+ error:
+ 	if (ret != -EIOCBQUEUED) /* don't free if there is iocb queued */
+ 		ffs_free_buffer(io_data);
++	if (trace)
++		pr_info("gud_ffs_trace event=ffs_read_kernel_return ts_ns=%llu req=%px io_data=%px returned=%zd req_actual=%u req_status=%d\n",
++			(unsigned long long)ktime_get_ns(), req, io_data, ret,
++			req->actual, req->status);
+ 	return ret;
+ }
+ 
+--- a/drivers/usb/dwc2/gadget.c
++++ b/drivers/usb/dwc2/gadget.c
+@@ -21,7 +21,9 @@
+ #include <linux/seq_file.h>
+ #include <linux/delay.h>
+ #include <linux/io.h>
++#include <linux/ktime.h>
+ #include <linux/slab.h>
++#include <linux/smp.h>
+ 
+ #include <linux/usb/ch9.h>
+ #include <linux/usb/gadget.h>
+@@ -105,6 +107,32 @@
+ 	return hsotg->params.g_dma_desc;
+ }
+ 
++/* This investigation traces only the FunctionFS bulk OUT request under test. */
++static bool gud_ffs_trace_req(struct dwc2_hsotg_ep *hs_ep,
++				      struct usb_request *req)
++{
++	return hs_ep->index == 1 && !hs_ep->dir_in && req &&
++		req->length == 12800;
++}
++
++static void gud_ffs_trace_regs(struct dwc2_hsotg *hsotg,
++				       struct dwc2_hsotg_ep *hs_ep,
++				       struct usb_request *req, const char *event)
++{
++	unsigned int index = hs_ep->index;
++
++	pr_info("gud_ffs_trace event=%s ts_ns=%llu req=%px ep=%px ep_index=%u direction=out req_length=%u req_actual=%u req_status=%d do eptsiz=0x%08x doepctl=0x%08x doepint=0x%08x doepdma=0x%08x daint=0x%08x daintmsk=0x%08x gintsts=0x%08x gintmsk=0x%08x cpu=%u\n",
++		event, (unsigned long long)ktime_get_ns(), req, &hs_ep->ep,
++		index, req->length, req->actual, req->status,
++		dwc2_readl(hsotg, DOEPTSIZ(index)),
++		dwc2_readl(hsotg, DOEPCTL(index)),
++		dwc2_readl(hsotg, DOEPINT(index)),
++		dwc2_readl(hsotg, DOEPDMA(index)),
++		dwc2_readl(hsotg, DAINT), dwc2_readl(hsotg, DAINTMSK),
++		dwc2_readl(hsotg, GINTSTS), dwc2_readl(hsotg, GINTMSK),
++		raw_smp_processor_id());
++}
++
+ /**
+  * dwc2_gadget_incr_frame_num - Increments the targeted frame number.
+  * @hs_ep: The endpoint
+@@ -1061,6 +1089,13 @@
+ 	unsigned int packets;
+ 	unsigned int maxreq;
+ 	unsigned int dma_reg;
++	bool trace = gud_ffs_trace_req(hs_ep, ureq);
++
++	if (trace)
++		pr_info("gud_ffs_trace event=dwc2_start_req_enter ts_ns=%llu req=%px hs_req=%px ep=%px ep_index=%u direction=out continuing=%u req_length=%u req_actual=%u req_status=%d\n",
++			(unsigned long long)ktime_get_ns(), ureq, hs_req, &hs_ep->ep,
++			hs_ep->index, continuing, ureq->length, ureq->actual,
++			ureq->status);
+ 
+ 	if (index != 0) {
+ 		if (hs_ep->req && !continuing) {
+@@ -1246,6 +1281,8 @@
+ 
+ 	/* enable ep interrupts */
+ 	dwc2_hsotg_ctrl_epint(hsotg, hs_ep->index, hs_ep->dir_in, 1);
++	if (trace)
++		gud_ffs_trace_regs(hsotg, hs_ep, ureq, "dwc2_start_req_return");
+ }
+ 
+ /**
+@@ -1409,6 +1446,15 @@
+ 	int ret;
+ 	u32 maxsize = 0;
+ 	u32 mask = 0;
++	bool trace = gud_ffs_trace_req(hs_ep, req);
++
++	if (trace)
++		pr_info("gud_ffs_trace event=dwc2_queue_enter ts_ns=%llu req=%px hs_req=%px ep=%px ep_index=%u direction=out req_length=%u req_actual=%u req_status=%d dma=%pad queue_empty=%u ep_enabled=%u using_dma=%u using_desc_dma=%u cpu=%u\n",
++			(unsigned long long)ktime_get_ns(), req, hs_req, ep,
++			hs_ep->index, req->length, req->actual, req->status,
++			&req->dma, list_empty(&hs_ep->queue),
++			!!(dwc2_readl(hs, DOEPCTL(hs_ep->index)) & DXEPCTL_EPENA),
++			using_dma(hs), using_desc_dma(hs), raw_smp_processor_id());
+ 
+ 
+ 	dev_dbg(hs->dev, "%s: req %p: %d@%p, noi=%d, zero=%d, snok=%d\n",
+@@ -1475,6 +1521,10 @@
+ 
+ 	first = list_empty(&hs_ep->queue);
+ 	list_add_tail(&hs_req->queue, &hs_ep->queue);
++	if (trace)
++		pr_info("gud_ffs_trace event=dwc2_queue_added ts_ns=%llu req=%px hs_req=%px ep=%px ep_index=%u first=%u queue_empty=%u\n",
++			(unsigned long long)ktime_get_ns(), req, hs_req, ep,
++			hs_ep->index, first, list_empty(&hs_ep->queue));
+ 
+ 	/*
+ 	 * Handle DDMA isochronous transfers separately - just add new entry
+@@ -2120,10 +2170,22 @@
+ 				       struct dwc2_hsotg_req *hs_req,
+ 				       int result)
+ {
++	bool trace;
++
+ 	if (!hs_req) {
+ 		dev_dbg(hsotg->dev, "%s: nothing to complete?\n", __func__);
+ 		return;
+ 	}
++	trace = gud_ffs_trace_req(hs_ep, &hs_req->req);
++	if (trace) {
++		pr_info("gud_ffs_trace event=dwc2_complete_enter_meta ts_ns=%llu req=%px hs_req=%px ep=%px ep_index=%u direction=out result=%d req_length=%u req_actual=%u req_status=%d queue_empty=%u cpu=%u\n",
++			(unsigned long long)ktime_get_ns(), &hs_req->req, hs_req,
++			&hs_ep->ep, hs_ep->index, result, hs_req->req.length,
++			hs_req->req.actual, hs_req->req.status,
++			list_empty(&hs_ep->queue), raw_smp_processor_id());
++		gud_ffs_trace_regs(hsotg, hs_ep, &hs_req->req,
++			"dwc2_complete_enter");
++	}
+ 
+ 	dev_dbg(hsotg->dev, "complete: ep %p %s, req %p, %d => %p\n",
+ 		hs_ep, hs_ep->ep.name, hs_req, result, hs_req->req.complete);
+@@ -2151,7 +2213,13 @@
+ 
+ 	if (hs_req->req.complete) {
+ 		spin_unlock(&hsotg->lock);
++		if (trace)
++			gud_ffs_trace_regs(hsotg, hs_ep, &hs_req->req,
++				"dwc2_giveback_enter");
+ 		usb_gadget_giveback_request(&hs_ep->ep, &hs_req->req);
++		if (trace)
++			gud_ffs_trace_regs(hsotg, hs_ep, &hs_req->req,
++				"dwc2_giveback_return");
+ 		spin_lock(&hsotg->lock);
+ 	}
+ 
+@@ -2429,6 +2497,13 @@
+ 		req->actual = size_done;
+ 	}
+ 
++	if (gud_ffs_trace_req(hs_ep, req))
++		pr_info("gud_ffs_trace event=dwc2_out_irq ts_ns=%llu phase=outdone epnum=%d doepint=0x%08x doeptsiz=0x%08x req_length=%u residual=%u calculated_actual=%u req_status=%d cpu=%u\n",
++			(unsigned long long)ktime_get_ns(), epnum,
++			dwc2_readl(hsotg, DOEPINT(epnum)), epsize, req->length,
++			size_left, req->actual, req->status,
++			raw_smp_processor_id());
++
+ 	/* if there is more request to do, schedule new transfer */
+ 	if (req->actual < req->length && size_left == 0) {
+ 		dwc2_hsotg_start_req(hsotg, hs_ep, hs_req, true);
+@@ -3094,6 +3169,17 @@
+ 			if (idx == 0 && !hs_ep->req)
+ 				dwc2_hsotg_enqueue_setup(hsotg);
+ 		} else if (using_dma(hsotg)) {
++			struct dwc2_hsotg_req *hs_req = hs_ep->req;
++
++			if (gud_ffs_trace_req(hs_ep, hs_req ? &hs_req->req : NULL))
++				pr_info("gud_ffs_trace event=dwc2_out_irq ts_ns=%llu phase=epint epnum=%u doepint=0x%08x doeptsiz=0x%08x req_length=%u residual=%u calculated_actual=%u req_status=%d cpu=%u\n",
++					(unsigned long long)ktime_get_ns(), idx, ints,
++					dwc2_readl(hsotg, DOEPTSIZ(idx)),
++					hs_req->req.length,
++					DXEPTSIZ_XFERSIZE_GET(dwc2_readl(hsotg,
++								DOEPTSIZ(idx))),
++					hs_req->req.actual, hs_req->req.status,
++					raw_smp_processor_id());
+ 			/*
+ 			 * We're using DMA, we need to fire an OutDone here
+ 			 * as we ignore the RXFIFO.
