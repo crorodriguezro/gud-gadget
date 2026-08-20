@@ -286,16 +286,24 @@ impl ExactAioTransaction {
         Ok(())
     }
 
-    fn status_sent(&mut self, status: u8) -> anyhow::Result<()> {
+    /// Returns whether this is the status response for the accepted SET_BUFFER.
+    ///
+    /// STATUS_ON_SET asks the host to fetch a status after every control SET.
+    /// Once the accepted SET_BUFFER has received its OK response, later control
+    /// statuses cannot change the ownership of its exact EP1 receive.
+    fn status_sent(&mut self, status: u8) -> anyhow::Result<bool> {
         if self.state != ExactAioState::InFlight {
-            return Ok(());
+            return Ok(false);
+        }
+        if self.status_ready {
+            return Ok(false);
         }
         ensure!(
             status == GUD_STATUS_OK,
             "armed SET_BUFFER received non-OK status {status}"
         );
         self.status_ready = true;
-        Ok(())
+        Ok(true)
     }
 
     #[cfg(test)]
@@ -1869,9 +1877,9 @@ impl PixelDataEndpoint {
         Ok(sequence)
     }
 
-    pub fn note_status_sent(&mut self, status: u8) -> anyhow::Result<()> {
-        self.exact_aio.status_sent(status)?;
-        if self.exact_aio.state == ExactAioState::InFlight {
+    pub fn note_status_sent(&mut self, status: u8) -> anyhow::Result<bool> {
+        let accepted_set_buffer_status = self.exact_aio.status_sent(status)?;
+        if accepted_set_buffer_status {
             debug!(
                 event = "status_after_arm",
                 monotonic_ns = functionfs_monotonic_ns(),
@@ -1882,7 +1890,7 @@ impl PixelDataEndpoint {
                 "successful status sent after exact request acceptance"
             );
         }
-        Ok(())
+        Ok(accepted_set_buffer_status)
     }
 
     pub fn try_complete_exact_payload_aio(
@@ -2403,7 +2411,7 @@ mod tests {
         GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
         GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET, GUD_DISPLAY_MAGIC,
         GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK, GUD_PIXEL_FORMAT_RGB565,
-        GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        GUD_STATUS_BUSY, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
     use crate::{
         begin_status_on_set_diagnostic_transaction, configure_status_on_set_diagnostic, event,
@@ -2682,6 +2690,37 @@ mod tests {
         assert!(transaction.begin_arm(12_800).is_err());
         assert_eq!(transaction.sequence, first_sequence);
         assert_eq!(transaction.state, ExactAioState::InFlight);
+    }
+
+    #[test]
+    fn later_busy_status_preserves_the_status_confirmed_exact_receive() {
+        let mut transaction = ExactAioTransaction::default();
+        let first_sequence = transaction.begin_arm(5_120).unwrap();
+        transaction.submission_accepted().unwrap();
+
+        assert!(transaction.status_sent(GUD_STATUS_OK).unwrap());
+        assert!(!transaction.status_sent(GUD_STATUS_BUSY).unwrap());
+        assert_eq!(transaction.state, ExactAioState::InFlight);
+        assert_eq!(transaction.sequence, first_sequence);
+        assert!(transaction.status_ready);
+        assert!(transaction.begin_arm(5_120).is_err());
+
+        transaction.completion(5_120).unwrap();
+        transaction.return_idle().unwrap();
+        assert_eq!(transaction.state, ExactAioState::Idle);
+    }
+
+    #[test]
+    fn initial_non_ok_status_remains_an_exact_receive_error() {
+        let mut transaction = ExactAioTransaction::default();
+        transaction.begin_arm(5_120).unwrap();
+        transaction.submission_accepted().unwrap();
+
+        assert!(transaction.status_sent(GUD_STATUS_BUSY).is_err());
+        assert_eq!(transaction.state, ExactAioState::InFlight);
+        assert!(!transaction.status_ready);
+        transaction.poison();
+        assert_eq!(transaction.state, ExactAioState::Poisoned);
     }
 
     #[test]

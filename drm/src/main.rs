@@ -3414,18 +3414,30 @@ fn main() -> anyhow::Result<()> {
                                 ));
                             break 'event_loop;
                         }
-                        if let Err(err) = gud_data.note_status_sent(status) {
-                            if let Some((_, started, _)) = pending_exact_receive.take() {
-                                gud_data.poison_exact_payload_aio(
-                                    "invalid GET_STATUS result after arm",
-                                );
-                                let _ = bulk_receive_session.finish_receive::<()>(
-                                    started,
-                                    Err(err.context("validate GET_STATUS after exact AIO arm")),
+                        match gud_data.note_status_sent(status) {
+                            Err(err) => {
+                                if let Some((_, started, _)) = pending_exact_receive.take() {
+                                    gud_data.poison_exact_payload_aio(
+                                        "invalid GET_STATUS result after arm",
+                                    );
+                                    let _ = bulk_receive_session.finish_receive::<()>(
+                                        started,
+                                        Err(err.context("validate GET_STATUS after exact AIO arm")),
+                                    );
+                                }
+                                tracing::error!("Invalid status transition");
+                            }
+                            Ok(false) => {
+                                tracing::debug!(
+                                    status,
+                                    exact_aio_state = ?gud_data.exact_aio_state(),
+                                    receiver_state = ?bulk_receive_session.current_state(),
+                                    "GET_STATUS belongs to later control activity and does not change exact receive ownership"
                                 );
                             }
-                            tracing::error!("Invalid status transition");
-                        } else if let Some(observation) =
+                            Ok(true) => {}
+                        }
+                        if let Some(observation) =
                             observation.expect("STATUS_ON_SET diagnostic observation disappeared")
                         {
                             let transaction = status_on_set_cleanup_drain
