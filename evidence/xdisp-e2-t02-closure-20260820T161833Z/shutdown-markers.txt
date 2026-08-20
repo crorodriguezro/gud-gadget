@@ -1,0 +1,19 @@
+boot_id=182b1ef9-4f3f-4d6f-88ac-cc8870141338
+---
+s "available"
+---
+21556 bash -c printf "boot_id="; cat /proc/sys/kernel/random/boot_id; echo ---; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 State; echo ---; pgrep -af mirgud || true; echo ---; journalctl -u xdisp.service --no-pager --since "2026-08-20 11:16:20" | tail -n 30
+---
+Aug 20 11:16:20 ubuntu-phablet xdispd[21125]: mirgud: V0.1 update 280 failed errno=110 (Connection timed out)
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202421 CAPTURE_LOOP_EXIT
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202421 PRESENTER_STOP_BEGIN
+Aug 20 11:16:20 ubuntu-phablet xdispd[21125]: mirgud: report_kind=final final=true frames_received=456 frames_submitted=455 frames_in_flight=0 frames_presented=279 frames_dropped=174 frames_cancelled=1 drop_percent=38.2418 cancellation_percent=0.21978 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=1 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=true benchmark_elapsed_us=12885535 benchmark_elapsed_ms=12885 received_fps=35 submitted_fps=35 presented_fps=21 dropped_fps=13 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=859725 interval_received=30 interval_submitted=29 interval_presented=0 interval_dropped=29 interval_cancelled=1 interval_submit_failures=1 interval_received_fps=34 interval_submitted_fps=33 interval_presented_fps=0 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=456 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=456 acquire_us_min=4 acquire_us_avg=329 acquire_us_max=833 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=456 conversion_us_min=21989 conversion_us_avg=23126 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=456 release_us_min=1527 release_us_avg=4708 release_us_max=12999 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=456 capture_cycle_us_min=23981 capture_cycle_us_avg=28166 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=280 submit_us_min=4009 submit_us_avg=24223 submit_us_max=5027053 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202421 PRESENTER_STOP_COMPLETE
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202422 SCREENCAST_RELEASE_BEGIN
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202433 SCREENCAST_RELEASE_COMPLETE
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202433 MIR_CONNECTION_RELEASE_BEGIN
+Aug 20 11:16:37 ubuntu-phablet xdispd[20755]: xdispd: active -> disconnecting: deactivated
+Aug 20 11:16:37 ubuntu-phablet xdispd[20755]: xdispd: teardown stop requested
+Aug 20 11:16:41 ubuntu-phablet xdispd[20755]: xdispd: teardown deadline reached; sending SIGKILL
+Aug 20 11:16:46 ubuntu-phablet xdispd[20755]: xdispd: child exit forced-sigkill:signal:9 stop_duration_ms=8671
+Aug 20 11:16:46 ubuntu-phablet xdispd[20755]: xdispd: disconnecting -> available: forced-sigkill:signal:9

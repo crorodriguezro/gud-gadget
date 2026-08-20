@@ -1,0 +1,10 @@
+before boot id: 182b1ef9-4f3f-4d6f-88ac-cc8870141338
+after boot id: 182b1ef9-4f3f-4d6f-88ac-cc8870141338
+before lightdm pid: 2358
+after lightdm pid: 2358
+before compositor pid: 2370
+after compositor pid: 2370
+before xdispd pid: 20755
+after xdispd pid: 20755
+internal display responsive: yes
+touch/input responsive: yes

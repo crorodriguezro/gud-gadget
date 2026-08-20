@@ -1,0 +1,35 @@
+981a489c101fc979da1d4f5ff5cc66294db5d24fc705cac281975e6fda3efaf4  /usr/libexec/lomiri-xdisp/xdispd
+359689ea4b59519a3a7031bf6044e299696ab9b8e26484a4b017c7f61690dc1a  /usr/libexec/lomiri-xdisp/mirgud
+---
+ExecStart={ path=/usr/libexec/lomiri-xdisp/xdispd ; argv[]=/usr/libexec/lomiri-xdisp/xdispd ; ignore_errors=no ; start_time=[Thu 2026-08-20 11:13:01 -05] ; stop_time=[n/a] ; pid=20755 ; code=(null) ; status=0/0 }
+---
+# /usr/lib/systemd/system/xdisp.service
+[Unit]
+Description=Lomiri GUD external display lifecycle
+After=lightdm.service
+Wants=lightdm.service
+
+[Service]
+Type=dbus
+BusName=org.lomiri.XDisp
+ExecStart=/usr/libexec/lomiri-xdisp/xdispd
+ExecStartPre=/usr/bin/install -d -m 0700 /home/phablet/.local/share/lomiri-xdisp
+Environment=MIR_CLIENT_PLATFORM_PATH=/usr/lib/aarch64-linux-gnu/mir1/client-platform
+Environment=MIR_SERVER_PLATFORM_PATH=/usr/lib/aarch64-linux-gnu/mir1/server-platform
+Restart=on-failure
+KillMode=control-group
+
+[Install]
+WantedBy=graphical.target
+Alias=dbus-org.lomiri.XDisp.service
+
+# /etc/systemd/system/xdisp.service.d/override.conf
+[Service]
+ExecStart=
+ExecStart=/usr/libexec/lomiri-xdisp/xdispd
+---
+s "available"
+---
+b true
+---
+b false

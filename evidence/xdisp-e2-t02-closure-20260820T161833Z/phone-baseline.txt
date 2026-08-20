@@ -1,0 +1,25 @@
+boot_id=182b1ef9-4f3f-4d6f-88ac-cc8870141338
+uname=Linux ubuntu-phablet 4.9.112-g6b190d86b #1 SMP PREEMPT Thu Mar 12 00:01:48 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
+---
+2358 /usr/sbin/lightdm
+2370 lomiri-system-compositor --enable-num-framebuffers-quirk=true --disable-overlays=false --console-provider=vt --spinner=/usr/bin/lomiri-system-compositor-spinner --file /run/mir_socket --from-dm-fd 11 --to-dm-fd 14 --vt 1
+2499 lightdm --session-child 11 16
+20755 /usr/libexec/lomiri-xdisp/xdispd
+21506 bash -c printf "boot_id="; cat /proc/sys/kernel/random/boot_id; printf "uname="; uname -a; echo ---; pgrep -af "lightdm|lomiri-system-compositor|xdispd" || true; echo ---; ls -l /dev/dri; echo ---; cat /sys/class/drm/card1/device/uevent 2>/dev/null | sed -n "1,20p"; echo ---; sha256sum /home/phablet/gud.ko 2>/dev/null || true
+---
+total 0
+drwxr-xr-x  2 root root        180 Aug 19 23:26 by-path
+crw-rw----+ 1 root video  226,   0 Aug 19 23:16 card0
+crw-rw----+ 1 root video  226,   1 Aug 19 23:26 card1
+crw-rw----  1 root video  226,  64 Jun  5 10:36 controlD64
+crw-rw----  1 root video  226,  65 Aug 19 23:26 controlD65
+crw-rw----+ 1 root render 226, 128 Jun  5 10:36 renderD128
+---
+DEVTYPE=usb_interface
+DRIVER=gud_xdisp_lz4_12800
+PRODUCT=1d50/614d/0
+TYPE=0/0/0
+INTERFACE=255/255/0
+MODALIAS=usb:v1D50p614Dd0000dc00dsc00dp00icFFiscFFip00in00
+---
+b7d48055ff1a20bc9b409c7713a8e0e2f9c346c28bd1220cee25aaa14e64912e  /home/phablet/gud.ko

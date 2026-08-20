@@ -1,0 +1,38 @@
+boot_id=2a7d1be3-ed3f-4580-af09-521f858f0324
+uname=Linux raspberrypi 6.12.47+rpt-rpi-v8-ffs-xfercompltrace #2 SMP PREEMPT Sun Aug 16 23:57:59 -05 2026 aarch64 GNU/Linux
+---
+active
+---
+3894 /home/cristian/gud-drm /dev/dri/card0
+4639 bash -c printf "boot_id="; cat /proc/sys/kernel/random/boot_id; printf "uname="; uname -a; echo ---; systemctl is-active gud-userspace.service; echo ---; pgrep -af gud-drm || true; echo ---; cat /sys/class/udc/3f980000.usb/state 2>/dev/null || true; echo ---; test -r /sys/kernel/config/usb_gadget/usb-gadget0/UDC && cat /sys/kernel/config/usb_gadget/usb-gadget0/UDC || true; echo ---; ls /etc/systemd/system/gud-userspace.service.d 2>/dev/null || true; echo ---; systemctl status gud-userspace.service --no-pager -l --lines=8
+---
+configured
+---
+3f980000.usb
+---
+10-xdisp-p0.1-containment.conf
+20-xdisp-p0.1-ffs-read-size.conf
+60-xdisp-p2.1-laptop-max-12800.conf.disabled
+98-e1-t04-production-aio.conf
+---
+● gud-userspace.service - Userspace GUD gadget
+     Loaded: loaded (/etc/systemd/system/gud-userspace.service; enabled; preset: enabled)
+    Drop-In: /etc/systemd/system/gud-userspace.service.d
+             └─10-xdisp-p0.1-containment.conf, 20-xdisp-p0.1-ffs-read-size.conf, 98-e1-t04-production-aio.conf
+     Active: active (running) since Thu 2026-08-20 05:22:00 BST; 11h ago
+ Invocation: a3327a4ef34c40b8ab90e8131516191d
+    Process: 3891 ExecStartPre=/bin/sh -c while [ ! -e /dev/dri/card0 ] || [ ! -e /sys/class/udc/3f980000.usb/state ]; do sleep 1; done (code=exited, status=0/SUCCESS)
+   Main PID: 3894 (gud-drm)
+      Tasks: 3 (limit: 168)
+        CPU: 15.436s
+     CGroup: /system.slice/gud-userspace.service
+             └─3894 /home/cristian/gud-drm /dev/dri/card0
+
+Aug 20 17:16:35 raspberrypi gud-drm[3894]: 2026-08-20T16:16:35.844561Z DEBUG gud_drm: Received event: SetupHostToDevice(CtrlReceiver { ctrl_req: CtrlReq { request_type: 65, request: 96, value: 0, index: 0, length: 25 } })
+Aug 20 17:16:35 raspberrypi gud-drm[3894]: 2026-08-20T16:16:35.844660Z  WARN gud_gadget: rejected SET_BUFFER outside the bounded STATUS_ON_SET diagnostic admission window event="status_on_set_set_buffer_rejected" transaction_limit=0 started_transactions=0 active=true attempted_third_transaction=false
+Aug 20 17:16:35 raspberrypi gud-drm[3894]: 2026-08-20T16:16:35.844776Z DEBUG gud_drm: Received event: SetupDeviceToHost(CtrlSender { ctrl_req: CtrlReq { request_type: 193, request: 0, value: 0, index: 0, length: 1 } })
+Aug 20 17:16:35 raspberrypi gud-drm[3894]: 2026-08-20T16:16:35.844850Z DEBUG gud_gadget: sent GUD status event="status_reply" monotonic_ns=42875401463767 status=1
+Aug 20 17:16:35 raspberrypi gud-drm[3894]: 2026-08-20T16:16:35.844879Z DEBUG gud_drm: GUD event: StatusSent(1)
+Aug 20 17:16:35 raspberrypi gud-drm[3894]: 2026-08-20T16:16:35.844932Z ERROR gud_gadget: exact FunctionFS AIO transaction poisoned; preserving accepted request event="exact_aio_poisoned" transaction_seq=1147 expected_bytes=5120 state=Poisoned reason="invalid GET_STATUS result after arm"
+Aug 20 17:16:35 raspberrypi gud-drm[3894]: 2026-08-20T16:16:35.844970Z ERROR gud_drm: FunctionFS bulk receive session entered Poisoned after an error event="receiver_state_transition" receiver_state="Poisoned"
+Aug 20 17:16:35 raspberrypi gud-drm[3894]: 2026-08-20T16:16:35.845002Z ERROR gud_drm: Invalid status transition

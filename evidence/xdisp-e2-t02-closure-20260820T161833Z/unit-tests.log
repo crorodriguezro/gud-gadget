@@ -1,0 +1,161 @@
+== android2 focused ==
+Running main() from main.cpp
+Note: Google Test filter = GudPresentationWorker.*:GudHwcBoundary.*
+[==========] Running 6 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 1 test from GudHwcBoundary
+[ RUN      ] GudHwcBoundary.excludes_only_synthetic_external_from_android_hwc
+[       OK ] GudHwcBoundary.excludes_only_synthetic_external_from_android_hwc (0 ms)
+[----------] 1 test from GudHwcBoundary (0 ms total)
+
+[----------] 5 tests from GudPresentationWorker
+[ RUN      ] GudPresentationWorker.coalesces_pending_frames_to_the_newest
+[       OK ] GudPresentationWorker.coalesces_pending_frames_to_the_newest (3 ms)
+[ RUN      ] GudPresentationWorker.submit_does_not_wait_for_a_slow_present
+[       OK ] GudPresentationWorker.submit_does_not_wait_for_a_slow_present (2 ms)
+[ RUN      ] GudPresentationWorker.retains_active_frame_and_releases_superseded_pending_frame
+[       OK ] GudPresentationWorker.retains_active_frame_and_releases_superseded_pending_frame (2 ms)
+[ RUN      ] GudPresentationWorker.contains_presentation_errors_and_continues
+[       OK ] GudPresentationWorker.contains_presentation_errors_and_continues (3 ms)
+[ RUN      ] GudPresentationWorker.shutdown_discards_pending_frame_and_joins_active_work
+[       OK ] GudPresentationWorker.shutdown_discards_pending_frame_and_joins_active_work (23 ms)
+[----------] 5 tests from GudPresentationWorker (35 ms total)
+
+[----------] Global test environment tear-down
+[==========] 6 tests from 2 test suites ran. (37 ms total)
+[  PASSED  ] 6 tests.
+== xdisp unit tests ==
+Running main() from /usr/src/googletest/googletest/src/gtest_main.cc
+[==========] Running 49 tests from 10 test suites.
+[----------] Global test environment set-up.
+[----------] 11 tests from XdispLifecycle
+[ RUN      ] XdispLifecycle.enables_discovers_and_activates_once
+[       OK ] XdispLifecycle.enables_discovers_and_activates_once (0 ms)
+[ RUN      ] XdispLifecycle.normal_deactivation_joins_before_available
+[       OK ] XdispLifecycle.normal_deactivation_joins_before_available (0 ms)
+[ RUN      ] XdispLifecycle.contained_forced_stop_returns_to_available
+[       OK ] XdispLifecycle.contained_forced_stop_returns_to_available (0 ms)
+[ RUN      ] XdispLifecycle.detach_retains_intent_and_reconnects_only_after_fresh_add
+[       OK ] XdispLifecycle.detach_retains_intent_and_reconnects_only_after_fresh_add (0 ms)
+[ RUN      ] XdispLifecycle.recoverable_error_requires_explicit_retry
+[       OK ] XdispLifecycle.recoverable_error_requires_explicit_retry (0 ms)
+[ RUN      ] XdispLifecycle.poison_is_persisted_before_stop_and_blocks_activation
+[       OK ] XdispLifecycle.poison_is_persisted_before_stop_and_blocks_activation (0 ms)
+[ RUN      ] XdispLifecycle.poison_clear_requires_remove_and_readd_and_returns_disabled
+[       OK ] XdispLifecycle.poison_clear_requires_remove_and_readd_and_returns_disabled (0 ms)
+[ RUN      ] XdispLifecycle.disable_stops_child_and_clears_activation_intent
+[       OK ] XdispLifecycle.disable_stops_child_and_clears_activation_intent (0 ms)
+[ RUN      ] XdispLifecycle.start_failure_becomes_recoverable_without_a_phantom_child
+[       OK ] XdispLifecycle.start_failure_becomes_recoverable_without_a_phantom_child (0 ms)
+[ RUN      ] XdispLifecycle.connecting_deadline_stops_child_in_recoverable_error
+[       OK ] XdispLifecycle.connecting_deadline_stops_child_in_recoverable_error (0 ms)
+[ RUN      ] XdispLifecycle.restored_poison_never_enables_or_activates
+[       OK ] XdispLifecycle.restored_poison_never_enables_or_activates (0 ms)
+[----------] 11 tests from XdispLifecycle (5 ms total)
+
+[----------] 7 tests from XdispChildTermination
+[ RUN      ] XdispChildTermination.graceful_exit_after_requested_stop
+[       OK ] XdispChildTermination.graceful_exit_after_requested_stop (0 ms)
+[ RUN      ] XdispChildTermination.forced_timeout_preserves_sigkill_and_containment
+[       OK ] XdispChildTermination.forced_timeout_preserves_sigkill_and_containment (0 ms)
+[ RUN      ] XdispChildTermination.forced_stop_counter_increments
+[       OK ] XdispChildTermination.forced_stop_counter_increments (0 ms)
+[ RUN      ] XdispChildTermination.spontaneous_exit_does_not_erase_last_stop_diagnostics
+[       OK ] XdispChildTermination.spontaneous_exit_does_not_erase_last_stop_diagnostics (0 ms)
+[ RUN      ] XdispChildTermination.poison_is_never_hidden_by_stop_request
+[       OK ] XdispChildTermination.poison_is_never_hidden_by_stop_request (0 ms)
+[ RUN      ] XdispChildTermination.unexpected_signal_is_recoverable
+[       OK ] XdispChildTermination.unexpected_signal_is_recoverable (0 ms)
+[ RUN      ] XdispChildTermination.requested_sigterm_is_graceful
+[       OK ] XdispChildTermination.requested_sigterm_is_graceful (0 ms)
+[----------] 7 tests from XdispChildTermination (1 ms total)
+
+[----------] 13 tests from MirgudPixelFormat
+[ RUN      ] MirgudPixelFormat.parses_supported_names
+[       OK ] MirgudPixelFormat.parses_supported_names (0 ms)
+[ RUN      ] MirgudPixelFormat.reports_transport_bytes_per_pixel
+[       OK ] MirgudPixelFormat.reports_transport_bytes_per_pixel (0 ms)
+[ RUN      ] MirgudPixelFormat.protects_drm_fourcc_mappings
+[       OK ] MirgudPixelFormat.protects_drm_fourcc_mappings (0 ms)
+[ RUN      ] MirgudPixelFormat.identifies_xrgb8888_scanout_copy_eligibility
+[       OK ] MirgudPixelFormat.identifies_xrgb8888_scanout_copy_eligibility (0 ms)
+[ RUN      ] MirgudPixelFormat.direct_copy_preserves_xrgb8888_bytes
+[       OK ] MirgudPixelFormat.direct_copy_preserves_xrgb8888_bytes (0 ms)
+[ RUN      ] MirgudPixelFormat.direct_copy_preserves_argb8888_bytes_for_visible_xrgb_channels
+[       OK ] MirgudPixelFormat.direct_copy_preserves_argb8888_bytes_for_visible_xrgb_channels (0 ms)
+[ RUN      ] MirgudPixelFormat.channel_reorder_produces_xrgb8888
+[       OK ] MirgudPixelFormat.channel_reorder_produces_xrgb8888 (0 ms)
+[ RUN      ] MirgudPixelFormat.xbgr8888_uses_channel_reorder
+[       OK ] MirgudPixelFormat.xbgr8888_uses_channel_reorder (0 ms)
+[ RUN      ] MirgudPixelFormat.egl_rgba_source_converts_correctly_with_bottom_up_rows
+[       OK ] MirgudPixelFormat.egl_rgba_source_converts_correctly_with_bottom_up_rows (0 ms)
+[ RUN      ] MirgudPixelFormat.egl_source_layouts_convert_one_row_without_channel_swapping
+[       OK ] MirgudPixelFormat.egl_source_layouts_convert_one_row_without_channel_swapping (0 ms)
+[ RUN      ] MirgudPixelFormat.egl_bgra_source_converts_correctly_with_bottom_up_rows
+[       OK ] MirgudPixelFormat.egl_bgra_source_converts_correctly_with_bottom_up_rows (0 ms)
+[ RUN      ] MirgudPixelFormat.packs_rgb565
+[       OK ] MirgudPixelFormat.packs_rgb565 (0 ms)
+[ RUN      ] MirgudPixelFormat.rgb565_direct_copy_respects_stride_and_row_order
+[       OK ] MirgudPixelFormat.rgb565_direct_copy_respects_stride_and_row_order (0 ms)
+[----------] 13 tests from MirgudPixelFormat (2 ms total)
+
+[----------] 1 test from MirgudSourcePixelFormat
+[ RUN      ] MirgudSourcePixelFormat.parses_names_and_selects_advertised_format
+[       OK ] MirgudSourcePixelFormat.parses_names_and_selects_advertised_format (0 ms)
+[----------] 1 test from MirgudSourcePixelFormat (0 ms total)
+
+[----------] 3 tests from MirgudTiming
+[ RUN      ] MirgudTiming.uses_explicit_denominators_and_bounded_summary
+[       OK ] MirgudTiming.uses_explicit_denominators_and_bounded_summary (0 ms)
+[ RUN      ] MirgudTiming.uses_nearest_rank_percentiles
+[       OK ] MirgudTiming.uses_nearest_rank_percentiles (0 ms)
+[ RUN      ] MirgudTiming.calculates_zero_and_elapsed_rates
+[       OK ] MirgudTiming.calculates_zero_and_elapsed_rates (0 ms)
+[----------] 3 tests from MirgudTiming (0 ms total)
+
+[----------] 1 test from MirgudQuality
+[ RUN      ] MirgudQuality.deterministic_pattern_converts_from_one_reference
+[       OK ] MirgudQuality.deterministic_pattern_converts_from_one_reference (0 ms)
+[----------] 1 test from MirgudQuality (0 ms total)
+
+[----------] 2 tests from MirgudPattern
+[ RUN      ] MirgudPattern.deterministic_seed_and_format_conversion_share_rgb_source
+[       OK ] MirgudPattern.deterministic_seed_and_format_conversion_share_rgb_source (0 ms)
+[ RUN      ] MirgudPattern.pregenerated_frames_repeat_without_changing_logical_rgb_source
+[       OK ] MirgudPattern.pregenerated_frames_repeat_without_changing_logical_rgb_source (0 ms)
+[----------] 2 tests from MirgudPattern (0 ms total)
+
+[----------] 1 test from MirgudSourceFormat
+[ RUN      ] MirgudSourceFormat.rejects_each_runtime_contract_change
+[       OK ] MirgudSourceFormat.rejects_each_runtime_contract_change (0 ms)
+[----------] 1 test from MirgudSourceFormat (0 ms total)
+
+[----------] 2 tests from MirgudXByteSamples
+[ RUN      ] MirgudXByteSamples.tracks_constant_and_varying_bounded_samples
+[       OK ] MirgudXByteSamples.tracks_constant_and_varying_bounded_samples (0 ms)
+[ RUN      ] MirgudXByteSamples.distributes_samples_over_full_frame
+[       OK ] MirgudXByteSamples.distributes_samples_over_full_frame (30 ms)
+[----------] 2 tests from MirgudXByteSamples (31 ms total)
+
+[----------] 8 tests from MirgudPresenter
+[ RUN      ] MirgudPresenter.accounts_for_one_presented_frame
+[       OK ] MirgudPresenter.accounts_for_one_presented_frame (2 ms)
+[ RUN      ] MirgudPresenter.resets_idle_statistics_for_a_measured_interval
+[       OK ] MirgudPresenter.resets_idle_statistics_for_a_measured_interval (1 ms)
+[ RUN      ] MirgudPresenter.accounts_for_pending_replacement
+[       OK ] MirgudPresenter.accounts_for_pending_replacement (1 ms)
+[ RUN      ] MirgudPresenter.snapshot_is_accounting_valid_while_presenting
+[       OK ] MirgudPresenter.snapshot_is_accounting_valid_while_presenting (2 ms)
+[ RUN      ] MirgudPresenter.cancels_pending_frame_once_during_stop
+[       OK ] MirgudPresenter.cancels_pending_frame_once_during_stop (2 ms)
+[ RUN      ] MirgudPresenter.records_failed_presentation_attempts
+[       OK ] MirgudPresenter.records_failed_presentation_attempts (1 ms)
+[ RUN      ] MirgudPresenter.separates_first_presented_callback_failure
+[       OK ] MirgudPresenter.separates_first_presented_callback_failure (1 ms)
+[ RUN      ] MirgudPresenter.reports_zero_denominator_percentages_and_final_accounting
+[       OK ] MirgudPresenter.reports_zero_denominator_percentages_and_final_accounting (0 ms)
+[----------] 8 tests from MirgudPresenter (16 ms total)
+
+[----------] Global test environment tear-down
+[==========] 49 tests from 10 test suites ran. (62 ms total)
+[  PASSED  ] 49 tests.

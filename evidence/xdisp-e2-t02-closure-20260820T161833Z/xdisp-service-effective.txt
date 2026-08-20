@@ -1,0 +1,38 @@
+ExecStart=ExecStart={ path=/usr/libexec/lomiri-xdisp/xdispd ; argv[]=/usr/libexec/lomiri-xdisp/xdispd ; ignore_errors=no ; start_time=[Thu 2026-08-20 11:13:01 -05] ; stop_time=[n/a] ; pid=20755 ; code=(null) ; status=0/0 }
+---
+# /usr/lib/systemd/system/xdisp.service
+[Unit]
+Description=Lomiri GUD external display lifecycle
+After=lightdm.service
+Wants=lightdm.service
+
+[Service]
+Type=dbus
+BusName=org.lomiri.XDisp
+ExecStart=/usr/libexec/lomiri-xdisp/xdispd
+ExecStartPre=/usr/bin/install -d -m 0700 /home/phablet/.local/share/lomiri-xdisp
+Environment=MIR_CLIENT_PLATFORM_PATH=/usr/lib/aarch64-linux-gnu/mir1/client-platform
+Environment=MIR_SERVER_PLATFORM_PATH=/usr/lib/aarch64-linux-gnu/mir1/server-platform
+Restart=on-failure
+KillMode=control-group
+
+[Install]
+WantedBy=graphical.target
+Alias=dbus-org.lomiri.XDisp.service
+
+# /etc/systemd/system/xdisp.service.d/override.conf
+[Service]
+ExecStart=
+ExecStart=/usr/libexec/lomiri-xdisp/xdispd
+---
+2358 /usr/sbin/lightdm
+2370 lomiri-system-compositor --enable-num-framebuffers-quirk=true --disable-overlays=false --console-provider=vt --spinner=/usr/bin/lomiri-system-compositor-spinner --file /run/mir_socket --from-dm-fd 11 --to-dm-fd 14 --vt 1
+2499 lightdm --session-child 11 16
+20755 /usr/libexec/lomiri-xdisp/xdispd
+21827 bash -c printf "ExecStart="; systemctl show -p ExecStart xdisp.service; echo ---; systemctl cat xdisp.service; echo ---; pgrep -af "lightdm|lomiri-system-compositor|xdispd|mirgud" || true; echo ---; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 State; echo ---; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 Enabled; echo ---; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 ActivationRequested
+---
+s "available"
+---
+b true
+---
+b false

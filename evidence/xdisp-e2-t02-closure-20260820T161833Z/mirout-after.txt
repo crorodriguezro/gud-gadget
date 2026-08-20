@@ -1,0 +1,6 @@
+Connected to server: /run/mir_socket
+Output 1: LVDS, connected, 1080x2280+0+0, enabled, on, 68mm x 145mm (6.3"), normal, 1.00x, unknown, phone
+    1080x2280     60.00*+
+Output 2: DisplayPort, disconnected
+Output 3: Virtual, disconnected
+    1280x720      60.00*+
