@@ -1,0 +1,90 @@
+{
+  "run": "/home/phablet/e2-fresh-20260820T035520Z-fast",
+  "cycles": 10,
+  "successful_cycles": 10,
+  "lomiri_restart_observed": false,
+  "baseline_pids": {
+    "xdisp": "56703",
+    "lightdm": "2276",
+    "compositor": "2306",
+    "lomiri": "66937"
+  },
+  "final_pids": {
+    "xdisp": "56703",
+    "lightdm": "2276",
+    "compositor": "2306",
+    "lomiri": "66937"
+  },
+  "cycles_detail": [
+    {
+      "cycle": "cycle-01",
+      "rc": -9,
+      "dumped": true,
+      "frames_received": 39,
+      "accounting_ok": "true"
+    },
+    {
+      "cycle": "cycle-02",
+      "rc": -9,
+      "dumped": true,
+      "frames_received": 43,
+      "accounting_ok": "true"
+    },
+    {
+      "cycle": "cycle-03",
+      "rc": -9,
+      "dumped": true,
+      "frames_received": 47,
+      "accounting_ok": "true"
+    },
+    {
+      "cycle": "cycle-04",
+      "rc": -9,
+      "dumped": true,
+      "frames_received": 46,
+      "accounting_ok": "true"
+    },
+    {
+      "cycle": "cycle-05",
+      "rc": -9,
+      "dumped": true,
+      "frames_received": 44,
+      "accounting_ok": "true"
+    },
+    {
+      "cycle": "cycle-06",
+      "rc": -9,
+      "dumped": true,
+      "frames_received": 44,
+      "accounting_ok": "true"
+    },
+    {
+      "cycle": "cycle-07",
+      "rc": -9,
+      "dumped": true,
+      "frames_received": 45,
+      "accounting_ok": "true"
+    },
+    {
+      "cycle": "cycle-08",
+      "rc": -9,
+      "dumped": true,
+      "frames_received": 45,
+      "accounting_ok": "true"
+    },
+    {
+      "cycle": "cycle-09",
+      "rc": -9,
+      "dumped": true,
+      "frames_received": 43,
+      "accounting_ok": "true"
+    },
+    {
+      "cycle": "cycle-10",
+      "rc": -9,
+      "dumped": true,
+      "frames_received": 44,
+      "accounting_ok": "true"
+    }
+  ]
+}
