@@ -84,11 +84,11 @@ E1 Transport qualification is **complete for v1**:
 
 ### Next: E2 Implementation
 
-Critical path: **E2-T01** — Synthetic/Offscreen Render Target
+Critical path: **E2-T01** — Reconcile the source/render capture gate
 
-- Phone-compatible offscreen gralloc/EGL
+- xdispd-owned Mir Virtual extended output / screencast
+- mirgud capture and bounded presentation
 - Bounded resource lifecycle (FDs/fences)
-- Integration with E2-T02 newest-frame worker
 - Re-qualify Mir/Lomiri with E1-T06 baseline
 
 See: `/home/cristianr/Projects/linux-mobile/T06-OPERATOR-RUNBOOK.md` (lines 515-540)
