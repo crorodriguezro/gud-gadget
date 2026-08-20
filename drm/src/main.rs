@@ -765,6 +765,10 @@ fn event_timeout_for_ready_payload(event_timeout: Duration, has_ready_payload: b
     }
 }
 
+fn conflicts_with_owned_exact_receive(event: &Event<'_>, has_ready_payload: bool) -> bool {
+    !has_ready_payload && matches!(event, Event::Buffer(_))
+}
+
 struct LifecycleObservation<'a> {
     usb_session: &'a mut UsbSessionState,
     session: &'a BulkReceiveSession,
@@ -3345,7 +3349,12 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                 }
-                if pending_exact_receive.is_some() && !matches!(&gud_event, Event::StatusSent(_)) {
+                // A second accepted SET_BUFFER would conflict with the exact EP1
+                // receive. Other GUD events are EP0 control-plane work and remain
+                // serviceable while that receive is safely owned.
+                if pending_exact_receive.is_some()
+                    && conflicts_with_owned_exact_receive(&gud_event, ready_payload_stats.is_some())
+                {
                     let reason = format!(
                         "unexpected high-level event while exact AIO accepted: {gud_event:?}"
                     );
@@ -4953,8 +4962,8 @@ fn main() -> anyhow::Result<()> {
 mod tests {
     use super::{
         advertised_preferred_mode_index, classify_usb_lifecycle, compute_scaled_layout,
-        derive_mode_from_native, diagnostic_pattern_color, dump_pixel_buffer_ppm,
-        event_timeout_for_ready_payload, fill_diagnostic_pattern_rect,
+        conflicts_with_owned_exact_receive, derive_mode_from_native, diagnostic_pattern_color,
+        dump_pixel_buffer_ppm, event_timeout_for_ready_payload, fill_diagnostic_pattern_rect,
         parse_e1_t05_inflight_deadline, parse_functionfs_read_size, parse_test_compression,
         parse_test_dynamic_mode_match, parse_test_max_buffer_size, parse_test_output_mode,
         parse_test_prearm_once_bytes, parse_test_status_on_set_bytes,
@@ -5528,6 +5537,40 @@ mod tests {
             event_timeout_for_ready_payload(Duration::from_millis(100), false),
             Duration::from_millis(100)
         );
+    }
+
+    #[test]
+    fn owned_exact_receive_allows_state_check_but_not_another_buffer() {
+        let state_check = Event::StateChecked(DisplayStateSnapshot {
+            mode: DisplayMode {
+                clock: 74_250,
+                hdisplay: 1280,
+                hsync_start: 1390,
+                hsync_end: 1430,
+                htotal: 1650,
+                vdisplay: 720,
+                vsync_start: 725,
+                vsync_end: 730,
+                vtotal: 750,
+                flags: 5,
+            },
+            format: GUD_PIXEL_FORMAT_RGB565,
+            connector: 0,
+            generation: 23,
+        });
+        let buffer = Event::Buffer(SetBuffer {
+            x: 0,
+            y: 0,
+            width: 1280,
+            height: 1,
+            length: 5120,
+            compression: 0,
+            compressed_length: 0,
+        });
+
+        assert!(!conflicts_with_owned_exact_receive(&state_check, false));
+        assert!(conflicts_with_owned_exact_receive(&buffer, false));
+        assert!(!conflicts_with_owned_exact_receive(&buffer, true));
     }
 
     #[test]
