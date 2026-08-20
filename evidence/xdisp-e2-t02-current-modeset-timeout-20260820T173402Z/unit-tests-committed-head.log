@@ -1,0 +1,300 @@
+sha256:14f36fb633310f8ddf70aa1fc6b769e225a5e693c6615d0ebf7c50e4798c1ec4
+CMake Deprecation Warning at cmake/MirCommon.cmake:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+Call Stack (most recent call first):
+  CMakeLists.txt:35 (include)
+
+
+-- Could NOT find Lcov (missing: LCOV_EXECUTABLE GENHTML_EXECUTABLE) 
+-- Could NOT find gcovr (missing: GCOVR_EXECUTABLE) 
+-- CMAKE_C_COMPILER: /usr/bin/cc
+Boost 1.48.0 found.
+Found Boost components:
+   program_options
+CMake Warning (dev) at /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:438 (message):
+  The package name passed to `find_package_handle_standard_args`
+  (ANDROID_PROPERTIES) does not match the name of the calling package
+  (AndroidProperties).  This can lead to problems in calling code that
+  expects `find_package` result variables (e.g., `_FOUND`) to follow a
+  certain pattern.
+Call Stack (most recent call first):
+  cmake/FindAndroidProperties.cmake:19 (find_package_handle_standard_args)
+  CMakeLists.txt:137 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:438 (message):
+  The package name passed to `find_package_handle_standard_args`
+  (LIBHARDWARE) does not match the name of the calling package (LibHardware).
+  This can lead to problems in calling code that expects `find_package`
+  result variables (e.g., `_FOUND`) to follow a certain pattern.
+Call Stack (most recent call first):
+  cmake/FindLibHardware.cmake:23 (find_package_handle_standard_args)
+  CMakeLists.txt:138 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:438 (message):
+  The package name passed to `find_package_handle_standard_args` (LTTNG_UST)
+  does not match the name of the calling package (LTTngUST).  This can lead
+  to problems in calling code that expects `find_package` result variables
+  (e.g., `_FOUND`) to follow a certain pattern.
+Call Stack (most recent call first):
+  cmake/FindLTTngUST.cmake:28 (find_package_handle_standard_args)
+  CMakeLists.txt:157 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Up-to-date: /build/mir_gtest/fail_on_success.sh
+-- Using /usr/src/googletest/googlemock/ as gmock source directory
+-- Using GTest v1.14.0 (parsed from pkg-config)
+-- doxygen 1.9.8 (>= 1.8.0) available - enabling make target doc
+CMake Deprecation Warning at cmake/ABICheck.cmake:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+Call Stack (most recent call first):
+  CMakeLists.txt:242 (include)
+
+
+CMake Deprecation Warning at cmake/ABICheck.cmake:50 (cmake_policy):
+  The OLD behavior for policy CMP0026 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+Call Stack (most recent call first):
+  cmake/ABICheck.cmake:67 (make_lib_descriptor)
+  CMakeLists.txt:242 (include)
+
+
+CMake Deprecation Warning at cmake/ABICheck.cmake:50 (cmake_policy):
+  The OLD behavior for policy CMP0026 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+Call Stack (most recent call first):
+  cmake/ABICheck.cmake:68 (make_lib_descriptor)
+  CMakeLists.txt:242 (include)
+
+
+-- Configuring done (0.4s)
+-- Generating done (0.0s)
+-- Build files have been written to: /build
+[1/50] cd /build/src && ln -fs wrapper /build/bin/mirgud
+[2/50] cd /build/tests/unit-tests/platforms/android && ln -fs wrapper /build/bin/mir_unit_tests_android2
+[3/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/hwc_struct_helpers.cpp.o
+[4/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_buffer.cpp.o
+[5/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_gud_presentation_worker.cpp.o
+[6/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_gud_screencast_rgb565.cpp.o
+[7/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_sync_fence.cpp.o
+[8/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_buffer_tex_bind.cpp.o
+[9/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_display.cpp.o
+[10/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_display_generic.cpp.o
+[11/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_display_group.cpp.o
+[12/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_gralloc.cpp.o
+[13/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_graphic_buffer_allocator.cpp.o
+[14/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_display_buffer.cpp.o
+[15/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_ipc_operations.cpp.o
+[16/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_resource_factory.cpp.o
+[17/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_framebuffers.cpp.o
+[18/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_fb_device.cpp.o
+[19/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_hwc_layers.cpp.o
+[20/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_hwc_layerlist.cpp.o
+[21/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_hwc_logger.cpp.o
+[22/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_server_interpreter.cpp.o
+[23/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_pixel_format.cpp.o
+[24/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_platform.cpp.o
+[25/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_graphics_platform.cpp.o
+[26/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_interpreter_buffer_cache.cpp.o
+[27/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_native_buffer.cpp.o
+[28/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_device_detection.cpp.o
+[29/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_hwc_fallback_gl_renderer.cpp.o
+[30/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_display_hotplug.cpp.o
+[31/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_egl_sync_extensions.cpp.o
+[32/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_egl_sync_fence.cpp.o
+[33/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_anw_logger.cpp.o
+[34/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/client/test_buffer.cpp.o
+[35/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/client/test_gralloc_registrar.cpp.o
+[36/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/client/test_android_native_window.cpp.o
+[37/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/client/test_android_client_platform.cpp.o
+[38/50] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/client/test_egl_native_surface_interpreter.cpp.o
+[39/50] cd /build/tests/unit-tests/xdisp && ln -fs wrapper /build/bin/mir_unit_tests_xdisp
+[40/50] Building CXX object tests/unit-tests/xdisp/CMakeFiles/mir_unit_tests_xdisp.dir/test_lifecycle.cpp.o
+[41/50] Building CXX object tests/unit-tests/xdisp/CMakeFiles/mir_unit_tests_xdisp.dir/test_child_termination.cpp.o
+[42/50] Building CXX object tests/unit-tests/xdisp/CMakeFiles/mir_unit_tests_xdisp.dir/test_pixel_format.cpp.o
+[43/50] Building CXX object tests/unit-tests/xdisp/CMakeFiles/mir_unit_tests_xdisp.dir/__/__/__/src/xdisp/lifecycle.cpp.o
+[44/50] Building CXX object tests/unit-tests/xdisp/CMakeFiles/mir_unit_tests_xdisp.dir/__/__/__/src/xdisp/child_termination.cpp.o
+[45/50] Linking CXX executable bin/mir_unit_tests_xdisp.bin
+[46/50] Building CXX object tests/mir_test_doubles/CMakeFiles/mir-test-doubles-platform-static.dir/mock_egl.cpp.o
+[47/50] Building CXX object tests/mir_test_doubles/CMakeFiles/mir-test-doubles-platform-static.dir/mock_gl.cpp.o
+[48/50] Building CXX object tests/mir_test_doubles/CMakeFiles/mir-test-doubles-platform-static.dir/mock_android_hw.cpp.o
+[49/50] Linking CXX static library tests/mir_test_doubles/libmir-test-doubles-platform-static.a
+[50/50] Linking CXX executable bin/mir_unit_tests_android2.bin
+Running main() from main.cpp
+Note: Google Test filter = GudPresentationWorker.*:GudHwcBoundary.*
+[==========] Running 6 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 1 test from GudHwcBoundary
+[ RUN      ] GudHwcBoundary.excludes_only_synthetic_external_from_android_hwc
+[       OK ] GudHwcBoundary.excludes_only_synthetic_external_from_android_hwc (0 ms)
+[----------] 1 test from GudHwcBoundary (0 ms total)
+
+[----------] 5 tests from GudPresentationWorker
+[ RUN      ] GudPresentationWorker.coalesces_pending_frames_to_the_newest
+[       OK ] GudPresentationWorker.coalesces_pending_frames_to_the_newest (0 ms)
+[ RUN      ] GudPresentationWorker.submit_does_not_wait_for_a_slow_present
+[       OK ] GudPresentationWorker.submit_does_not_wait_for_a_slow_present (0 ms)
+[ RUN      ] GudPresentationWorker.retains_active_frame_and_releases_superseded_pending_frame
+[       OK ] GudPresentationWorker.retains_active_frame_and_releases_superseded_pending_frame (0 ms)
+[ RUN      ] GudPresentationWorker.contains_presentation_errors_and_continues
+[       OK ] GudPresentationWorker.contains_presentation_errors_and_continues (0 ms)
+[ RUN      ] GudPresentationWorker.shutdown_discards_pending_frame_and_joins_active_work
+[       OK ] GudPresentationWorker.shutdown_discards_pending_frame_and_joins_active_work (20 ms)
+[----------] 5 tests from GudPresentationWorker (20 ms total)
+
+[----------] Global test environment tear-down
+[==========] 6 tests from 2 test suites ran. (20 ms total)
+[  PASSED  ] 6 tests.
+Running main() from /usr/src/googletest/googletest/src/gtest_main.cc
+[==========] Running 49 tests from 10 test suites.
+[----------] Global test environment set-up.
+[----------] 11 tests from XdispLifecycle
+[ RUN      ] XdispLifecycle.enables_discovers_and_activates_once
+[       OK ] XdispLifecycle.enables_discovers_and_activates_once (0 ms)
+[ RUN      ] XdispLifecycle.normal_deactivation_joins_before_available
+[       OK ] XdispLifecycle.normal_deactivation_joins_before_available (0 ms)
+[ RUN      ] XdispLifecycle.contained_forced_stop_returns_to_available
+[       OK ] XdispLifecycle.contained_forced_stop_returns_to_available (0 ms)
+[ RUN      ] XdispLifecycle.detach_retains_intent_and_reconnects_only_after_fresh_add
+[       OK ] XdispLifecycle.detach_retains_intent_and_reconnects_only_after_fresh_add (0 ms)
+[ RUN      ] XdispLifecycle.recoverable_error_requires_explicit_retry
+[       OK ] XdispLifecycle.recoverable_error_requires_explicit_retry (0 ms)
+[ RUN      ] XdispLifecycle.poison_is_persisted_before_stop_and_blocks_activation
+[       OK ] XdispLifecycle.poison_is_persisted_before_stop_and_blocks_activation (0 ms)
+[ RUN      ] XdispLifecycle.poison_clear_requires_remove_and_readd_and_returns_disabled
+[       OK ] XdispLifecycle.poison_clear_requires_remove_and_readd_and_returns_disabled (0 ms)
+[ RUN      ] XdispLifecycle.disable_stops_child_and_clears_activation_intent
+[       OK ] XdispLifecycle.disable_stops_child_and_clears_activation_intent (0 ms)
+[ RUN      ] XdispLifecycle.start_failure_becomes_recoverable_without_a_phantom_child
+[       OK ] XdispLifecycle.start_failure_becomes_recoverable_without_a_phantom_child (0 ms)
+[ RUN      ] XdispLifecycle.connecting_deadline_stops_child_in_recoverable_error
+[       OK ] XdispLifecycle.connecting_deadline_stops_child_in_recoverable_error (0 ms)
+[ RUN      ] XdispLifecycle.restored_poison_never_enables_or_activates
+[       OK ] XdispLifecycle.restored_poison_never_enables_or_activates (0 ms)
+[----------] 11 tests from XdispLifecycle (0 ms total)
+
+[----------] 7 tests from XdispChildTermination
+[ RUN      ] XdispChildTermination.graceful_exit_after_requested_stop
+[       OK ] XdispChildTermination.graceful_exit_after_requested_stop (0 ms)
+[ RUN      ] XdispChildTermination.forced_timeout_preserves_sigkill_and_containment
+[       OK ] XdispChildTermination.forced_timeout_preserves_sigkill_and_containment (0 ms)
+[ RUN      ] XdispChildTermination.forced_stop_counter_increments
+[       OK ] XdispChildTermination.forced_stop_counter_increments (0 ms)
+[ RUN      ] XdispChildTermination.spontaneous_exit_does_not_erase_last_stop_diagnostics
+[       OK ] XdispChildTermination.spontaneous_exit_does_not_erase_last_stop_diagnostics (0 ms)
+[ RUN      ] XdispChildTermination.poison_is_never_hidden_by_stop_request
+[       OK ] XdispChildTermination.poison_is_never_hidden_by_stop_request (0 ms)
+[ RUN      ] XdispChildTermination.unexpected_signal_is_recoverable
+[       OK ] XdispChildTermination.unexpected_signal_is_recoverable (0 ms)
+[ RUN      ] XdispChildTermination.requested_sigterm_is_graceful
+[       OK ] XdispChildTermination.requested_sigterm_is_graceful (0 ms)
+[----------] 7 tests from XdispChildTermination (0 ms total)
+
+[----------] 13 tests from MirgudPixelFormat
+[ RUN      ] MirgudPixelFormat.parses_supported_names
+[       OK ] MirgudPixelFormat.parses_supported_names (0 ms)
+[ RUN      ] MirgudPixelFormat.reports_transport_bytes_per_pixel
+[       OK ] MirgudPixelFormat.reports_transport_bytes_per_pixel (0 ms)
+[ RUN      ] MirgudPixelFormat.protects_drm_fourcc_mappings
+[       OK ] MirgudPixelFormat.protects_drm_fourcc_mappings (0 ms)
+[ RUN      ] MirgudPixelFormat.identifies_xrgb8888_scanout_copy_eligibility
+[       OK ] MirgudPixelFormat.identifies_xrgb8888_scanout_copy_eligibility (0 ms)
+[ RUN      ] MirgudPixelFormat.direct_copy_preserves_xrgb8888_bytes
+[       OK ] MirgudPixelFormat.direct_copy_preserves_xrgb8888_bytes (0 ms)
+[ RUN      ] MirgudPixelFormat.direct_copy_preserves_argb8888_bytes_for_visible_xrgb_channels
+[       OK ] MirgudPixelFormat.direct_copy_preserves_argb8888_bytes_for_visible_xrgb_channels (0 ms)
+[ RUN      ] MirgudPixelFormat.channel_reorder_produces_xrgb8888
+[       OK ] MirgudPixelFormat.channel_reorder_produces_xrgb8888 (0 ms)
+[ RUN      ] MirgudPixelFormat.xbgr8888_uses_channel_reorder
+[       OK ] MirgudPixelFormat.xbgr8888_uses_channel_reorder (0 ms)
+[ RUN      ] MirgudPixelFormat.egl_rgba_source_converts_correctly_with_bottom_up_rows
+[       OK ] MirgudPixelFormat.egl_rgba_source_converts_correctly_with_bottom_up_rows (0 ms)
+[ RUN      ] MirgudPixelFormat.egl_source_layouts_convert_one_row_without_channel_swapping
+[       OK ] MirgudPixelFormat.egl_source_layouts_convert_one_row_without_channel_swapping (0 ms)
+[ RUN      ] MirgudPixelFormat.egl_bgra_source_converts_correctly_with_bottom_up_rows
+[       OK ] MirgudPixelFormat.egl_bgra_source_converts_correctly_with_bottom_up_rows (0 ms)
+[ RUN      ] MirgudPixelFormat.packs_rgb565
+[       OK ] MirgudPixelFormat.packs_rgb565 (0 ms)
+[ RUN      ] MirgudPixelFormat.rgb565_direct_copy_respects_stride_and_row_order
+[       OK ] MirgudPixelFormat.rgb565_direct_copy_respects_stride_and_row_order (0 ms)
+[----------] 13 tests from MirgudPixelFormat (0 ms total)
+
+[----------] 1 test from MirgudSourcePixelFormat
+[ RUN      ] MirgudSourcePixelFormat.parses_names_and_selects_advertised_format
+[       OK ] MirgudSourcePixelFormat.parses_names_and_selects_advertised_format (0 ms)
+[----------] 1 test from MirgudSourcePixelFormat (0 ms total)
+
+[----------] 3 tests from MirgudTiming
+[ RUN      ] MirgudTiming.uses_explicit_denominators_and_bounded_summary
+[       OK ] MirgudTiming.uses_explicit_denominators_and_bounded_summary (0 ms)
+[ RUN      ] MirgudTiming.uses_nearest_rank_percentiles
+[       OK ] MirgudTiming.uses_nearest_rank_percentiles (0 ms)
+[ RUN      ] MirgudTiming.calculates_zero_and_elapsed_rates
+[       OK ] MirgudTiming.calculates_zero_and_elapsed_rates (0 ms)
+[----------] 3 tests from MirgudTiming (0 ms total)
+
+[----------] 1 test from MirgudQuality
+[ RUN      ] MirgudQuality.deterministic_pattern_converts_from_one_reference
+[       OK ] MirgudQuality.deterministic_pattern_converts_from_one_reference (0 ms)
+[----------] 1 test from MirgudQuality (0 ms total)
+
+[----------] 2 tests from MirgudPattern
+[ RUN      ] MirgudPattern.deterministic_seed_and_format_conversion_share_rgb_source
+[       OK ] MirgudPattern.deterministic_seed_and_format_conversion_share_rgb_source (0 ms)
+[ RUN      ] MirgudPattern.pregenerated_frames_repeat_without_changing_logical_rgb_source
+[       OK ] MirgudPattern.pregenerated_frames_repeat_without_changing_logical_rgb_source (0 ms)
+[----------] 2 tests from MirgudPattern (0 ms total)
+
+[----------] 1 test from MirgudSourceFormat
+[ RUN      ] MirgudSourceFormat.rejects_each_runtime_contract_change
+[       OK ] MirgudSourceFormat.rejects_each_runtime_contract_change (0 ms)
+[----------] 1 test from MirgudSourceFormat (0 ms total)
+
+[----------] 2 tests from MirgudXByteSamples
+[ RUN      ] MirgudXByteSamples.tracks_constant_and_varying_bounded_samples
+[       OK ] MirgudXByteSamples.tracks_constant_and_varying_bounded_samples (0 ms)
+[ RUN      ] MirgudXByteSamples.distributes_samples_over_full_frame
+[       OK ] MirgudXByteSamples.distributes_samples_over_full_frame (2 ms)
+[----------] 2 tests from MirgudXByteSamples (2 ms total)
+
+[----------] 8 tests from MirgudPresenter
+[ RUN      ] MirgudPresenter.accounts_for_one_presented_frame
+[       OK ] MirgudPresenter.accounts_for_one_presented_frame (0 ms)
+[ RUN      ] MirgudPresenter.resets_idle_statistics_for_a_measured_interval
+[       OK ] MirgudPresenter.resets_idle_statistics_for_a_measured_interval (0 ms)
+[ RUN      ] MirgudPresenter.accounts_for_pending_replacement
+[       OK ] MirgudPresenter.accounts_for_pending_replacement (0 ms)
+[ RUN      ] MirgudPresenter.snapshot_is_accounting_valid_while_presenting
+[       OK ] MirgudPresenter.snapshot_is_accounting_valid_while_presenting (0 ms)
+[ RUN      ] MirgudPresenter.cancels_pending_frame_once_during_stop
+[       OK ] MirgudPresenter.cancels_pending_frame_once_during_stop (0 ms)
+[ RUN      ] MirgudPresenter.records_failed_presentation_attempts
+[       OK ] MirgudPresenter.records_failed_presentation_attempts (0 ms)
+[ RUN      ] MirgudPresenter.separates_first_presented_callback_failure
+[       OK ] MirgudPresenter.separates_first_presented_callback_failure (0 ms)
+[ RUN      ] MirgudPresenter.reports_zero_denominator_percentages_and_final_accounting
+[       OK ] MirgudPresenter.reports_zero_denominator_percentages_and_final_accounting (0 ms)
+[----------] 8 tests from MirgudPresenter (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 49 tests from 10 test suites ran. (3 ms total)
+[  PASSED  ] 49 tests.

@@ -1,0 +1,657 @@
+sha256:14f36fb633310f8ddf70aa1fc6b769e225a5e693c6615d0ebf7c50e4798c1ec4
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Could NOT find Lcov (missing: LCOV_EXECUTABLE GENHTML_EXECUTABLE) 
+-- Could NOT find gcovr (missing: GCOVR_EXECUTABLE) 
+CMake Deprecation Warning at cmake/MirCommon.cmake:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+Call Stack (most recent call first):
+  CMakeLists.txt:35 (include)
+
+
+-- Performing Test HAS_W_MISMATCHED_TAGS
+-- Performing Test HAS_W_MISMATCHED_TAGS - Success
+-- CMAKE_C_COMPILER: /usr/bin/cc
+Boost 1.48.0 found.
+Found Boost components:
+   program_options
+-- Found PkgConfig: /usr/bin/pkg-config (found version "1.8.1") 
+-- Checking for module 'libandroid-properties'
+--   Found libandroid-properties, version 0.1.0
+-- Found ANDROID_PROPERTIES: android-properties  
+CMake Warning (dev) at /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:438 (message):
+  The package name passed to `find_package_handle_standard_args`
+  (ANDROID_PROPERTIES) does not match the name of the calling package
+  (AndroidProperties).  This can lead to problems in calling code that
+  expects `find_package` result variables (e.g., `_FOUND`) to follow a
+  certain pattern.
+Call Stack (most recent call first):
+  cmake/FindAndroidProperties.cmake:19 (find_package_handle_standard_args)
+  CMakeLists.txt:137 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Found LIBHARDWARE: /usr/lib/aarch64-linux-gnu/libhardware.so.2  
+CMake Warning (dev) at /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:438 (message):
+  The package name passed to `find_package_handle_standard_args`
+  (LIBHARDWARE) does not match the name of the calling package (LibHardware).
+  This can lead to problems in calling code that expects `find_package`
+  result variables (e.g., `_FOUND`) to follow a certain pattern.
+Call Stack (most recent call first):
+  cmake/FindLibHardware.cmake:23 (find_package_handle_standard_args)
+  CMakeLists.txt:138 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Checking for module 'libgralloc'
+--   Found libgralloc, version 0.1.0
+-- Checking for module 'libhwc2'
+--   Found libhwc2, version 0.1.0
+-- Checking for module 'libsync'
+--   Found libsync, version 0.1.0
+-- Checking for module 'hybris-egl-platform'
+--   Found hybris-egl-platform, version 0.1.0
+-- Checking for one of the modules 'android-headers-28'
+-- Found EGL: /usr/lib/aarch64-linux-gnu/libEGL.so  
+-- Found GLESv2: /usr/lib/aarch64-linux-gnu/libGLESv2.so  
+-- Found GLM: /usr/include  
+-- Found Protobuf: /usr/lib/aarch64-linux-gnu/libprotobuf.so (found version "3.21.12") 
+-- Checking for module 'capnp'
+--   Found capnp, version 1.0.1
+-- Checking for module 'capnpc'
+--   Found capnpc, version 1.0.1
+-- Checking for module 'capnp-rpc'
+--   Found capnp-rpc, version 1.0.1
+-- Checking for module 'capnp-json'
+--   Found capnp-json, version 1.0.1
+-- Checking for module 'capnp-websocket'
+--   Found capnp-websocket, version 1.0.1
+-- Checking for module 'kj'
+--   Found kj, version 1.0.1
+-- Checking for module 'kj-async'
+--   Found kj-async, version 1.0.1
+-- Checking for module 'kj-http'
+--   Found kj-http, version 1.0.1
+-- Checking for module 'kj-gzip'
+--   Found kj-gzip, version 1.0.1
+-- Checking for module 'kj-tls'
+--   Found kj-tls, version 1.0.1
+-- Checking for module 'kj-test'
+--   Found kj-test, version 1.0.1
+-- Found GLog: /usr/lib/aarch64-linux-gnu/libglog.so  
+-- Found GFlags: /usr/lib/aarch64-linux-gnu/libgflags.so  
+CMake Warning (dev) at /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:438 (message):
+  The package name passed to `find_package_handle_standard_args` (LTTNG_UST)
+  does not match the name of the calling package (LTTngUST).  This can lead
+  to problems in calling code that expects `find_package` result variables
+  (e.g., `_FOUND`) to follow a certain pattern.
+Call Stack (most recent call first):
+  cmake/FindLTTngUST.cmake:28 (find_package_handle_standard_args)
+  CMakeLists.txt:157 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Found LTTNG_UST: /usr/lib/aarch64-linux-gnu/liblttng-ust.so  
+-- Checking for module 'libudev'
+--   Found libudev, version 255
+-- Checking for module 'glib-2.0'
+--   Found glib-2.0, version 2.80.0
+-- Checking for modules 'gio-2.0;gio-unix-2.0'
+--   Found gio-2.0, version 2.80.0
+--   Found gio-unix-2.0, version 2.80.0
+-- Checking for one of the modules 'mir1client;mirclient'
+-- Checking for one of the modules 'mir1core;mircore'
+-- Checking for one of the modules 'mir1platform;mirplatform'
+-- Checking for one of the modules 'mir1-renderer-gl-dev;mir-renderer-gl-dev'
+-- Checking for one of the modules 'mir1renderer;mirrenderer'
+-- Checking for one of the modules 'mir1server;mirserver'
+-- Checking for module 'wayland-server'
+--   Found wayland-server, version 1.22.0
+-- Checking for module 'deviceinfo'
+--   Found deviceinfo, version 0.2.0
+-- Checking for module 'libdrm'
+--   Found libdrm, version 2.4.125
+-- Checking for module 'glesv2'
+--   Found glesv2, version 3.2
+-- Installing: /build/mir_gtest/fail_on_success.sh
+-- Found Threads: TRUE  
+-- Using /usr/src/googletest/googlemock/ as gmock source directory
+-- Checking for module 'gtest'
+--   Found gtest, version 1.14.0
+-- Using GTest v1.14.0 (parsed from pkg-config)
+-- Checking for one of the modules 'mir1test;mirtest'
+-- Checking for module 'umockdev-1.0>=0.6'
+--   Found umockdev-1.0, version 0.18.1
+-- Performing Test HAS_W_NULL_DEREFERENCE
+-- Performing Test HAS_W_NULL_DEREFERENCE - Success
+-- Performing Test HAS_W_OVERLOADED_VIRTUAL
+-- Performing Test HAS_W_OVERLOADED_VIRTUAL - Success
+-- Performing Test HAS_W_INCONSISTENT_MISSING_OVERRIDE
+-- Performing Test HAS_W_INCONSISTENT_MISSING_OVERRIDE - Failed
+-- Performing Test HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS
+-- Performing Test HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS - Failed
+-- Checking for module 'gtest'
+--   Found gtest, version 1.14.0
+-- Found Doxygen: /usr/bin/doxygen (found version "1.9.8") found components: doxygen dot 
+-- doxygen 1.9.8 (>= 1.8.0) available - enabling make target doc
+CMake Deprecation Warning at cmake/ABICheck.cmake:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+Call Stack (most recent call first):
+  CMakeLists.txt:242 (include)
+
+
+CMake Deprecation Warning at cmake/ABICheck.cmake:50 (cmake_policy):
+  The OLD behavior for policy CMP0026 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+Call Stack (most recent call first):
+  cmake/ABICheck.cmake:67 (make_lib_descriptor)
+  CMakeLists.txt:242 (include)
+
+
+CMake Deprecation Warning at cmake/ABICheck.cmake:50 (cmake_policy):
+  The OLD behavior for policy CMP0026 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+Call Stack (most recent call first):
+  cmake/ABICheck.cmake:68 (make_lib_descriptor)
+  CMakeLists.txt:242 (include)
+
+
+-- Configuring done (2.6s)
+-- Generating done (0.1s)
+-- Build files have been written to: /build
+[1/123] Creating directories for 'GMock'
+[2/123] No download step for 'GMock'
+[3/123] No update step for 'GMock'
+[4/123] No patch step for 'GMock'
+[5/123] Performing configure step for 'GMock'
+-- The CXX compiler identification is GNU 13.3.0
+-- The C compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /build/gmock
+[6/123] Performing build step for 'GMock'
+[1/8] Building CXX object /build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
+[2/8] Building CXX object CMakeFiles/gmock_main.dir/src/gmock_main.cc.o
+[3/8] Building CXX object CMakeFiles/gmock.dir/src/gmock-all.cc.o
+[4/8] Building CXX object /build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
+[5/8] Linking CXX static library lib/libgtest.a
+[6/8] Linking CXX static library lib/libgtest_main.a
+[7/8] Linking CXX static library lib/libgmock.a
+[8/8] Linking CXX static library lib/libgmock_main.a
+[7/123] No install step for 'GMock'
+[8/123] Completed 'GMock'
+[9/123] Building C object src/CMakeFiles/wrapper.dir/wrapper.c.o
+[10/123] Linking C executable bin/wrapper
+[11/123] cd /build/src && ln -fs wrapper /build/bin/mirgud
+[12/123] Building CXX object src/CMakeFiles/mirgud.dir/utils/gud_screencast.cpp.o
+[13/123] Linking CXX executable bin/mirgud.bin
+[14/123] Building CXX object src/gl/CMakeFiles/mirgl.dir/default_program_factory.cpp.o
+[15/123] Building CXX object src/gl/CMakeFiles/mirgl.dir/program.cpp.o
+[16/123] Building CXX object src/gl/CMakeFiles/mirgl.dir/recently_used_cache.cpp.o
+[17/123] Building CXX object src/gl/CMakeFiles/mirgl.dir/tessellation_helpers.cpp.o
+[18/123] Building CXX object src/gl/CMakeFiles/mirgl.dir/texture.cpp.o
+[19/123] Building CXX object src/platforms/common/client/mir/CMakeFiles/client_platform_common.dir/aging_buffer.cpp.o
+[20/123] Building CXX object src/platforms/common/client/mir/CMakeFiles/client_platform_common.dir/weak_egl.cpp.o
+[21/123] Linking CXX static library src/platforms/common/client/mir/libclient_platform_common.a
+[22/123] Building CXX object src/platforms/common/server/CMakeFiles/server_platform_common.dir/anonymous_shm_file.cpp.o
+[23/123] Building CXX object src/platforms/common/server/CMakeFiles/server_platform_common.dir/shm_buffer.cpp.o
+[24/123] Linking CXX static library src/platforms/common/server/libserver_platform_common.a
+[25/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/platform.cpp.o
+[26/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/graphic_buffer_allocator.cpp.o
+[27/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/buffer.cpp.o
+[28/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/display.cpp.o
+[29/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/display_group.cpp.o
+[30/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/display_configuration.cpp.o
+[31/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/display_buffer.cpp.o
+[32/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/hal_component_factory.cpp.o
+[33/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/hwc_layerlist.cpp.o
+[34/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/hwc_layers.cpp.o
+[35/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/hwc_fb_device.cpp.o
+[36/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/hwc_loggers.cpp.o
+[37/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/hwc_device.cpp.o
+[38/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/gralloc_module.cpp.o
+[39/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/server_render_window.cpp.o
+/src/src/platforms/android/server/server_render_window.cpp: In member function 'virtual void mir::graphics::android::ServerRenderWindow::dispatch_driver_usage_bits(uint64_t)':
+/src/src/platforms/android/server/server_render_window.cpp:125:67: warning: unused parameter 'usage' [-Wunused-parameter]
+  125 | void mga::ServerRenderWindow::dispatch_driver_usage_bits(uint64_t usage)
+      |                                                          ~~~~~~~~~^~~~~
+[40/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/resource_factory.cpp.o
+[41/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/framebuffers.cpp.o
+[42/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/fb_device.cpp.o
+[43/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/interpreter_cache.cpp.o
+[44/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/gl_context.cpp.o
+[45/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/gud_output.cpp.o
+/src/src/platforms/android/server/gud_output.cpp:107:22: warning: 'mir::graphics::android::GudOutput::Mode {anonymous}::read_connected_gud_mode(int)' defined but not used [-Wunused-function]
+  107 | mga::GudOutput::Mode read_connected_gud_mode(int fd)
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~
+[46/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/device_quirks.cpp.o
+[47/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/real_hwc_wrapper.cpp.o
+/src/src/platforms/android/server/real_hwc_wrapper.cpp: In function 'const std::array<hwc_display_contents_1*, 3>& {anonymous}::to_display_contensts_list(const std::__cxx11::list<mir::graphics::android::DisplayContents>&)':
+/src/src/platforms/android/server/real_hwc_wrapper.cpp:75:12: warning: reference to local variable 'lists' returned [-Wreturn-local-addr]
+   75 |     return lists;
+      |            ^~~~~
+/src/src/platforms/android/server/real_hwc_wrapper.cpp:63:64: note: declared here
+   63 |     std::array<hwc_display_contents_1*, HWC_NUM_DISPLAY_TYPES> lists{{ nullptr, nullptr, nullptr }};
+      |                                                                ^~~~~
+[48/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/real_hwc2_wrapper.cpp.o
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In function 'void {anonymous}::refresh_hook(HWC2EventListener*, int32_t, hwc2_display_t)':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:77:63: warning: unused parameter 'sequenceId' [-Wunused-parameter]
+   77 | static void refresh_hook(HWC2EventListener* listener, int32_t sequenceId, hwc2_display_t display)
+      |                                                       ~~~~~~~~^~~~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:77:90: warning: unused parameter 'display' [-Wunused-parameter]
+   77 | static void refresh_hook(HWC2EventListener* listener, int32_t sequenceId, hwc2_display_t display)
+      |                                                                           ~~~~~~~~~~~~~~~^~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In function 'void {anonymous}::vsync_hook(HWC2EventListener*, int32_t, hwc2_display_t, int64_t)':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:87:61: warning: unused parameter 'sequenceId' [-Wunused-parameter]
+   87 | static void vsync_hook(HWC2EventListener* listener, int32_t sequenceId, hwc2_display_t display,
+      |                                                     ~~~~~~~~^~~~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In function 'mir::graphics::android::HWC2DisplayConfig_ptr {anonymous}::get_active_config(hwc2_compat_device_t*, const std::unordered_map<int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> >&, mir::graphics::android::DisplayName)':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:123:68: warning: passing 'const std::unordered_map<int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> >' as 'this' argument discards qualifiers [-fpermissive]
+  123 |     auto &hwc2_display = hwc2_displays[as_hwc_display(display_name)];
+      |                                                                    ^
+In file included from /usr/include/c++/13/unordered_map:41,
+                 from /src/src/platforms/android/server/real_hwc2_wrapper.h:29,
+                 from /src/src/platforms/android/server/real_hwc2_wrapper.cpp:20:
+/usr/include/c++/13/bits/unordered_map.h:990:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](key_type&&) [with _Key = int; _Tp = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> > >; mapped_type = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; key_type = int]'
+  990 |       operator[](key_type&& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:119:27: warning: unused parameter 'hwc2_device' [-Wunused-parameter]
+  119 |     hwc2_compat_device_t* hwc2_device,
+      |     ~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In member function 'virtual void mir::graphics::android::RealHwc2Wrapper::prepare(const std::__cxx11::list<mir::graphics::android::DisplayContents>&) const':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:188:40: warning: passing 'const std::unordered_map<int, bool>' as 'this' argument discards qualifiers [-fpermissive]
+  188 |         if (!active_displays[display_id])
+      |                                        ^
+/usr/include/c++/13/bits/unordered_map.h:986:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](const key_type&) [with _Key = int; _Tp = bool; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, bool> >; mapped_type = bool; key_type = int]'
+  986 |       operator[](const key_type& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:195:46: warning: passing 'const std::unordered_map<int, std::vector<hwc2_compat_layer*> >' as 'this' argument discards qualifiers [-fpermissive]
+  195 |                 it = display_contents.emplace(display_id, std::vector<hwc2_compat_layer_t*>{}).first;
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/bits/unordered_map.h:395:9: note:   in call to 'std::pair<typename std::_Hashtable<_Key, std::pair<const _Key, _Val>, _Alloc, std::__detail::_Select1st, _Pred, _Hash, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<std::__not_<std::__and_<std::__is_fast_hash<_Hash>, std::__is_nothrow_invocable<const _Hash&, const _Key&> > >::value, false, true> >::iterator, bool> std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::emplace(_Args&& ...) [with _Args = {int&, std::vector<hwc2_compat_layer*, std::allocator<hwc2_compat_layer*> >}; _Key = int; _Tp = std::vector<hwc2_compat_layer*>; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, std::vector<hwc2_compat_layer*> > >; typename std::_Hashtable<_Key, std::pair<const _Key, _Val>, _Alloc, std::__detail::_Select1st, _Pred, _Hash, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<std::__not_<std::__and_<std::__is_fast_hash<_Hash>, std::__is_nothrow_invocable<const _Hash&, const _Key&> > >::value, false, true> >::iterator = std::__detail::_Insert_base<int, std::pair<const int, std::vector<hwc2_compat_layer*> >, std::allocator<std::pair<const int, std::vector<hwc2_compat_layer*> > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::iterator]'
+  395 |         emplace(_Args&&... __args)
+      |         ^~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:198:57: warning: passing 'const std::unordered_map<int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> >' as 'this' argument discards qualifiers [-fpermissive]
+  198 |             auto hwc2_display = hwc2_displays[display_id].get();
+      |                                                         ^
+/usr/include/c++/13/bits/unordered_map.h:986:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](const key_type&) [with _Key = int; _Tp = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> > >; mapped_type = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; key_type = int]'
+  986 |       operator[](const key_type& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:205:33: warning: passing 'const std::vector<hwc2_compat_layer*>' as 'this' argument discards qualifiers [-fpermissive]
+  205 |                 layers.push_back(layer);
+      |                 ~~~~~~~~~~~~~~~~^~~~~~~
+In file included from /usr/include/c++/13/vector:66,
+                 from /usr/include/mir1platform/mir/graphics/gamma_curves.h:23,
+                 from /usr/include/mir1platform/mir/graphics/display_configuration.h:26,
+                 from /src/src/platforms/android/server/display_name.h:22,
+                 from /src/src/platforms/android/server/hwc_wrapper.h:24,
+                 from /src/src/platforms/android/server/real_hwc2_wrapper.h:22:
+/usr/include/c++/13/bits/stl_vector.h:1281:7: note:   in call to 'void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = hwc2_compat_layer*; _Alloc = std::allocator<hwc2_compat_layer*>; value_type = hwc2_compat_layer*]'
+ 1281 |       push_back(const value_type& __x)
+      |       ^~~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In member function 'virtual void mir::graphics::android::RealHwc2Wrapper::set(const std::__cxx11::list<mir::graphics::android::DisplayContents>&) const':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:267:40: warning: passing 'const std::unordered_map<int, bool>' as 'this' argument discards qualifiers [-fpermissive]
+  267 |         if (!active_displays[display_id])
+      |                                        ^
+/usr/include/c++/13/bits/unordered_map.h:986:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](const key_type&) [with _Key = int; _Tp = bool; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, bool> >; mapped_type = bool; key_type = int]'
+  986 |       operator[](const key_type& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:271:57: warning: passing 'const std::unordered_map<int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> >' as 'this' argument discards qualifiers [-fpermissive]
+  271 |             auto hwc2_display = hwc2_displays[display_id].get();
+      |                                                         ^
+/usr/include/c++/13/bits/unordered_map.h:986:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](const key_type&) [with _Key = int; _Tp = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> > >; mapped_type = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; key_type = int]'
+  986 |       operator[](const key_type& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:324:69: warning: passing 'const std::unordered_map<int, int>' as 'this' argument discards qualifiers [-fpermissive]
+  324 |             auto _last_present_fence = last_present_fence[display_id];
+      |                                                                     ^
+/usr/include/c++/13/bits/unordered_map.h:986:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](const key_type&) [with _Key = int; _Tp = int; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, int> >; mapped_type = int; key_type = int]'
+  986 |       operator[](const key_type& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:328:46: warning: passing 'const std::unordered_map<int, int>' as 'this' argument discards qualifiers [-fpermissive]
+  328 |                 last_present_fence[display_id] = -1;
+      |                                              ^
+/usr/include/c++/13/bits/unordered_map.h:986:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](const key_type&) [with _Key = int; _Tp = int; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, int> >; mapped_type = int; key_type = int]'
+  986 |       operator[](const key_type& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:334:42: warning: passing 'const std::unordered_map<int, int>' as 'this' argument discards qualifiers [-fpermissive]
+  334 |             last_present_fence[display_id] = dup(presentFence);
+      |                                          ^
+/usr/include/c++/13/bits/unordered_map.h:986:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](const key_type&) [with _Key = int; _Tp = int; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, int> >; mapped_type = int; key_type = int]'
+  986 |       operator[](const key_type& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:338:82: warning: passing 'const std::unordered_map<int, std::shared_ptr<mir::graphics::Buffer> >' as 'this' argument discards qualifiers [-fpermissive]
+  338 |                 auto& previous_buffer = onscreen_client_target_buffers[display_id];
+      |                                                                                  ^
+/usr/include/c++/13/bits/unordered_map.h:986:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](const key_type&) [with _Key = int; _Tp = std::shared_ptr<mir::graphics::Buffer>; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, std::shared_ptr<mir::graphics::Buffer> > >; mapped_type = std::shared_ptr<mir::graphics::Buffer>; key_type = int]'
+  986 |       operator[](const key_type& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:273:18: warning: unused variable 'sync_before_set' [-Wunused-variable]
+  273 |             bool sync_before_set = true;
+      |                  ^~~~~~~~~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:347:74: warning: passing 'const std::unordered_map<int, std::shared_ptr<mir::graphics::Buffer> >' as 'this' argument discards qualifiers [-fpermissive]
+  347 |     onscreen_client_target_buffers = std::move(next_client_target_buffers);
+      |                                                                          ^
+/usr/include/c++/13/bits/unordered_map.h:283:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator=(std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>&&) [with _Key = int; _Tp = std::shared_ptr<mir::graphics::Buffer>; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, std::shared_ptr<mir::graphics::Buffer> > >]'
+  283 |       operator=(unordered_map&&) = default;
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In member function 'virtual void mir::graphics::android::RealHwc2Wrapper::vsync_signal_on(mir::graphics::android::DisplayName) const':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:354:67: warning: passing 'const std::unordered_map<int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> >' as 'this' argument discards qualifiers [-fpermissive]
+  354 |     auto hwc2_display = hwc2_displays[as_hwc_display(display_name)].get();
+      |                                                                   ^
+/usr/include/c++/13/bits/unordered_map.h:990:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](key_type&&) [with _Key = int; _Tp = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> > >; mapped_type = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; key_type = int]'
+  990 |       operator[](key_type&& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In member function 'virtual void mir::graphics::android::RealHwc2Wrapper::vsync_signal_off(mir::graphics::android::DisplayName) const':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:361:67: warning: passing 'const std::unordered_map<int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> >' as 'this' argument discards qualifiers [-fpermissive]
+  361 |     auto hwc2_display = hwc2_displays[as_hwc_display(display_name)].get();
+      |                                                                   ^
+/usr/include/c++/13/bits/unordered_map.h:990:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](key_type&&) [with _Key = int; _Tp = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> > >; mapped_type = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; key_type = int]'
+  990 |       operator[](key_type&& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In member function 'virtual void mir::graphics::android::RealHwc2Wrapper::display_on(mir::graphics::android::DisplayName) const':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:366:51: warning: unused parameter 'display_name' [-Wunused-parameter]
+  366 | void mga::RealHwc2Wrapper::display_on(DisplayName display_name) const
+      |                                       ~~~~~~~~~~~~^~~~~~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In member function 'virtual void mir::graphics::android::RealHwc2Wrapper::display_off(mir::graphics::android::DisplayName) const':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:371:52: warning: unused parameter 'display_name' [-Wunused-parameter]
+  371 | void mga::RealHwc2Wrapper::display_off(DisplayName display_name) const
+      |                                        ~~~~~~~~~~~~^~~~~~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In member function 'virtual int mir::graphics::android::RealHwc2Wrapper::display_attributes(mir::graphics::android::DisplayName, mir::graphics::android::ConfigId, const uint32_t*, int32_t*) const':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:542:40: warning: unused parameter 'config_id' [-Wunused-parameter]
+  542 |     DisplayName display_name, ConfigId config_id, uint32_t const* attributes, int32_t* values) const
+      |                               ~~~~~~~~~^~~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In member function 'virtual void mir::graphics::android::RealHwc2Wrapper::power_mode(mir::graphics::android::DisplayName, mir::graphics::android::PowerMode) const':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:576:76: warning: passing 'const std::unordered_map<int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> >' as 'this' argument discards qualifiers [-fpermissive]
+  576 |         auto hwc2_display = hwc2_displays[mga::as_hwc_display(display_name)].get();
+      |                                                                            ^
+/usr/include/c++/13/bits/unordered_map.h:990:7: note:   in call to 'std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::mapped_type& std::unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>::operator[](key_type&&) [with _Key = int; _Tp = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; _Hash = std::hash<int>; _Pred = std::equal_to<int>; _Alloc = std::allocator<std::pair<const int, std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete> > >; mapped_type = std::unique_ptr<hwc2_compat_display, mir::graphics::android::hwc2_display_delete>; key_type = int]'
+  990 |       operator[](key_type&& __k)
+      |       ^~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:579:16: warning: enumeration value 'normal' not handled in switch [-Wswitch]
+  579 |         switch (mode) {
+      |                ^
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In member function 'virtual void mir::graphics::android::RealHwc2Wrapper::set_active_config(mir::graphics::android::DisplayName, mir::graphics::android::ConfigId) const':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:616:58: warning: unused parameter 'display_name' [-Wunused-parameter]
+  616 | void mga::RealHwc2Wrapper::set_active_config(DisplayName display_name, ConfigId id) const
+      |                                              ~~~~~~~~~~~~^~~~~~~~~~~~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:616:81: warning: unused parameter 'id' [-Wunused-parameter]
+  616 | void mga::RealHwc2Wrapper::set_active_config(DisplayName display_name, ConfigId id) const
+      |                                                                        ~~~~~~~~~^~
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp: In member function 'bool mir::graphics::android::RealHwc2Wrapper::display_connected(mir::graphics::android::DisplayName) const':
+/src/src/platforms/android/server/real_hwc2_wrapper.cpp:626:12: warning: unused variable 'num_configs' [-Wunused-variable]
+  626 |     size_t num_configs = 0;
+      |            ^~~~~~~~~~~
+[49/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/hwc_fallback_gl_renderer.cpp.o
+[50/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/ipc_operations.cpp.o
+[51/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/hwc_blanking_control.cpp.o
+[52/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/egl_sync_factory.cpp.o
+[53/123] Building CXX object src/platforms/android/server/CMakeFiles/mirplatformgraphicsandroidobjects.dir/virtual_output.cpp.o
+[54/123] Building CXX object src/platforms/android/client/CMakeFiles/mirclientplatformandroidobjects.dir/buffer.cpp.o
+[55/123] Building CXX object src/platforms/android/client/CMakeFiles/mirclientplatformandroidobjects.dir/android_client_buffer_factory.cpp.o
+[56/123] Building CXX object src/platforms/android/client/CMakeFiles/mirclientplatformandroidobjects.dir/gralloc_registrar.cpp.o
+[57/123] Building CXX object src/platforms/android/client/CMakeFiles/mirclientplatformandroidobjects.dir/android_client_platform.cpp.o
+[58/123] Building CXX object src/platforms/android/client/CMakeFiles/mirclientplatformandroidobjects.dir/client_platform_factory.cpp.o
+[59/123] Building CXX object src/platforms/android/client/CMakeFiles/mirclientplatformandroidobjects.dir/egl_native_surface_interpreter.cpp.o
+[60/123] Building CXX object src/platforms/android/client/CMakeFiles/mirclientplatformandroidobjects.dir/android_native_display_container.cpp.o
+[61/123] Building CXX object src/platforms/android/common/CMakeFiles/mirsharedandroid-static.dir/mir_native_window.cpp.o
+[62/123] Building CXX object src/platforms/android/common/CMakeFiles/mirsharedandroid-static.dir/refcounted_buffer.cpp.o
+[63/123] Building CXX object src/platforms/android/common/CMakeFiles/mirsharedandroid-static.dir/android_native_buffer.cpp.o
+[64/123] Building CXX object src/platforms/android/common/CMakeFiles/mirsharedandroid-static.dir/syncfence.cpp.o
+[65/123] Building CXX object src/platforms/android/common/CMakeFiles/mirsharedandroid-static.dir/egl_sync_fence.cpp.o
+[66/123] Building CXX object src/platforms/android/common/CMakeFiles/mirsharedandroid-static.dir/egl_sync_extensions.cpp.o
+[67/123] Building CXX object src/platforms/android/common/CMakeFiles/mirsharedandroid-static.dir/native_window_report.cpp.o
+[68/123] Building CXX object src/platforms/android/common/CMakeFiles/mirsharedandroid-static.dir/hybris_gralloc_impl.cpp.o
+[69/123] Linking CXX static library src/platforms/android/common/libmirsharedandroid-static.a
+[70/123] Linking CXX shared library lib/server-modules/graphics-android2.so.16
+[71/123] Building CXX object src/xdisp/CMakeFiles/xdispd.dir/xdispd.cpp.o
+[72/123] Building CXX object src/xdisp/CMakeFiles/xdispd.dir/lifecycle.cpp.o
+[73/123] Building CXX object src/xdisp/CMakeFiles/xdispd.dir/child_termination.cpp.o
+[74/123] Linking CXX executable bin/xdispd
+[75/123] cd /build/tests/unit-tests/platforms/android && ln -fs wrapper /build/bin/mir_unit_tests_android2
+[76/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/hwc_struct_helpers.cpp.o
+[77/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_buffer.cpp.o
+[78/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_gud_presentation_worker.cpp.o
+[79/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_gud_screencast_rgb565.cpp.o
+[80/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_sync_fence.cpp.o
+[81/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_buffer_tex_bind.cpp.o
+[82/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_display.cpp.o
+[83/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_display_generic.cpp.o
+[84/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_display_group.cpp.o
+[85/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_gralloc.cpp.o
+[86/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_graphic_buffer_allocator.cpp.o
+[87/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_display_buffer.cpp.o
+[88/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_ipc_operations.cpp.o
+[89/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_resource_factory.cpp.o
+[90/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_framebuffers.cpp.o
+[91/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_fb_device.cpp.o
+[92/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_hwc_layers.cpp.o
+[93/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_hwc_layerlist.cpp.o
+[94/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_hwc_logger.cpp.o
+[95/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_server_interpreter.cpp.o
+[96/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_pixel_format.cpp.o
+[97/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_platform.cpp.o
+[98/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_graphics_platform.cpp.o
+[99/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_interpreter_buffer_cache.cpp.o
+[100/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_native_buffer.cpp.o
+[101/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_device_detection.cpp.o
+[102/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_hwc_fallback_gl_renderer.cpp.o
+[103/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_display_hotplug.cpp.o
+[104/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_egl_sync_extensions.cpp.o
+[105/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_egl_sync_fence.cpp.o
+[106/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/server/test_anw_logger.cpp.o
+[107/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/client/test_buffer.cpp.o
+[108/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/client/test_gralloc_registrar.cpp.o
+[109/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/client/test_android_native_window.cpp.o
+[110/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/client/test_android_client_platform.cpp.o
+[111/123] Building CXX object tests/unit-tests/platforms/android/CMakeFiles/mir_unit_tests_android2.dir/client/test_egl_native_surface_interpreter.cpp.o
+[112/123] cd /build/tests/unit-tests/xdisp && ln -fs wrapper /build/bin/mir_unit_tests_xdisp
+[113/123] Building CXX object tests/unit-tests/xdisp/CMakeFiles/mir_unit_tests_xdisp.dir/test_lifecycle.cpp.o
+[114/123] Building CXX object tests/unit-tests/xdisp/CMakeFiles/mir_unit_tests_xdisp.dir/test_child_termination.cpp.o
+[115/123] Building CXX object tests/unit-tests/xdisp/CMakeFiles/mir_unit_tests_xdisp.dir/test_pixel_format.cpp.o
+[116/123] Building CXX object tests/unit-tests/xdisp/CMakeFiles/mir_unit_tests_xdisp.dir/__/__/__/src/xdisp/lifecycle.cpp.o
+[117/123] Building CXX object tests/unit-tests/xdisp/CMakeFiles/mir_unit_tests_xdisp.dir/__/__/__/src/xdisp/child_termination.cpp.o
+[118/123] Linking CXX executable bin/mir_unit_tests_xdisp.bin
+[119/123] Building CXX object tests/mir_test_doubles/CMakeFiles/mir-test-doubles-platform-static.dir/mock_egl.cpp.o
+[120/123] Building CXX object tests/mir_test_doubles/CMakeFiles/mir-test-doubles-platform-static.dir/mock_gl.cpp.o
+[121/123] Building CXX object tests/mir_test_doubles/CMakeFiles/mir-test-doubles-platform-static.dir/mock_android_hw.cpp.o
+[122/123] Linking CXX static library tests/mir_test_doubles/libmir-test-doubles-platform-static.a
+[123/123] Linking CXX executable bin/mir_unit_tests_android2.bin
+Running main() from main.cpp
+Note: Google Test filter = GudPresentationWorker.*:GudHwcBoundary.*
+[==========] Running 6 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 1 test from GudHwcBoundary
+[ RUN      ] GudHwcBoundary.excludes_only_synthetic_external_from_android_hwc
+[       OK ] GudHwcBoundary.excludes_only_synthetic_external_from_android_hwc (0 ms)
+[----------] 1 test from GudHwcBoundary (0 ms total)
+
+[----------] 5 tests from GudPresentationWorker
+[ RUN      ] GudPresentationWorker.coalesces_pending_frames_to_the_newest
+[       OK ] GudPresentationWorker.coalesces_pending_frames_to_the_newest (0 ms)
+[ RUN      ] GudPresentationWorker.submit_does_not_wait_for_a_slow_present
+[       OK ] GudPresentationWorker.submit_does_not_wait_for_a_slow_present (0 ms)
+[ RUN      ] GudPresentationWorker.retains_active_frame_and_releases_superseded_pending_frame
+[       OK ] GudPresentationWorker.retains_active_frame_and_releases_superseded_pending_frame (0 ms)
+[ RUN      ] GudPresentationWorker.contains_presentation_errors_and_continues
+[       OK ] GudPresentationWorker.contains_presentation_errors_and_continues (0 ms)
+[ RUN      ] GudPresentationWorker.shutdown_discards_pending_frame_and_joins_active_work
+[       OK ] GudPresentationWorker.shutdown_discards_pending_frame_and_joins_active_work (20 ms)
+[----------] 5 tests from GudPresentationWorker (20 ms total)
+
+[----------] Global test environment tear-down
+[==========] 6 tests from 2 test suites ran. (20 ms total)
+[  PASSED  ] 6 tests.
+Running main() from /usr/src/googletest/googletest/src/gtest_main.cc
+[==========] Running 49 tests from 10 test suites.
+[----------] Global test environment set-up.
+[----------] 11 tests from XdispLifecycle
+[ RUN      ] XdispLifecycle.enables_discovers_and_activates_once
+[       OK ] XdispLifecycle.enables_discovers_and_activates_once (0 ms)
+[ RUN      ] XdispLifecycle.normal_deactivation_joins_before_available
+[       OK ] XdispLifecycle.normal_deactivation_joins_before_available (0 ms)
+[ RUN      ] XdispLifecycle.contained_forced_stop_returns_to_available
+[       OK ] XdispLifecycle.contained_forced_stop_returns_to_available (0 ms)
+[ RUN      ] XdispLifecycle.detach_retains_intent_and_reconnects_only_after_fresh_add
+[       OK ] XdispLifecycle.detach_retains_intent_and_reconnects_only_after_fresh_add (0 ms)
+[ RUN      ] XdispLifecycle.recoverable_error_requires_explicit_retry
+[       OK ] XdispLifecycle.recoverable_error_requires_explicit_retry (0 ms)
+[ RUN      ] XdispLifecycle.poison_is_persisted_before_stop_and_blocks_activation
+[       OK ] XdispLifecycle.poison_is_persisted_before_stop_and_blocks_activation (0 ms)
+[ RUN      ] XdispLifecycle.poison_clear_requires_remove_and_readd_and_returns_disabled
+[       OK ] XdispLifecycle.poison_clear_requires_remove_and_readd_and_returns_disabled (0 ms)
+[ RUN      ] XdispLifecycle.disable_stops_child_and_clears_activation_intent
+[       OK ] XdispLifecycle.disable_stops_child_and_clears_activation_intent (0 ms)
+[ RUN      ] XdispLifecycle.start_failure_becomes_recoverable_without_a_phantom_child
+[       OK ] XdispLifecycle.start_failure_becomes_recoverable_without_a_phantom_child (0 ms)
+[ RUN      ] XdispLifecycle.connecting_deadline_stops_child_in_recoverable_error
+[       OK ] XdispLifecycle.connecting_deadline_stops_child_in_recoverable_error (0 ms)
+[ RUN      ] XdispLifecycle.restored_poison_never_enables_or_activates
+[       OK ] XdispLifecycle.restored_poison_never_enables_or_activates (0 ms)
+[----------] 11 tests from XdispLifecycle (0 ms total)
+
+[----------] 7 tests from XdispChildTermination
+[ RUN      ] XdispChildTermination.graceful_exit_after_requested_stop
+[       OK ] XdispChildTermination.graceful_exit_after_requested_stop (0 ms)
+[ RUN      ] XdispChildTermination.forced_timeout_preserves_sigkill_and_containment
+[       OK ] XdispChildTermination.forced_timeout_preserves_sigkill_and_containment (0 ms)
+[ RUN      ] XdispChildTermination.forced_stop_counter_increments
+[       OK ] XdispChildTermination.forced_stop_counter_increments (0 ms)
+[ RUN      ] XdispChildTermination.spontaneous_exit_does_not_erase_last_stop_diagnostics
+[       OK ] XdispChildTermination.spontaneous_exit_does_not_erase_last_stop_diagnostics (0 ms)
+[ RUN      ] XdispChildTermination.poison_is_never_hidden_by_stop_request
+[       OK ] XdispChildTermination.poison_is_never_hidden_by_stop_request (0 ms)
+[ RUN      ] XdispChildTermination.unexpected_signal_is_recoverable
+[       OK ] XdispChildTermination.unexpected_signal_is_recoverable (0 ms)
+[ RUN      ] XdispChildTermination.requested_sigterm_is_graceful
+[       OK ] XdispChildTermination.requested_sigterm_is_graceful (0 ms)
+[----------] 7 tests from XdispChildTermination (0 ms total)
+
+[----------] 13 tests from MirgudPixelFormat
+[ RUN      ] MirgudPixelFormat.parses_supported_names
+[       OK ] MirgudPixelFormat.parses_supported_names (0 ms)
+[ RUN      ] MirgudPixelFormat.reports_transport_bytes_per_pixel
+[       OK ] MirgudPixelFormat.reports_transport_bytes_per_pixel (0 ms)
+[ RUN      ] MirgudPixelFormat.protects_drm_fourcc_mappings
+[       OK ] MirgudPixelFormat.protects_drm_fourcc_mappings (0 ms)
+[ RUN      ] MirgudPixelFormat.identifies_xrgb8888_scanout_copy_eligibility
+[       OK ] MirgudPixelFormat.identifies_xrgb8888_scanout_copy_eligibility (0 ms)
+[ RUN      ] MirgudPixelFormat.direct_copy_preserves_xrgb8888_bytes
+[       OK ] MirgudPixelFormat.direct_copy_preserves_xrgb8888_bytes (0 ms)
+[ RUN      ] MirgudPixelFormat.direct_copy_preserves_argb8888_bytes_for_visible_xrgb_channels
+[       OK ] MirgudPixelFormat.direct_copy_preserves_argb8888_bytes_for_visible_xrgb_channels (0 ms)
+[ RUN      ] MirgudPixelFormat.channel_reorder_produces_xrgb8888
+[       OK ] MirgudPixelFormat.channel_reorder_produces_xrgb8888 (0 ms)
+[ RUN      ] MirgudPixelFormat.xbgr8888_uses_channel_reorder
+[       OK ] MirgudPixelFormat.xbgr8888_uses_channel_reorder (0 ms)
+[ RUN      ] MirgudPixelFormat.egl_rgba_source_converts_correctly_with_bottom_up_rows
+[       OK ] MirgudPixelFormat.egl_rgba_source_converts_correctly_with_bottom_up_rows (0 ms)
+[ RUN      ] MirgudPixelFormat.egl_source_layouts_convert_one_row_without_channel_swapping
+[       OK ] MirgudPixelFormat.egl_source_layouts_convert_one_row_without_channel_swapping (0 ms)
+[ RUN      ] MirgudPixelFormat.egl_bgra_source_converts_correctly_with_bottom_up_rows
+[       OK ] MirgudPixelFormat.egl_bgra_source_converts_correctly_with_bottom_up_rows (0 ms)
+[ RUN      ] MirgudPixelFormat.packs_rgb565
+[       OK ] MirgudPixelFormat.packs_rgb565 (0 ms)
+[ RUN      ] MirgudPixelFormat.rgb565_direct_copy_respects_stride_and_row_order
+[       OK ] MirgudPixelFormat.rgb565_direct_copy_respects_stride_and_row_order (0 ms)
+[----------] 13 tests from MirgudPixelFormat (0 ms total)
+
+[----------] 1 test from MirgudSourcePixelFormat
+[ RUN      ] MirgudSourcePixelFormat.parses_names_and_selects_advertised_format
+[       OK ] MirgudSourcePixelFormat.parses_names_and_selects_advertised_format (0 ms)
+[----------] 1 test from MirgudSourcePixelFormat (0 ms total)
+
+[----------] 3 tests from MirgudTiming
+[ RUN      ] MirgudTiming.uses_explicit_denominators_and_bounded_summary
+[       OK ] MirgudTiming.uses_explicit_denominators_and_bounded_summary (0 ms)
+[ RUN      ] MirgudTiming.uses_nearest_rank_percentiles
+[       OK ] MirgudTiming.uses_nearest_rank_percentiles (0 ms)
+[ RUN      ] MirgudTiming.calculates_zero_and_elapsed_rates
+[       OK ] MirgudTiming.calculates_zero_and_elapsed_rates (0 ms)
+[----------] 3 tests from MirgudTiming (0 ms total)
+
+[----------] 1 test from MirgudQuality
+[ RUN      ] MirgudQuality.deterministic_pattern_converts_from_one_reference
+[       OK ] MirgudQuality.deterministic_pattern_converts_from_one_reference (0 ms)
+[----------] 1 test from MirgudQuality (0 ms total)
+
+[----------] 2 tests from MirgudPattern
+[ RUN      ] MirgudPattern.deterministic_seed_and_format_conversion_share_rgb_source
+[       OK ] MirgudPattern.deterministic_seed_and_format_conversion_share_rgb_source (0 ms)
+[ RUN      ] MirgudPattern.pregenerated_frames_repeat_without_changing_logical_rgb_source
+[       OK ] MirgudPattern.pregenerated_frames_repeat_without_changing_logical_rgb_source (0 ms)
+[----------] 2 tests from MirgudPattern (0 ms total)
+
+[----------] 1 test from MirgudSourceFormat
+[ RUN      ] MirgudSourceFormat.rejects_each_runtime_contract_change
+[       OK ] MirgudSourceFormat.rejects_each_runtime_contract_change (0 ms)
+[----------] 1 test from MirgudSourceFormat (0 ms total)
+
+[----------] 2 tests from MirgudXByteSamples
+[ RUN      ] MirgudXByteSamples.tracks_constant_and_varying_bounded_samples
+[       OK ] MirgudXByteSamples.tracks_constant_and_varying_bounded_samples (0 ms)
+[ RUN      ] MirgudXByteSamples.distributes_samples_over_full_frame
+[       OK ] MirgudXByteSamples.distributes_samples_over_full_frame (2 ms)
+[----------] 2 tests from MirgudXByteSamples (2 ms total)
+
+[----------] 8 tests from MirgudPresenter
+[ RUN      ] MirgudPresenter.accounts_for_one_presented_frame
+[       OK ] MirgudPresenter.accounts_for_one_presented_frame (0 ms)
+[ RUN      ] MirgudPresenter.resets_idle_statistics_for_a_measured_interval
+[       OK ] MirgudPresenter.resets_idle_statistics_for_a_measured_interval (0 ms)
+[ RUN      ] MirgudPresenter.accounts_for_pending_replacement
+[       OK ] MirgudPresenter.accounts_for_pending_replacement (0 ms)
+[ RUN      ] MirgudPresenter.snapshot_is_accounting_valid_while_presenting
+[       OK ] MirgudPresenter.snapshot_is_accounting_valid_while_presenting (0 ms)
+[ RUN      ] MirgudPresenter.cancels_pending_frame_once_during_stop
+[       OK ] MirgudPresenter.cancels_pending_frame_once_during_stop (0 ms)
+[ RUN      ] MirgudPresenter.records_failed_presentation_attempts
+[       OK ] MirgudPresenter.records_failed_presentation_attempts (0 ms)
+[ RUN      ] MirgudPresenter.separates_first_presented_callback_failure
+[       OK ] MirgudPresenter.separates_first_presented_callback_failure (0 ms)
+[ RUN      ] MirgudPresenter.reports_zero_denominator_percentages_and_final_accounting
+[       OK ] MirgudPresenter.reports_zero_denominator_percentages_and_final_accounting (0 ms)
+[----------] 8 tests from MirgudPresenter (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 49 tests from 10 test suites ran. (3 ms total)
+[  PASSED  ] 49 tests.

@@ -1,0 +1,186 @@
+phone_boot_id=182b1ef9-4f3f-4d6f-88ac-cc8870141338
+
+2358 /usr/sbin/lightdm
+2370 lomiri-system-compositor --enable-num-framebuffers-quirk=true --disable-overlays=false --console-provider=vt --spinner=/usr/bin/lomiri-system-compositor-spinner --file /run/mir_socket --from-dm-fd 11 --to-dm-fd 14 --vt 1
+2499 lightdm --session-child 11 16
+24499 /usr/libexec/lomiri-xdisp/xdispd
+25234 bash -c printf "phone_boot_id="; cat /proc/sys/kernel/random/boot_id; printf "\n"; pgrep -af "lightdm|lomiri-system-compositor|xdispd|mirgud" || true; echo ==xdisp==; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 State; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 ChildPid; echo ==pstore==; ls -la /sys/fs/pstore; echo ==kernel-fault-scan==; dmesg | tail -n 1200 | grep -Ei "BUG:|Oops|panic|Out of memory|binder.*-12|KGSL.*-24|Poisoned|unexpected.*-110|gud.*(error|fail|timeout)" || true
+==xdisp==
+s "available"
+u 0
+==pstore==
+total 0
+drwxr-xr-x  2 root root 0 Jun  5 10:36 .
+drwxr-xr-x+ 9 root root 0 Aug 19 23:22 ..
+==kernel-fault-scan==
+[47871.404760] gud_xdisp_lz4_12800 1-1.2:1.0: GUD request 0x61 failed: -110
+[47871.404815] gud_xdisp_lz4_12800 1-1.2:1.0: GUD state check failed: -110
+[47919.404547] gud_xdisp_lz4_12800 1-1.2:1.0: GUD request 0x61 failed: -110
+[47919.404608] gud_xdisp_lz4_12800 1-1.2:1.0: GUD state check failed: -110
+[48178.542436] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48178.542458] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48188.987824] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48188.987836] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.196149] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.196159] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.253703] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.253712] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.276305] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.276313] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.303236] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.303243] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.327975] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.327984] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.353377] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.353392] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.380069] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.380084] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.404807] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.404817] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.429601] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.429610] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.454727] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.454736] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.480536] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.480546] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.506589] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.506596] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.529966] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.529973] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.554604] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.554619] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.592460] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.592468] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.637654] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.637670] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.650583] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.650589] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.682384] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.682392] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.735197] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.735206] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.760103] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.760111] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.785313] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.785321] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.839228] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.839236] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.894450] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.894458] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48189.948059] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48189.948067] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.003217] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.003224] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.057989] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.057997] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.103230] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.103238] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.143217] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.143232] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.166604] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.166612] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.203604] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.203619] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.222315] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.222324] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.241063] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.241070] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.267544] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.267552] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.291073] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.291080] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.344429] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.344437] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.389531] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.389539] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.413515] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.413525] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.439751] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.439758] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.462718] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.462726] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.487900] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.487907] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.511365] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.511373] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.536418] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.536426] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.592412] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.592420] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.646353] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.646361] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.675046] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.675053] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.707355] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.707362] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.733148] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.733163] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.757764] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.757780] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.782074] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.782089] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.807732] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.807748] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.832573] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.832589] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.857409] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.857423] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.882027] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.882040] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.907300] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.907318] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.931514] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.931529] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.957012] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.957027] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48190.981392] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48190.981407] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.008001] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.008017] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.031394] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.031410] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.057087] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.057102] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.081221] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.081237] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.106389] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.106404] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.131275] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.131291] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.157953] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.157969] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.181308] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.181324] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.206130] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.206145] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.231439] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.231447] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.254398] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.254406] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.285760] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.285767] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.308854] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.308862] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.335584] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.335599] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.360660] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.360675] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.388216] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.388224] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.411647] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.411661] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.438658] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.438674] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.465565] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.465580] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.490413] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.490429] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.526015] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.526030] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.548335] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.548343] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48191.576288] gud_xdisp_lz4_12800 1-1.2:1.0: GUD bulk transfer failed after 0 retries: -16
+[48191.576296] gud_xdisp_lz4_12800 1-1.2:1.0: GUD atomic update failed: -16
+[48196.737681] gud_xdisp_lz4_12800 1-1.2:1.0: GUD request 0x61 failed: -110
+[48196.737717] gud_xdisp_lz4_12800 1-1.2:1.0: GUD state check failed: -110
+[48201.859492] gud_xdisp_lz4_12800 1-1.2:1.0: GUD request 0x64 failed: -110

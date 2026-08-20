@@ -1,0 +1,844 @@
+==usb==
+/sys/bus/usb/devices/1-1.1 343c
+0000
+/sys/bus/usb/devices/1-1.2 1d50
+614d
+/sys/bus/usb/devices/1-1 214b
+7250
+/sys/bus/usb/devices/usb1 1d6b
+0002
+/sys/bus/usb/devices/usb2 1d6b
+0003
+==gud-drm==
+DEVTYPE=usb_interface
+DRIVER=gud_xdisp_lz4_12800
+PRODUCT=1d50/614d/0
+TYPE=0/0/0
+INTERFACE=255/255/0
+MODALIAS=usb:v1D50p614Dd0000dc00dsc00dp00icFFiscFFip00in00
+==kernel==
+[47709.023269] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47709.023288] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47711.001537] R0: [NetworkManager][916136538135] [17:31:29.098521]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47711.020566] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47711.020602] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47711.020620] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47711.020639] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47711.020810] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47711.020823] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47713.019850] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47713.019900] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47713.019918] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47713.019943] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47713.019962] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47713.019978] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47713.236222] init: Received control message 'interface_start' for 'android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default' from pid: 34 (/system/bin/hwservicemanager)
+[47713.236346] init: Could not find service hosting interface android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default
+[47713.237756] init: Received control message 'interface_start' for 'android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default' from pid: 34 (/system/bin/hwservicemanager)
+[47713.237819] init: Could not find service hosting interface android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default
+[47713.887845] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47715.027068] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47715.027142] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47715.027165] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47715.027195] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47715.027217] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47715.027232] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47716.999046] R0: [NetworkManager][916251690223] [17:31:35.096026]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47717.024622] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47717.024661] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47717.024679] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47717.024701] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47717.024718] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47717.024732] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47719.022710] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47719.022789] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47719.022817] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47719.022849] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47719.022871] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47719.022893] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47720.718146] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47721.022549] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47721.022615] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47721.022642] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47721.022674] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47721.022701] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47721.022718] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47723.000055] R0: [NetworkManager][916366909720] [17:31:41.097042]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47723.020531] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47723.020556] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47723.020572] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47723.020592] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47723.020609] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47723.020621] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47725.023680] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47725.023736] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47725.023873] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47725.023896] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47725.023916] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47725.023929] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47726.689152] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47727.022190] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47727.022261] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47727.022290] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47727.022326] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47727.022351] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47727.022376] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47728.997506] R0: [NetworkManager][916482060693] [17:31:47.094489]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47729.019200] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47729.019234] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47729.019250] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47729.019270] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47729.019286] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47729.019298] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47731.025609] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47731.025661] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47731.025681] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47731.025703] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47731.025721] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47731.025734] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47732.872888] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47733.016359] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47733.016400] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47733.016417] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47733.016436] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47733.016454] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47733.016466] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47733.379502] R0: [cds_mc_thread][916566195194] [17:31:51.476495]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[47733.407694] R0: [cds_mc_thread][916566736500] [17:31:51.504688]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[47734.998854] R0: [NetworkManager][916597286626] [17:31:53.095841]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47735.021375] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47735.021410] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47735.021423] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47735.021439] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47735.021452] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47735.021462] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47737.023930] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47737.024117] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47737.024142] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47737.024264] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47737.024303] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47737.024318] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47739.025186] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47739.025266] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47739.025291] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47739.025324] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47739.025353] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47739.025374] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47739.698375] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47740.998385] R0: [NetworkManager][916712477634] [17:31:59.095373]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47741.019452] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47741.019485] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47741.019502] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47741.019526] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47741.019545] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47741.019558] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47743.025455] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47743.025536] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47743.025557] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47743.025583] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47743.025602] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47743.025618] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47745.025503] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47745.025578] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47745.025608] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47745.025643] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47745.025672] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47745.025694] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47745.886523] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47747.002725] R0: [NetworkManager][916827760911] [17:32:05.099711]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47747.022084] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47747.022121] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47747.022141] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47747.022166] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47747.022190] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47747.022205] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47749.021038] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47749.021093] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47749.021107] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47749.021122] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47749.021133] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47749.021141] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47751.020054] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47751.020103] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47751.020120] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47751.020141] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47751.020158] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47751.020171] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47752.662967] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47752.996435] R0: [NetworkManager][916942840233] [17:32:11.093426]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47753.015896] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47753.015937] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47753.015951] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47753.015971] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47753.015985] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47753.015994] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47755.026060] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47755.026212] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47755.026236] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47755.026273] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47755.026297] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47755.026312] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47757.026285] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47757.026362] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47757.026389] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47757.026417] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47757.026439] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47757.026489] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47758.683278] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47758.998022] R0: [NetworkManager][917058070692] [17:32:17.095013]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47759.021514] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47759.021699] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47759.021722] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47759.021748] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47759.021769] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47759.021787] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47761.028504] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47761.028582] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47761.028610] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47761.028643] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47761.028668] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47761.028686] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47763.025529] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47763.025611] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47763.025641] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47763.025675] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47763.025707] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47763.025726] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47764.099462] R0: [cds_mc_thread][917156018480] [17:32:22.196461]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[47764.119197] R0: [cds_mc_thread][917156397457] [17:32:22.216199]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[47764.874316] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47764.998200] R0: [NetworkManager][917173274082] [17:32:23.095190]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47765.018071] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47765.018103] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47765.018118] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47765.018135] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47765.018149] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47765.018159] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47767.024128] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47767.024210] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47767.024235] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47767.024272] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47767.024296] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47767.024318] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47767.347250] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47769.022576] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47769.022656] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47769.022685] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47769.022724] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47769.022753] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47769.022773] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47770.999775] R0: [NetworkManager][917288504289] [17:32:29.096764]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47771.022180] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47771.022221] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47771.022246] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47771.022283] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47771.022310] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47771.022334] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47771.705108] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47773.023506] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47773.023576] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47773.023604] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47773.023649] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47773.023677] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47773.023697] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47774.247488] EXT4-fs (sda13): re-mounted. Opts: (null)
+[47774.447075] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47774.447100] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47774.447109] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47774.447122] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47774.447130] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47774.447136] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47774.486229] EXT4-fs (sda13): re-mounted. Opts: (null)
+[47776.997078] R0: [NetworkManager][917403652427] [17:32:35.094064]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47777.025249] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47777.025287] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47777.025312] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47777.025351] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47777.025375] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47777.025391] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47777.887801] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47779.021885] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47779.021955] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47779.021978] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47779.022005] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47779.022025] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47779.022040] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47781.024169] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47781.024243] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47781.024269] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47781.024353] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47781.024376] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47781.024391] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47782.997860] R0: [NetworkManager][917518867453] [17:32:41.094847]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47783.020618] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47783.020858] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47783.020874] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47783.020893] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47783.020905] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47783.020914] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47784.725205] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47785.026420] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47785.026489] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47785.026511] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47785.026537] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47785.026557] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47785.026572] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47787.025837] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47787.025908] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47787.025933] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47787.025972] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47787.025998] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47787.026012] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47787.738313] EXT4-fs (sda13): re-mounted. Opts: (null)
+[47787.916154] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47787.916178] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47787.916188] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47787.916199] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47787.916208] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47787.916214] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47787.947851] EXT4-fs (sda13): re-mounted. Opts: (null)
+[47788.997611] R0: [NetworkManager][917634062745] [17:32:47.094602]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47790.015382] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47790.015424] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47790.015441] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47790.015459] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47790.015475] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47790.015488] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47790.685896] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47792.025972] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47792.026046] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47792.026073] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47792.026109] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47792.026140] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47792.026159] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47794.022064] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47794.022133] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47794.022160] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47794.022196] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47794.022220] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47794.022241] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47794.818926] R0: [cds_mc_thread][917745832106] [17:32:52.915924]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[47794.830269] R0: [cds_mc_thread][917746049977] [17:32:52.927271]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[47794.996981] R0: [NetworkManager][917749250888] [17:32:53.093985]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47796.023347] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47796.023427] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47796.023457] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47796.023493] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47796.023516] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47796.023533] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47796.874259] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47798.021793] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47798.021867] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47798.021926] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47798.021962] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47798.021987] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47798.022008] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47800.025986] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47800.026069] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47800.026096] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47800.026130] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47800.026160] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47800.026180] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47801.003524] R0: [NetworkManager][917864576162] [17:32:59.100510]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47802.017938] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47802.017996] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47802.018017] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47802.018037] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47802.018059] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47802.018074] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47803.705274] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47804.025324] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47804.025392] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47804.025422] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47804.025459] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47804.025486] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47804.025506] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47806.012148] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47806.012186] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47806.012200] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47806.012217] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47806.012231] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47806.012241] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47806.998422] R0: [NetworkManager][917979678204] [17:33:05.095409]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47808.022732] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47808.022785] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47808.022808] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47808.022832] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47808.022857] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47808.022874] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47809.889361] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47810.018848] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47810.018889] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47810.018908] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47810.018930] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47810.018949] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47810.018964] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47812.025857] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47812.025928] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47812.025957] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47812.025988] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47812.026010] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47812.026030] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47812.997696] R0: [NetworkManager][918094864323] [17:33:11.094687]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47813.988546] init: Received control message 'interface_start' for 'android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default' from pid: 34 (/system/bin/hwservicemanager)
+[47813.988676] init: Could not find service hosting interface android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default
+[47813.988999] init: Received control message 'interface_start' for 'android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default' from pid: 34 (/system/bin/hwservicemanager)
+[47813.989055] init: Could not find service hosting interface android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default
+[47814.024499] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47814.024538] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47814.024561] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47814.024590] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47814.024612] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47814.024630] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47814.936745] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47814.936775] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47814.936787] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47814.936801] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47814.936812] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47814.936821] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47816.716851] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47817.018893] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47817.018954] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47817.018974] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47817.019001] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47817.019018] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47817.019030] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47818.998971] R0: [NetworkManager][918210088879] [17:33:17.095966]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47819.021735] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47819.021772] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47819.021793] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47819.021820] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47819.021837] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47819.021852] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47821.022088] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47821.022166] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47821.022193] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47821.022227] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47821.022255] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47821.022273] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47822.685762] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47823.018191] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47823.018235] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47823.018253] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47823.018279] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47823.018296] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47823.018311] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47825.001653] R0: [NetworkManager][918325340326] [17:33:23.098646]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47825.023539] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47825.023573] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47825.023595] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47825.023620] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47825.023643] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47825.023659] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47825.540019] R0: [cds_mc_thread][918335674835] [17:33:23.636902]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[47825.563274] R0: [cds_mc_thread][918336123638] [17:33:23.660277]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[47827.024264] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47827.024340] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47827.024362] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47827.024389] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47827.024410] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47827.024424] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47827.342996] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47828.871377] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47829.019484] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47829.019527] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47829.019544] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47829.019566] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47829.019583] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47829.019596] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47830.998168] R0: [NetworkManager][918440473410] [17:33:29.095162]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47831.019564] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47831.019607] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47831.019631] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47831.019661] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47831.019685] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47831.019699] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47833.023120] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47833.023197] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47833.023226] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47833.023260] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47833.023293] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47833.023313] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47835.020806] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47835.020871] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47835.020889] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47835.020917] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47835.020935] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47835.020950] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47835.700434] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47836.997625] R0: [NetworkManager][918555662904] [17:33:35.094615]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47837.021653] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47837.021693] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47837.021719] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47837.021753] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47837.021781] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47837.021801] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47839.025305] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47839.025355] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47839.025380] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47839.025410] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47839.025435] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47839.025456] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47841.018459] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47841.018499] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47841.018514] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47841.018531] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47841.018548] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47841.018560] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47841.891415] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47843.003035] R0: [NetworkManager][918670966926] [17:33:41.100034]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47843.022642] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47843.022678] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47843.022697] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47843.022720] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47843.022738] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47843.022752] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47845.023941] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47845.024059] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47845.024081] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47845.024109] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47845.024132] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47845.024148] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47847.023810] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47847.023886] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47847.023909] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47847.023935] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47847.024053] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47847.024072] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47848.711466] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47849.000325] R0: [NetworkManager][918786114857] [17:33:47.097322]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47849.022992] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47849.023029] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47849.023048] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47849.023072] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47849.023089] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47849.023104] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47851.023541] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47851.023619] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47851.023648] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47851.023682] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47851.023708] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47851.023727] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47853.021271] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47853.021346] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47853.021373] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47853.021406] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47853.021431] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47853.021447] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47854.688999] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47854.999649] R0: [NetworkManager][918901300355] [17:33:53.096568]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47855.023788] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47855.023826] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47855.023847] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47855.023874] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47855.023894] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47855.023909] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47856.259696] R0: [cds_mc_thread][918925494843] [17:33:54.356697]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[47856.282233] R0: [cds_mc_thread][918925927666] [17:33:54.379240]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[47857.020578] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47857.020693] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47857.020720] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47857.020752] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47857.020778] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47857.020793] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47859.024075] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47859.024150] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47859.024178] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47859.024210] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47859.024236] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47859.024258] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47860.887040] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47860.998089] R0: [NetworkManager][919016471970] [17:33:59.095090]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47861.021573] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47861.021608] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47861.021638] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47861.021670] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47861.021698] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47861.021715] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47863.022952] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47863.023039] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47863.023064] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47863.023095] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47863.023116] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47863.023131] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47865.021546] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47865.021625] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47865.021650] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47865.021681] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47865.021710] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47865.021729] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47866.189656] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47866.189700] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47866.189713] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47866.189729] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47866.189741] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47866.189753] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47866.998303] R0: [NetworkManager][919131675900] [17:34:05.095295]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47867.697986] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47871.404760] gud_xdisp_lz4_12800 1-1.2:1.0: GUD request 0x61 failed: -110
+[47871.404815] gud_xdisp_lz4_12800 1-1.2:1.0: GUD state check failed: -110
+[47872.997259] R0: [NetworkManager][919246855866] [17:34:11.094252]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47873.891017] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47878.997669] R0: [NetworkManager][919362063781] [17:34:17.094665]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47880.713305] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47884.996974] R0: [NetworkManager][919477250432] [17:34:23.093970]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47886.686818] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47887.343784] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47889.539668] R0: [cds_mc_thread][919564470374] [17:34:27.636676]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[47889.560230] R0: [cds_mc_thread][919564865207] [17:34:27.657240]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[47890.997092] R0: [NetworkManager][919592452836] [17:34:29.094096]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47892.873779] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47896.999075] R0: [NetworkManager][919707690778] [17:34:35.096073]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47899.703514] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47902.999747] R0: [NetworkManager][919822903696] [17:34:41.096746]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47905.892323] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47908.998961] R0: [NetworkManager][919938088578] [17:34:47.095960]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47912.713396] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47914.323634] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect enter
+[47914.323675] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: detect status=1
+[47914.323686] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes enter
+[47914.323696] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode created
+[47914.323709] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: mode probed
+[47914.323716] gud_xdisp_lz4_12800 1-1.2:1.0: GUD connector: get_modes complete
+[47914.749945] init: Received control message 'interface_start' for 'android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default' from pid: 34 (/system/bin/hwservicemanager)
+[47914.750081] init: Could not find service hosting interface android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default
+[47914.750995] init: Received control message 'interface_start' for 'android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default' from pid: 34 (/system/bin/hwservicemanager)
+[47914.751062] init: Could not find service hosting interface android.hardware.biometrics.fingerprint@2.1::IBiometricsFingerprint/default
+[47914.998410] R0: [NetworkManager][920053278229] [17:34:53.095421]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47918.688985] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47919.404547] gud_xdisp_lz4_12800 1-1.2:1.0: GUD request 0x61 failed: -110
+[47919.404608] gud_xdisp_lz4_12800 1-1.2:1.0: GUD state check failed: -110
+[47920.046817] R0: [cds_mc_thread][920150207580] [17:34:58.143825]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[47920.068999] R0: [cds_mc_thread][920150633581] [17:34:58.166013]  wlan: [3312:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[47920.997985] R0: [NetworkManager][920168469904] [17:34:59.094988]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47924.883535] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47926.998940] R0: [NetworkManager][920283686454] [17:35:05.095851]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47931.707821] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47933.001543] R0: [NetworkManager][920398938136] [17:35:11.098543]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[47937.884883] healthd: battery l=100 v=4271 t=23.9 h=2 st=5 c=0 fc=2878000 cc=0 chg=a
+[47938.997903] R0: [NetworkManager][920514068225] [17:35:17.094903]  wlan: [1846:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+==xdisp-journal==
+Aug 19 23:23:08 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 23:23:08 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 19 23:24:31 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 23:24:31 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 19 23:24:31 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 19 23:24:31 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 23:24:31 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 19 23:25:54 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 23:25:54 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 19 23:25:54 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 19 23:25:54 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 23:25:54 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: disabled -> available: enabled
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: available -> connecting: activation requested
+Aug 19 23:26:44 ubuntu-phablet xdispd[5881]: mirgud: GUD enabled at 1280x720 rgb565
+Aug 19 23:26:44 ubuntu-phablet xdispd[5881]: mirgud: V0.1 initial modeset begin
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: child milestone: XDISP1 626799 MODESET_BEGIN
+Aug 19 23:26:44 ubuntu-phablet xdispd[5881]: mirgud: V0.1 initial modeset failed errno=22 (Invalid argument)
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: child milestone: XDISP1 626803 KMS_TEARDOWN_BEGIN
+Aug 19 23:26:44 ubuntu-phablet xdispd[5881]: mirgud: GUD atomic commit failed: Invalid argument
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: child milestone: XDISP1 626805 KMS_TEARDOWN_COMPLETE
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: child milestone: XDISP1 626805 FATAL R
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: child exit recoverable-source-failure:exit:21 stop_duration_ms=0
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: connecting -> recoverable_error: recoverable-source-failure:exit:21
+Aug 20 10:37:11 ubuntu-phablet xdispd[5565]: xdispd: recoverable_error -> available: deactivated
+Aug 20 10:37:11 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:37:11 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 10:37:11 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:37:11 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:37:11 ubuntu-phablet xdispd[17159]: xdispd: unavailable -> available: GUD sink available
+Aug 20 10:37:11 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: available -> disabled: disabled
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: disabled -> available: enabled
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: available -> connecting: activation requested
+Aug 20 10:38:29 ubuntu-phablet xdispd[17419]: mirgud: GUD enabled at 1280x720 rgb565
+Aug 20 10:38:29 ubuntu-phablet xdispd[17419]: mirgud: V0.1 initial modeset begin
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: child milestone: XDISP1 40931353 MODESET_BEGIN
+Aug 20 10:38:29 ubuntu-phablet xdispd[17419]: mirgud: V0.1 initial modeset failed errno=22 (Invalid argument)
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: child milestone: XDISP1 40931358 KMS_TEARDOWN_BEGIN
+Aug 20 10:38:29 ubuntu-phablet xdispd[17419]: mirgud: GUD atomic commit failed: Invalid argument
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: child milestone: XDISP1 40931360 KMS_TEARDOWN_COMPLETE
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: child milestone: XDISP1 40931360 FATAL R
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: child exit recoverable-source-failure:exit:21 stop_duration_ms=0
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: connecting -> recoverable_error: recoverable-source-failure:exit:21
+Aug 20 10:38:39 ubuntu-phablet xdispd[17159]: xdispd: recoverable_error -> available: deactivated
+Aug 20 10:39:13 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:39:13 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 10:39:13 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:39:13 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:39:13 ubuntu-phablet xdispd[17595]: xdispd: unavailable -> available: GUD sink available
+Aug 20 10:39:13 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:39:20 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:39:20 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 10:39:20 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:39:20 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:39:21 ubuntu-phablet xdispd[17776]: xdispd: unavailable -> available: GUD sink available
+Aug 20 10:39:21 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:39:50 ubuntu-phablet systemd[1]: /etc/systemd/system/xdisp.service.d/override.conf:1: Invalid section header '[Service]nExecStart=nExecStart=/home/phablet/xdispd-wrappern'
+Aug 20 10:39:52 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:39:52 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 10:39:52 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:39:52 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:39:52 ubuntu-phablet xdispd[18081]: xdispd: unavailable -> available: GUD sink available
+Aug 20 10:39:52 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:39:56 ubuntu-phablet systemd[1]: /etc/systemd/system/xdisp.service.d/override.conf:1: Invalid section header '[Service]nExecStart=nExecStart=/home/phablet/xdispd-wrappern'
+Aug 20 10:40:10 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:40:10 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 10:40:10 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:40:10 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:40:10 ubuntu-phablet xdispd[18321]: xdispd: unavailable -> available: GUD sink available
+Aug 20 10:40:10 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:40:29 ubuntu-phablet xdispd[18321]: xdispd: available -> disabled: disabled
+Aug 20 10:40:29 ubuntu-phablet xdispd[18321]: xdispd: disabled -> available: enabled
+Aug 20 10:40:29 ubuntu-phablet xdispd[18321]: xdispd: available -> connecting: activation requested
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: GUD enabled at 1280x720 xrgb8888
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: V0.1 initial modeset begin
+Aug 20 10:40:29 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41051429 MODESET_BEGIN
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: V0.1 initial modeset complete
+Aug 20 10:40:29 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41051439 MODESET_COMPLETE
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: xdisp topology phase=before-screencast id=1 connected=1 used=1 mode=1080x2280 top_left=(0,0)
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: xdisp topology phase=before-screencast id=2 connected=0 used=0 mode=none top_left=(0,0)
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: xdisp topology phase=before-screencast id=3 connected=0 used=0 mode=1280x720 top_left=(1080,0)
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: xdisp extend request size=1280x720 mode=extend socket=/run/mir_socket
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: xdisp extend region requested=(1080,0,1280,720)
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: available_mir_formats=1,2,6,7 available_mir_format_names=abgr8888,xbgr8888,rgb888,rgb565 requested_source_pixel_format=auto
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: xdisp topology phase=after-screencast id=1 connected=1 used=1 mode=1080x2280 top_left=(0,0)
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: xdisp topology phase=after-screencast id=2 connected=0 used=0 mode=none top_left=(0,0)
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: xdisp topology phase=after-screencast id=3 connected=0 used=0 mode=1280x720 top_left=(1080,0)
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: Stage B virtual/screencast source enabled 1280x720 requested_format=1 transport=xrgb8888
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: virtual frame source is CPU mapped 1280x720 mir_format=1 stride=5120 row_order=top-down transport=xrgb8888 conversion_path=channel-reorder
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: benchmark measured interval started after warmup_s=0
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: first CPU-complete virtual frame copied and converted
+Aug 20 10:40:29 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=1 frames_submitted=1 frames_in_flight=1 frames_presented=0 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=true benchmark_elapsed_us=78629 benchmark_elapsed_ms=78 received_fps=12 submitted_fps=12 presented_fps=0 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=0 interval_received=0 interval_submitted=0 interval_presented=0 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=0 interval_submitted_fps=0 interval_presented_fps=0 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=1 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=1 acquire_us_min=4 acquire_us_avg=4 acquire_us_max=4 acquire_us_p50=10 acquire_us_p95=10 conversion_us_samples=1 conversion_us_min=66577 conversion_us_avg=66577 conversion_us_max=66577 conversion_us_p50=100000 conversion_us_p95=100000 release_us_samples=1 release_us_min=11362 release_us_avg=11362 release_us_max=11362 release_us_p50=20000 release_us_p95=20000 capture_cycle_us_samples=1 capture_cycle_us_min=77944 capture_cycle_us_avg=77944 capture_cycle_us_max=77944 capture_cycle_us_p50=100000 capture_cycle_us_p95=100000 submit_us_samples=0 submit_us_min=0 submit_us_avg=0 submit_us_max=0 submit_us_p50=0 submit_us_p95=0 self_fds=17
+Aug 20 10:40:29 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41051647 ACTIVE
+Aug 20 10:40:29 ubuntu-phablet xdispd[18321]: xdispd: connecting -> active: first frame presented
+Aug 20 10:40:30 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=31 frames_submitted=31 frames_in_flight=0 frames_presented=30 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=1044253 benchmark_elapsed_ms=1044 received_fps=29 submitted_fps=29 presented_fps=28 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=965623 interval_received=30 interval_submitted=30 interval_presented=30 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=31 interval_submitted_fps=31 interval_presented_fps=31 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=31 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=31 acquire_us_min=4 acquire_us_avg=361 acquire_us_max=771 acquire_us_p50=500 acquire_us_p95=1000 conversion_us_samples=31 conversion_us_min=22033 conversion_us_avg=29875 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=100000 release_us_samples=31 release_us_min=1465 release_us_avg=3309 release_us_max=11362 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=31 capture_cycle_us_min=24242 capture_cycle_us_avg=33547 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=100000 submit_us_samples=30 submit_us_min=4403 submit_us_avg=7302 submit_us_max=14587 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 10:40:31 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=67 frames_submitted=67 frames_in_flight=0 frames_presented=66 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=2005669 benchmark_elapsed_ms=2005 received_fps=33 submitted_fps=33 presented_fps=32 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=961416 interval_received=36 interval_submitted=36 interval_presented=36 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=37 interval_submitted_fps=37 interval_presented_fps=37 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=67 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=67 acquire_us_min=4 acquire_us_avg=343 acquire_us_max=771 acquire_us_p50=500 acquire_us_p95=1000 conversion_us_samples=67 conversion_us_min=21986 conversion_us_avg=26772 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=100000 release_us_samples=67 release_us_min=1465 release_us_avg=2707 release_us_max=11362 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=67 capture_cycle_us_min=23946 capture_cycle_us_avg=29824 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=100000 submit_us_samples=66 submit_us_min=4403 submit_us_avg=6462 submit_us_max=14587 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 10:40:32 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=106 frames_submitted=106 frames_in_flight=0 frames_presented=105 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=3013777 benchmark_elapsed_ms=3013 received_fps=35 submitted_fps=35 presented_fps=34 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1008107 interval_received=39 interval_submitted=39 interval_presented=39 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=38 interval_submitted_fps=38 interval_presented_fps=38 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=106 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=106 acquire_us_min=4 acquire_us_avg=334 acquire_us_max=771 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=106 conversion_us_min=21960 conversion_us_avg=25094 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=100000 release_us_samples=106 release_us_min=1465 release_us_avg=2905 release_us_max=11362 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=106 capture_cycle_us_min=23946 capture_cycle_us_avg=28335 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=100000 submit_us_samples=105 submit_us_min=4382 submit_us_avg=6211 submit_us_max=14587 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 10:40:33 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=143 frames_submitted=143 frames_in_flight=0 frames_presented=142 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=4008476 benchmark_elapsed_ms=4008 received_fps=35 submitted_fps=35 presented_fps=35 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=994699 interval_received=37 interval_submitted=37 interval_presented=37 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=37 interval_submitted_fps=37 interval_presented_fps=37 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=143 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=143 acquire_us_min=4 acquire_us_avg=347 acquire_us_max=1627 acquire_us_p50=500 acquire_us_p95=1000 conversion_us_samples=143 conversion_us_min=21960 conversion_us_avg=24361 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=143 release_us_min=1465 release_us_avg=3230 release_us_max=11362 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=143 capture_cycle_us_min=23946 capture_cycle_us_avg=27940 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=142 submit_us_min=4382 submit_us_avg=6208 submit_us_max=14587 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 10:40:34 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=180 frames_submitted=180 frames_in_flight=0 frames_presented=179 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=5018430 benchmark_elapsed_ms=5018 received_fps=35 submitted_fps=35 presented_fps=35 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1009954 interval_received=37 interval_submitted=37 interval_presented=37 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=36 interval_submitted_fps=36 interval_presented_fps=36 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=180 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=180 acquire_us_min=4 acquire_us_avg=342 acquire_us_max=1627 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=180 conversion_us_min=21960 conversion_us_avg=23929 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=180 release_us_min=1465 release_us_avg=3517 release_us_max=11362 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=180 capture_cycle_us_min=23946 capture_cycle_us_avg=27790 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=179 submit_us_min=4382 submit_us_avg=6178 submit_us_max=14587 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 10:40:35 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=216 frames_submitted=216 frames_in_flight=0 frames_presented=215 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=6017132 benchmark_elapsed_ms=6017 received_fps=35 submitted_fps=35 presented_fps=35 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=998701 interval_received=36 interval_submitted=36 interval_presented=36 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=36 interval_submitted_fps=36 interval_presented_fps=36 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=216 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=216 acquire_us_min=4 acquire_us_avg=341 acquire_us_max=1627 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=216 conversion_us_min=21960 conversion_us_avg=23651 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=216 release_us_min=1465 release_us_avg=3773 release_us_max=23423 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=216 capture_cycle_us_min=23946 capture_cycle_us_avg=27766 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=215 submit_us_min=4382 submit_us_avg=6334 submit_us_max=17552 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 10:40:36 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=253 frames_submitted=253 frames_in_flight=0 frames_presented=252 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=7019334 benchmark_elapsed_ms=7019 received_fps=36 submitted_fps=36 presented_fps=35 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1002202 interval_received=37 interval_submitted=37 interval_presented=37 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=36 interval_submitted_fps=36 interval_presented_fps=36 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=253 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=253 acquire_us_min=4 acquire_us_avg=338 acquire_us_max=1627 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=253 conversion_us_min=21960 conversion_us_avg=23448 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=253 release_us_min=1465 release_us_avg=3866 release_us_max=23423 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=253 capture_cycle_us_min=23946 capture_cycle_us_avg=27654 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=252 submit_us_min=4382 submit_us_avg=6309 submit_us_max=17552 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 10:40:37 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=290 frames_submitted=290 frames_in_flight=0 frames_presented=289 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=8022536 benchmark_elapsed_ms=8022 received_fps=36 submitted_fps=36 presented_fps=36 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1003201 interval_received=37 interval_submitted=37 interval_presented=37 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=36 interval_submitted_fps=36 interval_presented_fps=36 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=290 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=290 acquire_us_min=4 acquire_us_avg=337 acquire_us_max=1627 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=290 conversion_us_min=21960 conversion_us_avg=23294 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=290 release_us_min=1465 release_us_avg=3942 release_us_max=23423 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=290 capture_cycle_us_min=23946 capture_cycle_us_avg=27575 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=289 submit_us_min=4382 submit_us_avg=6307 submit_us_max=17552 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 10:40:38 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=327 frames_submitted=327 frames_in_flight=0 frames_presented=326 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=9015079 benchmark_elapsed_ms=9015 received_fps=36 submitted_fps=36 presented_fps=36 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=992543 interval_received=37 interval_submitted=37 interval_presented=37 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=37 interval_submitted_fps=37 interval_presented_fps=37 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=327 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=327 acquire_us_min=4 acquire_us_avg=335 acquire_us_max=1627 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=327 conversion_us_min=21960 conversion_us_avg=23169 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=327 release_us_min=1465 release_us_avg=3975 release_us_max=23423 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=327 capture_cycle_us_min=23946 capture_cycle_us_avg=27480 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=326 submit_us_min=4382 submit_us_avg=6265 submit_us_max=17552 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 10:40:39 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=364 frames_submitted=364 frames_in_flight=0 frames_presented=363 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=10020384 benchmark_elapsed_ms=10020 received_fps=36 submitted_fps=36 presented_fps=36 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1005304 interval_received=37 interval_submitted=37 interval_presented=37 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=36 interval_submitted_fps=36 interval_presented_fps=36 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=364 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=364 acquire_us_min=4 acquire_us_avg=333 acquire_us_max=1627 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=364 conversion_us_min=21960 conversion_us_avg=23075 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=364 release_us_min=1465 release_us_avg=4030 release_us_max=23423 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=364 capture_cycle_us_min=23946 capture_cycle_us_avg=27441 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=363 submit_us_min=4382 submit_us_avg=6241 submit_us_max=17552 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 10:40:40 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=401 frames_submitted=401 frames_in_flight=0 frames_presented=400 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=11007190 benchmark_elapsed_ms=11007 received_fps=36 submitted_fps=36 presented_fps=36 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=986806 interval_received=37 interval_submitted=37 interval_presented=37 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=37 interval_submitted_fps=37 interval_presented_fps=37 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=401 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=401 acquire_us_min=4 acquire_us_avg=332 acquire_us_max=1627 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=401 conversion_us_min=21954 conversion_us_avg=22994 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=401 release_us_min=1465 release_us_avg=4035 release_us_max=23423 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=401 capture_cycle_us_min=23946 capture_cycle_us_avg=27363 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=400 submit_us_min=4382 submit_us_avg=6218 submit_us_max=17552 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 10:40:41 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=periodic final=false frames_received=439 frames_submitted=439 frames_in_flight=0 frames_presented=438 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=12018917 benchmark_elapsed_ms=12018 received_fps=36 submitted_fps=36 presented_fps=36 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1011726 interval_received=38 interval_submitted=38 interval_presented=38 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=37 interval_submitted_fps=37 interval_presented_fps=37 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=439 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=439 acquire_us_min=4 acquire_us_avg=330 acquire_us_max=1627 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=439 conversion_us_min=21954 conversion_us_avg=22927 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=439 release_us_min=1465 release_us_avg=4032 release_us_max=23423 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=439 capture_cycle_us_min=23946 capture_cycle_us_avg=27292 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=438 submit_us_min=4375 submit_us_avg=6191 submit_us_max=17552 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 10:40:41 ubuntu-phablet xdispd[18321]: xdispd: active -> disconnecting: deactivated
+Aug 20 10:40:41 ubuntu-phablet xdispd[18321]: xdispd: teardown stop requested
+Aug 20 10:40:41 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41063660 TERM_OBSERVED
+Aug 20 10:40:41 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41063661 CAPTURE_LOOP_EXIT
+Aug 20 10:40:41 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41063661 PRESENTER_STOP_BEGIN
+Aug 20 10:40:41 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41063670 PRESENTER_STOP_COMPLETE
+Aug 20 10:40:41 ubuntu-phablet xdispd-wrapper[18451]: mirgud: report_kind=final final=true frames_received=442 frames_submitted=442 frames_in_flight=0 frames_presented=442 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=true benchmark_elapsed_us=12108187 benchmark_elapsed_ms=12108 received_fps=36 submitted_fps=36 presented_fps=36 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=89270 interval_received=3 interval_submitted=3 interval_presented=4 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=33 interval_submitted_fps=33 interval_presented_fps=44 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=442 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=442 acquire_us_min=4 acquire_us_avg=330 acquire_us_max=1627 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=442 conversion_us_min=21954 conversion_us_avg=22924 conversion_us_max=66577 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=442 release_us_min=1465 release_us_avg=4029 release_us_max=23423 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=442 capture_cycle_us_min=23946 capture_cycle_us_avg=27285 capture_cycle_us_max=77944 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=442 submit_us_min=4375 submit_us_avg=6184 submit_us_max=17552 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 10:40:41 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41063671 PROCESS_EXIT
+Aug 20 10:40:41 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41063671 SCREENCAST_RELEASE_BEGIN
+Aug 20 10:40:41 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41063677 SCREENCAST_RELEASE_COMPLETE
+Aug 20 10:40:41 ubuntu-phablet xdispd[18321]: xdispd: child milestone: XDISP1 41063677 MIR_CONNECTION_RELEASE_BEGIN
+Aug 20 10:40:45 ubuntu-phablet xdispd[18321]: xdispd: teardown deadline reached; sending SIGKILL
+Aug 20 10:40:45 ubuntu-phablet xdispd[18321]: xdispd: child exit forced-sigkill:signal:9 stop_duration_ms=3372
+Aug 20 10:40:45 ubuntu-phablet xdispd[18321]: xdispd: disconnecting -> available: forced-sigkill:signal:9
+Aug 20 11:12:09 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 11:12:09 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 11:12:09 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 11:12:09 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 11:12:09 ubuntu-phablet xdispd[20415]: xdispd: unavailable -> available: GUD sink available
+Aug 20 11:12:09 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 11:13:01 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 11:13:01 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 11:13:01 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 11:13:01 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 11:13:01 ubuntu-phablet xdispd[20755]: xdispd: unavailable -> available: GUD sink available
+Aug 20 11:13:01 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 11:16:07 ubuntu-phablet xdispd[20755]: xdispd: available -> connecting: activation requested
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: GUD enabled at 1280x720 xrgb8888
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: V0.1 initial modeset begin
+Aug 20 11:16:07 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43189408 MODESET_BEGIN
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: V0.1 initial modeset complete
+Aug 20 11:16:07 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43189419 MODESET_COMPLETE
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: xdisp topology phase=before-screencast id=1 connected=1 used=1 mode=1080x2280 top_left=(0,0)
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: xdisp topology phase=before-screencast id=2 connected=0 used=0 mode=none top_left=(0,0)
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: xdisp topology phase=before-screencast id=3 connected=0 used=0 mode=1280x720 top_left=(1080,0)
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: xdisp extend request size=1280x720 mode=extend socket=/run/mir_socket
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: xdisp extend region requested=(1080,0,1280,720)
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: available_mir_formats=1,2,6,7 available_mir_format_names=abgr8888,xbgr8888,rgb888,rgb565 requested_source_pixel_format=auto
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: xdisp topology phase=after-screencast id=1 connected=1 used=1 mode=1080x2280 top_left=(0,0)
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: xdisp topology phase=after-screencast id=2 connected=0 used=0 mode=none top_left=(0,0)
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: xdisp topology phase=after-screencast id=3 connected=0 used=0 mode=1280x720 top_left=(1080,0)
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: Stage B virtual/screencast source enabled 1280x720 requested_format=1 transport=xrgb8888
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: virtual frame source is CPU mapped 1280x720 mir_format=1 stride=5120 row_order=top-down transport=xrgb8888 conversion_path=channel-reorder
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: benchmark measured interval started after warmup_s=0
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: first CPU-complete virtual frame copied and converted
+Aug 20 11:16:07 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=1 frames_submitted=1 frames_in_flight=0 frames_presented=0 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=62042 benchmark_elapsed_ms=62 received_fps=16 submitted_fps=16 presented_fps=0 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=0 interval_received=0 interval_submitted=0 interval_presented=0 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=0 interval_submitted_fps=0 interval_presented_fps=0 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=1 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=1 acquire_us_min=4 acquire_us_avg=4 acquire_us_max=4 acquire_us_p50=10 acquire_us_p95=10 conversion_us_samples=1 conversion_us_min=52816 conversion_us_avg=52816 conversion_us_max=52816 conversion_us_p50=100000 conversion_us_p95=100000 release_us_samples=1 release_us_min=8695 release_us_avg=8695 release_us_max=8695 release_us_p50=10000 release_us_p95=10000 capture_cycle_us_samples=1 capture_cycle_us_min=61516 capture_cycle_us_avg=61516 capture_cycle_us_max=61516 capture_cycle_us_p50=100000 capture_cycle_us_p95=100000 submit_us_samples=0 submit_us_min=0 submit_us_avg=0 submit_us_max=0 submit_us_p50=0 submit_us_p95=0 self_fds=17
+Aug 20 11:16:07 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43189606 ACTIVE
+Aug 20 11:16:07 ubuntu-phablet xdispd[20755]: xdispd: connecting -> active: first frame presented
+Aug 20 11:16:08 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=32 frames_submitted=32 frames_in_flight=0 frames_presented=31 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=1029996 benchmark_elapsed_ms=1029 received_fps=31 submitted_fps=31 presented_fps=30 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=967953 interval_received=31 interval_submitted=31 interval_presented=31 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=32 interval_submitted_fps=32 interval_presented_fps=32 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=32 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=32 acquire_us_min=4 acquire_us_avg=319 acquire_us_max=503 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=32 conversion_us_min=22049 conversion_us_avg=28559 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=100000 release_us_samples=32 release_us_min=1527 release_us_avg=3184 release_us_max=10924 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=32 capture_cycle_us_min=23981 capture_cycle_us_avg=32065 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=100000 submit_us_samples=31 submit_us_min=4403 submit_us_avg=7259 submit_us_max=26174 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 11:16:09 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=66 frames_submitted=66 frames_in_flight=0 frames_presented=65 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=2011593 benchmark_elapsed_ms=2011 received_fps=32 submitted_fps=32 presented_fps=32 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=981596 interval_received=34 interval_submitted=34 interval_presented=34 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=34 interval_submitted_fps=34 interval_presented_fps=34 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=66 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=66 acquire_us_min=4 acquire_us_avg=325 acquire_us_max=503 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=66 conversion_us_min=22012 conversion_us_avg=27336 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=100000 release_us_samples=66 release_us_min=1527 release_us_avg=2708 release_us_max=10924 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=66 capture_cycle_us_min=23981 capture_cycle_us_avg=30371 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=100000 submit_us_samples=65 submit_us_min=4232 submit_us_avg=6527 submit_us_max=26174 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 11:16:10 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=104 frames_submitted=104 frames_in_flight=0 frames_presented=103 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=3002143 benchmark_elapsed_ms=3002 received_fps=34 submitted_fps=34 presented_fps=34 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=990550 interval_received=38 interval_submitted=38 interval_presented=38 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=38 interval_submitted_fps=38 interval_presented_fps=38 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=104 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=104 acquire_us_min=4 acquire_us_avg=319 acquire_us_max=503 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=104 conversion_us_min=22006 conversion_us_avg=25468 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=100000 release_us_samples=104 release_us_min=1527 release_us_avg=2982 release_us_max=10924 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=104 capture_cycle_us_min=23981 capture_cycle_us_avg=28772 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=100000 submit_us_samples=103 submit_us_min=4232 submit_us_avg=6363 submit_us_max=26174 submit_us_p50=10000 submit_us_p95=20000 self_fds=17
+Aug 20 11:16:11 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=141 frames_submitted=141 frames_in_flight=0 frames_presented=140 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=4020954 benchmark_elapsed_ms=4020 received_fps=35 submitted_fps=35 presented_fps=34 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1018810 interval_received=37 interval_submitted=37 interval_presented=37 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=36 interval_submitted_fps=36 interval_presented_fps=36 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=141 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=141 acquire_us_min=4 acquire_us_avg=323 acquire_us_max=503 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=141 conversion_us_min=22006 conversion_us_avg=24698 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=100000 release_us_samples=141 release_us_min=1527 release_us_avg=3401 release_us_max=11982 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=141 capture_cycle_us_min=23981 capture_cycle_us_avg=28424 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=100000 submit_us_samples=140 submit_us_min=4232 submit_us_avg=6248 submit_us_max=26174 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:12 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=177 frames_submitted=177 frames_in_flight=0 frames_presented=176 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=5011061 benchmark_elapsed_ms=5011 received_fps=35 submitted_fps=35 presented_fps=35 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=990106 interval_received=36 interval_submitted=36 interval_presented=36 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=36 interval_submitted_fps=36 interval_presented_fps=36 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=177 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=177 acquire_us_min=4 acquire_us_avg=324 acquire_us_max=543 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=177 conversion_us_min=22006 conversion_us_avg=24213 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=100000 release_us_samples=177 release_us_min=1527 release_us_avg=3679 release_us_max=11982 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=177 capture_cycle_us_min=23981 capture_cycle_us_avg=28219 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=100000 submit_us_samples=176 submit_us_min=4232 submit_us_avg=6207 submit_us_max=26174 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:13 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=213 frames_submitted=213 frames_in_flight=0 frames_presented=212 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=6002772 benchmark_elapsed_ms=6002 received_fps=35 submitted_fps=35 presented_fps=35 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=991711 interval_received=36 interval_submitted=36 interval_presented=36 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=36 interval_submitted_fps=36 interval_presented_fps=36 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=213 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=213 acquire_us_min=4 acquire_us_avg=324 acquire_us_max=543 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=213 conversion_us_min=22006 conversion_us_avg=23883 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=213 release_us_min=1527 release_us_avg=3882 release_us_max=11982 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=213 capture_cycle_us_min=23981 capture_cycle_us_avg=28090 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=212 submit_us_min=4232 submit_us_avg=6328 submit_us_max=28520 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:14 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=250 frames_submitted=250 frames_in_flight=0 frames_presented=249 frames_dropped=0 frames_cancelled=0 drop_percent=0 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=7014975 benchmark_elapsed_ms=7014 received_fps=35 submitted_fps=35 presented_fps=35 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1012202 interval_received=37 interval_submitted=37 interval_presented=37 interval_dropped=0 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=36 interval_submitted_fps=36 interval_presented_fps=36 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=250 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=250 acquire_us_min=4 acquire_us_avg=323 acquire_us_max=543 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=250 conversion_us_min=22006 conversion_us_avg=23650 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=250 release_us_min=1527 release_us_avg=3994 release_us_max=11982 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=250 capture_cycle_us_min=23981 capture_cycle_us_avg=27969 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=249 submit_us_min=4009 submit_us_avg=6311 submit_us_max=28520 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:15 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=286 frames_submitted=286 frames_in_flight=1 frames_presented=279 frames_dropped=5 frames_cancelled=0 drop_percent=1.74825 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=7999343 benchmark_elapsed_ms=7999 received_fps=35 submitted_fps=35 presented_fps=34 dropped_fps=0 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=984368 interval_received=36 interval_submitted=36 interval_presented=30 interval_dropped=5 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=36 interval_submitted_fps=36 interval_presented_fps=30 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=286 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=286 acquire_us_min=4 acquire_us_avg=322 acquire_us_max=543 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=286 conversion_us_min=22006 conversion_us_avg=23488 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=286 release_us_min=1527 release_us_avg=4067 release_us_max=11982 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=286 capture_cycle_us_min=23981 capture_cycle_us_avg=27880 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=279 submit_us_min=4009 submit_us_avg=6292 submit_us_max=28520 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:16 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=322 frames_submitted=322 frames_in_flight=1 frames_presented=279 frames_dropped=41 frames_cancelled=0 drop_percent=12.7329 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=9010170 benchmark_elapsed_ms=9010 received_fps=35 submitted_fps=35 presented_fps=30 dropped_fps=4 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1010826 interval_received=36 interval_submitted=36 interval_presented=0 interval_dropped=36 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=35 interval_submitted_fps=35 interval_presented_fps=0 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=322 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=322 acquire_us_min=4 acquire_us_avg=323 acquire_us_max=637 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=322 conversion_us_min=21989 conversion_us_avg=23365 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=322 release_us_min=1527 release_us_avg=4204 release_us_max=11982 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=322 capture_cycle_us_min=23981 capture_cycle_us_avg=27894 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=279 submit_us_min=4009 submit_us_avg=6292 submit_us_max=28520 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:17 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=357 frames_submitted=357 frames_in_flight=1 frames_presented=279 frames_dropped=76 frames_cancelled=0 drop_percent=21.2885 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=10022418 benchmark_elapsed_ms=10022 received_fps=35 submitted_fps=35 presented_fps=27 dropped_fps=7 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1012247 interval_received=35 interval_submitted=35 interval_presented=0 interval_dropped=35 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=34 interval_submitted_fps=34 interval_presented_fps=0 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=357 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=357 acquire_us_min=4 acquire_us_avg=325 acquire_us_max=833 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=357 conversion_us_min=21989 conversion_us_avg=23289 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=357 release_us_min=1527 release_us_avg=4371 release_us_max=11982 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=357 capture_cycle_us_min=23981 capture_cycle_us_avg=27987 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=279 submit_us_min=4009 submit_us_avg=6292 submit_us_max=28520 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:18 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=391 frames_submitted=391 frames_in_flight=1 frames_presented=279 frames_dropped=110 frames_cancelled=0 drop_percent=28.133 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=11009829 benchmark_elapsed_ms=11009 received_fps=35 submitted_fps=35 presented_fps=25 dropped_fps=9 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=987410 interval_received=34 interval_submitted=34 interval_presented=0 interval_dropped=34 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=34 interval_submitted_fps=34 interval_presented_fps=0 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=391 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=391 acquire_us_min=4 acquire_us_avg=326 acquire_us_max=833 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=391 conversion_us_min=21989 conversion_us_avg=23225 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=391 release_us_min=1527 release_us_avg=4519 release_us_max=11982 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=391 capture_cycle_us_min=23981 capture_cycle_us_avg=28071 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=279 submit_us_min=4009 submit_us_avg=6292 submit_us_max=28520 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:19 ubuntu-phablet xdispd[21125]: mirgud: report_kind=periodic final=false frames_received=426 frames_submitted=426 frames_in_flight=1 frames_presented=279 frames_dropped=145 frames_cancelled=0 drop_percent=34.0376 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=12025809 benchmark_elapsed_ms=12025 received_fps=35 submitted_fps=35 presented_fps=23 dropped_fps=12 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1015979 interval_received=35 interval_submitted=35 interval_presented=0 interval_dropped=35 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=34 interval_submitted_fps=34 interval_presented_fps=0 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=426 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=426 acquire_us_min=4 acquire_us_avg=328 acquire_us_max=833 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=426 conversion_us_min=21989 conversion_us_avg=23170 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=426 release_us_min=1527 release_us_avg=4642 release_us_max=11982 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=426 capture_cycle_us_min=23981 capture_cycle_us_avg=28143 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=279 submit_us_min=4009 submit_us_avg=6292 submit_us_max=28520 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:20 ubuntu-phablet xdispd[21125]: mirgud: V0.1 update 280 failed errno=110 (Connection timed out)
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202421 CAPTURE_LOOP_EXIT
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202421 PRESENTER_STOP_BEGIN
+Aug 20 11:16:20 ubuntu-phablet xdispd[21125]: mirgud: report_kind=final final=true frames_received=456 frames_submitted=455 frames_in_flight=0 frames_presented=279 frames_dropped=174 frames_cancelled=1 drop_percent=38.2418 cancellation_percent=0.21978 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=1 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=true benchmark_elapsed_us=12885535 benchmark_elapsed_ms=12885 received_fps=35 submitted_fps=35 presented_fps=21 dropped_fps=13 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=859725 interval_received=30 interval_submitted=29 interval_presented=0 interval_dropped=29 interval_cancelled=1 interval_submit_failures=1 interval_received_fps=34 interval_submitted_fps=33 interval_presented_fps=0 transport_format=xrgb8888 transport_bpp=4 source_mir_format=1 conversion_path_current=channel-reorder conversion_path_direct_copy_frames=0 conversion_path_channel_reorder_frames=456 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=456 acquire_us_min=4 acquire_us_avg=329 acquire_us_max=833 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=456 conversion_us_min=21989 conversion_us_avg=23126 conversion_us_max=53085 conversion_us_p50=50000 conversion_us_p95=50000 release_us_samples=456 release_us_min=1527 release_us_avg=4708 release_us_max=12999 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=456 capture_cycle_us_min=23981 capture_cycle_us_avg=28166 capture_cycle_us_max=61516 capture_cycle_us_p50=50000 capture_cycle_us_p95=50000 submit_us_samples=280 submit_us_min=4009 submit_us_avg=24223 submit_us_max=5027053 submit_us_p50=10000 submit_us_p95=10000 self_fds=17
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202421 PRESENTER_STOP_COMPLETE
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202422 SCREENCAST_RELEASE_BEGIN
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202433 SCREENCAST_RELEASE_COMPLETE
+Aug 20 11:16:20 ubuntu-phablet xdispd[20755]: xdispd: child milestone: XDISP1 43202433 MIR_CONNECTION_RELEASE_BEGIN
+Aug 20 11:16:37 ubuntu-phablet xdispd[20755]: xdispd: active -> disconnecting: deactivated
+Aug 20 11:16:37 ubuntu-phablet xdispd[20755]: xdispd: teardown stop requested
+Aug 20 11:16:41 ubuntu-phablet xdispd[20755]: xdispd: teardown deadline reached; sending SIGKILL
+Aug 20 11:16:46 ubuntu-phablet xdispd[20755]: xdispd: child exit forced-sigkill:signal:9 stop_duration_ms=8671
+Aug 20 11:16:46 ubuntu-phablet xdispd[20755]: xdispd: disconnecting -> available: forced-sigkill:signal:9
+Aug 20 12:14:49 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 12:14:49 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 12:14:49 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 12:14:49 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 12:14:49 ubuntu-phablet xdispd[23621]: xdispd: unavailable -> available: GUD sink available
+Aug 20 12:14:49 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 12:15:16 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 12:15:16 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 12:15:16 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 12:15:22 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 12:15:22 ubuntu-phablet xdispd[23760]: xdispd: unavailable -> available: GUD sink available
+Aug 20 12:15:22 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 12:32:32 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 12:32:32 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 12:32:32 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 12:32:32 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 12:32:32 ubuntu-phablet xdispd[24275]: xdispd: unavailable -> available: GUD sink available
+Aug 20 12:32:32 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 12:32:45 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 12:32:45 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 12:32:45 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 12:32:45 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 12:32:46 ubuntu-phablet xdispd[24370]: xdispd: unavailable -> available: GUD sink available
+Aug 20 12:32:46 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 12:33:12 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 12:33:12 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 12:33:12 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 12:33:12 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 12:33:13 ubuntu-phablet xdispd[24499]: xdispd: unavailable -> available: GUD sink available
+Aug 20 12:33:13 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 12:34:04 ubuntu-phablet xdispd[24499]: xdispd: available -> connecting: activation requested
+Aug 20 12:34:04 ubuntu-phablet xdispd[24595]: mirgud: GUD enabled at 1280x720 xrgb8888
+Aug 20 12:34:04 ubuntu-phablet xdispd[24595]: mirgud: V0.1 initial modeset begin
+Aug 20 12:34:04 ubuntu-phablet xdispd[24595]: mirgud: kms card_fd=3 drm_master=1 connector=25 crtc=27 plane=26 mode_blob=30 mode=1280x720 1280x720 vrefresh=60 fb=31 fb_format=xrgb8888 fb_width=1280 fb_height=720 fb_pitch=5120 fb_size=3686400 modeset=1
+Aug 20 12:34:04 ubuntu-phablet xdispd[24499]: xdispd: child milestone: XDISP1 47866201 MODESET_BEGIN
+Aug 20 12:34:04 ubuntu-phablet xdispd[24595]: mirgud: atomic request flags=ALLOW_MODESET connector.CRTC_ID(17)=27 crtc.MODE_ID(19)=30 crtc.ACTIVE(18)=1 plane.FB_ID(14)=31 plane.CRTC_ID(17)=27 plane.SRC_X(6)=0 plane.SRC_Y(7)=0 plane.SRC_W(8)=83886080 plane.SRC_H(9)=47185920 plane.CRTC_X(10)=0 plane.CRTC_Y(11)=0 plane.CRTC_W(12)=1280 plane.CRTC_H(13)=720
+Aug 20 12:34:09 ubuntu-phablet xdispd[24595]: mirgud: V0.1 initial modeset failed errno=110 (Connection timed out)
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: child milestone: XDISP1 47871411 KMS_TEARDOWN_BEGIN
+Aug 20 12:34:09 ubuntu-phablet xdispd[24595]: mirgud: GUD atomic commit failed: Connection timed out
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: child milestone: XDISP1 47871420 KMS_TEARDOWN_COMPLETE
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: child milestone: XDISP1 47871421 FATAL P
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: connecting -> poisoned_transport: mirgud reported an unsafe GUD transport failure
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: teardown stop requested
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: child exit poisoned-transport-failure:exit:22 stop_duration_ms=1

@@ -1,0 +1,49 @@
+phone_boot_id=182b1ef9-4f3f-4d6f-88ac-cc8870141338
+
+fae478a57dbb1f2976c283f0d7202f083c64d71b6616f495812c6d006ecedf44  /usr/libexec/lomiri-xdisp/xdispd
+752c2d505d66992ad01468f8126b9902b5f540b2eae7d34edfc052a260598762  /usr/libexec/lomiri-xdisp/mirgud
+ExecStart={ path=/usr/libexec/lomiri-xdisp/xdispd ; argv[]=/usr/libexec/lomiri-xdisp/xdispd ; ignore_errors=no ; start_time=[Thu 2026-08-20 12:33:12 -05] ; stop_time=[n/a] ; pid=24499 ; code=(null) ; status=0/0 }
+s "available"
+b true
+u 25
+2358 /usr/sbin/lightdm
+2370 lomiri-system-compositor --enable-num-framebuffers-quirk=true --disable-overlays=false --console-provider=vt --spinner=/usr/bin/lomiri-system-compositor-spinner --file /run/mir_socket --from-dm-fd 11 --to-dm-fd 14 --vt 1
+2499 lightdm --session-child 11 16
+24499 /usr/libexec/lomiri-xdisp/xdispd
+24553 bash -c printf "phone_boot_id="; cat /proc/sys/kernel/random/boot_id; printf "\n"; sha256sum /usr/libexec/lomiri-xdisp/xdispd /usr/libexec/lomiri-xdisp/mirgud; systemctl show xdisp.service --property=ExecStart --no-pager; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 State; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 Enabled; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 ConnectorId; pgrep -af "lightdm|lomiri-system-compositor|xdispd|mirgud" || true; ls -l /dev/dri; for card in /sys/class/drm/card*/device/uevent; do echo "--- $card"; cat "$card" 2>/dev/null || true; done
+total 0
+drwxr-xr-x  2 root root        180 Aug 19 23:26 by-path
+crw-rw----+ 1 root video  226,   0 Aug 19 23:16 card0
+crw-rw----+ 1 root video  226,   1 Aug 19 23:26 card1
+crw-rw----  1 root video  226,  64 Jun  5 10:36 controlD64
+crw-rw----  1 root video  226,  65 Aug 19 23:26 controlD65
+crw-rw----+ 1 root render 226, 128 Jun  5 10:36 renderD128
+--- /sys/class/drm/card0/device/uevent
+DRIVER=msm_drm
+OF_NAME=qcom,mdss_mdp
+OF_FULLNAME=/soc/qcom,mdss_mdp@ae00000
+OF_COMPATIBLE_0=qcom,sde-kms
+OF_COMPATIBLE_N=1
+MODALIAS=of:Nqcom,mdss_mdpT<NULL>Cqcom,sde-kms
+--- /sys/class/drm/card0-DSI-1/device/uevent
+MAJOR=226
+MINOR=0
+DEVNAME=dri/card0
+DEVTYPE=drm_minor
+--- /sys/class/drm/card0-Virtual-1/device/uevent
+MAJOR=226
+MINOR=0
+DEVNAME=dri/card0
+DEVTYPE=drm_minor
+--- /sys/class/drm/card1/device/uevent
+DEVTYPE=usb_interface
+DRIVER=gud_xdisp_lz4_12800
+PRODUCT=1d50/614d/0
+TYPE=0/0/0
+INTERFACE=255/255/0
+MODALIAS=usb:v1D50p614Dd0000dc00dsc00dp00icFFiscFFip00in00
+--- /sys/class/drm/card1-Virtual-2/device/uevent
+MAJOR=226
+MINOR=1
+DEVNAME=dri/card1
+DEVTYPE=drm_minor

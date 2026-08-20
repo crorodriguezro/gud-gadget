@@ -1,0 +1,3 @@
+[sudo] password for phablet: 30f95070703b625d235d5b1d02062cd40b63714a0ffc69cb6715aad54bd825d5  /home/phablet/gud-kms-stage
+stage=caps complete
+drmModeAtomicCommit(commit): Connection timed out

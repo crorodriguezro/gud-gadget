@@ -1,0 +1,26 @@
+start=2026-08-20T12:39:59-05:00
+==properties==
+State=s "available"
+Enabled=b true
+ActivationRequested=b false
+GudDevice=s "/dev/dri/card1"
+GudIdentity=s "/sys/devices/platform/soc/a600000.ssusb/a600000.dwc3/xhci-hcd.0.auto/usb1/1-1/1-1.2/1-1.2:1.0/drm/card1"
+ConnectorId=u 25
+ChildPid=u 0
+LastError=s ""
+LastChildExit=s "forced-sigkill:signal:9"
+LastStopForced=b true
+ForcedStopCount=t 1
+LastStopDurationMs=t 3254
+==processes==
+2358 /usr/sbin/lightdm
+2370 lomiri-system-compositor --enable-num-framebuffers-quirk=true --disable-overlays=false --console-provider=vt --spinner=/usr/bin/lomiri-system-compositor-spinner --file /run/mir_socket --from-dm-fd 11 --to-dm-fd 14 --vt 1
+2499 lightdm --session-child 11 16
+24499 /usr/libexec/lomiri-xdisp/xdispd
+25179 bash -c start=$(date --iso-8601=seconds); echo "start=$start"; busctl --system call org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 Deactivate; sleep 8; echo ==properties==; for property in State Enabled ActivationRequested GudDevice GudIdentity ConnectorId ChildPid LastError LastChildExit LastStopForced ForcedStopCount LastStopDurationMs; do printf "%s=" "$property"; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 "$property"; done; echo ==processes==; pgrep -af "lightdm|lomiri-system-compositor|xdispd|mirgud" || true; echo ==journal==; journalctl -u xdisp.service --since "$start" --no-pager
+==journal==
+Aug 20 12:39:59 ubuntu-phablet xdispd[24499]: xdispd: active -> disconnecting: deactivated
+Aug 20 12:39:59 ubuntu-phablet xdispd[24499]: xdispd: teardown stop requested
+Aug 20 12:40:03 ubuntu-phablet xdispd[24499]: xdispd: teardown deadline reached; sending SIGKILL
+Aug 20 12:40:03 ubuntu-phablet xdispd[24499]: xdispd: child exit forced-sigkill:signal:9 stop_duration_ms=3254
+Aug 20 12:40:03 ubuntu-phablet xdispd[24499]: xdispd: disconnecting -> available: forced-sigkill:signal:9

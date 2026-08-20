@@ -1,0 +1,35 @@
+start=2026-08-20T12:34:04-05:00
+==properties==
+State=s "poisoned_transport"
+Enabled=b false
+ActivationRequested=b false
+GudDevice=s "/dev/dri/card1"
+GudIdentity=s "/sys/devices/platform/soc/a600000.ssusb/a600000.dwc3/xhci-hcd.0.auto/usb1/1-1/1-1.2/1-1.2:1.0/drm/card1"
+ConnectorId=u 25
+ChildPid=u 0
+LastError=s "mirgud reported an unsafe GUD transport failure"
+LastChildExit=s "poisoned-transport-failure:exit:22"
+LastStopForced=b false
+ForcedStopCount=t 0
+LastStopDurationMs=t 1
+==processes==
+2358 /usr/sbin/lightdm
+2370 lomiri-system-compositor --enable-num-framebuffers-quirk=true --disable-overlays=false --console-provider=vt --spinner=/usr/bin/lomiri-system-compositor-spinner --file /run/mir_socket --from-dm-fd 11 --to-dm-fd 14 --vt 1
+2499 lightdm --session-child 11 16
+24499 /usr/libexec/lomiri-xdisp/xdispd
+24591 bash -c start=$(date --iso-8601=seconds); echo "start=$start"; busctl --system call org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 Enable; busctl --system call org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 Activate; sleep 12; echo ==properties==; for property in State Enabled ActivationRequested GudDevice GudIdentity ConnectorId ChildPid LastError LastChildExit LastStopForced ForcedStopCount LastStopDurationMs; do printf "%s=" "$property"; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 "$property"; done; echo ==processes==; pgrep -af "lightdm|lomiri-system-compositor|xdispd|mirgud" || true; echo ==journal==; journalctl -u xdisp.service --since "$start" --no-pager
+==journal==
+Aug 20 12:34:04 ubuntu-phablet xdispd[24499]: xdispd: available -> connecting: activation requested
+Aug 20 12:34:04 ubuntu-phablet xdispd[24595]: mirgud: GUD enabled at 1280x720 xrgb8888
+Aug 20 12:34:04 ubuntu-phablet xdispd[24595]: mirgud: V0.1 initial modeset begin
+Aug 20 12:34:04 ubuntu-phablet xdispd[24595]: mirgud: kms card_fd=3 drm_master=1 connector=25 crtc=27 plane=26 mode_blob=30 mode=1280x720 1280x720 vrefresh=60 fb=31 fb_format=xrgb8888 fb_width=1280 fb_height=720 fb_pitch=5120 fb_size=3686400 modeset=1
+Aug 20 12:34:04 ubuntu-phablet xdispd[24499]: xdispd: child milestone: XDISP1 47866201 MODESET_BEGIN
+Aug 20 12:34:04 ubuntu-phablet xdispd[24595]: mirgud: atomic request flags=ALLOW_MODESET connector.CRTC_ID(17)=27 crtc.MODE_ID(19)=30 crtc.ACTIVE(18)=1 plane.FB_ID(14)=31 plane.CRTC_ID(17)=27 plane.SRC_X(6)=0 plane.SRC_Y(7)=0 plane.SRC_W(8)=83886080 plane.SRC_H(9)=47185920 plane.CRTC_X(10)=0 plane.CRTC_Y(11)=0 plane.CRTC_W(12)=1280 plane.CRTC_H(13)=720
+Aug 20 12:34:09 ubuntu-phablet xdispd[24595]: mirgud: V0.1 initial modeset failed errno=110 (Connection timed out)
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: child milestone: XDISP1 47871411 KMS_TEARDOWN_BEGIN
+Aug 20 12:34:09 ubuntu-phablet xdispd[24595]: mirgud: GUD atomic commit failed: Connection timed out
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: child milestone: XDISP1 47871420 KMS_TEARDOWN_COMPLETE
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: child milestone: XDISP1 47871421 FATAL P
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: connecting -> poisoned_transport: mirgud reported an unsafe GUD transport failure
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: teardown stop requested
+Aug 20 12:34:09 ubuntu-phablet xdispd[24499]: xdispd: child exit poisoned-transport-failure:exit:22 stop_duration_ms=1

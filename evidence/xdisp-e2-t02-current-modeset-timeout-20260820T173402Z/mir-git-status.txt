@@ -1,0 +1,8 @@
+## pixel-format-benchmark...github/pixel-format-benchmark
+ M src/utils/gud_screencast.cpp
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/invalid/
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/preliminary/
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/raw/
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/sessions/
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/source-format-preflight/
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/validation/
