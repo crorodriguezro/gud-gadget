@@ -1,0 +1,27 @@
+boot_id=182b1ef9-4f3f-4d6f-88ac-cc8870141338
+kernel=4.9.112-g6b190d86b
+
+2358 /usr/sbin/lightdm
+2370 lomiri-system-compositor --enable-num-framebuffers-quirk=true --disable-overlays=false --console-provider=vt --spinner=/usr/bin/lomiri-system-compositor-spinner --file /run/mir_socket --from-dm-fd 11 --to-dm-fd 14 --vt 1
+2499 lightdm --session-child 11 16
+16070 bash -c printf '%s\n' 1026 | sudo -S bash -lc 'exec 3<>/dev/dri/card1; exec 4>/tmp/mirgud-status-xrgb8888.log; timeout 12s /usr/libexec/lomiri-xdisp/mirgud --managed --gud-fd 3 --gud-connector 25 --status-fd 4 --source-mode extend --mir-socket-file /run/mir_socket --size 1280 720 --pixel-format xrgb8888'
+16072 sudo -S bash -lc exec 3<>/dev/dri/card1; exec 4>/tmp/mirgud-status-xrgb8888.log; timeout 12s /usr/libexec/lomiri-xdisp/mirgud --managed --gud-fd 3 --gud-connector 25 --status-fd 4 --source-mode extend --mir-socket-file /run/mir_socket --size 1280 720 --pixel-format xrgb8888
+16079 timeout 12s /usr/libexec/lomiri-xdisp/mirgud --managed --gud-fd 3 --gud-connector 25 --status-fd 4 --source-mode extend --mir-socket-file /run/mir_socket --size 1280 720 --pixel-format xrgb8888
+16085 /usr/libexec/lomiri-xdisp/mirgud --managed --gud-fd 3 --gud-connector 25 --status-fd 4 --source-mode extend --mir-socket-file /run/mir_socket --size 1280 720 --pixel-format xrgb8888
+17159 /usr/libexec/lomiri-xdisp/xdispd
+17217 bash -c printf "boot_id="; cat /proc/sys/kernel/random/boot_id; printf "kernel="; uname -r; printf "\n"; pgrep -af "lomiri-system-compositor|lightdm|xdispd|mirgud" || true; echo ---; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 State; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 Enabled; busctl --system get-property org.lomiri.XDisp /org/lomiri/XDisp org.lomiri.XDisp1 ActivationRequested; echo ---; ls -l /dev/dri; echo ---; sha256sum /usr/libexec/lomiri-xdisp/xdispd /usr/libexec/lomiri-xdisp/mirgud
+---
+s "available"
+b true
+b false
+---
+total 0
+drwxr-xr-x  2 root root        180 Aug 19 23:26 by-path
+crw-rw----+ 1 root video  226,   0 Aug 19 23:16 card0
+crw-rw----+ 1 root video  226,   1 Aug 19 23:26 card1
+crw-rw----  1 root video  226,  64 Jun  5 10:36 controlD64
+crw-rw----  1 root video  226,  65 Aug 19 23:26 controlD65
+crw-rw----+ 1 root render 226, 128 Jun  5 10:36 renderD128
+---
+9eb1e125d9ee3093735d9b70406b3c49749c0775beae1d5edaa16e17cf53a15e  /usr/libexec/lomiri-xdisp/xdispd
+359689ea4b59519a3a7031bf6044e299696ab9b8e26484a4b017c7f61690dc1a  /usr/libexec/lomiri-xdisp/mirgud

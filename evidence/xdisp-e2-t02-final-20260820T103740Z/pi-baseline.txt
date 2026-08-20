@@ -1,0 +1,44 @@
+boot_id=2a7d1be3-ed3f-4580-af09-521f858f0324
+kernel=6.12.47+rpt-rpi-v8-ffs-xfercompltrace
+
+active
+---
+3894 /home/cristian/gud-drm /dev/dri/card0
+4562 bash -c printf "%s\n" 1026 | sudo -S bash -lc "printf boot_id=; cat /proc/sys/kernel/random/boot_id; printf kernel=; uname -r; echo; systemctl is-active gud-userspace.service; echo ---; pgrep -af gud || true; echo ---; cat /sys/class/udc/3f980000.usb/state 2>/dev/null || true; echo ---; test -r /sys/kernel/config/usb_gadget/usb-gadget0/UDC && cat /sys/kernel/config/usb_gadget/usb-gadget0/UDC || true; echo ---; ls /etc/systemd/system/gud-userspace.service.d 2>/dev/null || true; echo ---; systemctl status gud-userspace.service --no-pager -l --lines=12"
+4564 sudo -S bash -lc printf boot_id=; cat /proc/sys/kernel/random/boot_id; printf kernel=; uname -r; echo; systemctl is-active gud-userspace.service; echo ---; pgrep -af gud || true; echo ---; cat /sys/class/udc/3f980000.usb/state 2>/dev/null || true; echo ---; test -r /sys/kernel/config/usb_gadget/usb-gadget0/UDC && cat /sys/kernel/config/usb_gadget/usb-gadget0/UDC || true; echo ---; ls /etc/systemd/system/gud-userspace.service.d 2>/dev/null || true; echo ---; systemctl status gud-userspace.service --no-pager -l --lines=12
+4566 bash -lc printf boot_id=; cat /proc/sys/kernel/random/boot_id; printf kernel=; uname -r; echo; systemctl is-active gud-userspace.service; echo ---; pgrep -af gud || true; echo ---; cat /sys/class/udc/3f980000.usb/state 2>/dev/null || true; echo ---; test -r /sys/kernel/config/usb_gadget/usb-gadget0/UDC && cat /sys/kernel/config/usb_gadget/usb-gadget0/UDC || true; echo ---; ls /etc/systemd/system/gud-userspace.service.d 2>/dev/null || true; echo ---; systemctl status gud-userspace.service --no-pager -l --lines=12
+---
+configured
+---
+3f980000.usb
+---
+10-xdisp-p0.1-containment.conf
+20-xdisp-p0.1-ffs-read-size.conf
+60-xdisp-p2.1-laptop-max-12800.conf.disabled
+98-e1-t04-production-aio.conf
+---
+● gud-userspace.service - Userspace GUD gadget
+     Loaded: loaded (/etc/systemd/system/gud-userspace.service; enabled; preset: enabled)
+    Drop-In: /etc/systemd/system/gud-userspace.service.d
+             └─10-xdisp-p0.1-containment.conf, 20-xdisp-p0.1-ffs-read-size.conf, 98-e1-t04-production-aio.conf
+     Active: active (running) since Thu 2026-08-20 05:22:00 BST; 11h ago
+ Invocation: a3327a4ef34c40b8ab90e8131516191d
+    Process: 3891 ExecStartPre=/bin/sh -c while [ ! -e /dev/dri/card0 ] || [ ! -e /sys/class/udc/3f980000.usb/state ]; do sleep 1; done (code=exited, status=0/SUCCESS)
+   Main PID: 3894 (gud-drm)
+      Tasks: 3 (limit: 168)
+        CPU: 14.060s
+     CGroup: /system.slice/gud-userspace.service
+             └─3894 /home/cristian/gud-drm /dev/dri/card0
+
+Aug 20 16:41:02 raspberrypi gud-drm[3894]: 2026-08-20T15:41:02.166201Z DEBUG gud_gadget: STATUS_ON_SET outer receive guard returned to Idle after cleanup drain event="status_on_set_receive_guard_transition" transaction=0 transaction_limit=0 started_transactions=0 active=false
+Aug 20 16:41:02 raspberrypi gud-drm[3894]: 2026-08-20T15:41:02.166233Z  INFO gud_drm: cumulative production exact-AIO lifecycle telemetry event="production_receive_telemetry" set_buffer_seen=866 accepted_transactions=866 rejected_busy_transactions=0 aio_submission_attempts=866 aio_accepted=866 aio_completed=866 processing_started=866 processing_completed=866 processing_failed=0 poisoned_transactions=0 timed_out_transactions=0 lifecycle_events=4 cleanup_attempts=0 unsafe_teardown_suppressed=0 currently_owned=false aggregate_state=Idle aio_state=Idle current_or_last_sequence=866 last_sequence=866 validation_to_aio_accept_ms_total=0 aio_accept_to_status_readiness="logged per transaction by status_after_arm" receive_ms_total=198 processing_ms_total=0 complete_transaction_ms_total=0
+Aug 20 16:41:05 raspberrypi gud-drm[3894]: 2026-08-20T15:41:05.511767Z DEBUG gud_drm: Received event: SetupHostToDevice(CtrlReceiver { ctrl_req: CtrlReq { request_type: 65, request: 100, value: 0, index: 0, length: 1 } })
+Aug 20 16:41:05 raspberrypi gud-drm[3894]: 2026-08-20T15:41:05.511905Z DEBUG gud_gadget: received display enable: false
+Aug 20 16:41:05 raspberrypi gud-drm[3894]: 2026-08-20T15:41:05.512224Z DEBUG gud_drm: Received event: SetupDeviceToHost(CtrlSender { ctrl_req: CtrlReq { request_type: 193, request: 0, value: 0, index: 0, length: 1 } })
+Aug 20 16:41:05 raspberrypi gud-drm[3894]: 2026-08-20T15:41:05.512308Z DEBUG gud_gadget: sent GUD status event="status_reply" monotonic_ns=40745068920686 status=0
+Aug 20 16:41:05 raspberrypi gud-drm[3894]: 2026-08-20T15:41:05.512340Z DEBUG gud_drm: GUD event: StatusSent(0)
+Aug 20 16:41:05 raspberrypi gud-drm[3894]: 2026-08-20T15:41:05.512461Z DEBUG gud_drm: Received event: SetupHostToDevice(CtrlReceiver { ctrl_req: CtrlReq { request_type: 65, request: 99, value: 0, index: 0, length: 1 } })
+Aug 20 16:41:05 raspberrypi gud-drm[3894]: 2026-08-20T15:41:05.512533Z DEBUG gud_gadget: received controller enable: false
+Aug 20 16:41:05 raspberrypi gud-drm[3894]: 2026-08-20T15:41:05.512633Z DEBUG gud_drm: Received event: SetupDeviceToHost(CtrlSender { ctrl_req: CtrlReq { request_type: 193, request: 0, value: 0, index: 0, length: 1 } })
+Aug 20 16:41:05 raspberrypi gud-drm[3894]: 2026-08-20T15:41:05.512697Z DEBUG gud_gadget: sent GUD status event="status_reply" monotonic_ns=40745069311153 status=0
+Aug 20 16:41:05 raspberrypi gud-drm[3894]: 2026-08-20T15:41:05.512723Z DEBUG gud_drm: GUD event: StatusSent(0)

@@ -1,0 +1,67 @@
+before state:
+s "available"
+b true
+b false
+enable/activate:
+()
+()
+()
+during run:
+s "recoverable_error"
+u 0
+s "recoverable-source-failure:exit:21"
+processes:
+17159 /usr/libexec/lomiri-xdisp/xdispd
+journal tail:
+Aug 19 23:23:08 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 23:23:08 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 19 23:24:31 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 23:24:31 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 19 23:24:31 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 19 23:24:31 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 23:24:31 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 19 23:25:54 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 23:25:54 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 19 23:25:54 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 19 23:25:54 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 23:25:54 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: disabled -> available: enabled
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: available -> connecting: activation requested
+Aug 19 23:26:44 ubuntu-phablet xdispd[5881]: mirgud: GUD enabled at 1280x720 rgb565
+Aug 19 23:26:44 ubuntu-phablet xdispd[5881]: mirgud: V0.1 initial modeset begin
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: child milestone: XDISP1 626799 MODESET_BEGIN
+Aug 19 23:26:44 ubuntu-phablet xdispd[5881]: mirgud: V0.1 initial modeset failed errno=22 (Invalid argument)
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: child milestone: XDISP1 626803 KMS_TEARDOWN_BEGIN
+Aug 19 23:26:44 ubuntu-phablet xdispd[5881]: mirgud: GUD atomic commit failed: Invalid argument
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: child milestone: XDISP1 626805 KMS_TEARDOWN_COMPLETE
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: child milestone: XDISP1 626805 FATAL R
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: child exit recoverable-source-failure:exit:21 stop_duration_ms=0
+Aug 19 23:26:44 ubuntu-phablet xdispd[5565]: xdispd: connecting -> recoverable_error: recoverable-source-failure:exit:21
+Aug 20 10:37:11 ubuntu-phablet xdispd[5565]: xdispd: recoverable_error -> available: deactivated
+Aug 20 10:37:11 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:37:11 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 20 10:37:11 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:37:11 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 20 10:37:11 ubuntu-phablet xdispd[17159]: xdispd: unavailable -> available: GUD sink available
+Aug 20 10:37:11 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: available -> disabled: disabled
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: disabled -> available: enabled
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: available -> connecting: activation requested
+Aug 20 10:38:29 ubuntu-phablet xdispd[17419]: mirgud: GUD enabled at 1280x720 rgb565
+Aug 20 10:38:29 ubuntu-phablet xdispd[17419]: mirgud: V0.1 initial modeset begin
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: child milestone: XDISP1 40931353 MODESET_BEGIN
+Aug 20 10:38:29 ubuntu-phablet xdispd[17419]: mirgud: V0.1 initial modeset failed errno=22 (Invalid argument)
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: child milestone: XDISP1 40931358 KMS_TEARDOWN_BEGIN
+Aug 20 10:38:29 ubuntu-phablet xdispd[17419]: mirgud: GUD atomic commit failed: Invalid argument
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: child milestone: XDISP1 40931360 KMS_TEARDOWN_COMPLETE
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: child milestone: XDISP1 40931360 FATAL R
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: child exit recoverable-source-failure:exit:21 stop_duration_ms=0
+Aug 20 10:38:29 ubuntu-phablet xdispd[17159]: xdispd: connecting -> recoverable_error: recoverable-source-failure:exit:21
+deactivate:
+()
+after deactivate:
+s "available"
+b false
+u 0
+final processes:
+17159 /usr/libexec/lomiri-xdisp/xdispd
