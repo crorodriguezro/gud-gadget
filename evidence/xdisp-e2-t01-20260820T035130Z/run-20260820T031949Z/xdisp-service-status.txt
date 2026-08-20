@@ -1,0 +1,10 @@
+● xdisp.service - Lomiri GUD external display lifecycle
+     Loaded: loaded (/usr/lib/systemd/system/xdisp.service; enabled; preset: enabled)
+     Active: active (running) since Wed 2026-08-19 22:15:19 -05; 4min 14s ago
+    Process: 56702 ExecStartPre=/usr/bin/install -d -m 0700 /home/phablet/.local/share/lomiri-xdisp (code=exited, status=0/SUCCESS)
+   Main PID: 56703 (xdispd)
+     CGroup: /system.slice/xdisp.service
+             └─56703 /usr/libexec/lomiri-xdisp/xdispd
+
+Aug 19 22:15:18 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 19 22:15:19 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.

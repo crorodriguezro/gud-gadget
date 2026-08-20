@@ -1,0 +1,1 @@
+E2-T01 blocker: xdispd/mirgud not installed on phone and docker daemon unavailable, so staged artifacts cannot be built in this environment.

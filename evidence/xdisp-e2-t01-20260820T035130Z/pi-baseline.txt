@@ -1,0 +1,35 @@
+Thu 20 Aug 02:52:22 UTC 2026
+2a7d1be3-ed3f-4580-af09-521f858f0324
+Linux raspberrypi 6.12.47+rpt-rpi-v8-ffs-xfercompltrace #2 SMP PREEMPT Sun Aug 16 23:57:59 -05 2026 aarch64 GNU/Linux
+● gud-userspace.service - Userspace GUD gadget
+     Loaded: loaded (/etc/systemd/system/gud-userspace.service; enabled; preset: enabled)
+    Drop-In: /etc/systemd/system/gud-userspace.service.d
+             └─10-xdisp-p0.1-containment.conf, 20-xdisp-p0.1-ffs-read-size.conf, 60-pixel-format-xrgb8888.conf, 70-xdisp-benchmark-dump-policy.conf, 70-xdisp-benchmark.conf, 80-functionfs-probe.conf, 95-functionfs-status-on-set-once.conf, 96-functionfs-status-on-set-two-transactions.conf, 98-e1-t04-production-aio.conf, 99-e1-t06-pattern-mode.conf, debug.conf
+     Active: active (running) since Thu 2026-08-20 02:26:52 BST; 1h 25min ago
+ Invocation: 58649236326c4a749bb3533e7061c1e8
+    Process: 3189 ExecStartPre=/bin/sh -c while [ ! -e /dev/dri/card0 ] || [ ! -e /sys/class/udc/3f980000.usb/state ]; do sleep 1; done (code=exited, status=0/SUCCESS)
+   Main PID: 3191 (gud-drm)
+      Tasks: 3 (limit: 168)
+        CPU: 1.796s
+     CGroup: /system.slice/gud-userspace.service
+             └─3191 /home/cristian/gud-drm /dev/dri/card0
+
+Aug 20 02:26:52 raspberrypi gud-drm[3191]: 2026-08-20T01:26:52.947612Z DEBUG usb_gadget::gadget: gadget at /sys/kernel/config/usb_gadget/usb-gadget0 registered
+Aug 20 02:26:52 raspberrypi gud-drm[3191]: 2026-08-20T01:26:52.947644Z DEBUG usb_gadget::gadget: binding gadget RegGadget { name: "usb-gadget0", is_attached: true } to Some(Udc { name: "3f980000.usb" })
+Aug 20 02:26:52 raspberrypi gud-drm[3191]: 2026-08-20T01:26:52.951306Z  INFO gud_drm: USB gadget bound to UDC
+Aug 20 02:26:52 raspberrypi gud-drm[3191]: 2026-08-20T01:26:52.951365Z  INFO gud_drm: Entering main event loop
+Aug 20 02:26:52 raspberrypi gud-drm[3191]: 2026-08-20T01:26:52.951459Z DEBUG gud_drm: Received event: Bind
+Aug 20 02:26:52 raspberrypi gud-drm[3191]: 2026-08-20T01:26:52.951487Z DEBUG gud_gadget: FunctionFS lifecycle transition event="functionfs_lifecycle" lifecycle_event="bind" lifecycle_generation=1 monotonic_ns=365
+Aug 20 02:26:52 raspberrypi gud-drm[3191]: 2026-08-20T01:26:52.951523Z DEBUG gud_gadget: Bind event received
+Aug 20 02:26:52 raspberrypi gud-drm[3191]: 2026-08-20T01:26:52.951540Z DEBUG gud_drm: GUD event: ProtocolStateInvalidated { generation: None, reason: Bind }
+Aug 20 02:26:52 raspberrypi gud-drm[3191]: 2026-08-20T01:26:52.951578Z  INFO gud_drm: E1-T05 lifecycle event observed from proven Idle ownership event="e1_t05_lifecycle_observed" lifecycle_event="bind" lifecycle_event_state=Idle usb_session_state=WaitingForHost aggregate_idle=true exact_aio_idle=true accepted_operation_absent=true aio_queue_empty=true pending_exact_receive_absent=true ready_exact_payload_absent=true cleanup_drain_absent=true diagnostic_guard_inactive=true diagnostic_lifecycle_containment=false prearmed_read_inactive=true aggregate_state=Idle aio_state=Idle transaction_seq=0 activation_generation=None currently_owned=false
+Aug 20 02:26:52 raspberrypi gud-drm[3191]: 2026-08-20T01:26:52.952553Z DEBUG gud_drm: Protocol state invalidated generation=None reason=Bind had_host_session=false
+MainPID=3191
+NRestarts=0
+ExecMainCode=0
+ExecMainStatus=0
+ActiveState=active
+SubState=running
+   3191       1 gud-drm         /home/cristian/gud-drm /dev/dri/card0
+   3430    3423 grep            grep -E gud-drm|gud-userspace|xdisp|mirgud
+2ac10f2458bec2608d86c38c274de95edc38c14abdb4bf0943bc8ef2115e1687  /home/cristian/gud-drm

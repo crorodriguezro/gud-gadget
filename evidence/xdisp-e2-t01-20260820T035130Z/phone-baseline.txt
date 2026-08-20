@@ -1,0 +1,33 @@
+Thu Aug 20 02:52:00 AM UTC 2026
+84ff5637-f72c-49c0-9206-f1af3688bdd2
+Linux ubuntu-phablet 4.9.112-g6b190d86b #1 SMP PREEMPT Thu Mar 12 00:01:48 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
+MainPID=0
+NRestarts=0
+ExecMainCode=0
+ExecMainStatus=0
+ActiveState=inactive
+SubState=dead
+   1556       1 lomiri-location lomiri-location-serviced --bus system --provider gps::Provider --provider remote::Provider
+   2276       1 lightdm         /usr/sbin/lightdm
+   2306    2276 lomiri-system-c lomiri-system-compositor --enable-num-framebuffers-quirk=true --disable-overlays=false --console-provider=vt --spinner=/usr/bin/lomiri-system-compositor-spinner --file /run/mir_socket --from-dm-fd 11 --to-dm-fd 14 --vt 1
+   2482    2276 lightdm         lightdm --session-child 11 16
+   3430    2513 trust-stored-sk trust-stored-skeleton --remote-agent UnixDomainSocketRemoteAgent --endpoint=/dev/socket/camera_service/camera_service_to_trust --local-agent MirAgent --trusted-mir-socket=/run/user/32011/mir_socket_trusted --for-service CameraService --with-text-domain CameraService --store-bus session --disable-whitelisting=yes
+   3434    2513 lomiri-indicato /usr/libexec/lomiri-indicator-location/lomiri-indicator-location-service
+   3442    2513 lomiri-indicato /usr/libexec/lomiri-indicator-network/lomiri-indicator-network-secret-agent
+   3460    2513 lomiri-indicato /usr/lib/aarch64-linux-gnu/lomiri-indicator-transfer/lomiri-indicator-transfer-service
+   3474    2513 lomiri-telephon /usr/bin/lomiri-telephony-service-approver
+   3494    2513 trust-stored-sk trust-stored-skeleton --remote-agent DBusRemoteAgent --bus=session --local-agent MirAgent --trusted-mir-socket=/run/user/32011/mir_socket_trusted --for-service PulseAudio --with-text-domain PulseAudio --store-bus session --disable-whitelisting=yes
+   3574    2513 lomiri-telephon /usr/bin/lomiri-telephony-service-handler
+   3576    2513 lomiri-history- /usr/libexec/lomiri-history-daemon
+   3579    2513 lomiri-telephon /usr/bin/lomiri-telephony-service-handler
+   3598    2513 trust-stored-sk /usr/bin/trust-stored-skeleton --remote-agent DBusRemoteAgent --bus=system --local-agent MirAgent --trusted-mir-socket=/run/user/32011/mir_socket_trusted --for-service LomiriLocationService --with-text-domain lomiri-location-service --store-bus session
+   3600    2513 lomiri-sync-mon /usr/libexec/lomiri-sync-monitor/lomiri-sync-monitor
+   3627    2513 lomiri          lomiri --mode=full-greeter
+   3743    2513 lomiri-indicato /usr/bin/lomiri-indicator-telephony-service
+   3818    2513 thumbnailer-ser /usr/libexec/lomiri-thumbnailer/thumbnailer-service
+   3873    2513 lomiri-content- /usr/bin/lomiri-content-hub-service
+   3923    2513 lomiri-indicato /usr/libexec/lomiri-indicator-network/lomiri-indicator-network-service
+   3925    2513 lomiri-push-ser /usr/lib/lomiri-push-service/lomiri-push-service
+   3927    2513 lomiri-url-disp /usr/lib/aarch64-linux-gnu/lomiri-url-dispatcher/lomiri-url-dispatcher
+   4024    2513 policykit-agent /usr/lib/aarch64-linux-gnu/lomiri-polkit-agent/lomiri-polkit-agent/policykit-agent
+  56018   56011 grep            grep -E xdispd|mirgud|lightdm|lomiri|mir|dbus-org.lomiri.XDisp

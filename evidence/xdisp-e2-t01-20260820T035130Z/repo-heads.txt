@@ -1,0 +1,3 @@
+gud HEAD: b02ca0cb50aaaa4040a4b07e2b9a731ce003f00c
+gud-gadget HEAD: ab1c7b33899bef2aca1ed5e1a80a897fbe53d4b4
+mir-android2-platform-gud HEAD: 1823c332ba9250d7a7a1860f50dc15373b1eca70

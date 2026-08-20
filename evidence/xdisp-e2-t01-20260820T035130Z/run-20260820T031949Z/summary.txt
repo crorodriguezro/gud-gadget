@@ -1,0 +1,1 @@
+E2-T01 staging and source-only probes completed. xdisp.service remained active; mirout reported Output 3: Virtual disconnected after stopping the probe.
