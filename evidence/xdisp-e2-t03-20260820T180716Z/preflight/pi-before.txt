@@ -1,0 +1,7 @@
+target=cristian@192.168.1.110
+gud_userspace_service=active
+udc_state=configured
+receiver_safety_result=BLOCKED
+last_safe_marker=2026-08-20T17:39:50.038731Z STATUS_ON_SET outer receive guard returned to Idle after cleanup drain
+poisoned_marker=2026-08-20T17:39:50.066598Z exact FunctionFS AIO transaction poisoned; preserving accepted request
+receiver_state_marker=2026-08-20T17:39:50.066634Z FunctionFS bulk receive session entered Poisoned after an error

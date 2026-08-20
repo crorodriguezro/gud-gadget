@@ -1,0 +1,3 @@
+mir-android2-platform-gud 58d62cebb93a7335c38f7233b1522fce51bc7801
+gud 6c23bc9dbe70ae95d2ebda2b2d5199de0a68167a
+gud-gadget 63a2c9f495f760de6509939237cde82c48efec37

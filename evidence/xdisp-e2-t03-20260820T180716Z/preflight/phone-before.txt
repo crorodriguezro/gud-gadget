@@ -1,0 +1,10 @@
+target=phablet@192.168.1.120
+phone_boot_id=182b1ef9-4f3f-4d6f-88ac-cc8870141338
+usb_role=host
+gud_usb=FOUND: /sys/bus/usb/devices/1-1.2
+drm_nodes=/dev/dri/card0,/dev/dri/card1
+xdisp_state=available
+lightdm_pid=2358
+lomiri_system_compositor_pid=2370
+xdispd_pid=24499
+mirgud_pid=absent

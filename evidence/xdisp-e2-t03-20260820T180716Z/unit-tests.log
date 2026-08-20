@@ -1,0 +1,8 @@
+Build command:
+  XDISP_P02_BUILD_DIR=/tmp/mir-android2-platform-gud-e2t03-build XDISP_P02_BUILD_JOBS=1 ./tools/xdisp-p0.2-build.sh
+
+Result:
+  GudPresentationWorker.*:GudHwcBoundary.*: 6 tests passed.
+  mir_unit_tests_xdisp: 50 tests from 10 suites passed.
+  MirgudPresenter.records_enqueue_latency_separately_from_slow_presentation: passed.
+  MirgudPresenter.records_failed_presentation_attempts: passed.
