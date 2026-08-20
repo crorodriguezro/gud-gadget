@@ -1,0 +1,4 @@
+monitor powered=not separately recorded
+HDMI connector=sysfs connected and enabled
+physical displayed content=black screen
+physical local deterministic pattern=not attempted; DRM master was not released

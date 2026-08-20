@@ -1,0 +1,13 @@
+Pi boot_id=5592cfdb-dc36-48b5-87fa-2532c8b4448d
+Kernel=6.12.47+rpt-rpi-v8-ffs-xfercompltrace
+DRM driver=vc4
+DRM card=/dev/dri/card0
+HDMI connector=id 33, HDMI-A-1, connected, enabled
+HDMI EDID=256 bytes; physical size 480x270 mm
+Available modes include 1920x1080 and 1280x720
+Current connector mode=1280x720@60
+Current CRTC=id 95, fb 671, position 0,0, size 1280x720
+Current plane=id 84, crtc 95, fb 671
+Primary scanout format support includes XR24 (XRGB8888) and linear modifier
+Monitor operator observation=black screen
+DRM master before local test=gud-drm PID 591

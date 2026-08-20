@@ -1,0 +1,19 @@
+Stage 1 direct modetest pattern was NOT run.
+
+Safe precondition:
+  The phone no longer enumerated the GUD USB device.
+  Pi logs showed the last accepted FunctionFS transaction returned to Idle.
+
+Attempted safe ownership release:
+  sudo systemctl stop gud-userspace.service
+
+Result:
+  systemd stop-sigterm timed out.
+  systemd final-sigterm timed out.
+  SendSIGKILL=no caused systemd to skip SIGKILL.
+  gud-userspace.service became failed with Result=timeout.
+  gud-drm PID 591 remained alive and retained VC4 DRM master.
+
+No direct local DRM/KMS modeset is valid while gud-drm owns DRM master. No
+unsafe process kill, service restart, FunctionFS unbind, or software teardown
+was attempted.

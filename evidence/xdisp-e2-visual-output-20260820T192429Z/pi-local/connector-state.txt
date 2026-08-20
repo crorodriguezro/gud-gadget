@@ -1,0 +1,6 @@
+card0-HDMI-A-1 status=connected
+card0-HDMI-A-1 enabled=enabled
+HDMI DPMS=On
+HDMI link-status=Good
+HDMI Broadcast RGB=Automatic
+Monitor reported content=black screen
