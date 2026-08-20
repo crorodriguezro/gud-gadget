@@ -1,0 +1,13 @@
+No T03-safe controlled slow-GUD injection was available.
+
+The active Pi production service has no delay-injection environment variable or
+option. The only located test hook,
+GUD_TEST_E1_T05_PROCESSING_BARRIER, is debug-build-only and deliberately
+injects a one-shot Poisoned lifecycle failure while Processing owns a payload.
+It is an E1-T05 containment mechanism, not a delay facility, and must not be
+repurposed for T03.
+
+The healthy run observed worker present duration up to 3143113 us while
+enqueue_us_p95 was 10 us and enqueue_us_max was 177 us. This demonstrates
+decoupling under an observed worker stall but does not satisfy the required
+controlled slow-case method.

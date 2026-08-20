@@ -1,0 +1,25 @@
+Activation:
+  MODESET_COMPLETE -> first frame -> ACTIVE
+
+Final telemetry:
+  frames_received=4544
+  frames_submitted=4544
+  frames_presented=4393
+  frames_dropped=151
+  gud_submit_failures=0
+  max_pending_observed=1
+  max_in_flight_observed=1
+  enqueue_us_p50=10
+  enqueue_us_p95=10
+  enqueue_us_max=177
+  submit_us_p50=20000
+  submit_us_p95=20000
+  submit_us_max=3144313
+  accounting_ok=true
+
+The user reported the phone currently responsive during the active interval but
+did not observe the complete requested healthy interaction sequence.
+
+Deactivate used bounded xdispd SIGKILL containment after 3666 ms. Presenter and
+KMS teardown milestones completed first; the remaining Mir release wait is
+deferred to E2-T05.

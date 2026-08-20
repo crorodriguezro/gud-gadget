@@ -1,0 +1,12 @@
+Setup:
+  The Pi USB data connection remained physically detached following the
+  controlled failing case.
+
+Observed:
+  xdisp State=unavailable
+  GudDevice=""
+  ChildPid=0
+  Activate while unavailable returned without starting mirgud
+  no xdisp journal child loop occurred
+  phone boot ID, LightDM, Lomiri compositor, and xdispd remained unchanged
+  user reported phone touch and normal UI interactions remained responsive

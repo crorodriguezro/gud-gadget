@@ -1,0 +1,20 @@
+Injection:
+  User physically removed the Pi USB data connection while managed presentation
+  was ACTIVE from a clean receiver state.
+
+Observed:
+  xdisp active -> unavailable
+  phone GUD VID/PID absent
+  ChildPid=0
+  LastStopForced=true
+  ForcedStopCount=2
+  LastStopDurationMs=3131
+  phone boot_id unchanged: 182b1ef9-4f3f-4d6f-88ac-cc8870141338
+  LightDM PID remained 2358
+  lomiri-system-compositor PID remained 2370
+  xdispd remained alive
+  user reported no material phone freeze or compositor/LightDM restart
+
+The Pi service was not stopped, restarted, unbound, or otherwise torn down
+after the physical failure. Its last collected FunctionFS transaction completed
+and returned to Idle without a Poisoned marker.
