@@ -1,0 +1,14 @@
+metric,samples,p50,p95,max,unit,notes
+logical_admissions_per_source_frame,365,2,2,2,count,730 host payload timings grouped by frame_seq
+managed_received_fps,1,37,37,37,fps,phone final report
+managed_submitted_fps,1,37,37,37,fps,phone final report
+managed_presented_fps,1,9,9,9,fps,phone final report
+e2e_source_ready_to_worker_end,181,123.465,135.245,146.372,ms,deduplicated frame_seq timing
+worker_present,181,109.808,115.105,122.857,ms,deduplicated worker_end present_ns
+Pi_logical_payloads_completed,1,364,364,364,count,frame_stats records in the managed window
+Pi_recv_per_payload,364,50,52,56,ms,Pi frame_stats
+Pi_processing_total_per_payload,364,2,2,2,ms,copy+scale+flush total
+host_set_buffer_admission_per_frame,365,10376,12809,18399,us,sum of payloads in frame_seq
+host_bulk_wait_per_frame,365,90759,91866,111354,us,sum of payloads in frame_seq
+host_logical_total_per_frame,365,102977,106865,118846,us,sum of payloads in frame_seq
+effective_raw_usb_rate,364,36.864,36.864,37.616,MB/s,decimal bytes divided by Pi recv_ms

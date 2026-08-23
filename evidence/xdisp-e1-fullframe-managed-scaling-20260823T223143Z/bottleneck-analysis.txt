@@ -1,0 +1,19 @@
+The dominant bottleneck at the largest safe payload is RAW USB bulk transfer.
+At 3,686,400 bytes, the matched managed run measured 100.589 ms p50 logical
+host total and 91.058 ms p50 bulk wait; Pi measured 100 ms p50 receive and
+4 ms p50 processing. The source-ready-to-worker-end E2E proxy was 119.826 ms
+p50, 133.736 ms p95, 160.031 ms max.
+
+The wire rate was 36.864 MB/s p50 decimal (about 35.16 MiB/s on Pi telemetry),
+which is consistent across the half and full payloads. One full frame therefore
+consumes about 100 ms of transport time, making 20 fps impossible for this RAW
+path without reducing bytes or changing the transport boundary. FunctionFS
+chunk scheduling is not independently exposed, but 225 internal chunks were
+completed inside the exact logical transfer with no failures; no evidence shows
+chunk scheduling dominating the measured wire interval.
+
+Point of diminishing returns: reducing admissions from two to one did not raise
+presented FPS (both managed runs were 9 fps), because the USB byte rate, not
+the remaining admission count, controls the frame interval. The next diagnostic
+is TEST LARGE-FRAME LZ4 with the same one-admission geometry, not an admission
+redesign in this task.

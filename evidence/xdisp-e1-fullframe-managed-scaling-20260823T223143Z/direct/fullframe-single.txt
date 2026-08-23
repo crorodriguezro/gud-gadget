@@ -1,0 +1,10 @@
+Result: PASS
+Payload: one logical 3,686,400-byte XRGB8888 framebuffer, 1280x720
+Host: bulk result=0, actual=3686400, elapsed_us=91977
+Pi logical completion: transfer_bytes=3686400, output_bytes=3686400,
+read_size=3686400, read_calls=1
+Internal FunctionFS chunks: 225 x 16,384 bytes (exact arithmetic from the
+logical length and configured chunk size)
+Final receiver state: aggregate_state=Idle aio_state=Idle currently_owned=false
+Raw evidence: fullframe-single/phone-stdout.log,
+fullframe-single/phone-stderr.log, fullframe-single/phone-kernel-full.log

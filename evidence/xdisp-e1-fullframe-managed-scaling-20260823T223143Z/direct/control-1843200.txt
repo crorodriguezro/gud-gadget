@@ -1,0 +1,9 @@
+Result: PASS
+Payload: 1,843,200 bytes, XRGB8888, 1280x360
+Host: exact bulk completion, actual=1843200, result=0, no timeout
+Pi: one logical transaction; final processing completed; no short completion,
+timeout, poisoned transaction, or ambiguous accepted I/O
+Internal FunctionFS chunks: 1,843,200 / 16,384 = 112 (derived exactly)
+Final receiver state: aggregate_state=Idle aio_state=Idle currently_owned=false
+Raw evidence: control-1843200/phone-stdout.log,
+control-1843200/phone-stderr.log, control-1843200/phone-kernel-full.log

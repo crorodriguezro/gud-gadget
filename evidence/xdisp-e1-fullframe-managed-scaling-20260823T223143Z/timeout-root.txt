@@ -1,0 +1,4 @@
+GET_STATUS 5-second stall: not reproduced.
+Managed half and full runs completed without timeout, short logical completion,
+Poisoned transition, or ambiguous accepted I/O. The forced xdispd teardown was
+the existing lifecycle stop deadline, not a GUD GET_STATUS stall.

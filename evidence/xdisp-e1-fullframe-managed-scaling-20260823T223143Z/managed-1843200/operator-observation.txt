@@ -1,0 +1,9 @@
+Matched descriptor and host planner: 1,843,200 bytes.
+Managed telemetry proved two rectangles per source frame: 1280x360+0,0 and
+1280x360+0,360, each with one exact 1,843,200-byte read.
+The final phone report had accounting_ok=true, zero submit/capture/conversion/
+release/lifecycle failures, and one clean cancellation during teardown.
+The xdispd child teardown reached the existing 3-second forced-SIGKILL path;
+this did not produce Pi ownership ambiguity and the receiver remained Idle.
+The old half-frame run made with a mismatched host cap is retained separately
+in xdisp-journal.log and is not included in these metrics.

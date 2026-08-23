@@ -1,0 +1,5 @@
+payload_bytes,rows_per_payload,logical_admissions_per_frame,managed_presented_fps,host_or_managed_evidence,notes
+12800,2,360,0.92,historical qualified baseline,host transfer p50 about 864 ms and E2E p50 about 940 ms
+163840,32,about 23,about 6.56,prior direct/managed qualification,historical rung
+1843200,360,2,9,matched managed run,received/submitted 37 fps; USB about 36.5 MB/s
+3686400,720,1,9,matched managed run,received/submitted 36 fps; USB about 36.5 MB/s

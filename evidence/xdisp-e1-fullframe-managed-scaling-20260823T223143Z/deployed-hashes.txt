@@ -1,0 +1,4 @@
+Pi usb_f_fs.ko.xz: 5f1ddde8a24515d90bf348b05e8a6c55ab4bf7edca10c47c4fd70af9f51dbbd5
+Pi libcomposite.ko.xz: 092420bf815a1b64d1e95f0310e056efc6b26dd17cc460a933eefc7e249fae09
+Phone staged /tmp/gud.ko used for final restored cap: 439fad16551e2a66c922abad6791dd3e38f8fbe202b5aa0ca12e4147b10a1ad7
+Local FunctionFS source f_fs.c: 9d9d0dc7dcc05206123c9ad9acaf32fb78356fdf206bdf2d0faf101d954c7cad

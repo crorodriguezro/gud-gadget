@@ -1,0 +1,11 @@
+Phone: kernel 4.9.112-g6b190d86b; Pi enumerated as 1d50:614d; staged GUD
+diagnostic module reloaded with xdisp_payload_limit=12800 after testing.
+Pi: kernel 6.12.47+rpt-rpi-v8-ffs-xfercompltrace; production override restored
+with GUD_TEST_MAX_BUFFER_SIZE=12800, GUD_TEST_COMPRESSION=none,
+GUD_RECEIVE_MODE=status-on-set-aio, GUD_FFS_READ_SIZE=16384,
+GUD_TRANSFER_FORMAT=xrgb8888, GUD_TEST_OUTPUT_MODE=1280x720.
+Pi service: active; UDC: configured; aggregate_state=Idle; aio_state=Idle;
+currently_owned=false; poisoned_transactions=0; timed_out_transactions=0.
+xdisp.service: active/available after managed child deactivation; no managed
+child left running.
+E2-T04: paused.

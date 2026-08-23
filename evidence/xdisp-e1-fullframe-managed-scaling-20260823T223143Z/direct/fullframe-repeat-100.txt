@@ -1,0 +1,9 @@
+Result: PASS, 100/100 exact logical transfers
+Payload per transfer: 3,686,400 bytes
+Total logical bytes: 368,640,000
+Host actual bytes: 3,686,400 for each successful transfer
+Short completions: 0; timeouts: 0; poisoned transitions: 0;
+ambiguous accepted I/O: 0
+Final receiver state: aggregate_state=Idle aio_state=Idle currently_owned=false
+Raw evidence: fullframe-repeat-100/phone-stdout.log,
+fullframe-repeat-100/phone-stderr.log, fullframe-repeat-100/phone-kernel-full.log

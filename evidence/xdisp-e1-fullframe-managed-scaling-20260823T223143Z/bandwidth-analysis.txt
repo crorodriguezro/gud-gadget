@@ -1,0 +1,12 @@
+RAW XRGB8888 full frame: 3,686,400 bytes.
+Measured effective payload rate from Pi recv_ms: 36.864 MB/s p50, 37.236 MB/s
+p95, 37.236 MB/s max for the full-frame run. Pi's corresponding USB telemetry
+was 35.16 MiB/s p50 and 35.51 MiB/s p95.
+
+At that rate, ideal wire-only frame cadence is approximately 9.99 fps. The
+managed presenter achieved 9 presented fps, with 36 submitted fps and frequent
+replacement drops. Pi processing was only 4 ms p50 per full payload, so it is
+not the limiting boundary.
+
+No LZ4 diagnostic run was performed: RAW characterization is now complete and
+does show USB bandwidth dominance; LZ4 is deferred to the next scoped task.

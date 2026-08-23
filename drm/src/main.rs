@@ -2164,6 +2164,33 @@ fn parse_test_dynamic_mode_match(raw: Option<&OsStr>) -> anyhow::Result<bool> {
     Ok(true)
 }
 
+fn parse_test_row_crc_trace(raw: Option<&OsStr>) -> anyhow::Result<bool> {
+    let Some(raw) = raw else {
+        return Ok(false);
+    };
+    let raw = raw
+        .to_str()
+        .context("GUD_TEST_ROW_CRC_TRACE must be valid UTF-8")?;
+    ensure!(
+        raw == "1",
+        "invalid GUD_TEST_ROW_CRC_TRACE={raw:?}; expected exactly \"1\""
+    );
+    Ok(true)
+}
+
+fn row_crc32(bytes: &[u8]) -> u32 {
+    let mut crc = !0_u32;
+
+    for byte in bytes {
+        crc ^= u32::from(*byte);
+        for _ in 0..8 {
+            crc = (crc >> 1) ^ (0xedb8_8320 & 0_u32.wrapping_sub(crc & 1));
+        }
+    }
+
+    !crc
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct TestOutputMode {
     width: u16,
@@ -2716,6 +2743,7 @@ fn main() -> anyhow::Result<()> {
         .flatten();
     let pattern_mode = PatternMode::from_env();
     let transfer_format = TransferFormat::from_env()?;
+    let row_crc_trace = parse_test_row_crc_trace(var_os("GUD_TEST_ROW_CRC_TRACE").as_deref())?;
     info!(?frame_dump_mode, "Frame dump policy");
     if frame_dump_mode.permits_startup_dump() {
         if let Some(path) = dump_path.as_deref() {
@@ -2734,6 +2762,7 @@ fn main() -> anyhow::Result<()> {
         info!("Framebuffer dump paths ignored by disabled dump policy");
     }
     info!("Pattern mode: {:?}", pattern_mode);
+    info!(row_crc_trace, "Per-row CRC trace");
     info!(
         transfer_format = transfer_format.name(),
         gud_format = format_args!("{:#04x}", transfer_format.gud_pixel_format()),
@@ -3160,6 +3189,7 @@ fn main() -> anyhow::Result<()> {
     let mut ready_exact_payload: Option<(gud_gadget::SetBuffer, gud_gadget::PayloadStats)> = None;
     let mut status_on_set_cleanup_drain: Option<StatusOnSetCleanupDrain> = None;
     let mut receive_telemetry = ReceiveTelemetry::default();
+    let mut row_immediate_crcs: Vec<Option<u32>> = Vec::new();
     let unbind_target: Arc<dyn GadgetUnbind> = reg.clone();
     match gadget_shutdown.publish(&unbind_target) {
         Ok(GadgetUnbindOutcome::Armed) => {}
@@ -4577,6 +4607,70 @@ fn main() -> anyhow::Result<()> {
                             }
                         };
 
+                        if row_crc_trace
+                            && !scaled_mode
+                            && matches!(pattern_mode, PatternMode::Off | PatternMode::Startup)
+                        {
+                            let bpp = transfer_format.bytes_per_pixel();
+                            let row_bytes = info.width as usize * bpp;
+                            if info.x == 0 && info.y == 0 && info.width == source_width {
+                                row_immediate_crcs = vec![None; source_height as usize];
+                            }
+                            {
+                                let framebuffer = active.front_buffer_mut();
+                                for row_offset in 0..info.height as usize {
+                                    let row = info.y as usize + row_offset;
+                                    let payload_start = row_offset * row_bytes;
+                                    let payload_end = payload_start + row_bytes;
+                                    let framebuffer_start =
+                                        row * physical_pitch as usize + info.x as usize * bpp;
+                                    let framebuffer_end = framebuffer_start + row_bytes;
+                                    let logical_crc =
+                                        row_crc32(&payload[payload_start..payload_end]);
+                                    let immediate_crc =
+                                        row_crc32(&framebuffer[framebuffer_start..framebuffer_end]);
+
+                                    if row < row_immediate_crcs.len() {
+                                        row_immediate_crcs[row] = Some(immediate_crc);
+                                    }
+                                    tracing::info!(
+                                        event = "row_crc_immediate",
+                                        row,
+                                        pi_logical_rx_crc =
+                                            format_args!("{logical_crc:08x}"),
+                                        pi_fb_immediate_crc =
+                                            format_args!("{immediate_crc:08x}"),
+                                        "captured logical receive and immediate framebuffer row CRC"
+                                    );
+                                }
+                            }
+
+                            if info.x == 0
+                                && info.width == source_width
+                                && info.y + info.height == source_height
+                            {
+                                let framebuffer = active.front_buffer_mut();
+                                for row in 0..source_height as usize {
+                                    let start = row * physical_pitch as usize;
+                                    let end = start + source_width as usize * bpp;
+                                    let final_crc = row_crc32(&framebuffer[start..end]);
+                                    let immediate_crc =
+                                        row_immediate_crcs.get(row).and_then(|crc| *crc);
+                                    tracing::info!(
+                                        event = "row_crc_final",
+                                        row,
+                                        pi_fb_immediate_crc = format_args!(
+                                            "{:08x}",
+                                            immediate_crc.unwrap_or_default()
+                                        ),
+                                        pi_fb_final_crc = format_args!("{final_crc:08x}"),
+                                        immediate_present = immediate_crc.is_some(),
+                                        "captured final framebuffer row CRC"
+                                    );
+                                }
+                            }
+                        }
+
                         let mut flush_ms = 0u128;
                         if framebuffer_changed {
                             let flush_start = std::time::Instant::now();
@@ -4966,12 +5060,12 @@ mod tests {
         dump_pixel_buffer_ppm, event_timeout_for_ready_payload, fill_diagnostic_pattern_rect,
         parse_e1_t05_inflight_deadline, parse_functionfs_read_size, parse_test_compression,
         parse_test_dynamic_mode_match, parse_test_max_buffer_size, parse_test_output_mode,
-        parse_test_prearm_once_bytes, parse_test_status_on_set_bytes,
+        parse_test_prearm_once_bytes, parse_test_row_crc_trace, parse_test_status_on_set_bytes,
         parse_test_status_on_set_two_transactions_bytes, read_pixel, record_host_activity,
-        render_waiting_screen, scale_to_fit, validate_test_mode_policy, waiting_scene_glyph,
-        write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown,
-        GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind, ProvenIdleGate,
-        ScaledLayout, ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity,
+        render_waiting_screen, row_crc32, scale_to_fit, validate_test_mode_policy,
+        waiting_scene_glyph, write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode,
+        GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind,
+        ProvenIdleGate, ScaledLayout, ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity,
         StatusOnSetCleanupDrain, StatusOnSetCleanupObservation, StatusOnSetCleanupPhase,
         TestOutputMode, TransferFormat, UsbLifecycleInput, UsbLifecycleResult, UsbSessionState,
         BULK_RECEIVE_DEADLINE, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN,
@@ -5330,6 +5424,14 @@ mod tests {
                 "unexpectedly accepted {value:?}"
             );
         }
+    }
+
+    #[test]
+    fn row_crc_trace_parser_and_crc_are_deterministic() {
+        assert!(!parse_test_row_crc_trace(None).unwrap());
+        assert!(parse_test_row_crc_trace(Some(OsStr::new("1"))).unwrap());
+        assert!(parse_test_row_crc_trace(Some(OsStr::new("0"))).is_err());
+        assert_eq!(row_crc32(b"123456789"), 0xcbf4_3926);
     }
 
     #[test]

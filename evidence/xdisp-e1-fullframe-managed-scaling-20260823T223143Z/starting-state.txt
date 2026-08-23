@@ -1,0 +1,10 @@
+Phone kernel: 4.9.112-g6b190d86b
+Pi kernel: 6.12.47+rpt-rpi-v8-ffs-xfercompltrace
+Pi before testing: gud-userspace.service active, UDC configured,
+aggregate_state=Idle, aio_state=Idle, currently_owned=false.
+Phone enumerated Pi as 1d50:614d and /dev/dri/card1 was present.
+FunctionFS fix under test: one logical AIO backed by vmalloc storage and
+sequential 16 KiB contiguous DMA chunks when DWC2 SG is unavailable.
+The existing Pi diagnostic override was changed only at proven Idle boundaries;
+the initial managed half attempt with a mismatched host cap is explicitly
+excluded from the reported metrics.

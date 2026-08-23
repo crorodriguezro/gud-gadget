@@ -1,0 +1,4 @@
+scope,logical_bytes,chunk_size,derived_internal_chunks,observed_logical_payloads,failed_chunks,measurement_note
+per payload,3686400,16384,225,187,0,exact division; one logical GUD payload
+per source frame,3686400,16384,225,187,0,one admission per frame
+FunctionFS chunk overhead,,,,,0,not separately timestamped; included in logical transfer timing

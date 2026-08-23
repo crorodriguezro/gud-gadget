@@ -1,0 +1,200 @@
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=1 payload_bytes=3686400 command_result=0 start_ns=1787524343349068662 end_ns=1787524343466879767
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=2 payload_bytes=3686400 command_result=0 start_ns=1787524343471952424 end_ns=1787524343608537802
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=3 payload_bytes=3686400 command_result=0 start_ns=1787524343613795459 end_ns=1787524343744790003
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=4 payload_bytes=3686400 command_result=0 start_ns=1787524343750023598 end_ns=1787524343882775434
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=5 payload_bytes=3686400 command_result=0 start_ns=1787524343887680955 end_ns=1787524344024901594
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=6 payload_bytes=3686400 command_result=0 start_ns=1787524344030845761 end_ns=1787524344173646973
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=7 payload_bytes=3686400 command_result=0 start_ns=1787524344179881661 end_ns=1787524344315663342
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=8 payload_bytes=3686400 command_result=0 start_ns=1787524344320809280 end_ns=1787524344467945180
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=9 payload_bytes=3686400 command_result=0 start_ns=1787524344473290805 end_ns=1787524344610099308
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=10 payload_bytes=3686400 command_result=0 start_ns=1787524344615561028 end_ns=1787524344754170677
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=11 payload_bytes=3686400 command_result=0 start_ns=1787524344759306146 end_ns=1787524344895939285
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=12 payload_bytes=3686400 command_result=0 start_ns=1787524344901297306 end_ns=1787524345044626279
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=13 payload_bytes=3686400 command_result=0 start_ns=1787524345050137634 end_ns=1787524345183920876
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=14 payload_bytes=3686400 command_result=0 start_ns=1787524345189187074 end_ns=1787524345323344171
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=15 payload_bytes=3686400 command_result=0 start_ns=1787524345328748911 end_ns=1787524345463434914
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=16 payload_bytes=3686400 command_result=0 start_ns=1787524345469108144 end_ns=1787524345614027742
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=17 payload_bytes=3686400 command_result=0 start_ns=1787524345619627794 end_ns=1787524345756689214
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=18 payload_bytes=3686400 command_result=0 start_ns=1787524345762746090 end_ns=1787524345898788187
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=19 payload_bytes=3686400 command_result=0 start_ns=1787524345903692510 end_ns=1787524346054889348
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=20 payload_bytes=3686400 command_result=0 start_ns=1787524346060345286 end_ns=1787524346197120717
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=21 payload_bytes=3686400 command_result=0 start_ns=1787524346202607748 end_ns=1787524346340040158
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=22 payload_bytes=3686400 command_result=0 start_ns=1787524346346064638 end_ns=1787524346481399599
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=23 payload_bytes=3686400 command_result=0 start_ns=1787524346486882933 end_ns=1787524346631616489
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=24 payload_bytes=3686400 command_result=0 start_ns=1787524346636914875 end_ns=1787524346786439994
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=25 payload_bytes=3686400 command_result=0 start_ns=1787524346792163640 end_ns=1787524346930348758
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=26 payload_bytes=3686400 command_result=0 start_ns=1787524346935799071 end_ns=1787524347078576742
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=27 payload_bytes=3686400 command_result=0 start_ns=1787524347084061742 end_ns=1787524347214210349
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=28 payload_bytes=3686400 command_result=0 start_ns=1787524347217048370 end_ns=1787524347357409738
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=29 payload_bytes=3686400 command_result=0 start_ns=1787524347363459166 end_ns=1787524347499608398
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=30 payload_bytes=3686400 command_result=0 start_ns=1787524347505299961 end_ns=1787524347640192631
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=31 payload_bytes=3686400 command_result=0 start_ns=1787524347645909871 end_ns=1787524347778665614
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=32 payload_bytes=3686400 command_result=0 start_ns=1787524347785016135 end_ns=1787524347916705836
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=33 payload_bytes=3686400 command_result=0 start_ns=1787524347922173440 end_ns=1787524348065702830
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=34 payload_bytes=3686400 command_result=0 start_ns=1787524348071315747 end_ns=1787524348220711231
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=35 payload_bytes=3686400 command_result=0 start_ns=1787524348225981700 end_ns=1787524348377056455
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=36 payload_bytes=3686400 command_result=0 start_ns=1787524348383099163 end_ns=1787524348519426625
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=37 payload_bytes=3686400 command_result=0 start_ns=1787524348524726157 end_ns=1787524348654219711
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=38 payload_bytes=3686400 command_result=0 start_ns=1787524348659558410 end_ns=1787524348801725143
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=39 payload_bytes=3686400 command_result=0 start_ns=1787524348806987747 end_ns=1787524348952154637
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=40 payload_bytes=3686400 command_result=0 start_ns=1787524348957547137 end_ns=1787524349105760277
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=41 payload_bytes=3686400 command_result=0 start_ns=1787524349110279496 end_ns=1787524349244019301
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=42 payload_bytes=3686400 command_result=0 start_ns=1787524349249679562 end_ns=1787524349384899628
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=43 payload_bytes=3686400 command_result=0 start_ns=1787524349390211712 end_ns=1787524349532745007
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=44 payload_bytes=3686400 command_result=0 start_ns=1787524349538226779 end_ns=1787524349672764969
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=45 payload_bytes=3686400 command_result=0 start_ns=1787524349678103407 end_ns=1787524349826285141
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=46 payload_bytes=3686400 command_result=0 start_ns=1787524349831935245 end_ns=1787524349968410571
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=47 payload_bytes=3686400 command_result=0 start_ns=1787524349973552864 end_ns=1787524350111796575
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=48 payload_bytes=3686400 command_result=0 start_ns=1787524350117593920 end_ns=1787524350266086851
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=49 payload_bytes=3686400 command_result=0 start_ns=1787524350271721591 end_ns=1787524350408437959
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=50 payload_bytes=3686400 command_result=0 start_ns=1787524350413552855 end_ns=1787524350540210680
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=51 payload_bytes=3686400 command_result=0 start_ns=1787524350543243024 end_ns=1787524350670921996
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=52 payload_bytes=3686400 command_result=0 start_ns=1787524350674182048 end_ns=1787524350800405758
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=53 payload_bytes=3686400 command_result=0 start_ns=1787524350805683259 end_ns=1787524350949310357
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=54 payload_bytes=3686400 command_result=0 start_ns=1787524350955049576 end_ns=1787524351089746100
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=55 payload_bytes=3686400 command_result=0 start_ns=1787524351094956517 end_ns=1787524351239502000
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=56 payload_bytes=3686400 command_result=0 start_ns=1787524351245146844 end_ns=1787524351383750764
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=57 payload_bytes=3686400 command_result=0 start_ns=1787524351390099567 end_ns=1787524351524697289
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=58 payload_bytes=3686400 command_result=0 start_ns=1787524351529737498 end_ns=1787524351673707148
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=59 payload_bytes=3686400 command_result=0 start_ns=1787524351679460638 end_ns=1787524351828007996
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=60 payload_bytes=3686400 command_result=0 start_ns=1787524351833268101 end_ns=1787524351975348688
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=61 payload_bytes=3686400 command_result=0 start_ns=1787524351980605251 end_ns=1787524352116325369
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=62 payload_bytes=3686400 command_result=0 start_ns=1787524352122415838 end_ns=1787524352268002675
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=63 payload_bytes=3686400 command_result=0 start_ns=1787524352272988041 end_ns=1787524352408984200
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=64 payload_bytes=3686400 command_result=0 start_ns=1787524352414095138 end_ns=1787524352549204422
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=65 payload_bytes=3686400 command_result=0 start_ns=1787524352554730881 end_ns=1787524352688719072
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=66 payload_bytes=3686400 command_result=0 start_ns=1787524352694000166 end_ns=1787524352828137835
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=67 payload_bytes=3686400 command_result=0 start_ns=1787524352833291742 end_ns=1787524352976407798
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=68 payload_bytes=3686400 command_result=0 start_ns=1787524352982044986 end_ns=1787524353126898178
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=69 payload_bytes=3686400 command_result=0 start_ns=1787524353132414584 end_ns=1787524353281493037
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=70 payload_bytes=3686400 command_result=0 start_ns=1787524353286552204 end_ns=1787524353417503467
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=71 payload_bytes=3686400 command_result=0 start_ns=1787524353423098572 end_ns=1787524353558609679
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=72 payload_bytes=3686400 command_result=0 start_ns=1787524353563468065 end_ns=1787524353697934537
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=73 payload_bytes=3686400 command_result=0 start_ns=1787524353702804954 end_ns=1787524353839783509
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=74 payload_bytes=3686400 command_result=0 start_ns=1787524353845300020 end_ns=1787524353992242795
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=75 payload_bytes=3686400 command_result=0 start_ns=1787524353997323785 end_ns=1787524354141371352
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=76 payload_bytes=3686400 command_result=0 start_ns=1787524354147241561 end_ns=1787524354298044024
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=77 payload_bytes=3686400 command_result=0 start_ns=1787524354303119909 end_ns=1787524354438804819
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=78 payload_bytes=3686400 command_result=0 start_ns=1787524354444487788 end_ns=1787524354588205563
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=79 payload_bytes=3686400 command_result=0 start_ns=1787524354593957595 end_ns=1787524354727638129
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=80 payload_bytes=3686400 command_result=0 start_ns=1787524354733409744 end_ns=1787524354871373976
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=81 payload_bytes=3686400 command_result=0 start_ns=1787524354877235279 end_ns=1787524355009861126
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=82 payload_bytes=3686400 command_result=0 start_ns=1787524355015694199 end_ns=1787524355166707860
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=83 payload_bytes=3686400 command_result=0 start_ns=1787524355172751819 end_ns=1787524355306855791
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=84 payload_bytes=3686400 command_result=0 start_ns=1787524355312961781 end_ns=1787524355447298201
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=85 payload_bytes=3686400 command_result=0 start_ns=1787524355452694816 end_ns=1787524355599970924
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=86 payload_bytes=3686400 command_result=0 start_ns=1787524355605426393 end_ns=1787524355741437292
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=87 payload_bytes=3686400 command_result=0 start_ns=1787524355747009897 end_ns=1787524355890919130
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=88 payload_bytes=3686400 command_result=0 start_ns=1787524355896364235 end_ns=1787524356031386696
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=89 payload_bytes=3686400 command_result=0 start_ns=1787524356036457999 end_ns=1787524356180543117
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=90 payload_bytes=3686400 command_result=0 start_ns=1787524356185606972 end_ns=1787524356316118235
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=91 payload_bytes=3686400 command_result=0 start_ns=1787524356321659433 end_ns=1787524356459424916
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=92 payload_bytes=3686400 command_result=0 start_ns=1787524356465017521 end_ns=1787524356613769463
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=93 payload_bytes=3686400 command_result=0 start_ns=1787524356619237380 end_ns=1787524356754190622
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=94 payload_bytes=3686400 command_result=0 start_ns=1787524356760231300 end_ns=1787524356887495584
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=95 payload_bytes=3686400 command_result=0 start_ns=1787524356892201574 end_ns=1787524357028928046
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=96 payload_bytes=3686400 command_result=0 start_ns=1787524357034763202 end_ns=1787524357180371550
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=97 payload_bytes=3686400 command_result=0 start_ns=1787524357185595561 end_ns=1787524357322348023
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=98 payload_bytes=3686400 command_result=0 start_ns=1787524357327986825 end_ns=1787524357462635849
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=99 payload_bytes=3686400 command_result=0 start_ns=1787524357468515537 end_ns=1787524357612899197
+stage=atomic-commit complete
+XDISP_RAW_REPEAT_RESULT transaction=100 payload_bytes=3686400 command_result=0 start_ns=1787524357618350917 end_ns=1787524357763572963

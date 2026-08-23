@@ -1,0 +1,7 @@
+Matched descriptor and host planner: 3,686,400 bytes.
+Managed telemetry proved 1280x720+0,0 rectangles, one exact 3,686,400-byte
+read per logical payload, and one logical admission per source frame.
+The final phone report had accounting_ok=true, zero submit/capture/conversion/
+release/lifecycle failures, and one clean cancellation during teardown.
+The xdispd child teardown reached the existing 3-second forced-SIGKILL path;
+this did not produce Pi ownership ambiguity and the receiver remained Idle.
