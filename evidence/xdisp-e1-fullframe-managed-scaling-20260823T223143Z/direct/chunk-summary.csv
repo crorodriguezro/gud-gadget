@@ -1,4 +1,4 @@
 test,logical_bytes,chunk_size,expected_internal_chunks,logical_completions,short_or_failed_chunks,ambiguous_io,poisoned,timeouts
-control-1843200,1843200,16384,112,1,0,0,0,0
+control-1843200,1843200,16384,113,1,0,0,0,0
 fullframe-single,3686400,16384,225,1,0,0,0,0
 fullframe-repeat-100,3686400,16384,225,100,0,0,0,0

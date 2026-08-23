@@ -1,0 +1,336 @@
+--- a/drivers/usb/gadget/function/f_fs.c
++++ b/drivers/usb/gadget/function/f_fs.c
+@@ -47,6 +47,7 @@
+ 
+ #define FUNCTIONFS_MAGIC	0xa647361 /* Chosen by a honest dice roll ;) */
+ #define MAX_ALT_SETTINGS	2		  /* Allow up to 2 alt settings to be set. */
++#define FFS_CHUNK_SIZE		(16 * 1024)
+ 
+ #define DMABUF_ENQUEUE_TIMEOUT_MS 5000
+ 
+@@ -245,15 +246,21 @@
+ struct ffs_io_data {
+ 	bool aio;
+ 	bool read;
++	bool use_chunks;
+ 
+ 	struct kiocb *kiocb;
+ 	struct iov_iter data;
+ 	const void *to_free;
+ 	char *buf;
++	char *chunk_buf;
++	size_t transfer_len;
++	size_t chunk_offset;
++	size_t chunk_len;
+ 
+ 	struct mm_struct *mm;
+ 	struct work_struct work;
+ 
++	struct ffs_epfile *epfile;
+ 	struct usb_ep *ep;
+ 	struct usb_request *req;
+ 	struct sg_table sgt;
+@@ -740,6 +747,52 @@
+ static void ffs_epfile_io_complete(struct usb_ep *_ep, struct usb_request *req)
+ {
+ 	struct ffs_io_data *io_data = req->context;
++	unsigned long flags;
++	int ret;
++
++	if (io_data->use_chunks) {
++		if (req->status) {
++			io_data->status = req->status;
++		} else if (req->actual > io_data->chunk_len) {
++			io_data->status = -EIO;
++		} else {
++			if (io_data->read && req->actual)
++				memcpy(io_data->buf + io_data->chunk_offset,
++				       io_data->chunk_buf, req->actual);
++			io_data->chunk_offset += req->actual;
++			io_data->status = io_data->chunk_offset;
++
++			if (req->actual == req->length &&
++			    io_data->chunk_offset < io_data->transfer_len) {
++				/* Keep one logical FunctionFS I/O while using bounded
++				 * contiguous DMA buffers underneath it. */
++				io_data->chunk_len = min_t(size_t,
++					io_data->transfer_len - io_data->chunk_offset,
++					FFS_CHUNK_SIZE);
++				if (!io_data->read)
++					memcpy(io_data->chunk_buf,
++					       io_data->buf + io_data->chunk_offset,
++					       io_data->chunk_len);
++				req->buf = io_data->chunk_buf;
++				req->sg = NULL;
++				req->num_sgs = 0;
++				req->length = io_data->chunk_len;
++
++				spin_lock_irqsave(&io_data->ffs->eps_lock, flags);
++				if (io_data->epfile->ep &&
++				    io_data->epfile->ep->ep == _ep)
++					ret = usb_ep_queue(_ep, req, GFP_ATOMIC);
++				else
++					ret = -ESHUTDOWN;
++				spin_unlock_irqrestore(&io_data->ffs->eps_lock, flags);
++				if (!ret)
++					return;
++				io_data->status = ret;
++			}
++		}
++	} else {
++		io_data->status = req->status ? req->status : req->actual;
++	}
+ 
+ 	if (io_data->read && _ep->address == 1 && req->length == 12800)
+ 		pr_info("gud_ffs_trace event=ffs_complete_enter ts_ns=%llu req=%px io_data=%px ep=%px ep_name=%s ep_num=%u req_length=%u req_actual=%u req_status=%d io_status_before=%d cpu=%u\n",
+@@ -747,11 +800,6 @@
+ 			_ep->name, _ep->address, req->length, req->actual,
+ 			req->status, READ_ONCE(io_data->status), raw_smp_processor_id());
+ 
+-	if (req->status)
+-		io_data->status = req->status;
+-	else
+-		io_data->status = req->actual;
+-
+ 	if (io_data->read && _ep->address == 1 && req->length == 12800)
+ 		pr_info("gud_ffs_trace event=ffs_complete_wake ts_ns=%llu req=%px io_data=%px ep=%px req_actual=%u req_status=%d io_status=%d\n",
+ 			(unsigned long long)ktime_get_ns(), req, io_data, _ep,
+@@ -845,6 +893,24 @@
+ static inline void *ffs_alloc_buffer(struct ffs_io_data *io_data,
+ 	size_t data_len)
+ {
++	if (io_data->use_chunks) {
++		io_data->chunk_buf = kmalloc(min_t(size_t, data_len,
++						   FFS_CHUNK_SIZE), GFP_KERNEL);
++		if (!io_data->chunk_buf)
++			return NULL;
++
++		io_data->transfer_len = data_len;
++		io_data->chunk_offset = 0;
++		io_data->chunk_len = min_t(size_t, data_len, FFS_CHUNK_SIZE);
++		io_data->buf = vmalloc(data_len);
++		if (!io_data->buf) {
++			kfree(io_data->chunk_buf);
++			io_data->chunk_buf = NULL;
++			return NULL;
++		}
++		return io_data->buf;
++	}
++
+ 	if (io_data->use_sg)
+ 		return ffs_build_sg_list(&io_data->sgt, data_len);
+ 
+@@ -853,6 +919,14 @@
+ 
+ static inline void ffs_free_buffer(struct ffs_io_data *io_data)
+ {
++	if (io_data->use_chunks) {
++		vfree(io_data->buf);
++		kfree(io_data->chunk_buf);
++		io_data->buf = NULL;
++		io_data->chunk_buf = NULL;
++		return;
++	}
++
+ 	if (!io_data->buf)
+ 		return;
+ 
+@@ -913,10 +987,54 @@
+ {
+ 	struct ffs_io_data *io_data = req->context;
+ 	struct ffs_data *ffs = io_data->ffs;
++	unsigned long flags;
++	int ret;
+ 	bool trace = io_data->read &&
+ 		(_ep->address & USB_ENDPOINT_NUMBER_MASK) == 1 &&
+ 		req->length == 12800;
+ 
++	if (io_data->use_chunks) {
++		if (req->status) {
++			io_data->status = req->status;
++		} else if (req->actual > io_data->chunk_len) {
++			io_data->status = -EIO;
++		} else {
++			if (io_data->read && req->actual)
++				memcpy(io_data->buf + io_data->chunk_offset,
++				       io_data->chunk_buf, req->actual);
++			io_data->chunk_offset += req->actual;
++			io_data->status = io_data->chunk_offset;
++
++			if (req->actual == req->length &&
++			    io_data->chunk_offset < io_data->transfer_len) {
++				io_data->chunk_len = min_t(size_t,
++					io_data->transfer_len - io_data->chunk_offset,
++					FFS_CHUNK_SIZE);
++				if (!io_data->read)
++					memcpy(io_data->chunk_buf,
++					       io_data->buf + io_data->chunk_offset,
++					       io_data->chunk_len);
++				req->buf = io_data->chunk_buf;
++				req->sg = NULL;
++				req->num_sgs = 0;
++				req->length = io_data->chunk_len;
++
++				spin_lock_irqsave(&io_data->ffs->eps_lock, flags);
++				if (io_data->epfile->ep &&
++				    io_data->epfile->ep->ep == _ep)
++					ret = usb_ep_queue(_ep, req, GFP_ATOMIC);
++				else
++					ret = -ESHUTDOWN;
++				spin_unlock_irqrestore(&io_data->ffs->eps_lock, flags);
++				if (!ret)
++					return;
++				io_data->status = ret;
++			}
++		}
++	} else {
++		io_data->status = req->status ? req->status : req->actual;
++	}
++
+ 	if (trace)
+ 		pr_info("gud_ffs_trace event=ffs_complete_enter ts_ns=%llu req=%px io_data=%px ep=%px ep_name=%s ep_num=%u async=1 req_length=%u req_actual=%u req_status=%d io_status_before=%d cpu=%u\n",
+ 			(unsigned long long)ktime_get_ns(), req, io_data, _ep,
+@@ -924,7 +1042,6 @@
+ 			req->length, req->actual, req->status,
+ 			READ_ONCE(io_data->status), raw_smp_processor_id());
+ 
+-	io_data->status = req->status ? req->status : req->actual;
+ 	if (trace)
+ 		pr_info("gud_ffs_trace event=ffs_complete_wake ts_ns=%llu req=%px io_data=%px ep=%px async=1 req_actual=%u req_status=%d io_status=%d\n",
+ 			(unsigned long long)ktime_get_ns(), req, io_data, _ep,
+@@ -1057,6 +1174,7 @@
+ 	ep = ffs_epfile_wait_ep(file);
+ 	if (IS_ERR(ep))
+ 		return PTR_ERR(ep);
++	io_data->epfile = epfile;
+ 
+ 	/* Do we halt? */
+ 	halt = (!io_data->read == !epfile->in);
+@@ -1108,6 +1226,8 @@
+ 			data_len = usb_ep_align_maybe(gadget, ep->ep, data_len);
+ 
+ 		io_data->use_sg = gadget->sg_supported && data_len > PAGE_SIZE;
++		io_data->use_chunks = !io_data->use_sg &&
++			data_len > FFS_CHUNK_SIZE;
+ 		spin_unlock_irq(&epfile->ffs->eps_lock);
+ 
+ 		data = ffs_alloc_buffer(io_data, data_len);
+@@ -1115,17 +1235,26 @@
+ 			ret = -ENOMEM;
+ 			goto error_mutex;
+ 		}
++		io_data->buf = data;
+ 		if (!io_data->read &&
+ 		    !copy_from_iter_full(data, data_len, &io_data->data)) {
+ 			ret = -EFAULT;
+ 			goto error_mutex;
+ 		}
+-		if (io_data->read && !epfile->in && ep->num == 1 &&
++		if (io_data->read && !epfile->in &&
++		    (ep->ep->address & USB_ENDPOINT_NUMBER_MASK) == 1 &&
+ 		    requested_len == 12800)
+-			pr_info("gud_ffs_trace event=ffs_io_observed ts_ns=%llu endpoint=%u direction=out io_kind=data async=%u requested_length=%zd queued_length=%zd use_sg=%u\n",
+-				(unsigned long long)ktime_get_ns(), ep->num,
++			pr_info("gud_ffs_trace event=ffs_io_observed ts_ns=%llu endpoint=%u ffs_ep_num=%u direction=out io_kind=data async=%u requested_length=%zd queued_length=%zd use_sg=%u\n",
++				(unsigned long long)ktime_get_ns(),
++				ep->ep->address & USB_ENDPOINT_NUMBER_MASK, ep->num,
+ 				io_data->aio, requested_len, data_len,
+ 				io_data->use_sg);
++		if (io_data->use_chunks)
++			pr_info("gud_ffs_trace event=ffs_chunked_io ts_ns=%llu endpoint=%u ffs_ep_num=%u direction=%s async=%u logical_length=%zd first_chunk_length=%zu chunk_size=%u\n",
++				(unsigned long long)ktime_get_ns(),
++				ep->ep->address & USB_ENDPOINT_NUMBER_MASK, ep->num,
++				io_data->read ? "out" : "in", io_data->aio,
++				data_len, io_data->chunk_len, FFS_CHUNK_SIZE);
+ 	}
+ 
+ 	spin_lock_irq(&epfile->ffs->eps_lock);
+@@ -1155,7 +1284,15 @@
+ 		bool interrupted = false;
+ 
+ 		req = ep->req;
+-		if (io_data->use_sg) {
++		if (io_data->use_chunks) {
++			req->buf = io_data->chunk_buf;
++			req->sg = NULL;
++			req->num_sgs = 0;
++			req->length = io_data->chunk_len;
++			if (!io_data->read)
++				memcpy(io_data->chunk_buf, io_data->buf,
++				       io_data->chunk_len);
++		} else if (io_data->use_sg) {
+ 			req->buf = NULL;
+ 			req->sg	= io_data->sgt.sgl;
+ 			req->num_sgs = io_data->sgt.nents;
+@@ -1163,19 +1300,21 @@
+ 			req->buf = data;
+ 			req->num_sgs = 0;
+ 		}
+-		req->length = data_len;
+-
+-		io_data->buf = data;
++		if (!io_data->use_chunks)
++			req->length = data_len;
+ 
+ 		init_completion(&io_data->done);
+ 		req->context  = io_data;
+ 		req->complete = ffs_epfile_io_complete;
+-		trace = io_data->read && !epfile->in && ep->num == 1 &&
++		trace = io_data->read && !epfile->in &&
++			(ep->ep->address & USB_ENDPOINT_NUMBER_MASK) == 1 &&
+ 			req->length == 12800;
+ 		if (trace)
+ 			pr_info("gud_ffs_trace event=ffs_ep_queue_enter ts_ns=%llu req=%px io_data=%px ep=%px ep_name=%s ep_num=%u direction=out req_length=%u req_actual=%u req_status=%d epfile=%px ffs=%px pid=%d comm=%s\n",
+ 				(unsigned long long)ktime_get_ns(), req, io_data, ep->ep,
+-				ep->ep->name, ep->num, req->length, req->actual,
++				ep->ep->name,
++				ep->ep->address & USB_ENDPOINT_NUMBER_MASK,
++				req->length, req->actual,
+ 				req->status, epfile, epfile->ffs, current->pid,
+ 				current->comm);
+ 
+@@ -1226,7 +1365,15 @@
+ 	} else if (!(req = usb_ep_alloc_request(ep->ep, GFP_ATOMIC))) {
+ 		ret = -ENOMEM;
+ 	} else {
+-		if (io_data->use_sg) {
++		if (io_data->use_chunks) {
++			req->buf = io_data->chunk_buf;
++			req->sg = NULL;
++			req->num_sgs = 0;
++			req->length = io_data->chunk_len;
++			if (!io_data->read)
++				memcpy(io_data->chunk_buf, io_data->buf,
++				       io_data->chunk_len);
++		} else if (io_data->use_sg) {
+ 			req->buf = NULL;
+ 			req->sg	= io_data->sgt.sgl;
+ 			req->num_sgs = io_data->sgt.nents;
+@@ -1234,21 +1381,23 @@
+ 			req->buf = data;
+ 			req->num_sgs = 0;
+ 		}
+-		req->length = data_len;
++		if (!io_data->use_chunks)
++			req->length = data_len;
+ 
+-		io_data->buf = data;
+ 		io_data->ep = ep->ep;
+ 		io_data->req = req;
+ 		io_data->ffs = epfile->ffs;
+ 
+ 		req->context  = io_data;
+ 		req->complete = ffs_epfile_async_io_complete;
+-		trace = io_data->read && !epfile->in && ep->num == 1 &&
++		trace = io_data->read && !epfile->in &&
++			(ep->ep->address & USB_ENDPOINT_NUMBER_MASK) == 1 &&
+ 			req->length == 12800;
+ 		if (trace)
+ 			pr_info("gud_ffs_trace event=ffs_ep_queue_enter ts_ns=%llu req=%px io_data=%px ep=%px ep_name=%s ep_num=%u direction=out async=1 req_length=%u req_actual=%u req_status=%d epfile=%px ffs=%px pid=%d comm=%s\n",
+ 				(unsigned long long)ktime_get_ns(), req, io_data,
+-				ep->ep, ep->ep->name, ep->num, req->length,
++				ep->ep, ep->ep->name,
++				ep->ep->address & USB_ENDPOINT_NUMBER_MASK, req->length,
+ 				req->actual, req->status, epfile, epfile->ffs,
+ 				current->pid, current->comm);
+ 

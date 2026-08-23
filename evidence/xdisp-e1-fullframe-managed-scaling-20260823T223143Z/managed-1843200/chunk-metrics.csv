@@ -1,4 +1,4 @@
 scope,logical_bytes,chunk_size,derived_internal_chunks,observed_logical_payloads,failed_chunks,measurement_note
-per payload,1843200,16384,112,730,0,exact division; kernel path preserves one logical AIO
-per 1280x720 source frame,3686400,16384,224,365,0,two 1280x360 payloads
+per payload,1843200,16384,113,730,0,112 full 16 KiB chunks plus an 8192-byte tail; kernel path preserves one logical AIO
+per 1280x720 source frame,3686400,16384,226,365,0,two 1280x360 payloads; each payload is 113 USB requests
 FunctionFS chunk overhead,,,,,0,not separately timestamped; included in logical transfer timing

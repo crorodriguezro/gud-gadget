@@ -3,7 +3,7 @@ Mir/source capture cycle,50.000,50.000,81.714,40.5%,phone final report capture_c
 producer enqueue,0.050,0.050,1.604,0.0%,phone final report enqueue_us
 GUD SET_BUFFER admission,10.376,12.809,18.399,8.4%,host frame_seq sum
 logical RAW USB bulk,90.759,91.866,111.354,73.5%,host bulk_wait_us frame_seq sum
-FunctionFS internal chunk sequencing,not-separated,not-separated,not-separated,not-separated,112 chunks/payload; included in logical transfer
+FunctionFS internal chunk sequencing,not-separated,not-separated,not-separated,not-separated,113 USB requests/payload (112 full chunks plus 8192-byte tail); included in logical transfer
 Pi processing,4.000,4.000,5.000,3.2%,two payloads x Pi total_ms; Pi frame_stats
 DRM/KMS/presenter,remainder,remainder,remainder,remainder,not independently exposed by this run
 E2E source-ready to worker-end,123.465,135.245,146.372,100.0%,deduplicated mirgud frame trace
