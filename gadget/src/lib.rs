@@ -584,6 +584,37 @@ pub struct DisplayStateSnapshot {
     pub generation: u64,
 }
 
+/// Stable E4-T01 correlation key derived only from the wire-visible GUD state.
+pub fn mode_contract_id(mode: &DisplayMode, format: u8, connector: u8) -> u64 {
+    fn add(hash: &mut u64, bytes: impl IntoIterator<Item = u8>) {
+        for byte in bytes {
+            *hash ^= u64::from(byte);
+            *hash = hash.wrapping_mul(1_099_511_628_211);
+        }
+    }
+
+    let mut hash = 14_695_981_039_346_656_037u64;
+    add(&mut hash, [1, connector, format]);
+    add(&mut hash, mode.clock.to_le_bytes());
+    add(&mut hash, mode.hdisplay.to_le_bytes());
+    add(&mut hash, mode.hsync_start.to_le_bytes());
+    add(&mut hash, mode.hsync_end.to_le_bytes());
+    add(&mut hash, mode.htotal.to_le_bytes());
+    add(&mut hash, mode.vdisplay.to_le_bytes());
+    add(&mut hash, mode.vsync_start.to_le_bytes());
+    add(&mut hash, mode.vsync_end.to_le_bytes());
+    add(&mut hash, mode.vtotal.to_le_bytes());
+    add(
+        &mut hash,
+        (mode.flags & GUD_DISPLAY_MODE_FLAG_USER_MASK).to_le_bytes(),
+    );
+    hash
+}
+
+pub fn mode_contract_id_string(mode: &DisplayMode, format: u8, connector: u8) -> String {
+    format!("e4c1-{:016x}", mode_contract_id(mode, format, connector))
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ActiveScanoutState {
     pub width: u32,
@@ -2505,20 +2536,20 @@ mod tests {
         active_scanout_state, build_display_descriptor, build_display_descriptor_with_flags,
         classify_functionfs_read_completion, clear_pending_state, commit_pending_state,
         configure_state_check_validation, current_status, handle_resume_transition,
-        handle_suspend_transition, latch_status, mark_success, modes_have_same_user_timing,
-        next_connector_status, parse_enable_request, read_functionfs_payload,
-        reset_connector_status_changed, reset_protocol_state, reset_status,
-        serialize_connector_descriptors, serialize_display_descriptor, serialize_display_modes,
-        store_pending_state, update_controller_enabled, update_display_enabled,
-        usb_packet_estimate, validate_buffer_request, validate_functionfs_read_size,
-        validate_state_check_payload, ActiveScanoutState, ConnectorDescriptor, DisplayMode,
-        DisplayState, EndpointOperation, ExactAioState, ExactAioTransaction,
-        FunctionFsReadCompletion, PixelDataEndpoint, RetiredExactAioTransaction, SetBuffer,
-        DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE, FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE,
-        GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
-        GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET, GUD_DISPLAY_MAGIC,
-        GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK, GUD_PIXEL_FORMAT_RGB565,
-        GUD_STATUS_BUSY, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
+        handle_suspend_transition, latch_status, mark_success, mode_contract_id,
+        mode_contract_id_string, modes_have_same_user_timing, next_connector_status,
+        parse_enable_request, read_functionfs_payload, reset_connector_status_changed,
+        reset_protocol_state, reset_status, serialize_connector_descriptors,
+        serialize_display_descriptor, serialize_display_modes, store_pending_state,
+        update_controller_enabled, update_display_enabled, usb_packet_estimate,
+        validate_buffer_request, validate_functionfs_read_size, validate_state_check_payload,
+        ActiveScanoutState, ConnectorDescriptor, DisplayMode, DisplayState, EndpointOperation,
+        ExactAioState, ExactAioTransaction, FunctionFsReadCompletion, PixelDataEndpoint,
+        RetiredExactAioTransaction, SetBuffer, DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE,
+        FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE, GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED,
+        GUD_CONNECTOR_STATUS_CONNECTED, GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET,
+        GUD_DISPLAY_MAGIC, GUD_DISPLAY_MODE_FLAG_PREFERRED, GUD_DISPLAY_MODE_FLAG_USER_MASK,
+        GUD_PIXEL_FORMAT_RGB565, GUD_STATUS_BUSY, GUD_STATUS_OK, GUD_STATUS_REQUEST_NOT_SUPPORTED,
     };
     use crate::{
         begin_status_on_set_diagnostic_transaction, configure_status_on_set_diagnostic, event,
@@ -2536,6 +2567,40 @@ mod tests {
 
     fn test_global_state() -> MutexGuard<'static, ()> {
         TEST_GLOBAL_STATE.lock().expect("test state lock poisoned")
+    }
+
+    #[test]
+    fn mode_contract_identity_matches_the_e4_cross_process_vector() {
+        let timing = DisplayMode {
+            clock: 74_250,
+            hdisplay: 1280,
+            hsync_start: 1390,
+            hsync_end: 1430,
+            htotal: 1650,
+            vdisplay: 720,
+            vsync_start: 725,
+            vsync_end: 730,
+            vtotal: 750,
+            flags: 0x0000_0005,
+        };
+
+        let id = mode_contract_id(&timing, GUD_PIXEL_FORMAT_RGB565, 0);
+
+        assert_eq!(id, 0x2c52_42af_7c0e_3ebe);
+        assert_eq!(
+            mode_contract_id_string(&timing, GUD_PIXEL_FORMAT_RGB565, 0),
+            "e4c1-2c5242af7c0e3ebe"
+        );
+        assert_ne!(
+            id,
+            mode_contract_id(&timing, super::GUD_PIXEL_FORMAT_XRGB8888, 0)
+        );
+        let mut different_timing = timing;
+        different_timing.htotal += 1;
+        assert_ne!(
+            id,
+            mode_contract_id(&different_timing, GUD_PIXEL_FORMAT_RGB565, 0)
+        );
     }
 
     struct RecordingReader {

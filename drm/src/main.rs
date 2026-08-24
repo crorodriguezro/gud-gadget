@@ -3821,13 +3821,41 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                     Event::StateCommitted(snapshot) => {
+                        let mode_contract_id = gud_gadget::mode_contract_id_string(
+                            &snapshot.mode,
+                            snapshot.format,
+                            snapshot.connector,
+                        );
+                        tracing::info!(
+                            event = "e4_mode_contract_gud_commit",
+                            mode_contract_id,
+                            generation = snapshot.generation,
+                            connector = snapshot.connector,
+                            format = snapshot.format,
+                            clock_khz = snapshot.mode.clock,
+                            hdisplay = snapshot.mode.hdisplay,
+                            hsync_start = snapshot.mode.hsync_start,
+                            hsync_end = snapshot.mode.hsync_end,
+                            htotal = snapshot.mode.htotal,
+                            vdisplay = snapshot.mode.vdisplay,
+                            vsync_start = snapshot.mode.vsync_start,
+                            vsync_end = snapshot.mode.vsync_end,
+                            vtotal = snapshot.mode.vtotal,
+                            flags = snapshot.mode.flags,
+                            "Recorded committed wire-visible GUD mode contract"
+                        );
                         if !dynamic_mode_match {
-                            tracing::debug!(
+                            tracing::info!(
+                                event = "e4_mode_contract_physical_route",
+                                mode_contract_id,
                                 generation = snapshot.generation,
                                 mode = ?snapshot.mode,
+                                physical_mode = ?mode,
+                                physical_size = ?active.size(),
+                                physical_pitch = active.pitch(),
+                                physical_mapping_lengths = ?active.mapping_lengths(),
                                 commit_control_ms = control_event_ms,
-                                "State commit notification ignored while dynamic matching is \
-                                 disabled"
+                                "Recorded fixed physical scanout for committed mode contract"
                             );
                             continue;
                         }
@@ -3895,6 +3923,7 @@ fn main() -> anyhow::Result<()> {
                                 scanout_runtime.counters().fallback();
                                 tracing::error!(
                                     event = "mode_commit_decision",
+                                    mode_contract_id,
                                     generation = snapshot.generation,
                                     logical = ?logical_key,
                                     commit_control_ms = control_event_ms,
@@ -4288,6 +4317,7 @@ fn main() -> anyhow::Result<()> {
                         }
                         tracing::info!(
                             event = "mode_commit_decision",
+                            mode_contract_id,
                             generation = snapshot.generation,
                             logical = ?logical_key,
                             old_physical = ?old_physical_key,
