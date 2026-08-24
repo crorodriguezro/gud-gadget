@@ -1,0 +1,5 @@
+Corrected derived evidence only; raw logs were preserved.
+
+1,843,200 / 16,384 = 112 full requests + 8,192-byte tail = 113 requests.
+Two half-frame payloads therefore imply 226 internal USB requests per frame.
+3,686,400 / 16,384 = 225 exact requests for one full frame.

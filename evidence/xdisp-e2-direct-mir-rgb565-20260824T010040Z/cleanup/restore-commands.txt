@@ -1,0 +1,11 @@
+Cleanup actions
+
+1. Deactivated the managed XDisp session through org.lomiri.XDisp1.
+2. Removed only /etc/systemd/system/xdisp.service.d/zzzz-e2-direct-rgb565.conf
+   and restarted xdisp.service.
+3. Removed only /etc/systemd/system/gud-userspace.service.d/zzzz-e2-direct-rgb565.conf
+   and restarted gud-userspace.service.
+4. Confirmed the Pi UDC was configured and production XRGB8888/RAW/12800
+   settings were active.
+5. Confirmed VID:PID 1d50:614d, then reloaded /home/phablet/gud.ko.
+6. Confirmed xdisp was available with ChildPid=0 and /dev/dri/card1 present.

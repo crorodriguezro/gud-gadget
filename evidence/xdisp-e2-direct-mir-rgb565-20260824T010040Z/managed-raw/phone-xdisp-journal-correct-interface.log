@@ -1,0 +1,260 @@
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1784 event_ns=13527661277082 present_ns=53592818 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1787 source_ready_ns=13527644695778 event_ns=13527661306665 queue_wait_ns=16610887
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1787 update_seq=528 event_ns=13527661322498
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1788 event_ns=13527662106196 capture_cycle_us=4366
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1788 source_ready_ns=13527662106196 event_ns=13527662131613
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1788 event_ns=13527662148696 duration_ns=17083 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud: report_kind=periodic final=false frames_received=1788 frames_submitted=1788 pending_frames=1 max_pending_observed=1 frames_in_flight=1 max_in_flight_observed=1 frames_presented=527 frames_dropped=1259 frames_cancelled=0 drop_percent=70.4139 cancellation_percent=0 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=false benchmark_elapsed_us=29005126 benchmark_elapsed_ms=29005 received_fps=61 submitted_fps=61 presented_fps=18 dropped_fps=43 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=1003010 interval_received=62 interval_submitted=62 interval_presented=19 interval_dropped=43 interval_cancelled=0 interval_submit_failures=0 interval_received_fps=61 interval_submitted_fps=61 interval_presented_fps=18 transport_format=rgb565 transport_bpp=2 source_mir_format=7 conversion_path_current=direct-copy conversion_path_direct_copy_frames=1788 conversion_path_channel_reorder_frames=0 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=1788 acquire_us_min=3 acquire_us_avg=221 acquire_us_max=6091 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=1788 conversion_us_min=423 conversion_us_avg=1010 conversion_us_max=4366 conversion_us_p50=1000 conversion_us_p95=2000 release_us_samples=1788 release_us_min=1357 release_us_avg=3371 release_us_max=27389 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=1788 capture_cycle_us_min=2318 capture_cycle_us_avg=4604 capture_cycle_us_max=29429 capture_cycle_us_p50=5000 capture_cycle_us_p95=10000 enqueue_us_samples=1788 enqueue_us_min=12 enqueue_us_avg=34 enqueue_us_max=2317 enqueue_us_p50=50 enqueue_us_p95=100 submit_us_samples=527 submit_us_min=51557 submit_us_avg=54958 submit_us_max=68075 submit_us_p50=100000 submit_us_p95=100000 self_fds=17
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1789 event_ns=13527677108177 capture_cycle_us=3260
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1789 source_ready_ns=13527677108177 event_ns=13527677172292
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1788 replaced_by=1789 event_ns=13527677197552
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1789 event_ns=13527677197552 duration_ns=25260 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1790 event_ns=13527695845470 capture_cycle_us=5875
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1790 source_ready_ns=13527695845470 event_ns=13527695912762
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1789 replaced_by=1790 event_ns=13527695936148
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1790 event_ns=13527695936148 duration_ns=23386 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1791 event_ns=13527709100680 capture_cycle_us=3027
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1791 source_ready_ns=13527709100680 event_ns=13527709162451
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1790 replaced_by=1791 event_ns=13527709184118
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1791 event_ns=13527709184118 duration_ns=21667 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1787 update_seq=528 event_ns=13527719109900 duration_ns=57787402 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1787 event_ns=13527719157244 present_ns=57850579 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1791 source_ready_ns=13527709100680 event_ns=13527719182712 queue_wait_ns=10082032
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1791 update_seq=529 event_ns=13527719198494
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1792 event_ns=13527726019588 capture_cycle_us=3836
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1792 source_ready_ns=13527726019588 event_ns=13527726093494
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1792 event_ns=13527726113598 duration_ns=20104 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1793 event_ns=13527742209381 capture_cycle_us=3816
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1793 source_ready_ns=13527742209381 event_ns=13527742287558
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1792 replaced_by=1793 event_ns=13527742318600
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1793 event_ns=13527742318600 duration_ns=31042 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1794 event_ns=13527758164539 capture_cycle_us=3648
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1794 source_ready_ns=13527758164539 event_ns=13527758239800
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1793 replaced_by=1794 event_ns=13527758266623
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1794 event_ns=13527758266623 duration_ns=26823 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1795 event_ns=13527774110582 capture_cycle_us=3351
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1795 source_ready_ns=13527774110582 event_ns=13527774179332
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1794 replaced_by=1795 event_ns=13527774205322
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1795 event_ns=13527774205322 duration_ns=25990 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1791 update_seq=529 event_ns=13527774317093 duration_ns=55118599 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1791 event_ns=13527774340114 present_ns=55157402 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1795 source_ready_ns=13527774110582 event_ns=13527774358395 queue_wait_ns=247813
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1795 update_seq=530 event_ns=13527774372822
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1796 event_ns=13527790461053 capture_cycle_us=3596
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1796 source_ready_ns=13527790461053 event_ns=13527790530219
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1796 event_ns=13527790551522 duration_ns=21303 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1797 event_ns=13527806328919 capture_cycle_us=3298
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1797 source_ready_ns=13527806328919 event_ns=13527806394700
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1796 replaced_by=1797 event_ns=13527806420429
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1797 event_ns=13527806420429 duration_ns=25729 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1798 event_ns=13527823388869 capture_cycle_us=4223
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1798 source_ready_ns=13527823388869 event_ns=13527823452931
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1797 replaced_by=1798 event_ns=13527823476681
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1798 event_ns=13527823476681 duration_ns=23750 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1795 update_seq=530 event_ns=13527829534025 duration_ns=55161203 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1795 event_ns=13527829589963 present_ns=55231568 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1798 source_ready_ns=13527823388869 event_ns=13527829611838 queue_wait_ns=6222969
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1798 update_seq=531 event_ns=13527829624755
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1799 event_ns=13527838445016 capture_cycle_us=3170
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1799 source_ready_ns=13527838445016 event_ns=13527838533349
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1799 event_ns=13527838551943 duration_ns=18594 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1800 event_ns=13527856914497 capture_cycle_us=5394
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1800 source_ready_ns=13527856914497 event_ns=13527856984028
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1799 replaced_by=1800 event_ns=13527857006580
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1800 event_ns=13527857006580 duration_ns=22552 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1801 event_ns=13527871364707 capture_cycle_us=3702
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1801 source_ready_ns=13527871364707 event_ns=13527871427311
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1800 replaced_by=1801 event_ns=13527871449238
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1801 event_ns=13527871449238 duration_ns=21927 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1798 update_seq=531 event_ns=13527884929396 duration_ns=55304641 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1798 event_ns=13527885004968 present_ns=55393130 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1801 source_ready_ns=13527871364707 event_ns=13527885034604 queue_wait_ns=13669897
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1801 update_seq=532 event_ns=13527885050125
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1802 event_ns=13527890805802 capture_cycle_us=7014
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1802 source_ready_ns=13527890805802 event_ns=13527890868615
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1802 event_ns=13527890887834 duration_ns=19219 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1803 event_ns=13527907717523 capture_cycle_us=7805
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1803 source_ready_ns=13527907717523 event_ns=13527907785856
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1802 replaced_by=1803 event_ns=13527907809867
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1803 event_ns=13527907809867 duration_ns=24011 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1804 event_ns=13527920539087 capture_cycle_us=4470
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1804 source_ready_ns=13527920539087 event_ns=13527920606639
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1803 replaced_by=1804 event_ns=13527920629555
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1804 event_ns=13527920629555 duration_ns=22916 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1805 event_ns=13527936560338 capture_cycle_us=4391
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1805 source_ready_ns=13527936560338 event_ns=13527936620703
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1804 replaced_by=1805 event_ns=13527936642474
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1805 event_ns=13527936642474 duration_ns=21771 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1801 update_seq=532 event_ns=13527940335755 duration_ns=55285630 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1801 event_ns=13527940403047 present_ns=55368443 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1805 source_ready_ns=13527936560338 event_ns=13527940431016 queue_wait_ns=3870678
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1805 update_seq=533 event_ns=13527940444974
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1806 event_ns=13527953713673 capture_cycle_us=4371
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1806 source_ready_ns=13527953713673 event_ns=13527954343725
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1806 event_ns=13527954394402 duration_ns=50677 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1807 event_ns=13527967871695 capture_cycle_us=3496
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1807 source_ready_ns=13527967871695 event_ns=13527967940654
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1806 replaced_by=1807 event_ns=13527967963727
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1807 event_ns=13527967963727 duration_ns=23073 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1808 event_ns=13527985997479 capture_cycle_us=5517
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1808 source_ready_ns=13527985997479 event_ns=13527986064926
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1807 replaced_by=1808 event_ns=13527986089562
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1808 event_ns=13527986089562 duration_ns=24636 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1805 update_seq=533 event_ns=13527993642583 duration_ns=53197609 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1805 event_ns=13527993707740 present_ns=53276724 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1808 source_ready_ns=13527985997479 event_ns=13527993738052 queue_wait_ns=7740573
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1808 update_seq=534 event_ns=13527993752688
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1809 event_ns=13528000421647 capture_cycle_us=3840
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1809 source_ready_ns=13528000421647 event_ns=13528000497324
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1809 event_ns=13528000517897 duration_ns=20573 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1810 event_ns=13528016524200 capture_cycle_us=3838
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1810 source_ready_ns=13528016524200 event_ns=13528016584825
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1809 replaced_by=1810 event_ns=13528016611805
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1810 event_ns=13528016611805 duration_ns=26980 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1811 event_ns=13528031873004 capture_cycle_us=2965
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1811 source_ready_ns=13528031873004 event_ns=13528031942014
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1810 replaced_by=1811 event_ns=13528031966754
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1811 event_ns=13528031966754 duration_ns=24740 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1808 update_seq=534 event_ns=13528046920870 duration_ns=53168182 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1808 event_ns=13528047009099 present_ns=53271047 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1811 source_ready_ns=13528031873004 event_ns=13528047036130 queue_wait_ns=15163126
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1811 update_seq=535 event_ns=13528047050766
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1812 event_ns=13528053627485 capture_cycle_us=8615
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1812 source_ready_ns=13528053627485 event_ns=13528054518110
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1812 event_ns=13528054954673 duration_ns=436563 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1813 event_ns=13528064586288 capture_cycle_us=3468
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1813 source_ready_ns=13528064586288 event_ns=13528064665195
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1812 replaced_by=1813 event_ns=13528064690247
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1813 event_ns=13528064690247 duration_ns=25052 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1814 event_ns=13528080803998 capture_cycle_us=3568
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1814 source_ready_ns=13528080803998 event_ns=13528080868165
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1813 replaced_by=1814 event_ns=13528080894155
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1814 event_ns=13528080894155 duration_ns=25990 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1815 event_ns=13528097303583 capture_cycle_us=3936
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1815 source_ready_ns=13528097303583 event_ns=13528097372385
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1814 replaced_by=1815 event_ns=13528097396865
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1815 event_ns=13528097396865 duration_ns=24480 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1811 update_seq=535 event_ns=13528103842959 duration_ns=56792193 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1811 event_ns=13528103899313 present_ns=56863183 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1815 source_ready_ns=13528097303583 event_ns=13528103923376 queue_wait_ns=6619793
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1815 update_seq=536 event_ns=13528103938792
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1816 event_ns=13528113183741 capture_cycle_us=3699
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1816 source_ready_ns=13528113183741 event_ns=13528113252804
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1816 event_ns=13528113273637 duration_ns=20833 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1817 event_ns=13528129465878 capture_cycle_us=3857
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1817 source_ready_ns=13528129465878 event_ns=13528129544003
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1816 replaced_by=1817 event_ns=13528129570462
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1817 event_ns=13528129570462 duration_ns=26459 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1818 event_ns=13528145686244 capture_cycle_us=3980
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1818 source_ready_ns=13528145686244 event_ns=13528145754786
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1817 replaced_by=1818 event_ns=13528145784369
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1818 event_ns=13528145784369 duration_ns=29583 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1815 update_seq=536 event_ns=13528158148902 duration_ns=54210110 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1815 event_ns=13528158221402 present_ns=54298026 result=ok
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1818 source_ready_ns=13528145686244 event_ns=13528158248329 queue_wait_ns=12562085
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1818 update_seq=537 event_ns=13528158263173
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1819 event_ns=13528161533486 capture_cycle_us=3719
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1819 source_ready_ns=13528161533486 event_ns=13528161601559
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1819 event_ns=13528161621975 duration_ns=20416 accepted=true pending=1
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1820 event_ns=13528177571977 capture_cycle_us=3651
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1820 source_ready_ns=13528177571977 event_ns=13528177644633
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1819 replaced_by=1820 event_ns=13528177671977
+Aug 23 20:14:34 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1820 event_ns=13528177671977 duration_ns=27344 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1821 event_ns=13528195599531 capture_cycle_us=5550
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1821 source_ready_ns=13528195599531 event_ns=13528195678281
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1820 replaced_by=1821 event_ns=13528195707864
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1821 event_ns=13528195707864 duration_ns=29583 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1822 event_ns=13528209926928 capture_cycle_us=3744
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1822 source_ready_ns=13528209926928 event_ns=13528210020418
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1821 replaced_by=1822 event_ns=13528210042293
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1822 event_ns=13528210042293 duration_ns=21875 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1818 update_seq=537 event_ns=13528212938907 duration_ns=54675734 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1818 event_ns=13528212988543 present_ns=54740214 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1822 source_ready_ns=13528209926928 event_ns=13528213014480 queue_wait_ns=3087552
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1822 update_seq=538 event_ns=13528213028959
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1823 event_ns=13528228342815 capture_cycle_us=5782
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1823 source_ready_ns=13528228342815 event_ns=13528229339117
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1823 event_ns=13528229661669 duration_ns=322552 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1824 event_ns=13528242871358 capture_cycle_us=3897
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1824 source_ready_ns=13528242871358 event_ns=13528242936515
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1823 replaced_by=1824 event_ns=13528242962712
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1824 event_ns=13528242962712 duration_ns=26197 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1825 event_ns=13528259639537 capture_cycle_us=4478
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1825 source_ready_ns=13528259639537 event_ns=13528259700579
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1824 replaced_by=1825 event_ns=13528259723495
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1825 event_ns=13528259723495 duration_ns=22916 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1822 update_seq=538 event_ns=13528268507923 duration_ns=55478964 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1822 event_ns=13528268573965 present_ns=55559485 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1825 source_ready_ns=13528259639537 event_ns=13528268611413 queue_wait_ns=8971876
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1825 update_seq=539 event_ns=13528268624590
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1826 event_ns=13528275009174 capture_cycle_us=3697
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1826 source_ready_ns=13528275009174 event_ns=13528275105268
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1826 event_ns=13528275122716 duration_ns=17448 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1827 event_ns=13528293340478 capture_cycle_us=5902
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1827 source_ready_ns=13528293340478 event_ns=13528293407197
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1826 replaced_by=1827 event_ns=13528293431207
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1827 event_ns=13528293431207 duration_ns=24010 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1828 event_ns=13528307449073 capture_cycle_us=3908
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1828 source_ready_ns=13528307449073 event_ns=13528307509125
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1827 replaced_by=1828 event_ns=13528307531521
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1828 event_ns=13528307531521 duration_ns=22396 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1825 update_seq=539 event_ns=13528322315637 duration_ns=53691047 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1825 event_ns=13528322373606 present_ns=53762193 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1828 source_ready_ns=13528307449073 event_ns=13528322401939 queue_wait_ns=14952866
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1828 update_seq=540 event_ns=13528322416262
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1829 event_ns=13528324448971 capture_cycle_us=4780
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1829 source_ready_ns=13528324448971 event_ns=13528324585377
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1829 event_ns=13528324605689 duration_ns=20312 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1830 event_ns=13528339683087 capture_cycle_us=3892
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1830 source_ready_ns=13528339683087 event_ns=13528339742670
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1829 replaced_by=1830 event_ns=13528339769128
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1830 event_ns=13528339769128 duration_ns=26458 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1831 event_ns=13528355867880 capture_cycle_us=3979
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1831 source_ready_ns=13528355867880 event_ns=13528355943505
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1830 replaced_by=1831 event_ns=13528355971005
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1831 event_ns=13528355971005 duration_ns=27500 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1832 event_ns=13528372339705 capture_cycle_us=4330
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1832 source_ready_ns=13528372339705 event_ns=13528372414496
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1831 replaced_by=1832 event_ns=13528372440694
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1832 event_ns=13528372440694 duration_ns=26198 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1828 update_seq=540 event_ns=13528375699601 duration_ns=53283339 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1828 event_ns=13528375759028 present_ns=53357089 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1832 source_ready_ns=13528372339705 event_ns=13528375784392 queue_wait_ns=3444687
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1832 update_seq=541 event_ns=13528375801059
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1833 event_ns=13528389424290 capture_cycle_us=4961
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1833 source_ready_ns=13528389424290 event_ns=13528389507883
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1833 event_ns=13528389528508 duration_ns=20625 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1834 event_ns=13528405199291 capture_cycle_us=4616
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1834 source_ready_ns=13528405199291 event_ns=13528405270020
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1833 replaced_by=1834 event_ns=13528405296531
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1834 event_ns=13528405296531 duration_ns=26511 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1835 event_ns=13528420174397 capture_cycle_us=3477
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1835 source_ready_ns=13528420174397 event_ns=13528420274813
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1834 replaced_by=1835 event_ns=13528420298668
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1835 event_ns=13528420298668 duration_ns=23855 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1832 update_seq=541 event_ns=13528430285075 duration_ns=54484016 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1832 event_ns=13528430338096 present_ns=54553704 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_start frame_seq=1835 source_ready_ns=13528420174397 event_ns=13528430367835 queue_wait_ns=10193438
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_start frame_seq=1835 update_seq=542 event_ns=13528430383721
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1836 event_ns=13528437443409 capture_cycle_us=4438
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1836 source_ready_ns=13528437443409 event_ns=13528437483201
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1836 event_ns=13528437493774 duration_ns=10573 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=source_ready frame_seq=1837 event_ns=13528454085025 capture_cycle_us=4901
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_enter frame_seq=1837 source_ready_ns=13528454085025 event_ns=13528454154661
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=dropped frame_seq=1836 replaced_by=1837 event_ns=13528454713463
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=submit_return frame_seq=1837 event_ns=13528454713463 duration_ns=558802 accepted=true pending=1
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: active -> disconnecting: deactivated
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: teardown stop requested
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: child milestone: XDISP1 13528465 TERM_OBSERVED
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: child milestone: XDISP1 13528465 CAPTURE_LOOP_EXIT
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: child milestone: XDISP1 13528465 PRESENTER_STOP_BEGIN
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=kms_present_end frame_seq=1835 update_seq=542 event_ns=13528484182841 duration_ns=53799120 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud_frame event=worker_end frame_seq=1835 event_ns=13528484309612 present_ns=53941777 result=ok
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: child milestone: XDISP1 13528484 PRESENTER_STOP_COMPLETE
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: child milestone: XDISP1 13528484 KMS_TEARDOWN_BEGIN
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: child milestone: XDISP1 13528491 KMS_TEARDOWN_COMPLETE
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direct-rgb565-13818a0[14885]: mirgud: report_kind=final final=true frames_received=1837 frames_submitted=1837 pending_frames=0 max_pending_observed=1 frames_in_flight=0 max_in_flight_observed=1 frames_presented=542 frames_dropped=1294 frames_cancelled=1 drop_percent=70.4409 cancellation_percent=0.0544366 capture_failures=0 conversion_failures=0 release_failures=0 dump_failures=0 gud_submit_failures=0 lifecycle_callback_failures=0 x_byte_samples=0 x_byte_min=0 x_byte_max=0 x_byte_constant=true x_byte_zero_percent=0 x_byte_ff_percent=0 accounting_ok=true benchmark_elapsed_us=29834571 benchmark_elapsed_ms=29834 received_fps=61 submitted_fps=61 presented_fps=18 dropped_fps=43 cancelled_fps=0 submit_failure_fps=0 interval_elapsed_us=829444 interval_received=49 interval_submitted=49 interval_presented=15 interval_dropped=35 interval_cancelled=1 interval_submit_failures=0 interval_received_fps=59 interval_submitted_fps=59 interval_presented_fps=18 transport_format=rgb565 transport_bpp=2 source_mir_format=7 conversion_path_current=direct-copy conversion_path_direct_copy_frames=1837 conversion_path_channel_reorder_frames=0 conversion_path_rgb565_pack_frames=0 conversion_path_rgb565_expand_frames=0 conversion_path_rgb888_expand_frames=0 pattern_generation=none pattern_sequence_frames=0 pattern_workload=none pattern_seed=0 acquire_us_samples=1837 acquire_us_min=3 acquire_us_avg=220 acquire_us_max=6091 acquire_us_p50=500 acquire_us_p95=500 conversion_us_samples=1837 conversion_us_min=423 conversion_us_avg=1009 conversion_us_max=4366 conversion_us_p50=1000 conversion_us_p95=2000 release_us_samples=1837 release_us_min=1357 release_us_avg=3367 release_us_max=27389 release_us_p50=5000 release_us_p95=10000 capture_cycle_us_samples=1837 capture_cycle_us_min=2318 capture_cycle_us_avg=4597 capture_cycle_us_max=29429 capture_cycle_us_p50=5000 capture_cycle_us_p95=10000 enqueue_us_samples=1837 enqueue_us_min=10 enqueue_us_avg=34 enqueue_us_max=2317 enqueue_us_p50=50 enqueue_us_p95=100 submit_us_samples=542 submit_us_min=51557 submit_us_avg=54955 submit_us_max=68075 submit_us_p50=100000 submit_us_p95=100000 self_fds=16
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: child milestone: XDISP1 13528492 PROCESS_EXIT
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: child milestone: XDISP1 13528493 SCREENCAST_RELEASE_BEGIN
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: child milestone: XDISP1 13528496 SCREENCAST_RELEASE_COMPLETE
+Aug 23 20:14:35 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: child milestone: XDISP1 13528496 MIR_CONNECTION_RELEASE_BEGIN

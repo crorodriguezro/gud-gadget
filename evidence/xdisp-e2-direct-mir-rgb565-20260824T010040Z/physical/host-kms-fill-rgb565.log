@@ -1,0 +1,5 @@
+Mon Aug 24 01:10:24 AM UTC 2026
+card=/dev/dri/card1 connector=25 crtc=27 plane=26 dumb_handle=1 fb_id=30
+atomic modeset succeeded
+holding test pattern for 30 seconds
+kms_fill_rc=0

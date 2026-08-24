@@ -1,0 +1,25 @@
+PI
+raspberrypi
+6.12.47+rpt-rpi-v8-ffs-xfercompltrace
+active
+configured
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.432278Z  INFO gud_drm: FunctionFS bulk OUT read ceiling: 16384 bytes; conservative receive safety deadline: 1000 ms
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.432303Z  WARN gud_drm: TEST-ONLY GUD descriptor override enabled; a fresh USB enumeration is required compression="none" descriptor_max_buffer_size=Some(12800)
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.432329Z  WARN gud_drm: TEST-ONLY physical DRM output-mode override enabled; normal mode selection is unchanged when GUD_TEST_OUTPUT_MODE is absent width=1280 height=720
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.432354Z  INFO gud_drm: Opening DRM device: /dev/dri/card0
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.432537Z  INFO gud_drm: Using UDC: Udc { name: "3f980000.usb" }
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.432685Z  INFO gud_drm: Serialized GUD display descriptor fields event="descriptor_config" magic="0x1d50614d" version=1 flags=1 compression=0 max_buffer_size=12800 min_width=640 max_width=1920 min_height=400 max_height=1080 dynamic_mode_match=false
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.515578Z  INFO gud_drm: USB gadgets removed
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.515645Z  INFO gud_drm: Created pixel data endpoint
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.515684Z  INFO gud_drm: Built USB gadget
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.516132Z  INFO gud_drm: Built normalized complete-timing route catalog connector=0 entries=28 preferred=ModeKey { connector: 0, clock: 148500, hdisplay: 1920, hsync_start: 2008, hsync_end: 2052, htotal: 2200, vdisplay: 1080, vsync_start: 1084, vsync_end: 1089, vtotal: 1125, flags: 5 } exact_routes=25 scaled_routes=3
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.516207Z  INFO gud_drm: Catalog-derived memory estimate; actual DRM pitch/mapping lengths are recorded per allocation logical_scanout_estimate_bytes=49766400 max_shadow_bytes=8294400 logical_peak_estimate_bytes=58060800 transfer_format=Xrgb8888
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.516246Z  INFO gud_drm: Picked deterministic physical DRM startup/fallback mode width=1280 height=720 test_override=true dynamic_mode_match=false mode=Mode { name: "1280x720", clock: 74250, size: (1280, 720), hsync: (1390, 1430, 1650), vsync: (725, 730, 750), hskew: 0, vscan: 0, vrefresh: 60, mode_type: ModeTypeFlags(DRIVER) }
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.577379Z  INFO gud_drm: CRTC set, display should be active
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.694640Z  INFO gud_drm: Filled both framebuffers with waiting screen
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.694721Z  WARN gud_drm: Failed to flush test pattern: dirty DRM framebuffer
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.712046Z  INFO gud_drm: USB gadget bound to UDC
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.712110Z  INFO gud_drm: Entering main event loop
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.712215Z  INFO gud_drm: E1-T05 lifecycle event observed from proven Idle ownership event="e1_t05_lifecycle_observed" lifecycle_event="bind" lifecycle_event_state=Idle usb_session_state=WaitingForHost aggregate_idle=true exact_aio_idle=true accepted_operation_absent=true aio_queue_empty=true pending_exact_receive_absent=true ready_exact_payload_absent=true cleanup_drain_absent=true diagnostic_guard_inactive=true diagnostic_lifecycle_containment=false prearmed_read_inactive=true aggregate_state=Idle aio_state=Idle transaction_seq=0 activation_generation=None currently_owned=false
+Aug 24 00:26:50 raspberrypi gud-drm[2564]: 2026-08-23T23:26:50.214414Z  INFO gud_drm: E1-T05 lifecycle event observed from proven Idle ownership event="e1_t05_lifecycle_observed" lifecycle_event="enable" lifecycle_event_state=Idle usb_session_state=Active aggregate_idle=true exact_aio_idle=true accepted_operation_absent=true aio_queue_empty=true pending_exact_receive_absent=true ready_exact_payload_absent=true cleanup_drain_absent=true diagnostic_guard_inactive=true diagnostic_lifecycle_containment=false prearmed_read_inactive=true aggregate_state=Idle aio_state=Idle transaction_seq=0 activation_generation=None currently_owned=false
+Aug 24 00:26:50 raspberrypi gud-drm[2564]: 2026-08-23T23:26:50.215421Z  INFO gud_drm: session_activity had_host_session=true event=GetDescriptor(GetDescriptor { sender: CtrlSender { ctrl_req: CtrlReq { request_type: 193, request: 1, value: 0, index: 0, length: 30 } } })

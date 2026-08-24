@@ -1,0 +1,21 @@
+Current mirgud format support:
+
+src/utils/gud_screencast_format.h:24-111 defines transport PixelFormat only as
+rgb565 and xrgb8888; bytes_per_pixel() is 2 and 4 respectively.
+The same header:132-183 has source enums for abgr8888, xbgr8888, argb8888,
+xrgb8888, rgb888, bgr888, and rgb565.
+
+For RGB565 source to RGB565 transport, conversion_path_for() selects direct
+copy and DirectCapture copies rows with the requested stride. This is already
+DIRECTLY_SUPPORTED when mirgud is run with --pixel-format rgb565.
+
+For RGB888 source, the existing source-side conversion supports rgb888, but
+conversion_path_for() selects rgb888_expand when transport is xrgb8888. There
+is no rgb888 transport PixelFormat, no RGB888 option in the current GUD host
+driver, and no current mirgud direct packed-RGB888 transport path.
+
+Current production is therefore: Mir abgr8888 (4 Bpp) -> mirgud channel
+reorder -> XRGB8888 transport. Switching source selection to RGB565 removes
+the source-to-transport conversion if RGB565 transport is selected. Switching
+to RGB888 still requires mirgud plumbing/conversion unless a packed RGB888
+transport path is added.

@@ -1,0 +1,10 @@
+requested,enum_exists,api_accepted,stream_created,frames_acquired,cpu_mapped,actual_format,stride,logical_bpp,backing_bpp,changing_content,result
+xrgb8888,yes,no,no,0,no,none,,4,,n/a,CLASS_C_RUNTIME_REJECT
+rgb888,yes,yes,yes,255,yes,rgb888,3840,3,3,yes,CLASS_A_AT_MIR_BOUNDARY
+rgb565,yes,yes,yes,2434,yes,rgb565,2560,2,2,yes,CLASS_A_AT_MIR_BOUNDARY
+abgr8888,yes,yes,yes,338,yes,abgr8888,5120,4,4,yes,current_auto_source
+xbgr8888,yes,yes,not_run,0,not_run,,,4,,not_run,advertised_not_probed
+bgr888,yes,no,no,0,no,none,,3,,n/a,CLASS_C_NOT_ADVERTISED
+argb8888,yes,no,no,0,no,none,,4,,n/a,CLASS_C_NOT_ADVERTISED
+rgba5551,yes,no,no,0,no,none,,2,,n/a,CLASS_C_NOT_ADVERTISED
+rgba4444,yes,no,no,0,no,none,,2,,n/a,CLASS_C_NOT_ADVERTISED

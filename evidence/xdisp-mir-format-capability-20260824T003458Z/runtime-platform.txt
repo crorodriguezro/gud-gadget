@@ -1,0 +1,11 @@
+Phone: OnePlus 6, arm64, Ubuntu Touch 24.04.4/Noble
+Kernel: 4.9.112-g6b190d86b
+Mir server process: lomiri-system-compositor --file /run/mir_socket
+Mir graphics backend: UBports Android2 platform through libhybris/Android HAL
+and gralloc; the local platform package is mir-android2-platform-gud.
+Virtual path: Lomiri/Mir Virtual output id 3, extended region (1080,0,1280,720),
+Mir socket /run/mir_socket, Mir screencast buffer stream.
+CPU access: mir_buffer_stream_get_graphics_region(), followed by
+mir_buffer_stream_swap_buffers_sync().
+Production mirgud invocation: xdispd supplies --source-mode extend,
+--pixel-format xrgb8888, --size 1280 720; source format remains auto.

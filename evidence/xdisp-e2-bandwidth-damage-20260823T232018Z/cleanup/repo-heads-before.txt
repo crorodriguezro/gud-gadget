@@ -1,0 +1,4 @@
+gud branch=pixel-format-benchmark HEAD=77ffef6220cf25d125ab21d9eb93498373f07e8b remote=origin/pixel-format-benchmark
+gud-gadget branch=pixel-format-benchmark HEAD=46d5e6f5890e3861ef4be784d41dc300242fae55 remote=origin/pixel-format-benchmark
+mir-android2-platform-gud branch=pixel-format-benchmark HEAD=5f7f790efc4e92b46c82a7fd9fed48593ccbe95b remote=origin/pixel-format-benchmark
+At capture start all three repositories had no tracked modifications. Existing untracked build/evidence artifacts were preserved.

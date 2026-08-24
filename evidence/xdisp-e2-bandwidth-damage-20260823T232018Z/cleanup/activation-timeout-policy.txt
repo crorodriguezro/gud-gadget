@@ -1,0 +1,5 @@
+The source default is restored to a bounded 10-second activation deadline.
+An explicit diagnostic-only environment override,
+`XDISP_DIAGNOSTIC_ACTIVATION_TIMEOUT_SECONDS`, accepts 1..45 seconds; invalid
+values fall back to 10 seconds. This separates the prior 45-second diagnostic
+accommodation from production behavior.

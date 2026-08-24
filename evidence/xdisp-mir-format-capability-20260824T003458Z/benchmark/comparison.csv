@@ -1,0 +1,4 @@
+format,source_bpp,source_stride,source_frame_bytes,source_only_fps,capture_cycle_us,source_to_transport_conversion,interpretation
+xrgb8888,4,5120,3686400,34,28922,"abgr8888 channel reorder in current managed run","baseline transport; Mir xrgb8888 not advertised"
+rgb888,3,3840,2764800,32,29710,"rgb888-expand because current transport is xrgb8888","true packed source; direct packed transport unavailable"
+rgb565,2,2560,1843200,61,7043,"none when transport is rgb565","direct source and transport match"

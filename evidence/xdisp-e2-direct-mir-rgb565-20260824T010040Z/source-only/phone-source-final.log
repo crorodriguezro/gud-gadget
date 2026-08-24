@@ -1,0 +1,2 @@
+847b7f79e03d5c6627ebab623434be40bbabe552c8a3566755c717d621598486  /tmp/xdisp-e2-rgb565-source.ppm
+phablet    14440   14439  0 20:11 ?        00:00:00 bash -c kill -KILL 13651 13652 13650 2>/dev/null || true; sleep 1; ps -eo user,pid,ppid,args | grep -E "mirgud-direct-rgb565|xdispd" | grep -v grep || true

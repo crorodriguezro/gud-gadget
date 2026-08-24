@@ -1,0 +1,4 @@
+`rg -n "damage|FB_DAMAGE_CLIPS|DRM_MODE_FB_DAMAGE_CLIPS" mir-android2-platform-gud/src gud/backport-4.9`: no native capture-path damage or GUD damage property found.
+`mir_buffer_stream_get_graphics_region` and `mir_buffer_stream_swap_buffers_sync` source audit: complete-buffer path confirmed.
+Software framebuffer diffing: not run and not implemented.
+E2-T04: not started.

@@ -1,0 +1,4 @@
+No propagation was implemented because native damage is not exposed to this
+capture path. A future implementation would need a Mir API that supplies
+buffer-coordinate damage, coordinate/stride validation, and a GUD
+`FB_DAMAGE_CLIPS` property path before forwarding rectangles.

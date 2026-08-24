@@ -1,0 +1,12 @@
+Aug 23 20:12:04 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 23 20:12:04 ubuntu-phablet xdispd-throughp[14549]: xdispd: unavailable -> available: GUD sink available
+Aug 23 20:12:04 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+Aug 23 20:13:00 ubuntu-phablet systemd[1]: Stopping xdisp.service - Lomiri GUD external display lifecycle...
+Aug 23 20:13:00 ubuntu-phablet systemd[1]: xdisp.service: Deactivated successfully.
+Aug 23 20:13:00 ubuntu-phablet systemd[1]: Stopped xdisp.service - Lomiri GUD external display lifecycle.
+Aug 23 20:13:00 ubuntu-phablet systemd[1]: Starting xdisp.service - Lomiri GUD external display lifecycle...
+Aug 23 20:13:00 ubuntu-phablet xdispd-e2-direc[14765]: xdispd: unavailable -> available: GUD sink available
+Aug 23 20:13:00 ubuntu-phablet systemd[1]: Started xdisp.service - Lomiri GUD external display lifecycle.
+===STATE===
+active
+root       14765       1       00:33 /home/phablet/xdispd-e2-direct-rgb565-13818a0

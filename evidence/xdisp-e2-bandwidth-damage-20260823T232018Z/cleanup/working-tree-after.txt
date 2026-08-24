@@ -1,0 +1,5 @@
+Tracked files are clean in all three repositories after the local commits.
+Untracked files remain intentionally preserved: pre-existing gud test binaries,
+historical gud-gadget evidence, the new local xdisp-e2 evidence directory,
+and historical mir benchmark artifacts. No unrelated untracked files were
+removed or staged.

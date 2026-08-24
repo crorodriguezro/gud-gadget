@@ -1,0 +1,11 @@
+FunctionFS patch packaging: PASS
+
+Patch: gud-gadget/docs/test-only/functionfs-large-aio-vmalloc.patch
+Patch SHA256: 73c4e0f7acca21d76625224ed2c65b73a1e96e201116b6a92f4083fabba161ae
+Baseline f_fs.c SHA256: 9a365e11c0941712295561bd5e3770a43ab71c9e06fadee879e3d192baef0342
+Qualified f_fs.c SHA256: 9d9d0dc7dcc05206123c9ad9acaf32fb78356fdf206bdf2d0faf101d954c7cad
+Captured .config SHA256: 468663f1cf02031078f90e1fd89c2a7b4b044b2e75fb180fdeb746483b3bf55e
+Patch dry-run against .xfersizetrace-source: PASS
+Build source: .xfercompltrace-source
+Build output: .functionfs-kernel-build-6.12.47-repro
+Target release: 6.12.47+rpt-rpi-v8-ffs-xfercompltrace

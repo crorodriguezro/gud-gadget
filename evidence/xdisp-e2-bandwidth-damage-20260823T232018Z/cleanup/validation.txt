@@ -1,0 +1,9 @@
+Patch dry-run: PASS
+Derived evidence correction: PASS; no raw logs changed
+GUD help-text correction: PASS
+XDISP timeout policy source change: PASS; default 10 seconds, explicit 1..45 diagnostic override
+Managed LZ4: 808 one-rectangle host records and 808 Pi frame records
+Transport safety: zero observed short completions, timeouts, poisoned transitions, ambiguous accepted I/O, or ownership ambiguity
+Final runtime: phone cap 12800 and XDISP available; Pi compression none/max buffer 12800, UDC configured, receiver Idle in startup telemetry
+Clean kernel rebuild: PASS; Image sha256 40b56fa38e1cbe2b07ecebd89ae72d8abbb2dbf0df8f9283e217eb5746b5c4bc; usb_f_fs.ko sha256 29639ab76ceba2e492943e6a8dee6316d7d1e4fdaf21b8725a49196e401f075b; vmlinux sha256 1fec93da70a1db0a951900db90df4118bbfc36a74ff15e71297d319f5262b6a4; modules_install: PASS
+xdispd strict syntax check: PASS with C++14, -Wall -Wextra -Werror and gio/udev/drm headers; full CMake configure was not available because this host lacks Boost and legacy Android/Mir pkg-config dependencies

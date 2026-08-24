@@ -1,0 +1,7 @@
+The live RGB565 run produced changing fingerprints and a valid completed PPM;
+the direct-copy path copied the Mir region without a format conversion.
+Stride 2560 at width 1280 is exactly 2 bytes/pixel, and mapped storage is
+1843200 bytes/frame. The source-only run did not inject a deterministic
+black/white/red/green/blue pattern, so word-level RGB565 sample validation was
+not separately captured. The returned format/stride/direct-copy combination is
+nevertheless direct buffer evidence, not an inferred width*bpp calculation.

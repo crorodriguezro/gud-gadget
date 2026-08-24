@@ -1,0 +1,15 @@
+Final Pi state after qualification cleanup
+
+systemd gud-userspace.service: active; enabled
+UDC: configured
+GUD_FFS_READ_SIZE=16384
+GUD_RECEIVE_MODE=status-on-set-aio
+GUD_TEST_COMPRESSION=none
+GUD_TEST_MAX_BUFFER_SIZE=12800
+GUD_TEST_OUTPUT_MODE=1280x720
+GUD_TRANSFER_FORMAT=xrgb8888
+GUD_FRAME_DUMP_MODE=disabled
+GUD_PATTERN_MODE=off
+
+The temporary RGB565 service drop-in was removed. The production userspace
+binary and production drop-ins were not modified.

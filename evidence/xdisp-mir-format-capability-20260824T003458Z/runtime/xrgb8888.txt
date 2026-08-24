@@ -1,0 +1,12 @@
+Requested source: xrgb8888 (enum 4)
+Result: REJECTED before screencast creation
+
+Available: 1,2,6,7 = abgr8888,xbgr8888,rgb888,rgb565
+Error: requested Mir source format xrgb8888 is not advertised
+Frames acquired: 0
+CPU mapped: no
+Actual format/stride: none
+
+This is the exact backend capability result, not proof that the enum is absent.
+The enum exists in Mir common.h, but this deployed Android2 backend does not
+advertise it.

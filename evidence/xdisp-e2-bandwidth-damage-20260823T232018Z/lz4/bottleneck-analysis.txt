@@ -1,0 +1,10 @@
+Full-frame LZ4 changes wire bytes while preserving one logical rectangle and
+one GUD admission. In the managed sample it lowered median wire payload to
+18.4% of RAW and improved presented rate to 13.27 fps, but compression cost
+and variable content made the p95 E2E interval 165.117 ms. The remaining
+dominant cost is the synchronous one-admission USB transfer interval plus
+full-frame capture/presentation scheduling; no admission redesign was started.
+
+The noise control produced safe RAW fallback, not a transport fault. The
+gradient control is the available deterministic image-like proxy; the current
+pattern CLI does not expose a native photo asset workload.

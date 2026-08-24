@@ -1,0 +1,12 @@
+Advertised and not independently frame-probed in this audit:
+
+abgr8888 enum 1: advertised; current production auto selection chooses this
+first; runtime managed logs show stride 5120 at 1280 width and channel-reorder
+to XRGB8888 transport.
+xbgr8888 enum 2: advertised; not explicitly selected in this audit.
+bgr888 enum 5: enum exists but not advertised.
+argb8888 enum 3: enum exists but explicit request rejected as not advertised.
+xrgb8888 enum 4: enum exists but explicit request rejected as not advertised.
+rgba5551/rgba4444 enums 8/9: defined but not advertised; not probed.
+
+The available list is the authoritative deployed-backend request set.

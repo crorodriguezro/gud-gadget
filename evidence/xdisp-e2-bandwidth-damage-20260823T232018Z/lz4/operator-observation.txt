@@ -1,0 +1,5 @@
+The Pi was stopped only after its ownership gate reported proven Idle and the
+UDC was not attached. The temporary 3,686,400-byte LZ4 descriptor enumerated
+successfully. Managed activation reached active and deactivation returned to
+available. The temporary override was removed before the Pi was restarted with
+compression none/max buffer 12800. The phone module was reloaded at cap 12800.

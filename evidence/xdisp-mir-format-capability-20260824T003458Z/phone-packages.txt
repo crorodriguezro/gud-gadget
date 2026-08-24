@@ -1,0 +1,36 @@
+Collected from OnePlus 6 over SSH on 2026-08-23 local time / 2026-08-24 UTC.
+
+OS: Ubuntu 24.04.4 LTS, Ubuntu Touch (Noble)
+Kernel: 4.9.112-g6b190d86b
+
+Mir runtime packages:
+libmir1al3:arm64 2.9.0.1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+libmir1client9:arm64 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+libmir1common7:arm64 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+libmir1cookie2:arm64 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+libmir1core1:arm64 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+libmir1platform18:arm64 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+libmir1protobuf3ubports1:arm64 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+libmir1server53:arm64 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+libmir1wayland0:arm64 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+libmirclient9:arm64 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+mir1-client-platform-android2-5:arm64 1.8.0~20241214090501.18~5869d7e+ubports~dev
+mir1-graphics-drivers-android2:arm64 1.8.0~20241214090501.18~5869d7e+ubports~dev
+mir1-platform-graphics-android2-16:arm64 1.8.0~20241214090501.18~5869d7e+ubports~dev
+mir1-platform-input-evdev7:arm64 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+mir1-utils 1.8.3-0ubports1+0~20260316153853.1+ubports24.04.1~1.gbpbd1c92
+
+Lomiri:
+lomiri 0.5.0+0~20260225173057.3+ubports24.04.1~1.gbp219367
+lomiri-common 0.5.0+0~20260225173057.3+ubports24.04.1~1.gbp219367
+lomiri-system-compositor 1.0.0+0~20250825193030.10+ubports~dev~1.gbpc02afe
+qtmir-qt5-mir1:arm64 0.7.2+0~20260224160609.1+ubports24.04.1~1.gbpc4a4f7
+
+Other relevant runtime:
+libhybris 0.1.0+git20250630+0cedf90-0ubports1+0~20260108202046.2+ubports24.04.1~1.gbp76766a
+
+Library sonames:
+/usr/lib/aarch64-linux-gnu/libmir1client.so.9
+/usr/lib/aarch64-linux-gnu/libmir1common.so.7
+/usr/lib/aarch64-linux-gnu/libmir1platform.so.18
+/usr/lib/aarch64-linux-gnu/libmir1server.so.53

@@ -1,0 +1,41 @@
+3369872b08e096593956515069be3ab0d40d259a5479cd668e74f13a3b577f2e  /home/phablet/mirgud-direct-rgb565-13818a0.bin
+Usage:
+  -h [ --help ]                 show this help
+  -m [ --mir-socket-file ] arg  Mir server socket
+  --source-mode arg             source selection: primary (default) or extend 
+                                (Aethercast-compatible)
+  --pixel-format arg            transport pixel format: rgb565 (default) or 
+                                xrgb8888
+  --source-pixel-format arg     Mir source pixel format: auto (default), 
+                                abgr8888, xbgr8888, argb8888, xrgb8888, rgb888,
+                                bgr888, or rgb565
+  -s [ --size ] arg             GUD/screencast size (default 1280 720)
+  --cap-interval arg            capture every N display intervals
+  --monitor-pid arg             sample this compositor PID's fd/sync_file 
+                                counts
+  --pattern                     generated transport workload (no Mir)
+  --pattern-fps arg             generated workload rate (default 1)
+  --pattern-duration arg        generated workload duration in seconds (0 = 
+                                until stopped)
+  --benchmark-warmup arg        exclude this many initial seconds from final 
+                                statistics
+  --pattern-workload arg        generated workload: solid, checkerboard, 
+                                gradient, motion, or noise
+  --pattern-seed arg            deterministic generated workload seed
+  --pattern-generation arg      pattern generation: pregenerated (default) or 
+                                per-frame
+  --pattern-sequence-frames arg bounded pregenerated motion/noise sequence 
+                                length (default 60)
+  --quality                     generate deterministic quality reference 
+                                patterns and dump both RGB565 and XRGB8888 
+                                PPMs; requires --dump-frame
+  --no-gud                      Mir source/copy/conversion benchmark: 
+                                copy/release frames without opening GUD
+  --extend-hold                 hold an Aethercast-compatible extend screencast
+                                without reading frames
+  --managed                     run as an xdispd-managed child
+  --gud-fd arg                  inherited GUD DRM fd (managed mode)
+  --gud-connector arg           required GUD connector id (managed mode)
+  --status-fd arg               managed status pipe fd
+  --dump-frame arg              write completed owned frames as binary PPM 
+                                (prefix or single path)

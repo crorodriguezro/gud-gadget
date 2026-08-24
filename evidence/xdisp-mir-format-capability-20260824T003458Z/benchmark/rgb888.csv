@@ -1,0 +1,2 @@
+format,source,transport,frames,elapsed_us,acquire_us_avg,conversion_us_avg,release_us_avg,capture_cycle_us_avg,fps,notes
+rgb888,rgb888,xrgb8888,255,7853494,593,24174,4941,29710,32,"source-only GUD-disabled live run; conversion is mirgud RGB888->XRGB8888"

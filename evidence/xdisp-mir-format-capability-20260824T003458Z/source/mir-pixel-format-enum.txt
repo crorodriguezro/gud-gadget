@@ -1,0 +1,26 @@
+MirPixelFormat from Mir common.h (values are explicit/ordered):
+
+0  mir_pixel_format_invalid  4 bytes by MIR_BYTES_PER_PIXEL fallback; not a usable format
+1  mir_pixel_format_abgr_8888  4 Bpp, alpha, integer 0xAABBGGRR, LE memory R,G,B,A
+2  mir_pixel_format_xbgr_8888  4 Bpp, X/padding, integer 0x00BBGGRR, LE memory R,G,B,X
+3  mir_pixel_format_argb_8888  4 Bpp, alpha, integer 0xAARRGGBB, LE memory B,G,R,A
+4  mir_pixel_format_xrgb_8888  4 Bpp, X/padding, integer 0x00RRGGBB, LE memory B,G,R,X
+5  mir_pixel_format_bgr_888    3 Bpp, no alpha, literal B,G,R byte order
+6  mir_pixel_format_rgb_888    3 Bpp, no alpha, literal R,G,B byte order
+7  mir_pixel_format_rgb_565    2 Bpp, no alpha, 16-bit R5:G6:B5 word
+8  mir_pixel_format_rgba_5551  2 Bpp, alpha, 16-bit R5:G5:B5:A1 word
+9  mir_pixel_format_rgba_4444  2 Bpp, alpha, 16-bit R4:G4:B4:A4 word
+10 mir_pixel_formats           sentinel (one past the last format)
+
+The deployed Android2 allocator advertises only 1, 2, 6, and 7 at runtime.
+The exact runtime line was:
+available_mir_formats=1,2,6,7 available_mir_format_names=abgr8888,xbgr8888,rgb888,rgb565
+
+Compatibility note: the local Android2 format-conversion header also references
+mir_pixel_format_rgba_10101002, but that symbol is not present in the deployed
+Mir common.h enum listing used for this audit and was not runtime-advertised.
+It is therefore treated as an unresolved Android compatibility reference, not
+as a verified MirPixelFormat enum/value in this capability matrix.
+
+Source references: Mir common.h API enum/MIR_BYTES_PER_PIXEL; local
+src/utils/gud_screencast_format.h:155-183; runtime lines above.

@@ -1,0 +1,2 @@
+format,source,transport,frames,elapsed_us,acquire_us_avg,conversion_us_avg,release_us_avg,capture_cycle_us_avg,fps,notes
+rgb565,rgb565,rgb565,2434,39859498,359,1660,5023,7043,61,"source-only GUD-disabled run; direct copy"

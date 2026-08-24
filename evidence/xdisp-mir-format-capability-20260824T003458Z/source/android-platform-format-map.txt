@@ -1,0 +1,28 @@
+Local Android2 platform source audit:
+
+src/platforms/android/server/graphic_buffer_allocator.cpp:106-136 forwards
+allocation to GrallocModule and declares supported formats in this order:
+abgr8888, xbgr8888, rgb888, rgb565.
+
+src/platforms/android/include/android_format_conversion-inl.h:35-55 maps:
+Mir abgr8888 -> HAL_PIXEL_FORMAT_RGBA_8888
+Mir xbgr8888 -> HAL_PIXEL_FORMAT_RGBX_8888
+Mir argb8888 -> HAL_PIXEL_FORMAT_BGRA_8888
+Mir xrgb8888 -> HAL_PIXEL_FORMAT_BGRA_8888
+Mir rgb888 -> HAL_PIXEL_FORMAT_RGB_888
+Mir rgb565 -> HAL_PIXEL_FORMAT_RGB_565
+
+src/platforms/android/server/graphic_buffer_allocator.cpp:119-128 uses the
+requested Android format for framebuffer allocation. gralloc_module.cpp:63-98
+passes aligned width, height, format, usage flags, and receives native stride.
+src/platforms/android/server/buffer.cpp:74-82 derives Mir stride from native
+stride and the Mir format; :206-220 uses GRALLOC_USAGE_SW_READ_OFTEN for CPU
+read access. Thus RGB888 is not represented as a 32-bit format in this map,
+and RGB565 is not expanded at the allocator boundary.
+
+Software usage includes SW_READ_OFTEN/SW_WRITE_OFTEN plus HW_COMPOSER and
+HW_TEXTURE (android_format_conversion-inl.h:79-87). Hardware framebuffer
+allocation uses the platform's framebuffer gralloc flags.
+
+Runtime confirmation is stronger than the mapping alone: RGB888 returned
+stride 3840 and RGB565 returned stride 2560 for width 1280.

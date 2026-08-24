@@ -1,0 +1,12 @@
+Lomiri's role is to own the Mir server and expose/configure the Virtual output;
+the format selection is in the Mir screencast client spec and backend allocator.
+
+Evidence:
+- Mir Virtual output id 3 was created/used by the extend screencast.
+- The same available-format list and successful explicit format requests were
+  observed through the xdispd/mirgud client.
+- No Lomiri shell source or policy in this project selects RGB565/RGB888 for
+  the screencast; xdispd passes the region and mirgud passes the Mir format.
+
+Conclusion: no additional Lomiri format restriction was found. The deciding
+restriction is Mir's backend-advertised allocator set, not shell policy.

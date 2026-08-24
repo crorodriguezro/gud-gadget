@@ -1,0 +1,6 @@
+Qualified RAW baseline: gud-gadget/evidence/xdisp-e1-fullframe-managed-scaling-20260823T223143Z
+
+Format: XRGB8888, 1280x720, 3,686,400 logical bytes/frame.
+Admission: one logical full-frame SET_BUFFER per presented frame.
+Measured baseline: approximately 91 ms USB bulk, E2E p50 119.826 ms,
+presented approximately 9 fps.

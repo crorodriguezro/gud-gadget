@@ -1,0 +1,14 @@
+Context only; no downstream implementation was performed.
+
+gud/backport-4.9/gud_pipe.c:293-296 maps DRM_FORMAT_RGB565 and
+DRM_FORMAT_XRGB8888 to GUD protocol formats; :1207-1208 and :1272-1273 accept
+those two framebuffer formats. The host driver does not accept RGB888.
+
+gud-gadget/gadget/src/lib.rs:47-49 defines GUD RGB565 (0x40), RGB888 (0x50),
+and XRGB8888 (0x80), with :1039-1041 bytes/pixel 2, 3, and 4. The Pi gadget
+has protocol-level RGB888 support, but the current OnePlus host path cannot
+originate/submit it as a DRM framebuffer format.
+
+The current downstream constraint does not alter the Mir result: Mir itself
+delivers packed RGB888, but current mirgud/host integration cannot carry it
+without additional plumbing.

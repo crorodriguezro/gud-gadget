@@ -1,0 +1,24 @@
+Command (existing diagnostic binary, GUD disabled):
+/home/phablet/mirgud-source-format-430794c.bin --source-mode extend
+  --mir-socket-file /run/mir_socket --size 1280 720
+  --source-pixel-format rgb888 --pixel-format xrgb8888 --no-gud
+
+Observed:
+available_mir_formats=1,2,6,7 available_mir_format_names=abgr8888,xbgr8888,rgb888,rgb565 requested_source_pixel_format=rgb888
+Stage B virtual/screencast source enabled 1280x720 requested_format=6 transport=xrgb8888
+virtual frame source is CPU mapped 1280x720 mir_format=6 stride=3840 row_order=top-down transport=xrgb8888 conversion_path=rgb888-expand
+
+Bounded run result:
+frames_received=255 frames_submitted=255 frames_presented=254
+capture_failures=0 conversion_failures=0 release_failures=0
+source_mir_format=6 conversion_path_rgb888_expand_frames=255
+acquire_us_avg=593 conversion_us_avg=24174 release_us_avg=4941
+capture_cycle_us_avg=29710 received_fps=32
+
+Classification:
+enum exists: yes; API accepted: yes; stream created: yes; frames acquired: yes;
+CPU map: yes; actual format: RGB888/enum 6; stride: 3840 bytes; logical
+visible bytes: 1280*720*3 = 2764800; mapped storage: 3840*720 = 2764800.
+True packed 3-byte rows are demonstrated by stride=width*3. The mirgud
+conversion path shown is the requested xrgb8888 transport expansion, not a Mir
+source conversion.

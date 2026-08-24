@@ -1,0 +1,7 @@
+[sudo] password for phablet: ===START===
+active
+Error: GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: No such interface “org.lomiri.XDisp” on object at path /org/lomiri/XDisp
+Error: GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: No such interface “org.lomiri.XDisp” on object at path /org/lomiri/XDisp
+===DEACTIVATE===
+Error: GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: No such interface “org.lomiri.XDisp” on object at path /org/lomiri/XDisp
+Error: GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: No such interface “org.lomiri.XDisp” on object at path /org/lomiri/XDisp

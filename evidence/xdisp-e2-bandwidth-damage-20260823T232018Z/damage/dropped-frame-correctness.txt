@@ -1,0 +1,7 @@
+Current status: NOT IMPLEMENTED.
+
+`LatestFramePresenter` keeps the newest pending complete frame and can drop
+older frames. If native partial damage is later added, pending damage must be
+unioned across dropped ancestry and retained until successful presentation, or
+a full-frame fallback must be forced whenever ancestry is uncertain. Attaching
+only the newest frame's partial damage would risk stale regions.

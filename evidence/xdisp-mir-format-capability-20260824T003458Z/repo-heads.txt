@@ -1,0 +1,18 @@
+UTC: 2026-08-24T00:34:58Z
+
+gud
+  branch: pixel-format-benchmark
+  HEAD: 4a2eb91b0ea1a3404b38af75821250a14040ccbf
+  status: modified only by pre-existing untracked test binaries under backport-4.9/tests/
+
+gud-gadget
+  branch: pixel-format-benchmark
+  HEAD: 0af1ae3ace9452f12db5621812b3c89860ba55c7
+  status: pre-existing untracked evidence/ and SHA256SUMS content; this audit directory is new
+
+mir-android2-platform-gud
+  branch: pixel-format-benchmark
+  HEAD: 13818a0ded045042cc9f955809fccfcfa896fb2e
+  status: pre-existing untracked benchmark evidence under doc/benchmarks/
+
+No commit was created and nothing was pushed.

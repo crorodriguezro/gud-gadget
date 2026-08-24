@@ -1,0 +1,6 @@
+   8917       1    02:23:33 /home/phablet/xdispd-throughput-trace
+  12703       1       28:04 timeout 8s /home/phablet/mirgud-source-format-430794c.bin --source-mode extend --mir-socket-file /run/mir_socket --size 1280 720 --source-pixel-format rgb888 --pixel-format xrgb8888 --no-gud --dump-frame /tmp/xdisp-audit-rgb888.ppm --dump-frame-after 3
+  12704   12703       28:04 /home/phablet/mirgud-source-format-430794c.bin --source-mode extend --mir-socket-file /run/mir_socket --size 1280 720 --source-pixel-format rgb888 --pixel-format xrgb8888 --no-gud --dump-frame /tmp/xdisp-audit-rgb888.ppm --dump-frame-after 3
+   8917       1    02:23:34 /home/phablet/xdispd-throughput-trace
+  12703       1       28:05 timeout 8s /home/phablet/mirgud-source-format-430794c.bin --source-mode extend --mir-socket-file /run/mir_socket --size 1280 720 --source-pixel-format rgb888 --pixel-format xrgb8888 --no-gud --dump-frame /tmp/xdisp-audit-rgb888.ppm --dump-frame-after 3
+  12704   12703       28:05 /home/phablet/mirgud-source-format-430794c.bin --source-mode extend --mir-socket-file /run/mir_socket --size 1280 720 --source-pixel-format rgb888 --pixel-format xrgb8888 --no-gud --dump-frame /tmp/xdisp-audit-rgb888.ppm --dump-frame-after 3

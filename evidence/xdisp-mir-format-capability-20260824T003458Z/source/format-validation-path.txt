@@ -1,0 +1,21 @@
+Mir/client-side validation observed by the existing mirgud diagnostic:
+
+select_source_pixel_format() rejects an explicit format not present in
+mir_connection_get_available_surface_formats(). Existing phone evidence for
+explicit argb8888 and xrgb8888 ends before screencast creation with:
+requested Mir source format <name> is not advertised.
+
+For advertised formats, mir_screencast_create_sync() succeeded and the returned
+MirGraphicsRegion.pixel_format exactly matched the requested value:
+RGB565: requested 7, returned 7.
+RGB888: requested 6, returned 6.
+
+The client does not silently substitute a different format: explicit requests
+are compared after stream creation and mismatch is fatal. The API's accepted
+format set is backend-dependent; this phone's backend advertises 1,2,6,7.
+The API reports a Mir format, dimensions, stride, and CPU address at the
+buffer-stream boundary. The client reports bytes as stride*height where needed.
+
+No Mir core source or library was modified or rebuilt during this audit. The
+evidence therefore proves acceptance and returned buffer format, but does not
+claim that every compositor-internal rendering operation uses the same format.

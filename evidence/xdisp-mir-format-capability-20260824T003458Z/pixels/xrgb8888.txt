@@ -1,0 +1,4 @@
+No XRGB8888 source buffer was delivered by the deployed backend; explicit
+request was rejected. The current production source is Mir ABGR8888, whose
+managed runtime line reports stride 5120 and mir_format=1, then mirgud performs
+channel reorder to XRGB8888 transport.

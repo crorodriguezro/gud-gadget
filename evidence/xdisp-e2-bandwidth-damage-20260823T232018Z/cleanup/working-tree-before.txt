@@ -1,0 +1,8 @@
+The task started with clean tracked files in gud, gud-gadget, and mir-android2-platform-gud.
+Pre-existing untracked artifacts were present and intentionally preserved:
+- gud/backport-4.9/tests/gud-kms-fill-aarch64
+- gud/backport-4.9/tests/gud-kms-fill-ab-aarch64
+- gud/backport-4.9/tests/gud-kms-smoke
+- gud/backport-4.9/tests/gud-kms-stage
+- historical untracked evidence directories under gud-gadget/evidence/
+- historical untracked benchmark directories under mir-android2-platform-gud/doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/

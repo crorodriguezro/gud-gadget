@@ -1,0 +1,9 @@
+===PI===
+Mon 24 Aug 01:01:29 UTC 2026
+Linux raspberrypi 6.12.47+rpt-rpi-v8-ffs-xfercompltrace #2 SMP PREEMPT Sun Aug 16 23:57:59 -05 2026 aarch64 GNU/Linux
+active
+enabled
+configured
+root        2564       1  0 00:26 ?        00:00:01 /home/cristian/gud-drm /dev/dri/card0
+===GADGET_ENV===
+Environment=RUST_LOG=info GUD_FFS_READ_SIZE=16384 GUD_RECEIVE_MODE=status-on-set-aio GUD_TEST_COMPRESSION=none GUD_TEST_MAX_BUFFER_SIZE=12800 GUD_TEST_OUTPUT_MODE=1280x720 GUD_TRANSFER_FORMAT=xrgb8888 GUD_FRAME_DUMP_MODE=disabled GUD_PATTERN_MODE=off

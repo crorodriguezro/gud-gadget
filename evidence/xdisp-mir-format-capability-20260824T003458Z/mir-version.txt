@@ -1,0 +1,8 @@
+Mir version: 1.8.3 (runtime package versions and sonames)
+Mir platform package source lineage: UBports mir-android2-platform, package
+version 1.8.0, source revision 5869d7e in the phone package version.
+Local platform audit source: mir-android2-platform-gud HEAD 13818a0.
+Lomiri version: 0.5.0.
+The phone's installed development headers were not present; enum values were
+cross-checked against Mir's common.h API listing and the deployed runtime's
+available-format IDs.

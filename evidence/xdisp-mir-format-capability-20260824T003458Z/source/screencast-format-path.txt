@@ -1,0 +1,26 @@
+Current mirgud path, local source lines:
+
+1. src/utils/gud_screencast.cpp:1351-1363 connects to /run/mir_socket and
+   obtains the Mir display configuration.
+2. :1380-1395 calls
+   mir_connection_get_available_surface_formats(), logs all IDs/names, and
+   selects auto/front or the explicitly requested source enum through
+   mirgud::select_source_pixel_format().
+3. :1396-1400 creates the spec, sets width/height, and calls
+   mir_screencast_spec_set_pixel_format(spec, format), then sets the capture
+   region.
+4. :1406-1418 calls mir_screencast_create_sync(spec) and rejects a null stream.
+5. :1424-1431 gets the MirBufferStream and, for an explicit request, compares
+   graphics_region(stream).pixel_format with the requested enum.
+6. :670-673 calls mir_buffer_stream_get_graphics_region() and requires a
+   non-null vaddr. :732-771 validates width/height/stride/format, copies rows,
+   and releases with mir_buffer_stream_swap_buffers_sync().
+
+The old generic screencast sample in src/utils/screencast.cpp uses the same
+Mir API at :555-562 and :567-580, including
+mir_screencast_spec_set_pixel_format().
+
+The exact current production child is built by src/xdisp/xdispd.cpp:607-612:
+--source-mode extend --pixel-format xrgb8888 --mir-socket-file /run/mir_socket
+--size 1280 720. It does not pass --source-pixel-format, so source selection
+is auto and the first advertised format is abgr8888.

@@ -1,0 +1,23 @@
+Command (existing diagnostic binary, GUD disabled):
+/home/phablet/mirgud-source-format-430794c.bin --source-mode extend
+  --mir-socket-file /run/mir_socket --size 1280 720
+  --source-pixel-format rgb565 --pixel-format rgb565 --no-gud
+
+Observed in the 2026-07-30 source-only run:
+available_mir_formats=1,2,6,7 available_mir_format_names=abgr8888,xbgr8888,rgb888,rgb565 requested_source_pixel_format=rgb565
+Stage B virtual/screencast source enabled 1280x720 requested_format=7 transport=rgb565
+virtual frame source is CPU mapped 1280x720 mir_format=7 stride=2560 row_order=top-down transport=rgb565 conversion_path=direct-copy
+
+Final source-only report:
+frames_received=2434 frames_submitted=2434 frames_presented=2434
+capture_failures=0 conversion_failures=0 release_failures=0
+source_mir_format=7 conversion_path_direct_copy_frames=2434
+acquire_us_avg=359 conversion_us_avg=1660 release_us_avg=5023
+capture_cycle_us_avg=7043 received_fps=61
+
+Classification:
+enum exists: yes; API accepted: yes; stream created: yes; frames acquired: yes;
+CPU map: yes; actual format: RGB565/enum 7; stride: 2560 bytes; logical
+visible bytes: 1280*720*2 = 1843200; mapped storage: 2560*720 = 1843200.
+The exact stride and direct-copy path show no XRGB8888-sized backing buffer at
+the MirGraphicsRegion boundary.

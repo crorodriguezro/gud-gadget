@@ -1,0 +1,7 @@
+Classification: NO_NATIVE_DAMAGE_FOR_THIS_PATH.
+
+The current source uses `mir_buffer_stream_get_graphics_region()` to acquire a
+complete CPU-mapped screencast buffer and `mir_buffer_stream_swap_buffers_sync()`
+to release it. No damage rectangle or damage metadata is returned by the Mir C
+screencast/buffer-stream API used in `src/utils/gud_screencast.cpp`. Generic Mir
+compositor damage support is not evidence that this capture path exposes it.

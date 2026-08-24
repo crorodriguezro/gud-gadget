@@ -1,0 +1,2 @@
+Updated `gud/backport-4.9/gud_pipe.c` MODULE_PARM_DESC from `1..524288` to
+`1..4194304`. The actual diagnostic validation limit was not changed.

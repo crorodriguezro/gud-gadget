@@ -1,0 +1,18 @@
+===PHONE===
+Mon Aug 24 01:01:07 AM UTC 2026
+Linux ubuntu-phablet 4.9.112-g6b190d86b #1 SMP PREEMPT Thu Mar 12 00:01:48 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
+host
+9
+root        8917       1  1 17:38 ?        00:01:49 /home/phablet/xdispd-throughput-trace
+phablet    12703       1  0 19:33 ?        00:00:00 timeout 8s /home/phablet/mirgud-source-format-430794c.bin --source-mode extend --mir-socket-file /run/mir_socket --size 1280 720 --source-pixel-format rgb888 --pixel-format xrgb8888 --no-gud --dump-frame /tmp/xdisp-audit-rgb888.ppm --dump-frame-after 3
+phablet    12704   12703  0 19:33 ?        00:00:06 /home/phablet/mirgud-source-format-430794c.bin --source-mode extend --mir-socket-file /run/mir_socket --size 1280 720 --source-pixel-format rgb888 --pixel-format xrgb8888 --no-gud --dump-frame /tmp/xdisp-audit-rgb888.ppm --dump-frame-after 3
+===DRM===
+total 0
+drwxr-xr-x  2 root root        180 Aug 23 18:26 by-path
+crw-rw----+ 1 root video  226,   0 Aug 23 16:29 card0
+crw-rw----+ 1 root video  226,   1 Aug 23 18:26 card1
+crw-rw----  1 root video  226,  64 Jun  5 10:36 controlD64
+crw-rw----  1 root video  226,  65 Aug 23 18:26 controlD65
+crw-rw----+ 1 root render 226, 128 Jun  5 10:36 renderD128
+===MODULE===
+gud                    45056  0

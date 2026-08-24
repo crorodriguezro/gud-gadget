@@ -1,0 +1,10 @@
+The live RGB888 run produced changing fingerprints and a valid completed PPM
+after mirgud expanded the packed source to XRGB8888 transport. The source
+region was 1280*720*3 bytes per row storage (stride 3840), so the runtime
+buffer itself was not a nominal 24-bit format padded to 32 bpp.
+
+Exact per-pixel RGB888 channel-byte validation was not instrumented at the
+MirGraphicsRegion address in this run; color plausibility was validated only
+through the successful frame conversion/PPM path. Therefore internal Mir
+rendering-versus-conversion remains UNKNOWN even though delivery is true
+packed RGB888.

@@ -1,0 +1,104 @@
+● gud-userspace.service - Userspace GUD gadget
+     Loaded: loaded (/etc/systemd/system/gud-userspace.service; enabled; preset: enabled)
+    Drop-In: /etc/systemd/system/gud-userspace.service.d
+             └─10-xdisp-p0.1-containment.conf, 20-xdisp-p0.1-ffs-read-size.conf, 98-e1-t04-production-aio.conf, 99-throughput-production-info.conf, zzz-e1-fullframe-managed.conf
+     Active: active (running) since Mon 2026-08-24 00:26:49 BST; 1h 39min ago
+ Invocation: 73a8302dc3714132a2be8cca889d7986
+    Process: 2562 ExecStartPre=/bin/sh -c while [ ! -e /dev/dri/card0 ] || [ ! -e /sys/class/udc/3f980000.usb/state ]; do sleep 1; done (code=exited, status=0/SUCCESS)
+   Main PID: 2564 (gud-drm)
+      Tasks: 3 (limit: 168)
+        CPU: 1.949s
+     CGroup: /system.slice/gud-userspace.service
+             └─2564 /home/cristian/gud-drm /dev/dri/card0
+
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.516207Z  INFO gud_drm: Catalog-derived memory estimate; actual DRM pitch/mapping lengths are recorded per allocation logical_scanout_estimate_bytes=49766400 max_shadow_bytes=8294400 logical_peak_estimate_bytes=58060800 transfer_format=Xrgb8888
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.516246Z  INFO gud_drm: Picked deterministic physical DRM startup/fallback mode width=1280 height=720 test_override=true dynamic_mode_match=false mode=Mode { name: "1280x720", clock: 74250, size: (1280, 720), hsync: (1390, 1430, 1650), vsync: (725, 730, 750), hskew: 0, vscan: 0, vrefresh: 60, mode_type: ModeTypeFlags(DRIVER) }
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.577379Z  INFO gud_drm: CRTC set, display should be active
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.694640Z  INFO gud_drm: Filled both framebuffers with waiting screen
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.694721Z  WARN gud_drm: Failed to flush test pattern: dirty DRM framebuffer
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.712046Z  INFO gud_drm: USB gadget bound to UDC
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.712110Z  INFO gud_drm: Entering main event loop
+Aug 24 00:26:49 raspberrypi gud-drm[2564]: 2026-08-23T23:26:49.712215Z  INFO gud_drm: E1-T05 lifecycle event observed from proven Idle ownership event="e1_t05_lifecycle_observed" lifecycle_event="bind" lifecycle_event_state=Idle usb_session_state=WaitingForHost aggregate_idle=true exact_aio_idle=true accepted_operation_absent=true aio_queue_empty=true pending_exact_receive_absent=true ready_exact_payload_absent=true cleanup_drain_absent=true diagnostic_guard_inactive=true diagnostic_lifecycle_containment=false prearmed_read_inactive=true aggregate_state=Idle aio_state=Idle transaction_seq=0 activation_generation=None currently_owned=false
+Aug 24 00:26:50 raspberrypi gud-drm[2564]: 2026-08-23T23:26:50.214414Z  INFO gud_drm: E1-T05 lifecycle event observed from proven Idle ownership event="e1_t05_lifecycle_observed" lifecycle_event="enable" lifecycle_event_state=Idle usb_session_state=Active aggregate_idle=true exact_aio_idle=true accepted_operation_absent=true aio_queue_empty=true pending_exact_receive_absent=true ready_exact_payload_absent=true cleanup_drain_absent=true diagnostic_guard_inactive=true diagnostic_lifecycle_containment=false prearmed_read_inactive=true aggregate_state=Idle aio_state=Idle transaction_seq=0 activation_generation=None currently_owned=false
+Aug 24 00:26:50 raspberrypi gud-drm[2564]: 2026-08-23T23:26:50.215421Z  INFO gud_drm: session_activity had_host_session=true event=GetDescriptor(GetDescriptor { sender: CtrlSender { ctrl_req: CtrlReq { request_type: 193, request: 1, value: 0, index: 0, length: 30 } } })
+# /etc/systemd/system/gud-userspace.service
+[Unit]
+Description=Userspace GUD gadget
+After=systemd-modules-load.service local-fs.target
+Wants=systemd-modules-load.service
+ConditionPathExists=/home/cristian/gud-drm
+ConditionPathExists=/dev/dri/card0
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/cristian
+Environment=RUST_LOG=info
+ExecStartPre=/bin/sh -c 'while [ ! -e /dev/dri/card0 ] || [ ! -e /sys/class/udc/3f980000.usb/state ]; do sleep 1; done'
+ExecStart=/home/cristian/gud-drm /dev/dri/card0
+Restart=on-failure
+RestartSec=1s
+StartLimitIntervalSec=0
+
+[Install]
+WantedBy=multi-user.target
+
+# /etc/systemd/system/gud-userspace.service.d/10-xdisp-p0.1-containment.conf
+# XDISP-P0.1 containment: a proven-idle detach stays in the persistent
+# FunctionFS process. Non-zero failures and crashes stay down.
+[Service]
+Restart=no
+# An in-flight or poisoned Step 5 process ignores SIGTERM so userspace does not
+# trigger the known-risk teardown path. Do not let systemd escalate that stop
+# to SIGKILL; recover by physical/hardware reset instead.
+SendSIGKILL=no
+
+# /etc/systemd/system/gud-userspace.service.d/20-xdisp-p0.1-ffs-read-size.conf
+# XDISP-P0.1 Step 5: replace 125 512-byte reads with four larger reads for the
+# normal 64,000-byte tile while limiting contiguous allocation pressure.
+[Service]
+Environment=GUD_FFS_READ_SIZE=16384
+Environment=RUST_LOG=debug
+
+# /etc/systemd/system/gud-userspace.service.d/98-e1-t04-production-aio.conf
+[Service]
+# Production exact-AIO configuration. Restart policy is intentionally inherited
+# from 10-xdisp-p0.1-containment.conf: only a zero-status proven-Idle detach
+# restarts, while failures and contained ownership remain down.
+UnsetEnvironment=GUD_TEST_PREARM_ONCE_BYTES
+UnsetEnvironment=GUD_TEST_STATUS_ON_SET_BYTES
+UnsetEnvironment=GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES
+Environment=GUD_RECEIVE_MODE=status-on-set-aio
+Environment=GUD_FFS_READ_SIZE=16384
+Environment=GUD_TEST_COMPRESSION=none
+Environment=GUD_TEST_MAX_BUFFER_SIZE=12800
+Environment=GUD_TEST_OUTPUT_MODE=1280x720
+Environment=GUD_TRANSFER_FORMAT=xrgb8888
+Environment=GUD_FRAME_DUMP_MODE=disabled
+Environment=GUD_PATTERN_MODE=off
+Environment=RUST_LOG=debug
+Restart=on-success
+
+# /etc/systemd/system/gud-userspace.service.d/99-throughput-production-info.conf
+[Service]
+Environment=RUST_LOG=info
+
+# /etc/systemd/system/gud-userspace.service.d/zzz-e1-fullframe-managed.conf
+[Service]
+# Production exact-AIO configuration. Restart policy is intentionally inherited
+# from 10-xdisp-p0.1-containment.conf: only a zero-status proven-Idle detach
+# restarts, while failures and contained ownership remain down.
+UnsetEnvironment=GUD_TEST_PREARM_ONCE_BYTES
+UnsetEnvironment=GUD_TEST_STATUS_ON_SET_BYTES
+UnsetEnvironment=GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES
+Environment=GUD_RECEIVE_MODE=status-on-set-aio
+Environment=GUD_FFS_READ_SIZE=16384
+Environment=GUD_TEST_COMPRESSION=none
+Environment=GUD_TEST_MAX_BUFFER_SIZE=12800
+Environment=GUD_TEST_OUTPUT_MODE=1280x720
+Environment=GUD_TRANSFER_FORMAT=xrgb8888
+Environment=GUD_FRAME_DUMP_MODE=disabled
+Environment=GUD_PATTERN_MODE=off
+Environment=RUST_LOG=info
+Restart=on-success
+Environment=RUST_LOG=info GUD_FFS_READ_SIZE=16384 GUD_RECEIVE_MODE=status-on-set-aio GUD_TEST_COMPRESSION=none GUD_TEST_MAX_BUFFER_SIZE=12800 GUD_TEST_OUTPUT_MODE=1280x720 GUD_TRANSFER_FORMAT=xrgb8888 GUD_FRAME_DUMP_MODE=disabled GUD_PATTERN_MODE=off

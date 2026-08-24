@@ -1,0 +1,83 @@
+===MODULE===
+1843200
+crw-rw----+ 1 root video 226, 1 Aug 23 20:08 /dev/dri/card1
+[13102.692629] healthd: battery l=100 v=4286 t=24.8 h=2 st=5 c=21 fc=2878000 cc=0 chg=
+[13103.186623] R0: [cds_mc_thread][251666125170] [01:07:29.995931]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[13103.186682] R0: [cds_mc_thread][251666126434] [01:07:29.995997]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x110
+[13103.186735] R0: [cds_mc_thread][251666127482] [01:07:29.996052]  wlan: [3354:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[13104.002157] R0: [NetworkManager][251681783200] [01:07:30.811454]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13108.637907] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[13108.882998] healthd: battery l=100 v=4287 t=24.8 h=2 st=5 c=20 fc=2878000 cc=0 chg=
+[13109.535017] R0: [cds_mc_thread][251788014349] [01:07:36.344327]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[13109.535076] R0: [cds_mc_thread][251788015599] [01:07:36.344392]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x110
+[13109.535132] R0: [cds_mc_thread][251788016690] [01:07:36.344449]  wlan: [3354:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[13110.002873] R0: [NetworkManager][251796997025] [01:07:36.812174]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13110.239603] R0: [cds_mc_thread][251801542444] [01:07:37.048915]  wlan: [3354:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[13110.249623] R0: [cds_mc_thread][251801734822] [01:07:37.058935]  wlan: [3354:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[13115.464952] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[13115.714960] healthd: battery l=100 v=4279 t=24.8 h=2 st=5 c=-6 fc=2878000 cc=0 chg=
+[13116.006567] R0: [NetworkManager][251912267902] [01:07:42.815866]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13118.442279] R0: [cds_mc_thread][251959033759] [01:07:45.251588]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[13118.442339] R0: [cds_mc_thread][251959035040] [01:07:45.251655]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x110
+[13118.442434] R0: [cds_mc_thread][251959036864] [01:07:45.251750]  wlan: [3354:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[13121.651053] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[13121.897667] healthd: battery l=100 v=4277 t=24.8 h=2 st=5 c=19 fc=2878000 cc=0 chg=
+[13122.004476] R0: [NetworkManager][252027427981] [01:07:48.813788]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13123.049894] R0: [cds_mc_thread][252047499982] [01:07:49.859205]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[13123.049950] R0: [cds_mc_thread][252047501187] [01:07:49.859268]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x110
+[13123.050004] R0: [cds_mc_thread][252047502234] [01:07:49.859322]  wlan: [3354:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[13128.001576] R0: [NetworkManager][252142572082] [01:07:54.810877]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13128.173337] R0: [cds_mc_thread][252145870124] [01:07:54.982650]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[13128.173391] R0: [cds_mc_thread][252145871257] [01:07:54.982709]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x110
+[13128.173445] R0: [cds_mc_thread][252145872308] [01:07:54.982764]  wlan: [3354:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[13128.478069] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[13128.722192] healthd: battery l=100 v=4285 t=24.8 h=2 st=5 c=15 fc=2878000 cc=0 chg=
+[13132.165278] R0: [cds_mc_thread][252222515317] [01:07:58.974588]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[13132.165339] R0: [cds_mc_thread][252222516652] [01:07:58.974657]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x110
+[13132.165397] R0: [cds_mc_thread][252222517753] [01:07:58.974714]  wlan: [3354:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[13132.367694] usb 1-1.3: new high-speed USB device number 11 using xhci-hcd
+[13132.463294] usb 1-1.3: New USB device found, idVendor=1d50, idProduct=614d
+[13132.463365] usb 1-1.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[13132.463389] usb 1-1.3: Product: Generic USB Display
+[13132.463410] usb 1-1.3: Manufacturer: The Internet
+[13132.472025] gud_xdisp_lz4_12800 1-1.3:1.0: GUD v1 bulk-out=0x01 buffer=1843200 compression=0x00 width=640-1920 height=400-1080
+[13132.472049] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP diagnostic variant: compression=0x00 actual bulk payload cap=12800
+[13132.475698] gud_xdisp_lz4_12800 1-1.3:1.0: GUD probe complete for 1d50:614d
+[13134.001963] R0: [NetworkManager][252257779506] [01:08:00.811264]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13134.451142] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[13134.691626] healthd: battery l=100 v=4287 t=24.8 h=2 st=5 c=11 fc=2878000 cc=0 chg=
+[13139.435839] R0: [cds_mc_thread][252362110120] [01:08:06.245151]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[13139.435897] R0: [cds_mc_thread][252362111366] [01:08:06.245216]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x110
+[13139.435952] R0: [cds_mc_thread][252362112426] [01:08:06.245271]  wlan: [3354:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[13140.001362] R0: [NetworkManager][252372968070] [01:08:06.810669]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13140.637952] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[13140.879870] healthd: battery l=100 v=4288 t=24.8 h=2 st=5 c=15 fc=2878000 cc=0 chg=
+[13144.860056] R0: [cds_mc_thread][252466255071] [01:08:11.669368]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[13144.860116] R0: [cds_mc_thread][252466256392] [01:08:11.669437]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x110
+[13144.860172] R0: [cds_mc_thread][252466257460] [01:08:11.669492]  wlan: [3354:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[13146.006106] R0: [NetworkManager][252488259116] [01:08:12.815412]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13147.465139] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[13147.707968] healthd: battery l=100 v=4286 t=24.8 h=2 st=5 c=13 fc=2878000 cc=0 chg=
+[13152.003246] R0: [NetworkManager][252603404297] [01:08:18.812557]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13153.651140] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[13153.899472] healthd: battery l=100 v=4276 t=24.8 h=2 st=5 c=-4 fc=2878000 cc=0 chg=
+[13155.514912] R0: [cds_mc_thread][252670828204] [01:08:22.324219]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[13155.514972] R0: [cds_mc_thread][252670829612] [01:08:22.324293]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x110
+[13155.515026] R0: [cds_mc_thread][252670830656] [01:08:22.324347]  wlan: [3354:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[13158.003176] R0: [NetworkManager][252718602765] [01:08:24.812478]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13160.433236] R0: [cds_mc_thread][252765260149] [01:08:27.242550]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 861: Beacon for session[0] got changed.
+[13160.433295] R0: [cds_mc_thread][252765261390] [01:08:27.242615]  wlan: [3354:W :PE ] __sch_beacon_process_for_session: 863: sending beacon param change bitmap: 0x110
+[13160.433360] R0: [cds_mc_thread][252765262667] [01:08:27.242682]  wlan: [3354:E :PE ] sch_process_pre_beacon_ind: 1002: PreBeaconInd received in invalid state: 11
+[13160.481288] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[13160.670192] healthd: battery l=100 v=4289 t=24.8 h=2 st=5 c=19 fc=2878000 cc=0 chg=
+[13164.001115] R0: [NetworkManager][252833756949] [01:08:30.810092]  wlan: [1741:E :HDD] hdd_is_rcpi_applicable: 4950: mac addr is different from bssid connected
+[13165.492446] R0: [cds_mc_thread][252862397001] [01:08:32.301762]  wlan: [3354:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=1, vdev=0
+[13165.500350] R0: [cds_mc_thread][252862548808] [01:08:32.309669]  wlan: [3354:I :WMI] send_set_arp_stats_req_cmd_tlv: 12397: set arp stats flag=0, vdev=0
+[13166.451145] SMBLIB: smblib_get_apsd_result: APSD_DTC_STATUS_DONE_BIT is 0
+[13166.622316] usbcore: deregistering interface driver gud_xdisp_lz4_12800
+[13166.622473] gud_xdisp_lz4_12800 1-1.3:1.0: GUD disconnected
+[13166.639514] gud_xdisp_lz4_12800 1-1.3:1.0: GUD v1 bulk-out=0x01 buffer=1843200 compression=0x00 width=640-1920 height=400-1080
+[13166.639554] gud_xdisp_lz4_12800 1-1.3:1.0: XDISP diagnostic variant: compression=0x00 actual bulk payload cap=1843200
+[13166.651288] gud_xdisp_lz4_12800 1-1.3:1.0: GUD probe complete for 1d50:614d
+[13166.651440] usbcore: registered new interface driver gud_xdisp_lz4_12800
+[13166.702004] healthd: battery l=100 v=4282 t=24.8 h=2 st=5 c=-90 fc=2878000 cc=0 chg=

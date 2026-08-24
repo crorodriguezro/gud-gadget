@@ -1,0 +1,5 @@
+Classification: NOT_PRESENT_IN_GUD_BACKPORT.
+
+Search of `gud/backport-4.9` found no `FB_DAMAGE_CLIPS`,
+`DRM_MODE_FB_DAMAGE_CLIPS`, damage property blob, or atomic damage-property
+programming. The current XDISP rectangles come from the GUD transport planner.
