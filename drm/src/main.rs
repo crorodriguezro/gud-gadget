@@ -22,12 +22,12 @@ use std::ffi::OsStr;
 use std::fs::{rename, File};
 use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 use std::time::{Duration, Instant};
 use tracing::{debug, info, warn};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
-use usb_gadget::function::custom::{Custom, Interface};
+use usb_gadget::function::custom::{Custom, Event as FunctionFsEvent, Interface};
 use usb_gadget::{default_udc, Class, Config, Gadget, RegGadget, Strings};
 
 const CRTC_SET_RETRIES: usize = 20;
@@ -305,6 +305,7 @@ enum BulkReceiveState {
     Processing = 3,
     Poisoned = 4,
     ShuttingDown = 5,
+    AbortedBySessionDestruction = 6,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -329,6 +330,8 @@ enum UsbLifecycleInput {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum UsbLifecycleResult {
     Continue(UsbSessionState),
+    PreserveOwned(UsbSessionState),
+    SessionBoundary(UsbSessionState),
     Contained,
     FatalUnbind,
 }
@@ -365,8 +368,46 @@ fn classify_usb_lifecycle(
     input: UsbLifecycleInput,
     proven_idle: bool,
 ) -> UsbLifecycleResult {
-    if state == UsbSessionState::Contained || !proven_idle {
-        return UsbLifecycleResult::Contained;
+    if !proven_idle {
+        return match input {
+            UsbLifecycleInput::Suspend => {
+                UsbLifecycleResult::PreserveOwned(UsbSessionState::Suspended)
+            }
+            UsbLifecycleInput::Resume => UsbLifecycleResult::PreserveOwned(UsbSessionState::Active),
+            UsbLifecycleInput::Disable => {
+                UsbLifecycleResult::SessionBoundary(UsbSessionState::WaitingForHost)
+            }
+            UsbLifecycleInput::Enable => {
+                UsbLifecycleResult::SessionBoundary(UsbSessionState::Active)
+            }
+            UsbLifecycleInput::Unbind => {
+                UsbLifecycleResult::SessionBoundary(UsbSessionState::WaitingForHost)
+            }
+            UsbLifecycleInput::Bind => {
+                UsbLifecycleResult::SessionBoundary(UsbSessionState::WaitingForHost)
+            }
+            UsbLifecycleInput::ProtocolInvalidation => UsbLifecycleResult::Contained,
+        };
+    }
+    if state == UsbSessionState::Contained {
+        return match input {
+            UsbLifecycleInput::Disable => {
+                UsbLifecycleResult::SessionBoundary(UsbSessionState::WaitingForHost)
+            }
+            UsbLifecycleInput::Enable => {
+                UsbLifecycleResult::SessionBoundary(UsbSessionState::Active)
+            }
+            UsbLifecycleInput::Unbind => {
+                UsbLifecycleResult::SessionBoundary(UsbSessionState::WaitingForHost)
+            }
+            UsbLifecycleInput::Suspend | UsbLifecycleInput::Resume => {
+                UsbLifecycleResult::PreserveOwned(state)
+            }
+            UsbLifecycleInput::Bind => {
+                UsbLifecycleResult::SessionBoundary(UsbSessionState::WaitingForHost)
+            }
+            UsbLifecycleInput::ProtocolInvalidation => UsbLifecycleResult::Contained,
+        };
     }
     match input {
         UsbLifecycleInput::ProtocolInvalidation => UsbLifecycleResult::Continue(state),
@@ -403,6 +444,7 @@ impl BulkReceiveState {
             3 => Self::Processing,
             4 => Self::Poisoned,
             5 => Self::ShuttingDown,
+            6 => Self::AbortedBySessionDestruction,
             _ => unreachable!("invalid bulk receive state {raw}"),
         }
     }
@@ -411,6 +453,7 @@ impl BulkReceiveState {
 #[derive(Clone)]
 struct BulkReceiveSession {
     state: Arc<AtomicU8>,
+    epoch_id: Arc<AtomicU64>,
     deadline: Duration,
 }
 
@@ -455,7 +498,8 @@ impl ReceiveTelemetry {
             lifecycle_events = self.lifecycle_events,
             cleanup_attempts = self.cleanup_attempts,
             unsafe_teardown_suppressed = self.unsafe_teardown_suppressed,
-            currently_owned = session.current_state() != BulkReceiveState::Idle,
+            usb_epoch = session.epoch_id(),
+            currently_owned = session.currently_owned(),
             aggregate_state = ?session.current_state(),
             aio_state = ?endpoint.exact_aio_state(),
             current_or_last_sequence = endpoint.exact_aio_sequence(),
@@ -481,6 +525,7 @@ impl BulkReceiveSession {
     fn with_deadline(deadline: Duration) -> Self {
         Self {
             state: Arc::new(AtomicU8::new(BulkReceiveState::Idle as u8)),
+            epoch_id: Arc::new(AtomicU64::new(0)),
             deadline,
         }
     }
@@ -671,6 +716,7 @@ impl BulkReceiveSession {
                         return Err(state);
                     }
                 }
+                BulkReceiveState::AbortedBySessionDestruction => return Ok(()),
                 state @ (BulkReceiveState::Poisoned | BulkReceiveState::ShuttingDown) => {
                     return Err(state);
                 }
@@ -681,11 +727,12 @@ impl BulkReceiveSession {
     fn begin_shutdown(&self) -> Result<(), BulkReceiveState> {
         loop {
             match self.current_state() {
-                BulkReceiveState::Idle => {
+                BulkReceiveState::Idle | BulkReceiveState::AbortedBySessionDestruction => {
+                    let expected = self.current_state();
                     if self
                         .state
                         .compare_exchange(
-                            BulkReceiveState::Idle as u8,
+                            expected as u8,
                             BulkReceiveState::ShuttingDown as u8,
                             Ordering::AcqRel,
                             Ordering::Acquire,
@@ -721,6 +768,60 @@ impl BulkReceiveSession {
     fn current_state(&self) -> BulkReceiveState {
         BulkReceiveState::from_raw(self.state.load(Ordering::Acquire))
     }
+
+    fn currently_owned(&self) -> bool {
+        !matches!(
+            self.current_state(),
+            BulkReceiveState::Idle | BulkReceiveState::AbortedBySessionDestruction
+        )
+    }
+
+    fn epoch_id(&self) -> u64 {
+        self.epoch_id.load(Ordering::Acquire)
+    }
+
+    fn retire_after_session_destruction(&self) -> Result<u64, BulkReceiveState> {
+        loop {
+            let state = self.current_state();
+            if !matches!(
+                state,
+                BulkReceiveState::Arming | BulkReceiveState::InFlight | BulkReceiveState::Poisoned
+            ) {
+                return Err(state);
+            }
+            if self
+                .state
+                .compare_exchange(
+                    state as u8,
+                    BulkReceiveState::AbortedBySessionDestruction as u8,
+                    Ordering::AcqRel,
+                    Ordering::Acquire,
+                )
+                .is_ok()
+            {
+                return Ok(self.epoch_id());
+            }
+        }
+    }
+
+    fn begin_usb_epoch(&self, epoch_id: u64) -> anyhow::Result<()> {
+        let state = self.current_state();
+        ensure!(
+            matches!(
+                state,
+                BulkReceiveState::Idle | BulkReceiveState::AbortedBySessionDestruction
+            ),
+            "cannot begin USB epoch {epoch_id} from {state:?}"
+        );
+        ensure!(
+            epoch_id > self.epoch_id(),
+            "USB epoch identifier did not increase"
+        );
+        self.epoch_id.store(epoch_id, Ordering::Release);
+        self.state
+            .store(BulkReceiveState::Idle as u8, Ordering::Release);
+        Ok(())
+    }
 }
 
 fn lifecycle_event_name(reason: ProtocolInvalidationReason) -> &'static str {
@@ -745,8 +846,15 @@ fn proven_idle_gate(
 ) -> ProvenIdleGate {
     let diagnostic_guard = gud_gadget::status_on_set_diagnostic_guard_state();
     ProvenIdleGate {
-        aggregate_idle: session.current_state() == BulkReceiveState::Idle,
-        exact_aio_idle: endpoint.exact_aio_state() == gud_gadget::ExactAioState::Idle,
+        aggregate_idle: matches!(
+            session.current_state(),
+            BulkReceiveState::Idle | BulkReceiveState::AbortedBySessionDestruction
+        ),
+        exact_aio_idle: matches!(
+            endpoint.exact_aio_state(),
+            gud_gadget::ExactAioState::Idle
+                | gud_gadget::ExactAioState::AbortedBySessionDestruction
+        ),
         accepted_operation_absent: endpoint.exact_aio_operation_id().is_none(),
         aio_queue_empty: endpoint.exact_aio_queue_is_empty(),
         pending_exact_receive_absent: pending_exact_receive.is_none(),
@@ -832,6 +940,43 @@ fn observe_aio_lifecycle(
                 "E1-T05 lifecycle event observed from proven Idle ownership"
             );
             UsbLifecycleResult::Continue(next_state)
+        }
+        UsbLifecycleResult::PreserveOwned(next_state) => {
+            *observation.usb_session = next_state;
+            warn!(
+                event = "functionfs_lifecycle_preserved_owned",
+                lifecycle_event,
+                usb_session_state = ?next_state,
+                aggregate_state = ?observation.session.current_state(),
+                aio_state = ?observation.endpoint.exact_aio_state(),
+                transaction_seq = observation.endpoint.exact_aio_sequence(),
+                usb_epoch = observation.session.epoch_id(),
+                currently_owned = observation.session.currently_owned(),
+                "SUSPEND/RESUME preserved the live USB epoch and exact ownership"
+            );
+            UsbLifecycleResult::PreserveOwned(next_state)
+        }
+        UsbLifecycleResult::SessionBoundary(next_state) => {
+            let unsafe_state = observation.session.current_state();
+            if observation.session.currently_owned() {
+                observation.session.poison();
+                observation.endpoint.poison_exact_payload_aio(
+                    "awaiting AIO harvest after source-proven endpoint destruction",
+                );
+            }
+            *observation.usb_session = next_state;
+            warn!(
+                event = "epoch_destroy_proven",
+                lifecycle_event,
+                lifecycle_event_state = ?unsafe_state,
+                usb_session_state = ?next_state,
+                usb_epoch = observation.session.epoch_id(),
+                transaction_seq = observation.endpoint.exact_aio_sequence(),
+                accepted_operation_id = observation.endpoint.exact_aio_operation_id(),
+                aio_queue_empty = gate.aio_queue_empty,
+                "FunctionFS disabled the prior endpoint generation; waiting to harvest its AIO completion"
+            );
+            UsbLifecycleResult::SessionBoundary(next_state)
         }
         UsbLifecycleResult::Contained => {
             let unsafe_state = observation
@@ -3188,6 +3333,7 @@ fn main() -> anyhow::Result<()> {
     let mut pending_exact_receive: Option<(gud_gadget::SetBuffer, std::time::Instant, u64)> = None;
     let mut ready_exact_payload: Option<(gud_gadget::SetBuffer, gud_gadget::PayloadStats)> = None;
     let mut status_on_set_cleanup_drain: Option<StatusOnSetCleanupDrain> = None;
+    let mut pending_epoch_boundary: Option<(ProtocolInvalidationReason, Option<u64>)> = None;
     let mut receive_telemetry = ReceiveTelemetry::default();
     let mut row_immediate_crcs: Vec<Option<u32>> = Vec::new();
     let unbind_target: Arc<dyn GadgetUnbind> = reg.clone();
@@ -3210,9 +3356,44 @@ fn main() -> anyhow::Result<()> {
     drop(unbind_target);
 
     'event_loop: while running.load(Ordering::Relaxed) {
-        if bulk_receive_session.current_state() == BulkReceiveState::Poisoned {
-            std::thread::sleep(Duration::from_millis(100));
-            continue;
+        if let Some((boundary, new_epoch)) = pending_epoch_boundary {
+            if pending_exact_receive.is_none() && gud_data.exact_aio_queue_is_empty() {
+                tracing::warn!(
+                    event = "epoch_retire_begin",
+                    usb_epoch = bulk_receive_session.epoch_id(),
+                    transaction_seq = gud_data.exact_aio_sequence(),
+                    terminal_boundary = lifecycle_event_name(boundary),
+                    "retiring destroyed FunctionFS endpoint generation after terminal AIO harvest"
+                );
+                let retired = gud_data
+                    .retire_exact_aio_after_session_destruction()
+                    .context("retire exact AIO from destroyed FunctionFS epoch")?;
+                bulk_receive_session
+                    .retire_after_session_destruction()
+                    .map_err(|state| {
+                        anyhow::anyhow!(
+                            "cannot retire aggregate receiver from destroyed epoch state {state:?}"
+                        )
+                    })?;
+                gud_gadget::retire_status_on_set_transaction_after_session_destruction();
+                status_on_set_cleanup_drain = None;
+                ready_exact_payload = None;
+                tracing::warn!(
+                    event = "epoch_retire_complete",
+                    epoch_id = retired.epoch_id,
+                    transaction_seq = retired.transaction_seq,
+                    disposition = "ABORTED_BY_SESSION_DESTRUCTION",
+                    currently_owned = false,
+                    "old USB epoch reached a terminal historical disposition"
+                );
+                if let Some(epoch_id) = new_epoch {
+                    gud_data.begin_exact_aio_usb_epoch(epoch_id)?;
+                    bulk_receive_session.begin_usb_epoch(epoch_id)?;
+                    usb_session = UsbSessionState::Active;
+                }
+                pending_epoch_boundary = None;
+                continue;
+            }
         }
         if let Some(drain) = status_on_set_cleanup_drain.as_mut() {
             if drain.timed_out(Instant::now()) {
@@ -3266,16 +3447,18 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
                 }
-                Ok(None) if started.elapsed() <= bulk_receive_session.deadline => {}
+                Ok(None)
+                    if bulk_receive_session.current_state() == BulkReceiveState::Poisoned
+                        || started.elapsed() <= bulk_receive_session.deadline => {}
                 Ok(None) => {
                     let (_, started, transaction_seq) = pending_exact_receive
-                        .take()
+                        .as_ref()
                         .expect("timed-out exact receive disappeared");
                     gud_data.poison_exact_payload_aio("missing completion timeout");
                     receive_telemetry.timed_out += 1;
                     receive_telemetry.poisoned += 1;
                     let _ = bulk_receive_session.finish_receive::<()>(
-                        started,
+                        *started,
                         Err(anyhow::anyhow!(
                             "exact FunctionFS AIO transaction {transaction_seq} exceeded completion deadline"
                         )),
@@ -3293,6 +3476,13 @@ fn main() -> anyhow::Result<()> {
                 }
             }
         }
+        if pending_epoch_boundary.is_some() {
+            // ENABLE can be queued immediately behind a coalesced DISABLE. Hold EP0
+            // briefly instead of consuming the new host's first probe request until
+            // the old one-slot AIO completion is harvested and the epoch can retire.
+            std::thread::sleep(Duration::from_millis(1));
+            continue;
+        }
         let event_timeout =
             if pending_exact_receive.is_some() || status_on_set_cleanup_drain.is_some() {
                 Duration::from_millis(10)
@@ -3307,10 +3497,10 @@ fn main() -> anyhow::Result<()> {
         )) {
             Ok(event) => event,
             Err(err) => {
-                if let Some((_, started, _)) = pending_exact_receive.take() {
+                if let Some((_, started, _)) = pending_exact_receive.as_ref() {
                     gud_data.poison_exact_payload_aio("EP0 event failure while exact AIO accepted");
                     let _ = bulk_receive_session.finish_receive::<()>(
-                        started,
+                        *started,
                         Err(anyhow::Error::new(err)
                             .context("process EP0 while exact AIO request was accepted")),
                     );
@@ -3348,6 +3538,25 @@ fn main() -> anyhow::Result<()> {
         } else {
             let event = event.expect("raw event disappeared");
             tracing::debug!("Received event: {:?}", event);
+            if bulk_receive_session.current_state() == BulkReceiveState::Poisoned
+                && !matches!(
+                    event,
+                    FunctionFsEvent::Enable
+                        | FunctionFsEvent::Bind
+                        | FunctionFsEvent::Disable
+                        | FunctionFsEvent::Unbind
+                        | FunctionFsEvent::Suspend
+                        | FunctionFsEvent::Resume
+                )
+            {
+                tracing::warn!(
+                    event = "contained_non_lifecycle_ep0_suppressed",
+                    usb_epoch = bulk_receive_session.epoch_id(),
+                    transaction_seq = gud_data.exact_aio_sequence(),
+                    "suppressed EP0 protocol work until a terminal FunctionFS boundary is observed"
+                );
+                continue;
+            }
             gud_gadget::event(event)
         };
         let control_event_ms = control_event_start.elapsed().as_millis();
@@ -3356,7 +3565,7 @@ fn main() -> anyhow::Result<()> {
                 tracing::debug!("GUD event: {:?}", gud_event);
                 record_host_activity(&mut had_host_session, &gud_event);
                 if let Event::ProtocolStateInvalidated { reason, .. } = &gud_event {
-                    match observe_aio_lifecycle(
+                    let lifecycle_result = observe_aio_lifecycle(
                         *reason,
                         usb_lifecycle_input(*reason),
                         LifecycleObservation {
@@ -3368,8 +3577,24 @@ fn main() -> anyhow::Result<()> {
                             status_on_set_cleanup_drain: &status_on_set_cleanup_drain,
                         },
                         &mut receive_telemetry,
-                    ) {
-                        UsbLifecycleResult::Continue(_) => {}
+                    );
+                    match lifecycle_result {
+                        UsbLifecycleResult::Continue(_) => {
+                            if *reason == ProtocolInvalidationReason::Enable {
+                                let epoch_id = gud_data.usb_activation_generation();
+                                if epoch_id > bulk_receive_session.epoch_id() {
+                                    gud_data.begin_exact_aio_usb_epoch(epoch_id)?;
+                                    bulk_receive_session.begin_usb_epoch(epoch_id)?;
+                                }
+                            }
+                        }
+                        UsbLifecycleResult::PreserveOwned(_) => continue,
+                        UsbLifecycleResult::SessionBoundary(_) => {
+                            let new_epoch = (*reason == ProtocolInvalidationReason::Enable)
+                                .then(|| gud_data.usb_activation_generation());
+                            pending_epoch_boundary = Some((*reason, new_epoch));
+                            continue;
+                        }
                         UsbLifecycleResult::Contained => continue,
                         UsbLifecycleResult::FatalUnbind => {
                             lifecycle_error = Some(anyhow::anyhow!(
@@ -4923,11 +5148,16 @@ fn main() -> anyhow::Result<()> {
             }
             Ok(None) => {}
             Err(err) => {
-                if let Some((_, started, _)) = pending_exact_receive.take() {
+                if let Some((_, started, _)) = pending_exact_receive.as_ref() {
                     gud_data.poison_exact_payload_aio(
                         "GUD protocol parse failure while exact AIO accepted",
                     );
-                    let _ = bulk_receive_session.finish_receive::<()>(started, Err(err));
+                    tracing::error!(
+                        error = ?err,
+                        error_chain = %format_args!("{err:#}"),
+                        "GUD event processing failed while exact AIO remained accepted"
+                    );
+                    let _ = bulk_receive_session.finish_receive::<()>(*started, Err(err));
                     continue;
                 }
                 tracing::warn!("Failed to parse GUD event: {}", err);
@@ -5749,31 +5979,86 @@ mod tests {
             );
             state = expected;
         }
-        for state in [
-            UsbSessionState::WaitingForHost,
-            UsbSessionState::Active,
-            UsbSessionState::Suspended,
-        ] {
-            for input in [
-                UsbLifecycleInput::Disable,
-                UsbLifecycleInput::Suspend,
-                UsbLifecycleInput::Resume,
-                UsbLifecycleInput::Unbind,
-            ] {
-                assert_eq!(
-                    classify_usb_lifecycle(state, input, false),
-                    UsbLifecycleResult::Contained
-                );
-            }
-        }
+        assert_eq!(
+            classify_usb_lifecycle(UsbSessionState::Active, UsbLifecycleInput::Suspend, false),
+            UsbLifecycleResult::PreserveOwned(UsbSessionState::Suspended)
+        );
+        assert_eq!(
+            classify_usb_lifecycle(UsbSessionState::Suspended, UsbLifecycleInput::Resume, false),
+            UsbLifecycleResult::PreserveOwned(UsbSessionState::Active)
+        );
+        assert_eq!(
+            classify_usb_lifecycle(UsbSessionState::Active, UsbLifecycleInput::Disable, false),
+            UsbLifecycleResult::SessionBoundary(UsbSessionState::WaitingForHost)
+        );
+        assert_eq!(
+            classify_usb_lifecycle(UsbSessionState::Contained, UsbLifecycleInput::Enable, false),
+            UsbLifecycleResult::SessionBoundary(UsbSessionState::Active)
+        );
+        assert_eq!(
+            classify_usb_lifecycle(UsbSessionState::Contained, UsbLifecycleInput::Bind, false),
+            UsbLifecycleResult::SessionBoundary(UsbSessionState::WaitingForHost)
+        );
+        assert_eq!(
+            classify_usb_lifecycle(
+                UsbSessionState::Active,
+                UsbLifecycleInput::ProtocolInvalidation,
+                false
+            ),
+            UsbLifecycleResult::Contained
+        );
         assert_eq!(
             classify_usb_lifecycle(UsbSessionState::Active, UsbLifecycleInput::Unbind, true),
             UsbLifecycleResult::FatalUnbind
         );
         assert_eq!(
             classify_usb_lifecycle(UsbSessionState::Contained, UsbLifecycleInput::Enable, true),
-            UsbLifecycleResult::Contained
+            UsbLifecycleResult::SessionBoundary(UsbSessionState::Active)
         );
+    }
+
+    #[test]
+    fn destroyed_outer_epoch_is_historical_and_fresh_epoch_starts_unowned() {
+        let session = BulkReceiveSession::default();
+        session.begin_usb_epoch(1).unwrap();
+        session.begin_receive().unwrap();
+        session.submission_accepted().unwrap();
+        session.poison();
+
+        assert_eq!(session.retire_after_session_destruction(), Ok(1));
+        assert_eq!(
+            session.current_state(),
+            BulkReceiveState::AbortedBySessionDestruction
+        );
+        assert!(!session.currently_owned());
+        assert!(session.begin_receive().is_err());
+
+        session.begin_usb_epoch(2).unwrap();
+        assert_eq!(session.epoch_id(), 2);
+        assert_eq!(session.current_state(), BulkReceiveState::Idle);
+        assert!(!session.currently_owned());
+    }
+
+    #[test]
+    fn live_ambiguous_outer_epoch_still_blocks_shutdown() {
+        let session = BulkReceiveSession::default();
+        session.begin_usb_epoch(1).unwrap();
+        session.begin_receive().unwrap();
+        session.submission_accepted().unwrap();
+        assert_eq!(session.begin_shutdown(), Err(BulkReceiveState::InFlight));
+        assert_eq!(session.current_state(), BulkReceiveState::Poisoned);
+    }
+
+    #[test]
+    fn shutdown_after_destroyed_outer_epoch_is_bounded() {
+        let session = BulkReceiveSession::default();
+        session.begin_usb_epoch(1).unwrap();
+        session.begin_receive().unwrap();
+        session.submission_accepted().unwrap();
+        session.poison();
+        session.retire_after_session_destruction().unwrap();
+        assert_eq!(session.begin_shutdown(), Ok(()));
+        assert_eq!(session.current_state(), BulkReceiveState::ShuttingDown);
     }
 
     #[test]

@@ -187,11 +187,19 @@ pub enum ExactAioState {
     InFlight,
     Processing,
     Poisoned,
+    AbortedBySessionDestruction,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RetiredExactAioTransaction {
+    pub epoch_id: u64,
+    pub transaction_seq: u64,
 }
 
 #[derive(Debug)]
 struct ExactAioTransaction {
     state: ExactAioState,
+    epoch_id: u64,
     sequence: u64,
     expected_bytes: usize,
     started: Option<Instant>,
@@ -200,12 +208,14 @@ struct ExactAioTransaction {
     activation_generation: Option<u64>,
     metadata: Option<SetBuffer>,
     status_ready: bool,
+    last_retired: Option<RetiredExactAioTransaction>,
 }
 
 impl Default for ExactAioTransaction {
     fn default() -> Self {
         Self {
             state: ExactAioState::Idle,
+            epoch_id: 0,
             sequence: 0,
             expected_bytes: 0,
             started: None,
@@ -214,6 +224,7 @@ impl Default for ExactAioTransaction {
             activation_generation: None,
             metadata: None,
             status_ready: false,
+            last_retired: None,
         }
     }
 }
@@ -377,6 +388,49 @@ impl ExactAioTransaction {
 
     fn poison(&mut self) {
         self.state = ExactAioState::Poisoned;
+    }
+
+    fn retire_after_session_destruction(&mut self) -> anyhow::Result<RetiredExactAioTransaction> {
+        ensure!(
+            matches!(
+                self.state,
+                ExactAioState::Arming | ExactAioState::InFlight | ExactAioState::Poisoned
+            ),
+            "cannot retire exact AIO transaction from {:?}",
+            self.state
+        );
+        let retired = RetiredExactAioTransaction {
+            epoch_id: self.epoch_id,
+            transaction_seq: self.sequence,
+        };
+        self.state = ExactAioState::AbortedBySessionDestruction;
+        self.expected_bytes = 0;
+        self.started = None;
+        self.accepted_at = None;
+        self.operation = None;
+        self.activation_generation = None;
+        self.metadata = None;
+        self.status_ready = false;
+        self.last_retired = Some(retired);
+        Ok(retired)
+    }
+
+    fn begin_usb_epoch(&mut self, epoch_id: u64) -> anyhow::Result<()> {
+        ensure!(
+            matches!(
+                self.state,
+                ExactAioState::Idle | ExactAioState::AbortedBySessionDestruction
+            ),
+            "cannot begin USB epoch {epoch_id} while exact AIO transaction is {:?}",
+            self.state
+        );
+        ensure!(
+            epoch_id > self.epoch_id,
+            "USB epoch identifier did not increase"
+        );
+        self.epoch_id = epoch_id;
+        self.state = ExactAioState::Idle;
+        Ok(())
     }
 }
 
@@ -966,6 +1020,15 @@ pub fn finish_status_on_set_diagnostic_transaction() -> anyhow::Result<()> {
         "STATUS_ON_SET outer receive guard returned to Idle after cleanup drain"
     );
     Ok(())
+}
+
+/// Release the outer admission guard only after the caller has proved that the
+/// endpoint session was destroyed and the accepted AIO completion was harvested.
+pub fn retire_status_on_set_transaction_after_session_destruction() {
+    let mut guard = status_on_set_diagnostic_guard()
+        .lock()
+        .expect("STATUS_ON_SET diagnostic guard lock poisoned");
+    guard.active = false;
 }
 
 fn status_on_set_set_buffer_permitted() -> bool {
@@ -1791,6 +1854,14 @@ impl PixelDataEndpoint {
         self.exact_aio.operation.map(|operation| operation.id())
     }
 
+    pub fn exact_aio_epoch_id(&self) -> u64 {
+        self.exact_aio.epoch_id
+    }
+
+    pub fn last_retired_exact_aio(&self) -> Option<RetiredExactAioTransaction> {
+        self.exact_aio.last_retired
+    }
+
     pub fn exact_aio_activation_generation(&self) -> Option<u64> {
         self.exact_aio.activation_generation
     }
@@ -1897,7 +1968,10 @@ impl PixelDataEndpoint {
         &mut self,
         output_bytes: usize,
     ) -> anyhow::Result<Option<PayloadStats>> {
-        if !matches!(self.exact_aio.state, ExactAioState::InFlight) {
+        if !matches!(
+            self.exact_aio.state,
+            ExactAioState::InFlight | ExactAioState::Poisoned
+        ) {
             return Ok(None);
         }
         let Some(buf) = self
@@ -1981,6 +2055,39 @@ impl PixelDataEndpoint {
             reason,
             "exact FunctionFS AIO transaction poisoned; preserving accepted request"
         );
+    }
+
+    /// Retire an unresolved transaction only after FunctionFS endpoint
+    /// destruction and after its sole AIO completion has been harvested.
+    pub fn retire_exact_aio_after_session_destruction(
+        &mut self,
+    ) -> anyhow::Result<RetiredExactAioTransaction> {
+        ensure!(
+            self.ep_rx.is_empty(),
+            "cannot retire destroyed USB epoch while an AIO completion remains unharvested"
+        );
+        let retired = self.exact_aio.retire_after_session_destruction()?;
+        error!(
+            event = "epoch_retire_complete",
+            epoch_id = retired.epoch_id,
+            transaction_seq = retired.transaction_seq,
+            disposition = "ABORTED_BY_SESSION_DESTRUCTION",
+            "retired unresolved exact AIO after source-proven endpoint destruction"
+        );
+        Ok(retired)
+    }
+
+    pub fn begin_exact_aio_usb_epoch(&mut self, epoch_id: u64) -> anyhow::Result<()> {
+        ensure!(
+            self.ep_rx.is_empty(),
+            "cannot begin fresh USB epoch while an old AIO completion remains unharvested"
+        );
+        self.exact_aio.begin_usb_epoch(epoch_id)?;
+        debug!(
+            event = "new_epoch",
+            epoch_id, "fresh exact-AIO USB epoch starts Idle"
+        );
+        Ok(())
     }
 
     pub fn recv_payload(
@@ -2406,7 +2513,7 @@ mod tests {
         usb_packet_estimate, validate_buffer_request, validate_functionfs_read_size,
         validate_state_check_payload, ActiveScanoutState, ConnectorDescriptor, DisplayMode,
         DisplayState, EndpointOperation, ExactAioState, ExactAioTransaction,
-        FunctionFsReadCompletion, PixelDataEndpoint, SetBuffer,
+        FunctionFsReadCompletion, PixelDataEndpoint, RetiredExactAioTransaction, SetBuffer,
         DEFAULT_FUNCTIONFS_BULK_OUT_READ_SIZE, FUNCTIONFS_BULK_OUT_MAX_PACKET_SIZE,
         GUD_COMPRESSION_LZ4, GUD_CONNECTOR_STATUS_CHANGED, GUD_CONNECTOR_STATUS_CONNECTED,
         GUD_CONNECTOR_TYPE_PANEL, GUD_DISPLAY_FLAG_STATUS_ON_SET, GUD_DISPLAY_MAGIC,
@@ -2671,6 +2778,47 @@ mod tests {
         assert_eq!(transaction.state, ExactAioState::InFlight);
         transaction.poison();
         assert_eq!(transaction.state, ExactAioState::Poisoned);
+    }
+
+    #[test]
+    fn destroyed_epoch_records_abort_before_a_fresh_epoch_can_start() {
+        let mut transaction = ExactAioTransaction::default();
+        transaction.begin_usb_epoch(1).unwrap();
+        transaction.begin_arm(12_800).unwrap();
+        transaction.submission_accepted().unwrap();
+        transaction.poison();
+
+        let retired = transaction.retire_after_session_destruction().unwrap();
+        assert_eq!(
+            retired,
+            RetiredExactAioTransaction {
+                epoch_id: 1,
+                transaction_seq: 1,
+            }
+        );
+        assert_eq!(
+            transaction.state,
+            ExactAioState::AbortedBySessionDestruction
+        );
+        assert_eq!(transaction.last_retired, Some(retired));
+        assert!(transaction.begin_arm(12_800).is_err());
+
+        transaction.begin_usb_epoch(2).unwrap();
+        assert_eq!(transaction.state, ExactAioState::Idle);
+        assert_eq!(transaction.epoch_id, 2);
+        assert_eq!(transaction.last_retired, Some(retired));
+        assert_eq!(transaction.begin_arm(12_800).unwrap(), 2);
+    }
+
+    #[test]
+    fn epoch_ids_must_increase_and_live_epoch_cannot_be_replaced() {
+        let mut transaction = ExactAioTransaction::default();
+        transaction.begin_usb_epoch(1).unwrap();
+        assert!(transaction.begin_usb_epoch(1).is_err());
+        transaction.begin_arm(512).unwrap();
+        assert!(transaction.begin_usb_epoch(2).is_err());
+        assert_eq!(transaction.epoch_id, 1);
+        assert_eq!(transaction.state, ExactAioState::Arming);
     }
 
     #[test]
