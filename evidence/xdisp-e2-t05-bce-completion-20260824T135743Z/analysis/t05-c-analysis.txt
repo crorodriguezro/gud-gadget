@@ -1,0 +1,2 @@
+T05-C is blocked before setup. The Pi could not be reached with the retained SSH credentials and the phone did not have an external GUD DRM device. No software-only substitute was counted.
+

@@ -1,0 +1,2 @@
+T05-B PASS. T05-C BLOCKED. T05-E BLOCKED. E2-T05 remains BLOCKED and E2 remains INCOMPLETE because the required Pi/USB hardware access was unavailable. Restore Pi access and run only C and E.
+

@@ -1,0 +1,2 @@
+The external GUD DRM device was genuinely absent: /dev/dri contained card0 but no card1, and xdispd reported GudDevice="" and State=unavailable. Activate was boring and bounded; Deactivate was idempotent. The process count query's managed-process count included xdispd itself; the direct mirgud count was zero.
+

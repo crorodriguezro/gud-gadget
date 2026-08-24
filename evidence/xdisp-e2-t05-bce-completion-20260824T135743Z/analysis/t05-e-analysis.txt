@@ -1,0 +1,2 @@
+T05-E is blocked before setup. No healthy GUD session existed and no deterministic pre-bulk failure hook was present in the checked source. No source change was introduced solely to create an unexercisable test.
+

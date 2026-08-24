@@ -1,0 +1,17 @@
+case,cycle,event,utc,detail
+t05-b,1,activate_request,2026-08-24T13:56:39.613Z,public D-Bus Activate
+t05-b,1,unavailable_observed,2026-08-24T13:56:41.663Z,State=unavailable ChildPid=0
+t05-b,1,deactivate_request,2026-08-24T13:56:42.007Z,public D-Bus Deactivate #1
+t05-b,1,deactivate_request,2026-08-24T13:56:42.043Z,public D-Bus Deactivate #2
+t05-b,1,final_state,2026-08-24T13:56:44.091Z,State=unavailable ChildPid=0
+t05-b,2,activate_request,2026-08-24T13:56:44.444Z,public D-Bus Activate
+t05-b,2,unavailable_observed,2026-08-24T13:56:46.486Z,State=unavailable ChildPid=0
+t05-b,2,deactivate_request,2026-08-24T13:56:46.819Z,public D-Bus Deactivate #1
+t05-b,2,deactivate_request,2026-08-24T13:56:46.858Z,public D-Bus Deactivate #2
+t05-b,2,final_state,2026-08-24T13:56:48.907Z,State=unavailable ChildPid=0
+t05-b,3,activate_request,2026-08-24T13:56:49.263Z,public D-Bus Activate
+t05-b,3,unavailable_observed,2026-08-24T13:56:51.307Z,State=unavailable ChildPid=0
+t05-b,3,deactivate_request,2026-08-24T13:56:51.644Z,public D-Bus Deactivate #1
+t05-b,3,deactivate_request,2026-08-24T13:56:51.687Z,public D-Bus Deactivate #2
+t05-b,3,final_state,2026-08-24T13:56:53.743Z,State=unavailable ChildPid=0
+

@@ -1,0 +1,3 @@
+case,run,event,utc,detail
+t05-c,2,setup_blocked,2026-08-24T13:50Z,Pi SSH authentication failed and phone had no GUD DRM device
+

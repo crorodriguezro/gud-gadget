@@ -1,0 +1,2 @@
+Working trees were not clean at task start. Existing unrelated untracked benchmark binaries, evidence directories, and benchmark artifacts were preserved in gud, gud-gadget, and mir-android2-platform-gud. No tracked files were modified by this continuation.
+

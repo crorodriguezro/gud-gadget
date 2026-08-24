@@ -1,0 +1,4 @@
+2026-08-24 T05-B: all three public Activate calls observed State=unavailable and ChildPid=0.
+2026-08-24 T05-B: all six public Deactivate calls returned; final ChildPid=0 each cycle.
+2026-08-24 T05-B: no mirgud child, no respawn loop, and no xdispd failure observed.
+

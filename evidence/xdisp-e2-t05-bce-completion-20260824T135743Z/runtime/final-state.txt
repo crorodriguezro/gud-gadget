@@ -1,0 +1,4 @@
+Phone after T05-B: xdispd D-Bus responsive, State=unavailable, ChildPid=0, no mirgud child, compositor and LightDM/session processes alive.
+Pi final service/UDC/receiver state: unknown because SSH authentication remained unavailable.
+No phone or Pi configuration was changed by this continuation.
+

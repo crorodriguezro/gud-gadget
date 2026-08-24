@@ -1,0 +1,5 @@
+cycle,device_absent,state_after_activate,child_pid_after_activate,deactivate_requests,final_state,final_child_pid,mirgud_children,respawn_loop,phone_health,verdict
+1,yes,unavailable,0,2,unavailable,0,0,0,healthy,PASS
+2,yes,unavailable,0,2,unavailable,0,0,0,healthy,PASS
+3,yes,unavailable,0,2,unavailable,0,0,0,healthy,PASS
+

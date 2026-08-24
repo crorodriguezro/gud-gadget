@@ -1,0 +1,2 @@
+The absent-device lifecycle did not create a managed child, so no stop or escalation was necessary. The public lifecycle interface remained responsive and idempotent.
+

@@ -1,0 +1,2 @@
+Blocked before setup. Physical USB detach was not simulated or attempted.
+

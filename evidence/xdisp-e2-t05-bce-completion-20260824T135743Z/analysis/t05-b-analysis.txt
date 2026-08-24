@@ -1,0 +1,2 @@
+T05-B passed 3/3. The device was genuinely absent, as shown by no /dev/dri/card1 and GudDevice="". Activate did not spawn mirgud or enter a retry loop. Two Deactivate calls per cycle returned safely. Every final state was unavailable with ChildPid=0.
+

@@ -1,0 +1,2 @@
+No new transport ownership transition was exercised. T05-B created no transport transaction. T05-C and T05-E were not started, so there were zero ambiguous accepted I/O and zero Poisoned transitions in this continuation.
+

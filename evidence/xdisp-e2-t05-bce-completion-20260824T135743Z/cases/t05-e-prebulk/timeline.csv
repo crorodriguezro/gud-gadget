@@ -1,0 +1,5 @@
+case,cycle,event,utc,detail
+t05-e,1,setup_blocked,2026-08-24T13:50Z,Pi SSH authentication failed; no GUD device on phone
+t05-e,2,setup_blocked,2026-08-24T13:50Z,Pi SSH authentication failed; no GUD device on phone
+t05-e,3,setup_blocked,2026-08-24T13:50Z,Pi SSH authentication failed; no GUD device on phone
+

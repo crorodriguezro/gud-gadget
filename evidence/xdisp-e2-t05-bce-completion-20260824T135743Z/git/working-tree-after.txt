@@ -1,0 +1,2 @@
+The continuation evidence directory is new and untracked until its evidence-only commit. Existing unrelated untracked work remains preserved. No tracked source files were modified.
+

@@ -1,0 +1,2 @@
+During T05-B the xdispd D-Bus service remained responsive, ChildPid stayed zero, and the compositor and LightDM/session processes remained present. No attributable fatal kernel or memory event was observed.
+
