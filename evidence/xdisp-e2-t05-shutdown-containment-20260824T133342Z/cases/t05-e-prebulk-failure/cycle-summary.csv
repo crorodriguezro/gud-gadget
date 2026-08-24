@@ -1,0 +1,4 @@
+case,cycle,result,reason
+t05-e,1,not-run,no current controlled pre-bulk failure hook exposed
+t05-e,2,not-run,no current controlled pre-bulk failure hook exposed
+t05-e,3,not-run,no current controlled pre-bulk failure hook exposed

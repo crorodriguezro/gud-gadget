@@ -1,0 +1,2 @@
+T05-C was not run in this session. No detach result is claimed and no
+transport recovery action was attempted.

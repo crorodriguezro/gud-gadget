@@ -1,0 +1,11 @@
+case,cycle,result,stop_duration_ms,final_state,child_pid,forced
+t05-a,1,forced-contained,3654,available,0,true
+t05-a,2,forced-contained,3223,available,0,true
+t05-a,3,forced-contained,3733,available,0,true
+t05-a,4,forced-contained,3313,available,0,true
+t05-a,5,forced-contained,2883,available,0,true
+t05-a,6,forced-contained,3515,available,0,true
+t05-a,7,forced-contained,3058,available,0,true
+t05-a,8,forced-contained,3644,available,0,true
+t05-a,9,forced-contained,3208,available,0,true
+t05-a,10,forced-contained,2792,available,0,true

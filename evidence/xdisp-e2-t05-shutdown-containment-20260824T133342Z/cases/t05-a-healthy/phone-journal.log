@@ -1,0 +1,2 @@
+2026-08-24 T05-A representative teardown: PRESENTER_STOP_BEGIN -> PRESENTER_STOP_COMPLETE -> KMS_TEARDOWN_BEGIN -> KMS_TEARDOWN_COMPLETE -> SCREENCAST_RELEASE_COMPLETE -> MIR_CONNECTION_RELEASE_BEGIN -> xdispd SIGKILL deadline -> child exit forced-sigkill.
+2026-08-24 T05-A all ten public cycles converged to State=available and ChildPid=0.

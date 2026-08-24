@@ -1,0 +1,26 @@
+# xdispd stop state machine audit
+
+Source: `mir-android2-platform-gud/src/xdisp/xdispd.cpp` and `src/xdisp/lifecycle.cpp`.
+
+1. Public `Deactivate` clears activation intent and calls the lifecycle stop
+   action when a child is running.
+2. xdispd marks the stop requested, records a steady-clock start time, and
+   sends SIGTERM to the one managed child.
+3. A single GLib timeout is installed for 3 seconds. If the child is still
+   present, xdispd records forced-kill intent and sends SIGKILL.
+4. The one GLib child-watch calls `g_spawn_close_pid`, removes the kill and
+   activation sources, sets `ChildPid` to zero, removes the status watch and
+   channel, classifies the wait status, and publishes lifecycle state.
+5. An early child exit removes the timeout before classification. A late
+   timeout sees `ChildPid <= 0` and does nothing; the source is still cleared.
+6. `ChildPid` is cleared in the child-watch path before lifecycle publication.
+   `Lifecycle::child_exited` transitions `disconnecting` to its saved target.
+7. Multiple Deactivate calls while stopping are harmless in the observed run:
+   only one child existed, one deadline/escalation occurred, and one reap
+   returned the state to available.
+8. Activation is blocked while `child_running` is true, preventing two managed
+   children. The normal service has `KillMode=control-group`, but the test
+   child shutdown was initiated by xdispd itself.
+
+Current default activation timeout is 10 seconds. No timeout was changed for
+T05.

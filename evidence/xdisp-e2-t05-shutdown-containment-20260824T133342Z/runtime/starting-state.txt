@@ -1,0 +1,2 @@
+Phone start: xdisp active/enabled, State=available, ChildPid=0, GudDevice=/dev/dri/card1, kernel 4.9.112-g6b190d86b.
+Pi start: last retained T04 evidence reported gud-userspace active, UDC configured, aggregate_state=Idle, aio_state=Idle, currently_owned=false. Fresh SSH verification was unavailable during T05.

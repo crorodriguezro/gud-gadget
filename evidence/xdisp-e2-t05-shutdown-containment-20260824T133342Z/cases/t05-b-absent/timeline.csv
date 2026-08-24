@@ -1,0 +1,2 @@
+case,run,event,event_ns,detail
+t05-b,1,not_run,,requires absent GUD device

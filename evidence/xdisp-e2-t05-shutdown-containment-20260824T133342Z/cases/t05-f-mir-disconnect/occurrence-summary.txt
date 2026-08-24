@@ -1,0 +1,7 @@
+REPRODUCED naturally in all 10 healthy T05-A cycles and all 3 T05-D cycles.
+
+Representative signature:
+PRESENTER_STOP_COMPLETE -> KMS_TEARDOWN_COMPLETE -> SCREENCAST_RELEASE_COMPLETE -> MIR_CONNECTION_RELEASE_BEGIN -> no completion -> xdispd deadline -> SIGKILL -> child reaped.
+
+External DRM/KMS resources were released before the missing Mir connection
+release completion. No GUD ownership ambiguity was introduced by this boundary.

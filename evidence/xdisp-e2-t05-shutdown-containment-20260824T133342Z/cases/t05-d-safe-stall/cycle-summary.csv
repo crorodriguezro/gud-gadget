@@ -1,0 +1,4 @@
+case,cycle,result,containment_ms,final_state,child_pid,ownership
+t05-d,1,forced-contained,3572,available,0,Idle/nonowned before commit
+t05-d,2,forced-contained,3149,available,0,Idle/nonowned before commit
+t05-d,3,forced-contained,2853,available,0,Idle/nonowned before commit

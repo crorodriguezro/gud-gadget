@@ -1,0 +1,3 @@
+T05-E was not run because no controlled pre-bulk failure mechanism was
+available without changing GUD admission. Deterministic xdispd tests passed
+recoverable child failure, timeout, forced stop, and poison-state cases.

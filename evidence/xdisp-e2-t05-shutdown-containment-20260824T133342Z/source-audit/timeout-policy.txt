@@ -1,0 +1,10 @@
+# Timeout policy
+
+- xdispd activation deadline: 10 seconds by default.
+- xdispd graceful stop deadline: 3 seconds.
+- Escalation: SIGTERM immediately, SIGKILL only when the 3-second stop source
+  fires and `ChildPid` is still nonzero.
+- Stop duration is measured with `std::chrono::steady_clock`.
+- The child status milestones carry a monotonic millisecond timestamp; journal
+  lines provide supporting wall-clock timestamps.
+- No xdispd, USB, GUD, or Mir timeout was changed for T05.

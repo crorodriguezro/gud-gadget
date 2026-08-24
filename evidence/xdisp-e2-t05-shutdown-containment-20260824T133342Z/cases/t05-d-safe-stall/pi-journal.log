@@ -1,0 +1,1 @@
+Fresh Pi journal unavailable. Safety proof is host-side: hook executes before drmModeAtomicCommit and therefore before GUD admission.

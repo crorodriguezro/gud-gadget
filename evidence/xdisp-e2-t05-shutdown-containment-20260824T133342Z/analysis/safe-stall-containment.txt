@@ -1,0 +1,4 @@
+T05-D passed 3/3. The first frame reached active state. The second present
+entered the default-off test hook before drmModeAtomicCommit. The receiver
+could not have accepted SET_BUFFER or bulk I/O at that point. Each blocked
+child was contained by xdispd in the existing deadline and reaped.

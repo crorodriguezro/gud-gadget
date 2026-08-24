@@ -1,0 +1,12 @@
+case,run,event,event_ns,detail
+t05-a,10,deactivate_request,1787577936004617066,public D-Bus Deactivate
+t05-a,10,term_observed,57389224000000,managed status monotonic-ms converted to ns; representative marker shape
+t05-a,10,presenter_stop_begin,57389225000000,managed status monotonic-ms converted to ns
+t05-a,10,presenter_stop_complete,57389243000000,managed status monotonic-ms converted to ns
+t05-a,10,kms_teardown_begin,57389243000000,managed status monotonic-ms converted to ns
+t05-a,10,kms_teardown_complete,57389258000000,managed status monotonic-ms converted to ns
+t05-a,10,screencast_release_complete,57389268000000,managed status monotonic-ms converted to ns
+t05-a,10,mir_connection_release_begin,57389268000000,managed status monotonic-ms converted to ns
+t05-a,10,sigkill_sent,,wall-clock journal after current 3-second deadline; xdispd-owned
+t05-a,10,child_reaped,wall-clock journal,forced-sigkill
+t05-a,10,xdispd_stable,1787577939210296552,State=available ChildPid=0

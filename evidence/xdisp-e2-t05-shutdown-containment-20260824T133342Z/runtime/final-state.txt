@@ -1,0 +1,2 @@
+Phone: xdisp active/enabled, State=available, ChildPid=0, GudDevice=/dev/dri/card1, LastError empty, safe-stall environment unset, production mirgud binary restored.
+Pi: no fresh final SSH state; no Pi-side configuration was changed.

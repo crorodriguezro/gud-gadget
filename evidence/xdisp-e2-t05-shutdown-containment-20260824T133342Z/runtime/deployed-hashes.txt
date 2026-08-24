@@ -1,0 +1,3 @@
+Phone xdispd managed binary: deployed existing `/home/phablet/xdispd-e2-direct-rgb565-13818a0` (not changed).
+Phone mirgud before/after restoration: 3369872b08e096593956515069be3ab0d40d259a5479cd668e74f13a3b577f2e.
+Temporary T05-D mirgud: 92cb8acef571dcac3fa39b6badf2106189f6fd4006877cf23f1ae438b1b8d63f.

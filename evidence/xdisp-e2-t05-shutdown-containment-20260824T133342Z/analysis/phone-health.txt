@@ -1,0 +1,3 @@
+The phone stayed on kernel 4.9.112-g6b190d86b. LightDM, the Lomiri compositor,
+and xdispd remained alive. Public D-Bus remained responsive. Every exercised
+case ended with xdispd active/enabled, State=available, and ChildPid=0.

@@ -1,0 +1,10 @@
+# Build validation
+
+- Existing xdisp build: `/tmp/mir-android2-platform-gud-p02-build`.
+- Rebuilt target: `mirgud` in the existing offline Ubuntu 24.04 container.
+- Build result: success after the T05-D hook was added.
+- Temporary deployed hook binary SHA256:
+  `92cb8acef571dcac3fa39b6badf2106189f6fd4006877cf23f1ae438b1b8d63f`.
+- Restored production binary SHA256:
+  `3369872b08e096593956515069be3ab0d40d259a5479cd668e74f13a3b577f2e`.
+- `git diff --check`: pass.

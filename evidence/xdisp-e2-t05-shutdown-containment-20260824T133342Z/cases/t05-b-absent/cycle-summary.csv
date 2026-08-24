@@ -1,0 +1,4 @@
+case,cycle,result,reason
+t05-b,1,not-run,Pi endpoint unavailable; no safe physical detach performed
+t05-b,2,not-run,Pi endpoint unavailable; no safe physical detach performed
+t05-b,3,not-run,Pi endpoint unavailable; no safe physical detach performed

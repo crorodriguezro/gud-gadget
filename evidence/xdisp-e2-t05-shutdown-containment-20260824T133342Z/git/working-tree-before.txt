@@ -1,0 +1,13 @@
+All three repositories had pre-existing local work at task start.
+
+gud: four pre-existing untracked backport test binaries under
+backport-4.9/tests/.
+
+gud-gadget: pre-existing untracked qualification evidence directories,
+SHA256SUMS, and the direct-RGB565 managed wrapper.
+
+mir-android2-platform-gud: pre-existing untracked pixel-format benchmark
+evidence directories. No existing tracked source changes were present before
+the T05 hook was added.
+
+These unrelated files were preserved and were not staged.

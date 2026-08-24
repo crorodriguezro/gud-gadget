@@ -1,0 +1,3 @@
+T05-B was not run. The safe next step is to restore Pi SSH/physical access,
+prove the receiver Idle/nonowned state, physically remove only the USB data
+path, and then perform three public Activate/Deactivate/status attempts.

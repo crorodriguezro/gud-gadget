@@ -1,0 +1,7 @@
+NEEDS PROJECT-OWNER DISPOSITION.
+
+The exercised design proves bounded containment and phone safety, including a
+safe pre-ownership stall. It does not satisfy the strict healthy graceful-stop
+target: all ten healthy cycles hit the known Mir disconnect boundary and were
+forced-contained. T05-B, T05-C, and T05-E remain hardware gaps caused by the
+unavailable Pi endpoint/physical operator path.

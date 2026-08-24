@@ -1,0 +1,26 @@
+# Presenter and Mir destruction order
+
+`mirgud` uses `release_presentation_and_kms()` as an idempotent lifetime
+boundary. It emits `PRESENTER_STOP_BEGIN`, calls `LatestFramePresenter::stop`,
+emits `PRESENTER_STOP_COMPLETE`, and only then destroys `GudKms`.
+
+`LatestFramePresenter::stop` marks stopping, drops pending work, wakes the
+worker, and joins it without holding the producer mutex. The worker owns the
+blocking present call, so no KMS object is destroyed while that call is still
+running.
+
+`GudKms::~GudKms` emits `KMS_TEARDOWN_BEGIN`, unmaps both frame buffers,
+removes framebuffers, destroys dumb buffers and the mode blob, closes the DRM
+fd, and emits `KMS_TEARDOWN_COMPLETE`. These events combine DRM-resource
+release into the KMS teardown interval.
+
+The screencast RAII deleter invokes the already-idempotent presentation/KMS
+cleanup and then calls `mir_screencast_release_sync`. Its connection RAII
+deleter invokes the same guard and then calls `mir_connection_release`.
+Therefore the effective order is:
+
+`presenter stop + worker join -> KMS/DRM cleanup -> screencast release -> Mir connection release`.
+
+The separate worker-join and DRM-resource markers requested by T05 are not
+present in this build; they map respectively to the interval enclosed by
+`PRESENTER_STOP_BEGIN/COMPLETE` and `KMS_TEARDOWN_BEGIN/COMPLETE`.

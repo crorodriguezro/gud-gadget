@@ -1,0 +1,23 @@
+# Instrumentation mapping
+
+Existing managed status events were used. `XDISP1 <monotonic-ms> EVENT` is
+forwarded into the xdispd journal. The exact current mapping is:
+
+| Requested boundary | Current marker |
+| --- | --- |
+| deactivate request | xdispd `teardown stop requested` |
+| child stop request | xdispd stop-request log; SIGTERM is the first signal |
+| presenter stop begin/complete | `PRESENTER_STOP_BEGIN/COMPLETE` |
+| worker join begin/complete | enclosed by presenter markers; not separately emitted |
+| KMS reset begin/complete | `KMS_TEARDOWN_BEGIN/COMPLETE` |
+| DRM resource release | enclosed by KMS teardown markers |
+| screencast release | `SCREENCAST_RELEASE_BEGIN/COMPLETE` |
+| connection release | `MIR_CONNECTION_RELEASE_BEGIN/COMPLETE` |
+| child exit | xdispd `child exit ...` |
+| SIGTERM | xdispd stop-request log; no separate signal marker |
+| SIGKILL | xdispd `teardown deadline reached; sending SIGKILL` |
+| child reaped | xdispd child-exit log after GLib child-watch |
+| stable state | final D-Bus `State`/`ChildPid` probe |
+
+The only source instrumentation added for T05 is the default-off safe-stall
+hook documented in `tests/focused-tests.txt`.

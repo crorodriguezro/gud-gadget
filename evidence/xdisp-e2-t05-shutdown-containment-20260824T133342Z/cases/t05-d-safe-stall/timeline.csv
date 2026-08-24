@@ -1,0 +1,7 @@
+case,run,event,event_ns,detail
+t05-d,1,first_frame_active,1787578285217281125,public state active
+t05-d,1,stall_enter,57757234000000,monotonic-ms converted to ns; before atomic commit
+t05-d,1,deactivate_request,1787578290228133499,public D-Bus Deactivate
+t05-d,1,sigkill_sent,wall-clock journal,existing xdispd deadline
+t05-d,1,child_reaped,wall-clock journal,forced-sigkill
+t05-d,1,xdispd_stable,1787578294525299292,State=available ChildPid=0

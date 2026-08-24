@@ -1,0 +1,4 @@
+Aug 24 08:31:44 xdispd: child milestone: XDISP1 57757234 T05_SAFE_STALL_ENTER
+Aug 24 08:31:49 xdispd: teardown stop requested
+Aug 24 08:31:52 xdispd: teardown deadline reached; sending SIGKILL
+Aug 24 08:31:52 xdispd: child exit forced-sigkill:signal:9 stop_duration_ms=2853

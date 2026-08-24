@@ -1,0 +1,4 @@
+No ambiguous accepted-I/O event, Poisoned transition, timeout, unsafe receiver
+restart, or UDC unbind was introduced by the exercised T05 cases. Pi-side
+fresh telemetry was unavailable, so this is not a substitute for T05-C/E
+receiver evidence.

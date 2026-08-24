@@ -1,0 +1,4 @@
+The evidence directory itself is new. Existing untracked work in all three
+repositories remains untouched. The mir repository has one intentional T05
+source change: src/utils/gud_screencast.cpp. The gud and gud-gadget tracked
+source trees were not changed by T05.

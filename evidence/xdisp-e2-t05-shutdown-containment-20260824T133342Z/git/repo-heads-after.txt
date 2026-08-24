@@ -1,0 +1,6 @@
+gud branch: pixel-format-benchmark
+gud HEAD: 0690785dd7d9c96e94f5769c29481f36b23a83e2
+gud-gadget branch: pixel-format-benchmark
+gud-gadget HEAD: 3ebc950e6ff61b7afa299fb908f9860253492061
+mir-android2-platform-gud branch: pixel-format-benchmark
+mir-android2-platform-gud HEAD: eedf520a247eb1baf73472fa6e86488b5ea8be4c

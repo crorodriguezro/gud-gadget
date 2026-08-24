@@ -1,0 +1,5 @@
+Healthy normal deactivation was bounded in 10/10 runs, but none exited
+gracefully. The stable repeated stall begins after presenter/KMS/screencast
+cleanup at Mir connection release. This is not a transport failure and does
+not justify changing the timeout. It requires project-owner disposition as a
+v1 bounded-containment policy or a later Mir lifecycle fix.

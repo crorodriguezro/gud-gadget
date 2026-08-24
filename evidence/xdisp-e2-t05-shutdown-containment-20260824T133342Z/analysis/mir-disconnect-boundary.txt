@@ -1,0 +1,5 @@
+The Mir disconnect stall was reproduced naturally. `mir_connection_release`
+did not complete before xdispd escalated. The preceding KMS and screencast
+release markers show that external DRM resources were released before force
+containment. The phone compositor and xdispd survived, and the managed child
+was reaped.
