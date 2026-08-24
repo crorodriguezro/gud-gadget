@@ -1,3 +1,8 @@
-case,run,event,utc,detail
-t05-c,2,setup_blocked,2026-08-24T13:50Z,Pi SSH authentication failed and phone had no GUD DRM device
-
+utc,event,result
+2026-08-24T14:23:45Z,active-baseline,State=active; managed child present; frame traffic observed
+2026-08-24T14:28:09Z,physical-usb-data-detach,operator unplugged USB DATA path
+2026-08-24T14:28:09Z,transport-failure,"GUD request/bulk failed -71"
+2026-08-24T14:28:09Z,usb-disconnect,"USB disconnect; GUD disconnected"
+2026-08-24T14:28:12Z,cleanup,"capture/presenter/KMS/screencast cleanup complete; Mir release stalled"
+2026-08-24T14:28:12Z,containment,"xdispd deadline; SIGKILL; child reaped; stop_duration_ms=3386"
+2026-08-24T14:28:12Z,final,State=unavailable; ChildPid=0; no respawn

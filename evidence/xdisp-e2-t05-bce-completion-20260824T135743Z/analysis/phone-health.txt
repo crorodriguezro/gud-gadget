@@ -1,2 +1,4 @@
-During T05-B the xdispd D-Bus service remained responsive, ChildPid stayed zero, and the compositor and LightDM/session processes remained present. No attributable fatal kernel or memory event was observed.
-
+Across B, C, and E the xdispd D-Bus service remained responsive. After each
+C detach and each E injection, the compositor and LightDM/session processes
+remained present, xdispd had ChildPid=0, and no uncontrolled respawn was
+observed. No attributable OOM, kernel BUG/Oops, or panic was observed.

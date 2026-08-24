@@ -1,2 +1,5 @@
-The continuation evidence directory is new and untracked until its evidence-only commit. Existing unrelated untracked work remains preserved. No tracked source files were modified.
-
+gud: clean.
+gud-gadget: tracked tree clean before this evidence-only update; unrelated
+untracked evidence and root SHA256SUMS remain preserved.
+mir-android2-platform-gud: clean after source commit 0cd8f5bf; unrelated
+untracked benchmark evidence remains preserved.

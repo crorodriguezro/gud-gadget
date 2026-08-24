@@ -1,3 +1,7 @@
-No binaries were deployed and no test hooks were armed for this continuation.
-Phone-side xdispd remained the existing deployed direct-RGB565 binary; source HEADs are recorded in git/repo-heads-after.txt.
-
+mirgud production backup/restored hash:
+3369872b08e096593956515069be3ab0d40d259a5479cd668e74f13a3b577f2
+mirgud temporary T05-E test build hash:
+0d99d52ea98fb079f46946f12c0157274f314aa1c773a2e66f600c89ce6f87b4
+T05-E was armed only through MIRGUD_T05_PREBULK_FAIL=1 and the environment
+was unset after the three runs. The production binary was restored and the
+temporary test files were removed.

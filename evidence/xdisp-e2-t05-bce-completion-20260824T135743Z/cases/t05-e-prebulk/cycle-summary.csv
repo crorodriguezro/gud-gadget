@@ -1,5 +1,4 @@
-cycle,healthy_active_session,prebulk_hook,explicit_error,ownership_ambiguity,poisoned,xdispd_containment,child_reaped,phone_responsive,verdict
-1,no,none,not run,0,0,not applicable,not applicable,not applicable,BLOCKED
-2,no,none,not run,0,0,not applicable,not applicable,not applicable,BLOCKED
-3,no,none,not run,0,0,not applicable,not applicable,not applicable,BLOCKED
-
+run,start_utc,child_pid,hook_triggered,worker_result,accepted_bulk,ebusy,retries,ambiguous_io,pi_state,stop_duration_ms,child_reaped,verdict
+1,2026-08-24T14:48:10Z,57860,yes,"failed errno=5",no,0,0,0,Idle/unowned,3111,yes,PASS
+2,2026-08-24T14:49:59Z,58221,yes,"failed errno=5",no,0,0,0,Idle/unowned,3489,yes,PASS
+3,2026-08-24T14:50:35Z,58465,yes,"failed errno=5",no,0,0,0,Idle/unowned,2953,yes,PASS

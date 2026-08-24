@@ -1,2 +1,4 @@
-Not observed. No active receiver setup was possible.
-
+Phone: GUD request/bulk error -71, then USB disconnect.
+Pi: final receiver state Idle; AIO Idle; currently_owned=false;
+poisoned_transactions=0.
+Classification: CLEAN_RESOLVED_ERROR. No accepted I/O remained ambiguous.

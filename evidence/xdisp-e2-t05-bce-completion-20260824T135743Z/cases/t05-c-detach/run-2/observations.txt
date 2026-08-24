@@ -1,2 +1,4 @@
-Blocked before setup. Physical USB detach was not simulated or attempted.
-
+Physical USB DATA detach was performed by the operator after reconnect and
+active baseline. The managed external display was active before removal.
+xdispd contained the known Mir release stall, reaped the child, and did not
+respawn it. The phone, compositor, and LightDM/session remained alive.

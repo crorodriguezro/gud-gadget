@@ -1,2 +1,5 @@
-T05-B PASS. T05-C BLOCKED. T05-E BLOCKED. E2-T05 remains BLOCKED and E2 remains INCOMPLETE because the required Pi/USB hardware access was unavailable. Restore Pi access and run only C and E.
-
+T05-B PASS 3/3. T05-C PASS 2/2. T05-E PASS 3/3.
+E2-T05 PASS and complete for the requested B/C/E continuation. T05-C used
+physical USB DATA detach; T05-E used a source-level, default-off failure
+injection before drmModeAtomicCommit and before any GUD bulk ownership.
+T05-A, T05-D, and T05-F remain valid and were not rerun.

@@ -1,4 +1,3 @@
-run,physical_detach,active_before_detach,phone_responsive,ownership_classification,poisoned,xdispd_containment,child_reaped,verdict
-1,no,not established,not applicable,UNKNOWN,no,not applicable,not applicable,BLOCKED
-2,no,not established,not applicable,UNKNOWN,no,not applicable,not applicable,BLOCKED
-
+run,active_baseline_utc,physical_detach,first_transport_error,pi_receiver_after,ownership,ambiguous_io,poisoned,stop_duration_ms,child_reaped,final_state,verdict
+1,2026-08-24T14:18:59Z,yes,"GUD request/bulk -71; USB disconnect",Idle/unowned,CLEAN_RESOLVED_ERROR,0,0,2962,yes,unavailable,PASS
+2,2026-08-24T14:23:45Z,yes,"GUD request/bulk -71; USB disconnect",Idle/unowned,CLEAN_RESOLVED_ERROR,0,0,3386,yes,unavailable,PASS

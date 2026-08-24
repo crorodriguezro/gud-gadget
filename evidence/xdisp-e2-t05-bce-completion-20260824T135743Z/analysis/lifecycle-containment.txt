@@ -1,2 +1,13 @@
-The absent-device lifecycle did not create a managed child, so no stop or escalation was necessary. The public lifecycle interface remained responsive and idempotent.
+T05-B: absent-device lifecycle created no managed child; public Activate and
+idempotent Deactivate remained bounded.
 
+T05-C: physical USB removal caused the GUD transport to fail and xdispd to
+enter disconnecting. Capture/presenter/KMS/screencast cleanup completed; Mir
+release then hit the known disconnect stall, so xdispd reached its existing
+deadline and SIGKILLed/reaped the child. Final state was unavailable with
+ChildPid=0 and no respawn.
+
+T05-E: the injected pre-bulk exception propagated as errno 5. Safe
+presentation/KMS cleanup completed; the same known Mir release stall was
+contained by the public Deactivate request and existing deadline/SIGKILL
+path. All children were reaped and no receiver recovery was attempted.

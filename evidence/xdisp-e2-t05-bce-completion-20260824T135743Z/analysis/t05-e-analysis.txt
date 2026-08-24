@@ -1,2 +1,9 @@
-T05-E is blocked before setup. No healthy GUD session existed and no deterministic pre-bulk failure hook was present in the checked source. No source change was introduced solely to create an unexercisable test.
+T05-E PASS, 3/3. A default-off hook was added in mirgud and enabled only for
+the controlled runs with MIRGUD_T05_PREBULK_FAIL=1. It triggers after the
+first frame but before drmModeAtomicCommit, so no GUD SET_BUFFER or bulk
+request is admitted for the injected failure. The worker propagated EIO
+(errno 5) and retained valid accounting.
 
+Every run ended with xdispd containment and ChildPid=0. Pi telemetry remained
+Idle/unowned with poisoned_transactions=0, no EBUSY, no retry, and no
+ambiguous ownership. The production binary and environment were restored.

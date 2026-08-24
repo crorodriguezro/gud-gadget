@@ -1,5 +1,12 @@
-case,cycle,event,utc,detail
-t05-e,1,setup_blocked,2026-08-24T13:50Z,Pi SSH authentication failed; no GUD device on phone
-t05-e,2,setup_blocked,2026-08-24T13:50Z,Pi SSH authentication failed; no GUD device on phone
-t05-e,3,setup_blocked,2026-08-24T13:50Z,Pi SSH authentication failed; no GUD device on phone
-
+utc,event,result
+2026-08-24T14:48:10Z,run-1-start,test binary deployed; hook armed
+2026-08-24T14:48:10Z,run-1-active,first frame presented; managed child PID 57860
+2026-08-24T14:48:59Z,run-1-trigger,T05_PREBULK_FAIL_TRIGGERED; EIO before atomic commit
+2026-08-24T14:48:59Z,run-1-containment,public Deactivate; deadline/SIGKILL; reaped in 3111 ms
+2026-08-24T14:49:59Z,run-2-start,hook armed; managed child PID 58221
+2026-08-24T14:49:59Z,run-2-trigger,T05_PREBULK_FAIL_TRIGGERED; EIO before atomic commit
+2026-08-24T14:49:59Z,run-2-containment,public Deactivate; deadline/SIGKILL; reaped in 3489 ms
+2026-08-24T14:50:35Z,run-3-start,hook armed; managed child PID 58465
+2026-08-24T14:50:35Z,run-3-trigger,T05_PREBULK_FAIL_TRIGGERED; EIO before atomic commit
+2026-08-24T14:50:35Z,run-3-containment,public Deactivate; deadline/SIGKILL; reaped in 2953 ms
+2026-08-24T14:51:00Z,restoration,production binary restored; hook environment unset; temporary files removed

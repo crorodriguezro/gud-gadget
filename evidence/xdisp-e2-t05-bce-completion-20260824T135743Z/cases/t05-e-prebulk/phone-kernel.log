@@ -1,2 +1,5 @@
-No T05-E run started.
-
+T05 hook is before drmModeAtomicCommit and before GUD SET_BUFFER/bulk admission
+mirgud_frame result=failed errno=5
+frames_received=2 frames_submitted=2 presented=1 gud_submit_failures=1
+accounting_ok=true
+No EBUSY or transport retry observed

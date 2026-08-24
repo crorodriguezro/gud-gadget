@@ -1,2 +1,5 @@
-No T05-C run started.
-
+[capture] GUD request 0x60 failed: -71
+[capture] GUD bulk transfer failed after 0 retries: -71
+[capture] GUD request 0x61 failed: -71
+[capture] GUD request 0x64 failed: -71
+[capture] USB disconnect; GUD disconnected

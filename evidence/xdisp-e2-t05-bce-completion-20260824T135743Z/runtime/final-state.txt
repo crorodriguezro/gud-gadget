@@ -1,4 +1,7 @@
-Phone after T05-B: xdispd D-Bus responsive, State=unavailable, ChildPid=0, no mirgud child, compositor and LightDM/session processes alive.
-Pi final service/UDC/receiver state: unknown because SSH authentication remained unavailable.
-No phone or Pi configuration was changed by this continuation.
-
+Phone after restoration: xdispd D-Bus responsive, State=available,
+GudDevice=/dev/dri/card1, ChildPid=0, LastError="", no mirgud child;
+compositor and LightDM/session processes alive.
+Pi: gud-userspace.service active, UDC= configured for 3f980000.usb, and last
+telemetry Idle/unowned with poisoned_transactions=0.
+Production xdispd environment has no T05 variables. Production mirgud hash
+was restored; temporary test payloads were removed.

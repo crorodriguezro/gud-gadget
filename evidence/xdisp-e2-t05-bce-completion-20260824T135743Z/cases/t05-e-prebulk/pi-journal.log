@@ -1,2 +1,4 @@
-Unavailable: SSH authentication to cristian@192.168.1.110 failed.
-
+run-1 telemetry poisoned_transactions=0 currently_owned=false aggregate_state=Idle aio_state=Idle
+run-2 telemetry poisoned_transactions=0 currently_owned=false aggregate_state=Idle aio_state=Idle
+run-3 telemetry poisoned_transactions=0 currently_owned=false aggregate_state=Idle aio_state=Idle
+No SET_BUFFER/bulk request was admitted for the injected failure

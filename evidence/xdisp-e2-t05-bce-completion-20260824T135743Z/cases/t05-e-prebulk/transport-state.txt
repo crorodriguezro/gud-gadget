@@ -1,0 +1,6 @@
+Hook point: after first frame, before drmModeAtomicCommit.
+Injected result: EIO/errno 5.
+Accepted GUD bulk ownership: no.
+Pi after each run: aggregate_state=Idle; aio_state=Idle;
+currently_owned=false; poisoned_transactions=0.
+EBUSY=0; retries=0; ambiguous accepted I/O=0.

@@ -1,2 +1,10 @@
-T05-C is blocked before setup. The Pi could not be reached with the retained SSH credentials and the phone did not have an external GUD DRM device. No software-only substitute was counted.
+T05-C PASS, 2/2. Each run began with a fresh active managed presentation and
+real USB DATA detach. The phone kernel reported GUD request/bulk `-71` and
+USB disconnect. xdispd performed capture/presenter/KMS/screencast cleanup,
+then contained the known Mir release stall with its existing deadline and
+SIGKILL path. ChildPid returned to 0, no respawn occurred, and the phone,
+compositor, and LightDM/session remained healthy.
 
+Pi receiver telemetry after each detach was Idle with currently_owned=false
+and poisoned_transactions=0. Because the last logical transaction completed
+before physical removal, both runs are CLEAN_RESOLVED_ERROR, not ambiguous.

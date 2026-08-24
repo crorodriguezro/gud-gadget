@@ -1,2 +1,18 @@
-No T05-E run started. No active GUD session or controlled pre-bulk fault mechanism was available.
-
+T05_PREBULK_FAIL_ARMED
+MODESET_BEGIN
+MODESET_COMPLETE
+ACTIVE
+connecting -> active: first frame presented
+T05_PREBULK_FAIL_TRIGGERED
+CAPTURE_LOOP_EXIT
+PRESENTER_STOP_BEGIN
+PRESENTER_STOP_COMPLETE
+KMS_TEARDOWN_BEGIN
+KMS_TEARDOWN_COMPLETE
+SCREENCAST_RELEASE_BEGIN
+SCREENCAST_RELEASE_COMPLETE
+MIR_CONNECTION_RELEASE_BEGIN
+public Deactivate requested containment
+teardown deadline reached; sending SIGKILL
+child exit forced-sigkill:signal:9
+final State=available; ChildPid=0

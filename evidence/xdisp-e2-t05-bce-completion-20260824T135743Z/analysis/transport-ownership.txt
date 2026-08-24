@@ -1,2 +1,9 @@
-No new transport ownership transition was exercised. T05-B created no transport transaction. T05-C and T05-E were not started, so there were zero ambiguous accepted I/O and zero Poisoned transitions in this continuation.
+T05-B created no transport transaction. In T05-C, the final logical Pi
+transaction completed before the physical detach; receiver telemetry returned
+to Idle with currently_owned=false and poisoned_transactions=0 in both runs.
+The phone's first transport error was GUD request/bulk -71 followed by USB
+disconnect, so both runs classify CLEAN_RESOLVED_ERROR rather than ambiguous.
 
+In T05-E the hook ran before drmModeAtomicCommit and before a GUD SET_BUFFER or
+bulk request was admitted. All three Pi checks remained Idle,
+currently_owned=false, poisoned_transactions=0, with no EBUSY or retry.
