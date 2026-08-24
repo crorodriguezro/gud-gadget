@@ -1,0 +1,36 @@
+# /usr/lib/systemd/system/xdisp.service
+[Unit]
+Description=Lomiri GUD external display lifecycle
+After=lightdm.service
+Wants=lightdm.service
+
+[Service]
+Type=dbus
+BusName=org.lomiri.XDisp
+ExecStart=/usr/libexec/lomiri-xdisp/xdispd
+ExecStartPre=/usr/bin/install -d -m 0700 /home/phablet/.local/share/lomiri-xdisp
+Environment=MIR_CLIENT_PLATFORM_PATH=/usr/lib/aarch64-linux-gnu/mir1/client-platform
+Environment=MIR_SERVER_PLATFORM_PATH=/usr/lib/aarch64-linux-gnu/mir1/server-platform
+Restart=on-failure
+KillMode=control-group
+
+[Install]
+WantedBy=graphical.target
+Alias=dbus-org.lomiri.XDisp.service
+
+# /etc/systemd/system/xdisp.service.d/override.conf
+[Service]
+ExecStart=
+ExecStart=/home/phablet/xdispd-wrapper
+
+# /etc/systemd/system/xdisp.service.d/zz-final-activation45.conf
+[Service]
+ExecStart=
+ExecStart=/home/phablet/xdispd-wrapper-activation45-native
+
+# /etc/systemd/system/xdisp.service.d/zzz-throughput-trace.conf
+[Service]
+Environment=MIRGUD_FRAME_TRACE=1
+ExecStart=
+ExecStart=/home/phablet/xdispd-throughput-wrapper
+===DROPINS===

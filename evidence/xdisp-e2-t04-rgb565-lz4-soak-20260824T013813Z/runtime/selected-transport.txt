@@ -1,0 +1,16 @@
+E2-T04 selected transport
+=========================
+Mir source: direct RGB565
+Mir version: 1.8.3
+Lomiri: 0.5.0
+Graphics backend: Android2 / libhybris / gralloc
+Mode: 1280x720
+Logical frame: 1,843,200 bytes (2 bytes/pixel)
+GUD transport: RGB565
+Compression: LZ4
+FunctionFS read size: 16,384 bytes
+Logical admissions: one per full-frame update
+Presenter bounds: max pending 1, max in-flight 1
+Lifecycle owner: xdispd
+Safety: one logical accepted/inflight payload; no payload pipelining; ambiguous accepted I/O poisons
+Reference qualification: 22.62 presented fps, direct-copy, zero safety failures

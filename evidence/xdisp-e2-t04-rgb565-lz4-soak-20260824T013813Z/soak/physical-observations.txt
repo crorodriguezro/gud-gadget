@@ -1,0 +1,11 @@
+T04 physical observation record
+
+The operator reported during the active T04 session that the external desktop
+looked wrong and occupied only about one third of the monitor. The observation
+was treated as a correctness failure and the 30-minute soak was aborted; no
+start/middle/end visual pass is claimed.
+
+The active T04 Pi configuration forced `GUD_TEST_OUTPUT_MODE=1280x720`. The
+connected HDMI connector advertises 1920x1080 as its preferred mode. A
+follow-up native-mode diagnostic selected 1920x1080 and reported `scaled=true`
+for the 1280x720 source, but that diagnostic was not a T04 qualification run.

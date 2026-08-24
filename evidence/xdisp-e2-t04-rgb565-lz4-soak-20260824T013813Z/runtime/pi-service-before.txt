@@ -1,0 +1,81 @@
+# /etc/systemd/system/gud-userspace.service
+[Unit]
+Description=Userspace GUD gadget
+After=systemd-modules-load.service local-fs.target
+Wants=systemd-modules-load.service
+ConditionPathExists=/home/cristian/gud-drm
+ConditionPathExists=/dev/dri/card0
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/cristian
+Environment=RUST_LOG=info
+ExecStartPre=/bin/sh -c 'while [ ! -e /dev/dri/card0 ] || [ ! -e /sys/class/udc/3f980000.usb/state ]; do sleep 1; done'
+ExecStart=/home/cristian/gud-drm /dev/dri/card0
+Restart=on-failure
+RestartSec=1s
+StartLimitIntervalSec=0
+
+[Install]
+WantedBy=multi-user.target
+
+# /etc/systemd/system/gud-userspace.service.d/10-xdisp-p0.1-containment.conf
+# XDISP-P0.1 containment: a proven-idle detach stays in the persistent
+# FunctionFS process. Non-zero failures and crashes stay down.
+[Service]
+Restart=no
+# An in-flight or poisoned Step 5 process ignores SIGTERM so userspace does not
+# trigger the known-risk teardown path. Do not let systemd escalate that stop
+# to SIGKILL; recover by physical/hardware reset instead.
+SendSIGKILL=no
+
+# /etc/systemd/system/gud-userspace.service.d/20-xdisp-p0.1-ffs-read-size.conf
+# XDISP-P0.1 Step 5: replace 125 512-byte reads with four larger reads for the
+# normal 64,000-byte tile while limiting contiguous allocation pressure.
+[Service]
+Environment=GUD_FFS_READ_SIZE=16384
+Environment=RUST_LOG=debug
+
+# /etc/systemd/system/gud-userspace.service.d/98-e1-t04-production-aio.conf
+[Service]
+# Production exact-AIO configuration. Restart policy is intentionally inherited
+# from 10-xdisp-p0.1-containment.conf: only a zero-status proven-Idle detach
+# restarts, while failures and contained ownership remain down.
+UnsetEnvironment=GUD_TEST_PREARM_ONCE_BYTES
+UnsetEnvironment=GUD_TEST_STATUS_ON_SET_BYTES
+UnsetEnvironment=GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES
+Environment=GUD_RECEIVE_MODE=status-on-set-aio
+Environment=GUD_FFS_READ_SIZE=16384
+Environment=GUD_TEST_COMPRESSION=none
+Environment=GUD_TEST_MAX_BUFFER_SIZE=12800
+Environment=GUD_TEST_OUTPUT_MODE=1280x720
+Environment=GUD_TRANSFER_FORMAT=xrgb8888
+Environment=GUD_FRAME_DUMP_MODE=disabled
+Environment=GUD_PATTERN_MODE=off
+Environment=RUST_LOG=debug
+Restart=on-success
+
+# /etc/systemd/system/gud-userspace.service.d/99-throughput-production-info.conf
+[Service]
+Environment=RUST_LOG=info
+
+# /etc/systemd/system/gud-userspace.service.d/zzz-e1-fullframe-managed.conf
+[Service]
+# Production exact-AIO configuration. Restart policy is intentionally inherited
+# from 10-xdisp-p0.1-containment.conf: only a zero-status proven-Idle detach
+# restarts, while failures and contained ownership remain down.
+UnsetEnvironment=GUD_TEST_PREARM_ONCE_BYTES
+UnsetEnvironment=GUD_TEST_STATUS_ON_SET_BYTES
+UnsetEnvironment=GUD_TEST_STATUS_ON_SET_TWO_TRANSACTIONS_BYTES
+Environment=GUD_RECEIVE_MODE=status-on-set-aio
+Environment=GUD_FFS_READ_SIZE=16384
+Environment=GUD_TEST_COMPRESSION=none
+Environment=GUD_TEST_MAX_BUFFER_SIZE=12800
+Environment=GUD_TEST_OUTPUT_MODE=1280x720
+Environment=GUD_TRANSFER_FORMAT=xrgb8888
+Environment=GUD_FRAME_DUMP_MODE=disabled
+Environment=GUD_PATTERN_MODE=off
+Environment=RUST_LOG=info
+Restart=on-success
+===DROPINS===

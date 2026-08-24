@@ -1,0 +1,11 @@
+Restored state after the aborted T04 and native-mode diagnostic
+
+Phone xdisp.service: active; State=available; Enabled=true;
+ActivationRequested=false; ChildPid=0; LastError empty.
+Pi gud-userspace.service: active; UDC=configured.
+Pi production environment: GUD_TRANSFER_FORMAT=xrgb8888,
+GUD_TEST_COMPRESSION=none, GUD_TEST_MAX_BUFFER_SIZE=12800,
+GUD_TEST_OUTPUT_MODE=1280x720, GUD_FFS_READ_SIZE=16384.
+
+The temporary T04 phone/Pi drop-ins and the temporary native-mode Pi drop-in
+were removed. No transport or kernel source was changed by this run.

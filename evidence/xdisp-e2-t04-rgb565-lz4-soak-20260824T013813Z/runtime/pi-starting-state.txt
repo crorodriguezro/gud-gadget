@@ -1,0 +1,97 @@
+2026-08-24T01:39:33Z
+===PI_HEALTH===
+Linux raspberrypi 6.12.47+rpt-rpi-v8-ffs-xfercompltrace #2 SMP PREEMPT Sun Aug 16 23:57:59 -05 2026 aarch64 GNU/Linux
+ 02:39:33 up  4:07,  2 users,  load average: 0.00, 0.00, 0.03
+active
+enabled
+===UDC===
+configured
+===SERVICE_ENV===
+MainPID=3524
+NRestarts=0
+Environment=RUST_LOG=info GUD_FFS_READ_SIZE=16384 GUD_RECEIVE_MODE=status-on-set-aio GUD_TEST_COMPRESSION=none GUD_TEST_MAX_BUFFER_SIZE=12800 GUD_TEST_OUTPUT_MODE=1280x720 GUD_TRANSFER_FORMAT=xrgb8888 GUD_FRAME_DUMP_MODE=disabled GUD_PATTERN_MODE=off
+===PROCESS===
+root        3524       1 Ssl        19:01  3128 147104    3 /home/cristian/gud-drm /dev/dri/card0
+===TELEMETRY===
+Aug 24 02:20:31 raspberrypi gud-drm-e2-direct-rgb565[3361]: 2026-08-24T01:20:31.250655Z  INFO gud_drm: cumulative production exact-AIO lifecycle telemetry event="production_receive_telemetry" set_buffer_seen=678 accepted_transactions=678 rejected_busy_transactions=0 aio_submission_attempts=678 aio_accepted=678 aio_completed=678 processing_started=678 processing_completed=678 processing_failed=0 poisoned_transactions=0 timed_out_transactions=0 lifecycle_events=2 cleanup_attempts=1 unsafe_teardown_suppressed=0 currently_owned=true aggregate_state=ShuttingDown aio_state=Idle current_or_last_sequence=678 last_sequence=678 validation_to_aio_accept_ms_total=86 aio_accept_to_status_readiness="logged per transaction by status_after_arm" receive_ms_total=10197 processing_ms_total=5811 complete_transaction_ms_total=5811
+===KERNEL_WINDOW===
+[13480.862836] gud_ffs_trace event=ffs_io_observed ts_ns=13480796265772 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.862999] gud_ffs_trace event=ffs_io_observed ts_ns=13480796428685 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.863203] gud_ffs_trace event=ffs_io_observed ts_ns=13480796632900 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.863404] gud_ffs_trace event=ffs_io_observed ts_ns=13480796833260 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.878328] gud_ffs_trace event=ffs_io_observed ts_ns=13480811756478 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.878988] gud_ffs_trace event=ffs_chunked_io ts_ns=13480812416567 endpoint=1 ffs_ep_num=255 direction=out async=1 logical_length=499559 first_chunk_length=16384 chunk_size=16384
+[13480.879169] gud_ffs_trace event=ffs_io_observed ts_ns=13480812597553 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.892484] gud_ffs_trace event=ffs_io_observed ts_ns=13480825908358 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.900517] gud_ffs_trace event=ffs_io_observed ts_ns=13480833938860 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.900812] gud_ffs_trace event=ffs_io_observed ts_ns=13480834240781 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.900961] gud_ffs_trace event=ffs_io_observed ts_ns=13480834390153 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.901127] gud_ffs_trace event=ffs_io_observed ts_ns=13480834555774 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.901312] gud_ffs_trace event=ffs_io_observed ts_ns=13480834740926 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.901475] gud_ffs_trace event=ffs_io_observed ts_ns=13480834904308 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.901626] gud_ffs_trace event=ffs_io_observed ts_ns=13480835055034 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.914667] gud_ffs_trace event=ffs_io_observed ts_ns=13480848093189 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.915313] gud_ffs_trace event=ffs_chunked_io ts_ns=13480848740726 endpoint=1 ffs_ep_num=255 direction=out async=1 logical_length=499552 first_chunk_length=16384 chunk_size=16384
+[13480.915503] gud_ffs_trace event=ffs_io_observed ts_ns=13480848931191 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.930498] gud_ffs_trace event=ffs_io_observed ts_ns=13480863922008 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.938142] gud_ffs_trace event=ffs_io_observed ts_ns=13480871564393 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.938479] gud_ffs_trace event=ffs_io_observed ts_ns=13480871906938 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.938674] gud_ffs_trace event=ffs_io_observed ts_ns=13480872102090 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.938909] gud_ffs_trace event=ffs_io_observed ts_ns=13480872337397 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.939082] gud_ffs_trace event=ffs_io_observed ts_ns=13480872509633 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.939249] gud_ffs_trace event=ffs_io_observed ts_ns=13480872677025 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.939421] gud_ffs_trace event=ffs_io_observed ts_ns=13480872849469 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.954759] gud_ffs_trace event=ffs_io_observed ts_ns=13480888183873 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.955419] gud_ffs_trace event=ffs_chunked_io ts_ns=13480888845108 endpoint=1 ffs_ep_num=255 direction=out async=1 logical_length=499717 first_chunk_length=16384 chunk_size=16384
+[13480.955620] gud_ffs_trace event=ffs_io_observed ts_ns=13480889048020 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.968895] gud_ffs_trace event=ffs_io_observed ts_ns=13480902317678 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.976492] gud_ffs_trace event=ffs_io_observed ts_ns=13480909912876 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.976783] gud_ffs_trace event=ffs_io_observed ts_ns=13480910210421 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.976938] gud_ffs_trace event=ffs_io_observed ts_ns=13480910365105 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.977100] gud_ffs_trace event=ffs_io_observed ts_ns=13480910526977 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.977261] gud_ffs_trace event=ffs_io_observed ts_ns=13480910688536 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.977425] gud_ffs_trace event=ffs_io_observed ts_ns=13480910852751 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.977585] gud_ffs_trace event=ffs_io_observed ts_ns=13480911012643 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.992913] gud_ffs_trace event=ffs_io_observed ts_ns=13480926339026 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13480.993549] gud_ffs_trace event=ffs_chunked_io ts_ns=13480926975575 endpoint=1 ffs_ep_num=255 direction=out async=1 logical_length=499686 first_chunk_length=16384 chunk_size=16384
+[13480.993730] gud_ffs_trace event=ffs_io_observed ts_ns=13480927156456 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.007631] gud_ffs_trace event=ffs_io_observed ts_ns=13480941052350 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.015195] gud_ffs_trace event=ffs_io_observed ts_ns=13480948616767 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.015472] gud_ffs_trace event=ffs_io_observed ts_ns=13480948898740 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.015644] gud_ffs_trace event=ffs_io_observed ts_ns=13480949069987 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.015808] gud_ffs_trace event=ffs_io_observed ts_ns=13480949234410 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.015964] gud_ffs_trace event=ffs_io_observed ts_ns=13480949390240 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.016377] gud_ffs_trace event=ffs_io_observed ts_ns=13480949803668 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.016622] gud_ffs_trace event=ffs_io_observed ts_ns=13480950047986 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.032844] gud_ffs_trace event=ffs_io_observed ts_ns=13480966268985 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.033468] gud_ffs_trace event=ffs_chunked_io ts_ns=13480966893711 endpoint=1 ffs_ep_num=255 direction=out async=1 logical_length=499693 first_chunk_length=16384 chunk_size=16384
+[13481.034303] gud_ffs_trace event=ffs_io_observed ts_ns=13480967728171 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.049152] gud_ffs_trace event=ffs_io_observed ts_ns=13480982573315 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.056853] gud_ffs_trace event=ffs_io_observed ts_ns=13480990273198 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.057152] gud_ffs_trace event=ffs_io_observed ts_ns=13480990576890 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.057823] gud_ffs_trace event=ffs_io_observed ts_ns=13480991247031 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.058181] gud_ffs_trace event=ffs_io_observed ts_ns=13480991606555 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.058375] gud_ffs_trace event=ffs_io_observed ts_ns=13480991800457 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.058517] gud_ffs_trace event=ffs_io_observed ts_ns=13480991943006 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.058690] gud_ffs_trace event=ffs_io_observed ts_ns=13480992115346 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.073697] gud_ffs_trace event=ffs_io_observed ts_ns=13481007119496 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.074334] gud_ffs_trace event=ffs_chunked_io ts_ns=13481007759013 endpoint=1 ffs_ep_num=255 direction=out async=1 logical_length=499678 first_chunk_length=16384 chunk_size=16384
+[13481.074523] gud_ffs_trace event=ffs_io_observed ts_ns=13481007948072 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.102159] gud_ffs_trace event=ffs_io_observed ts_ns=13481035577518 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.102421] gud_ffs_trace event=ffs_io_observed ts_ns=13481035845377 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.102638] gud_ffs_trace event=ffs_io_observed ts_ns=13481036062976 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13481.102914] gud_ffs_trace event=ffs_io_observed ts_ns=13481036338700 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13692.190124] ffs_data_put(): freeing
+[13692.190286] unloading
+[13692.853958] file system registered
+[13692.853988] gud_ffs_trace event=ffs_trace_provider_active ts_ns=13692780091903 async_trace=1 ep0_marker=1
+[13692.854509] read descriptors
+[13692.854542] read strings
+[13692.855851] dwc2 3f980000.usb: bound driver configfs-gadget.usb-gadget0
+[13692.860479] gud_ffs_trace event=ffs_io_observed ts_ns=13692786576527 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13693.133604] dwc2 3f980000.usb: new device is high-speed
+[13693.203538] dwc2 3f980000.usb: new device is high-speed
+[13693.268131] dwc2 3f980000.usb: new address 12
+[13693.286131] gud_ffs_trace event=ffs_io_observed ts_ns=13693212212355 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13693.287562] gud_ffs_trace event=ffs_io_observed ts_ns=13693213643701 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12
+[13707.601425] gud_ffs_trace event=ffs_io_observed ts_ns=13707526903322 endpoint=0 direction=control io_kind=event event_count=1 returned_length=12

@@ -1,0 +1,24 @@
+({'State': <'active'>, 'Enabled': <true>, 'ActivationRequested': <true>, 'GudDevice': <'/dev/dri/card1'>, 'GudIdentity': <'/sys/devices/platform/soc/a600000.ssusb/a600000.dwc3/xhci-hcd.0.auto/usb1/1-1/1-1.3/1-1.3:1.0/drm/card1'>, 'ConnectorId': <uint32 25>, 'ChildPid': <uint32 16721>, 'LastError': <''>, 'RecoveryObserved': <false>, 'LastChildExit': <'none'>, 'LastStopForced': <false>, 'ForcedStopCount': <uint64 0>, 'LastStopDurationMs': <uint64 0>},)
+root        1565       1 Ssl     04:16:37 27804 432444    6 lomiri-location-serviced --bus system --provider gps::Provider --provider remote::Provider
+root        2223    2158 Ssl+    04:16:34 67356 1057184  18 lomiri-system-compositor --enable-num-framebuffers-quirk=true --disable-overlays=false --console-provider=vt --spinner=/usr/bin/lomiri-system-compositor-spinner --file /run/mir_socket --from-dm-fd 11 --to-dm-fd 14 --vt 1
+phablet     3466    2539 Ssl     04:16:27  7448 430220    4 /usr/libexec/lomiri-indicator-location/lomiri-indicator-location-service
+phablet     3477    2539 Ssl     04:16:27  8876 182580    2 /usr/libexec/lomiri-indicator-network/lomiri-indicator-network-secret-agent
+phablet     3483    2539 Ssl     04:16:27 20668 730396    6 /usr/lib/aarch64-linux-gnu/lomiri-indicator-transfer/lomiri-indicator-transfer-service
+phablet     3484    2539 Ssl     04:16:27 25524 219580    2 /usr/bin/lomiri-telephony-service-approver
+phablet     3593    2539 Ssl     04:16:27 21660 197144    2 /usr/libexec/lomiri-history-daemon
+phablet     3598    2539 Sl      04:16:27 29072 635248    4 /usr/bin/lomiri-telephony-service-handler
+phablet     3600    2539 Sl      04:16:27 29916 635356    4 /usr/bin/lomiri-telephony-service-handler
+phablet     3608    2539 Ssl     04:16:27 12112 337244    7 /usr/bin/trust-stored-skeleton --remote-agent DBusRemoteAgent --bus=system --local-agent MirAgent --trusted-mir-socket=/run/user/32011/mir_socket_trusted --for-service LomiriLocationService --with-text-domain lomiri-location-service --store-bus session
+phablet     3609    2539 Ssl     04:16:27 25340 650836    8 /usr/libexec/lomiri-sync-monitor/lomiri-sync-monitor
+phablet     3704    2539 Ssl     04:16:26 629236 4903612 46 lomiri --mode=full-greeter
+phablet     3731    2539 Ssl     04:16:26 25260 515764    5 /usr/bin/lomiri-indicator-telephony-service
+phablet     3843    2539 Sl      04:16:24 19284 560596    7 /usr/libexec/lomiri-thumbnailer/thumbnailer-service
+phablet     3892    2539 Sl      04:16:22 30960 614548    9 /usr/bin/lomiri-content-hub-service
+phablet     4007    2539 Ssl     04:16:18 17704 408184    5 /usr/libexec/lomiri-indicator-network/lomiri-indicator-network-service
+phablet     4009    2539 Ssl     04:16:18 32396 2518452  19 /usr/lib/lomiri-push-service/lomiri-push-service
+phablet     4010    2539 Ssl     04:16:18 22996 624804    9 /usr/lib/aarch64-linux-gnu/lomiri-url-dispatcher/lomiri-url-dispatcher
+phablet     4124    2539 Ssl     04:16:15  6552 386432    6 /usr/lib/aarch64-linux-gnu/lomiri-polkit-agent/lomiri-polkit-agent/policykit-agent
+phablet    10859    2539 Ssl     02:27:18 120820 1322220 14 lomiri-system-settings
+root       16654       1 Ssl        04:08  7268 308064    4 /home/phablet/xdispd-e2-direct-rgb565-13818a0
+root       16721   16654 Sl         03:45 21212 213464    3 /home/phablet/mirgud-direct-rgb565-13818a0.bin --managed --gud-fd 3 --gud-connector 25 --status-fd 4 --source-mode extend --pixel-format rgb565 --source-pixel-format rgb565 --mir-socket-file /run/mir_socket --size 1280 720
+phablet    17558   17557 Ss         00:00  3336  52848    1 bash -c gdbus call --system --dest org.lomiri.XDisp --object-path /org/lomiri/XDisp --method org.freedesktop.DBus.Properties.GetAll org.lomiri.XDisp1; ps -eo user,pid,ppid,stat,etime,rss,vsz,nlwp,args | grep -E "[x]dispd|[m]irgud|[l]omiri-system-compositor|[l]omiri" | tail -30

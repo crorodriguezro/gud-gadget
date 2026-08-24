@@ -1,0 +1,12 @@
+Native-mode geometry diagnostic
+
+Pi HDMI-A-1 advertised preferred/native mode: 1920x1080.
+Temporary diagnostic override: GUD_TEST_OUTPUT_MODE=1920x1080.
+Selected physical mode: 1920x1080.
+Source mode: 1280x720.
+Receiver telemetry: scaled=true; one-row updates observed scale_ms=203 and
+processing/complete transaction time about 203-204 ms.
+
+This was a short diagnostic using the restored XRGB8888 production path, not
+the selected RGB565 + LZ4 T04 qualification. The exact temporary drop-in was
+removed afterward.
