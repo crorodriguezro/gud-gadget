@@ -1,0 +1,11 @@
+The failed probe was the first operation in gud_probe():
+
+usb_control_msg(usb_rcvctrlpipe(ep0), request=GUD_REQ_GET_DESCRIPTOR/0x01,
+request_type=USB_TYPE_VENDOR|USB_RECIP_INTERFACE|USB_DIR_IN, value=0,
+index=interface number, buffer=struct gud_display_descriptor_req,
+length=sizeof(struct gud_display_descriptor_req), timeout=USB_CTRL_GET_TIMEOUT).
+
+Phone dmesg records "display descriptor request failed: -110" five seconds after
+VID:PID 1d50:614d appeared. The Pi process was parked at the top of its event
+loop in aggregate/exact Poisoned state, so it did not read and answer the fresh
+EP0 setup. The timeout was path A, not stale host DRM state or a later bulk op.

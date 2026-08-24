@@ -1,0 +1,20 @@
+Ownership gate
+==============
+
+drm/src/main.rs BulkReceiveSession is the aggregate owner. PixelDataEndpoint's
+ExactAioTransaction in gadget/src/lib.rs is the exact Linux-AIO owner. The event
+loop also owns pending_exact_receive, ready_exact_payload, cleanup-drain state,
+the one-slot AIO queue, and the STATUS_ON_SET admission guard.
+
+The SIGTERM handler only sets shutdown_requested and logs:
+"Shutdown requested; waiting for the event loop ownership gate".
+The event loop exits only when proven_idle_gate() proves every owner idle/absent.
+Previously, any lifecycle event during Arming/InFlight/Processing poisoned both
+owners, and the top of the loop slept forever whenever the aggregate state was
+Poisoned. It therefore stopped harvesting AIO completions and stopped reading
+later FunctionFS lifecycle events. Poisoned/currently_owned=true could never
+reach the release condition, so systemd waited until its 90-second timeout.
+
+This gate combines logical GUD ownership, exact AIO ownership, AIO queue state,
+event-loop pending/ready ownership, cleanup ownership, and diagnostic admission.
+There was no USB epoch/session-generation model before E3-B01.

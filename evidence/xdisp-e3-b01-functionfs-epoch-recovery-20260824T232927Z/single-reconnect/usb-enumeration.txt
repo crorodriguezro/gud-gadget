@@ -1,0 +1,2 @@
+NOT ATTEMPTED — no physical reconnect was possible. Expected VID:PID is
+1d50:614d but it was not observed in a validation run.

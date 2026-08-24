@@ -1,0 +1,5 @@
+The implementation prevents rather than filters stale callbacks. It does not
+begin epoch N+1 until DWC2/FunctionFS endpoint destruction is proven, the sole
+accepted AIO completion for epoch N is harvested, and the AIO queue is empty.
+Operation identity remains checked on successful completions. With no queued
+or completed old AIO left, a late old callback cannot exist in userspace.

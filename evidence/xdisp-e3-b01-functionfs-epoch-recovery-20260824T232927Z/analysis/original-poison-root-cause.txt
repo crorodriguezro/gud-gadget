@@ -1,0 +1,13 @@
+Transaction 74824's phrase "GUD protocol parse failure while exact AIO accepted"
+was emitted by drm/src/main.rs whenever gud_gadget::event(raw_ep0_event) returned
+Err while pending_exact_receive existed. The actual error chain was not logged.
+At the same timestamp the Pi kernel logged a new full-speed/high-speed device,
+showing reconnect/EP0 teardown activity. It was not evidence that SET_BUFFER or
+bulk payload bytes were malformed; the wording conflated an EP0 FunctionFS event
+processing failure with GUD protocol parsing. E3-B01 logs the real error chain
+and preserves the accepted AIO until a terminal endpoint boundary and completion.
+
+Transaction 2827 was accepted 13 ms before FUNCTIONFS_SUSPEND. The old code
+treated every non-idle lifecycle input as containment and immediately poisoned.
+Because SUSPEND is resumable, it now preserves InFlight ownership and the same
+epoch while the loop continues toward RESUME or a real terminal boundary.

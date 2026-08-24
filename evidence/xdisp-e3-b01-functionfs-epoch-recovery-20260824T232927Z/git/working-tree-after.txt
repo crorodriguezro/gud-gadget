@@ -1,0 +1,4 @@
+Tracked source changes were committed as b9fc4effec076594badad3508b5a006909256bb7.
+Only this E3-B01 evidence directory is selected for the evidence commit.
+All pre-existing untracked SHA256SUMS, evidence directories, and test binaries
+remain untouched and uncommitted.

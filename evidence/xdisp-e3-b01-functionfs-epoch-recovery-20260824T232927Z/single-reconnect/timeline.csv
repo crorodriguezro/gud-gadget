@@ -1,0 +1,2 @@
+epoch_id,transaction_seq,event,event_ns,state,detail
+,,,,NOT_ATTEMPTED,physical cable access unavailable

@@ -1,0 +1,16 @@
+cargo fmt -- --check: PASS (existing stable-rustfmt imports_granularity warnings)
+cargo check --all-targets --all-features: PASS
+cargo clippy --all-targets --all-features -- -D warnings: PASS
+cargo build --release --target aarch64-unknown-linux-gnu: PASS
+binary: ELF 64-bit ARM aarch64, dynamically linked for GNU/Linux >=3.7
+SHA256: 7e22188ab8eb0e6a31eefacc9f88b6196cc3604e83730bfe2625ab8f16654a00
+
+Full cargo test --all also passed all 167 offline/unit tests; four vendor
+configfs integration tests failed because usb_gadget configfs is absent on the
+x86 build host. Those environmental tests are not receiver failures.
+
+Final recheck after the last source edit:
+- cargo test -p gud-gadget -p gud-drm: PASS, 161/161
+- cargo fmt -- --check: PASS (only existing stable-rustfmt warnings)
+- cargo clippy --all-targets --all-features -- -D warnings: PASS
+- git diff --check: PASS

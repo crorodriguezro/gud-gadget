@@ -1,0 +1,9 @@
+Source HEAD before evidence packaging:
+gud branch=pixel-format-benchmark head=276312b56ddef5e8cf581d5fa378fb133d7874bd
+gud-gadget branch=pixel-format-benchmark head=b9fc4effec076594badad3508b5a006909256bb7
+mir-android2-platform-gud branch=pixel-format-benchmark head=7eec63eada784ac8e4dc05a6aa2302cb3232b3a1
+
+Source commit:
+b9fc4effec076594badad3508b5a006909256bb7 functionfs: retire dead USB epochs safely
+
+An evidence-only commit follows this snapshot and is listed in final-report.md.

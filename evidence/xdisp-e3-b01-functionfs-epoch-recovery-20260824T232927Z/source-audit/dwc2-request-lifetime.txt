@@ -1,0 +1,15 @@
+drivers/usb/dwc2/gadget.c:
+- dwc2_hsotg_disconnect() calls kill_all_requests(..., -ESHUTDOWN) on every IN
+  and OUT endpoint before calling the composite gadget disconnect callback.
+- dwc2_hsotg_ep_disable() stops an enabled transfer, disables endpoint
+  interrupts, and calls kill_all_requests(..., -ESHUTDOWN).
+- kill_all_requests() synchronously removes each request and invokes
+  dwc2_hsotg_complete_request().
+- dwc2_hsotg_complete_request() sets status if still -EINPROGRESS, unmaps DMA,
+  removes the request from the endpoint queue, drops the DWC2 lock, and calls
+  usb_gadget_giveback_request().
+
+Thus the current 16-KiB chunk receives terminate with -ESHUTDOWN on endpoint
+disable/disconnect. A completion can race before the lifecycle event is read,
+but cannot remain a UDC-owned request after endpoint disable returns. The later
+FunctionFS AIO worker is handled by the additional harvest/empty-queue gate.

@@ -1,0 +1,4 @@
+NOT ATTEMPTED: physical cable access was unavailable. This directory contains
+explicit placeholders so absence of runtime evidence cannot be mistaken for a
+successful reconnect. No synthetic FunctionFS event or administrative UDC cycle
+was substituted for the product path.

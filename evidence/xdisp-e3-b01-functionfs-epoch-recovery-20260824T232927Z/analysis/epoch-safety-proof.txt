@@ -1,0 +1,14 @@
+Safety relies on four nested facts:
+
+1. E1 still permits only one logical accepted payload and the AIO driver queue
+   depth remains one.
+2. SUSPEND/RESUME never release ownership or create a new epoch.
+3. DISABLE/UNBIND/next ENABLE proves old endpoint disable; DWC2 has synchronously
+   given back every old request with -ESHUTDOWN before that point.
+4. Userspace additionally harvests the accepted AIO completion and proves the
+   queue empty before recording ABORTED_BY_SESSION_DESTRUCTION and starting a
+   new epoch.
+
+Therefore no callback or AIO completion from epoch N remains capable of mutating
+epoch N+1. No arbitrary Poisoned-to-Idle method exists; only the named destroyed-
+epoch retirement followed by a strictly increasing begin_usb_epoch transition.

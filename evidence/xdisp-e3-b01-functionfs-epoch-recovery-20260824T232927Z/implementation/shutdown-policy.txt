@@ -1,0 +1,4 @@
+A live ambiguous epoch still poisons and blocks shutdown. An epoch with a proven
+terminal endpoint boundary and harvested completion becomes the unowned terminal
+state AbortedBySessionDestruction. proven_idle_gate accepts that state only when
+all other owners and queues are absent, allowing bounded normal service stop.

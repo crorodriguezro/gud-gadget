@@ -1,0 +1,12 @@
+Phone evidence:
+  usb 1-1.3 idVendor=1d50 idProduct=614d
+  +5.043 s: display descriptor request failed: -110
+  probe failed with error -110
+
+Host call stack:
+  usb probe -> gud_probe -> gud_get_display_descriptor -> usb_control_msg
+
+The request was GUD GET_DESCRIPTOR (0x01). The prior Pi userspace receiver had
+stopped EP0 processing after Poisoned, so the request was not answered. Existing
+logs do not contain a Pi setup marker for that timed-out request; this absence
+is consistent with the parked event loop and is not evidence of a sent response.

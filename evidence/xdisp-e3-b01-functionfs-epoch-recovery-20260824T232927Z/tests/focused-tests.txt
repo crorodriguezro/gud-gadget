@@ -1,0 +1,9 @@
+cargo test -p gud-gadget -p gud-drm: PASS
+gud-drm: 83/83
+gud-gadget: 78/78
+total focused receiver/protocol tests: 161/161
+
+Added deterministic coverage for resumable owned SUSPEND/RESUME, terminal
+DISABLE/ENABLE classification, historical abort disposition, strictly increasing
+epochs, refusal to replace a live epoch, conservative live-epoch shutdown, and
+bounded shutdown after destroyed-epoch retirement.

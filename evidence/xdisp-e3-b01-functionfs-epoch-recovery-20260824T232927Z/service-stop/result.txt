@@ -1,0 +1,3 @@
+NOT ATTEMPTED. A stop after a physically destroyed active epoch requires cable
+access and follows the core reconnect proof. Deployment-time restart while the
+UDC was already detached is not counted as this test.

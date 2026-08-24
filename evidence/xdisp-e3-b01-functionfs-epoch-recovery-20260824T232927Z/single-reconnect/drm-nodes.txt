@@ -1,0 +1,6 @@
+Current detached observation, 2026-08-24T23:38:14Z:
+/dev/dri/card0
+/dev/dri/controlD64
+/dev/dri/renderD128
+
+No GUD DRM node exists because the cable is physically disconnected.

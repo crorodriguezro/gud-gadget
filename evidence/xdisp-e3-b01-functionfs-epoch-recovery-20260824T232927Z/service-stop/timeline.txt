@@ -1,0 +1,2 @@
+NOT ATTEMPTED — requires a physically destroyed active epoch after the core
+reconnect proof. Deployment-time detached restart is intentionally excluded.

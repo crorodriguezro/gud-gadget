@@ -1,0 +1,16 @@
+ffs_func_eps_disable() calls usb_ep_disable() for every endpoint while holding
+ffs->eps_lock, then clears epfile->ep. Pending requests are explicitly described
+as "nuked" by the source.
+
+For async endpoint I/O, the UDC completion callback stores req->status and queues
+ffs_user_copy_worker on ffs->io_completion_wq. The worker completes the kiocb,
+signals eventfd, frees the request, and frees its I/O storage.
+
+DISABLE is queued after usb_ep_disable() returns, so no UDC request callback from
+the old endpoint set can begin after DISABLE. The userspace-visible Linux-AIO
+completion can still trail DISABLE because the worker is asynchronous. UNBIND is
+stronger in that it drains io_completion_wq before queuing UNBIND.
+
+E3-B01 therefore does not retire at DISABLE/ENABLE alone: it also harvests the
+one accepted AIO completion and proves the AIO queue empty before a fresh epoch.
+No old completion can then arrive in the new epoch.

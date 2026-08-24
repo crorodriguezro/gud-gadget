@@ -1,0 +1,16 @@
+Safe retirement rule
+====================
+
+An old USB epoch may be retired only after:
+
+1. FUNCTIONFS_DISABLE, FUNCTIONFS_UNBIND, or a subsequent FUNCTIONFS_BIND/ENABLE
+   has proven that FunctionFS synchronously destroyed or disabled the prior
+   endpoint set; AND
+2. the old logical transaction's sole accepted Linux-AIO completion has been
+   harvested; AND
+3. the endpoint AIO queue is proven empty.
+
+The historical disposition is ABORTED_BY_SESSION_DESTRUCTION. This is never an
+Idle or successful transition inside the old epoch. A new ENABLE may then start
+a strictly increasing epoch in Idle. SUSPEND and RESUME preserve the same epoch
+and ownership.

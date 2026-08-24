@@ -1,0 +1,8 @@
+Last confirmed Pi state after deployment while physically detached:
+service active; deployed binary SHA-256
+7e22188ab8eb0e6a31eefacc9f88b6196cc3604e83730bfe2625ab8f16654a00;
+UDC state "not attached"; FunctionFS BIND observed; usb_epoch=0;
+aggregate_state=Idle; aio_state=Idle; currently_owned=false.
+
+A later read-only Pi refresh was unavailable because SSH authentication was
+rejected. This is not presented as a post-reconnect state.

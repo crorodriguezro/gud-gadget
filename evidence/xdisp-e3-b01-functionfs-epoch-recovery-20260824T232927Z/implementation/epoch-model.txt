@@ -1,0 +1,6 @@
+BulkReceiveState and ExactAioState now include AbortedBySessionDestruction.
+Both owners track a monotonically increasing USB epoch ID. ENABLE starts an
+epoch only from Idle or AbortedBySessionDestruction. A boundary seen while an
+AIO is owned poisons/contains that old transaction until its completion is
+harvested. Retirement clears current ownership metadata but preserves the last
+retired epoch and transaction sequence as historical disposition.

@@ -1,0 +1,3 @@
+NOT ATTEMPTED. The operator was away from the physical phone/Pi/cable setup.
+No service restart, UDC unbind, USB-role forcing, reboot, or synthetic event was
+used to claim reconnect success. The required one clean physical cycle remains.

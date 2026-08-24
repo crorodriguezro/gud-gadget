@@ -1,0 +1,8 @@
+Current detached observation, 2026-08-24T23:38:14Z:
+State="unavailable"
+ChildPid=0
+ActivationRequested=false
+GudDevice=""
+xdispd PID=82680, binary=/home/phablet/xdispd-e2-direct-rgb565-13818a0
+
+This is a healthy detached baseline, not reconnect evidence.

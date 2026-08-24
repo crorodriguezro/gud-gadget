@@ -1,0 +1,4 @@
+epoch_id,transaction_seq,event,event_ns,state,detail
+unknown,74824,POISON_ENTER,,Poisoned,retained prior-boot event; kernel simultaneously reported new device speed
+1,2827,LOGICAL_ACCEPT,,InFlight,accepted 13 ms before FunctionFS SUSPEND
+1,2827,FFS_SUSPEND,,InFlight,old implementation immediately contained and poisoned

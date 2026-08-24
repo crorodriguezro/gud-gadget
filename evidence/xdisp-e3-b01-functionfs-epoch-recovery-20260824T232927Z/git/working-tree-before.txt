@@ -1,0 +1,4 @@
+gud: only pre-existing untracked test binaries.
+gud-gadget: only pre-existing untracked SHA256SUMS/evidence artifacts.
+mir-android2-platform-gud: only pre-existing untracked benchmark evidence.
+No tracked modification was present in the three repositories at task start.

@@ -1,0 +1,4 @@
+BLOCKED: hardware access prevents the mandatory physical active
+detach -> reconnect -> explicit-reactivation test. The final binary was authorized,
+deployed, and selected on the Pi; authorization is no longer a blocker. Offline
+safety validation passed, but it cannot establish recovery.

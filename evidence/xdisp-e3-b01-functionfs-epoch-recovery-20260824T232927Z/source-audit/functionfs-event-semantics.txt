@@ -1,0 +1,21 @@
+Deployed source: local .xfercompltrace-source, Linux 6.12.47 plus the deployed
+FunctionFS/DWC2 trace and 16-KiB chunk patches. Runtime uname is
+6.12.47+rpt-rpi-v8-ffs-xfercompltrace #2 SMP PREEMPT Sun Aug 16 23:57:59 -05 2026.
+
+drivers/usb/gadget/function/f_fs.c:
+- ffs_func_suspend() only queues FUNCTIONFS_SUSPEND.
+- ffs_func_resume() only queues FUNCTIONFS_RESUME.
+- ffs_func_disable() calls ffs_func_eps_disable() before queuing DISABLE.
+- ffs_func_set_alt() disables an existing endpoint set before enabling the new
+  one and queuing ENABLE.
+- ffs_func_unbind() disables endpoints, drains io_completion_wq, then queues UNBIND.
+- __ffs_event_add() coalesces lifecycle events: BIND/UNBIND/ENABLE/DISABLE can
+  discard queued non-power-management lifecycle events. Therefore a later BIND
+  or ENABLE can replace an unread DISABLE/UNBIND in userspace.
+
+SUSPEND can RESUME the same configuration and endpoint generation; it is not a
+safe epoch boundary. DISABLE is terminal for the old enabled endpoint set.
+ENABLE is also sufficient when DISABLE was coalesced, because set_alt disables
+the prior endpoint set before enabling the new one. A subsequent BIND is accepted
+as coalesced proof of teardown; it does not start a data epoch. Only ENABLE starts
+the next epoch.
