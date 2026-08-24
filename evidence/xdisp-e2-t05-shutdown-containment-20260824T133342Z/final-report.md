@@ -57,7 +57,7 @@
 55. **Remaining lifecycle caveat:** Mir 1.8.3 connection disconnect can block after safe external-resource cleanup.
 56. **Source changes:** one test-only safe-stall hook in `src/utils/gud_screencast.cpp`.
 57. **Focused tests:** 50/50 xdisp tests passed; Android2 binary could not load its bundled Boost library outside its container; Python tests could not start because pytest is unavailable.
-58. **Commits created:** mir `eedf520a247eb1baf73472fa6e86488b5ea8be4c` (`xdisp: add safe pre-ownership shutdown stall hook`); evidence commit pending.
+58. **Commits created:** mir `eedf520a247eb1baf73472fa6e86488b5ea8be4c` (`xdisp: add safe pre-ownership shutdown stall hook`); gud-gadget `c5abd03` (`docs: record E2-T05 shutdown qualification`).
 59. **Commits pushed:** NO.
 60. **Final gud HEAD:** unchanged from before.
 61. **Final gud-gadget HEAD:** unchanged from before.
