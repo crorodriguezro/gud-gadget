@@ -1,0 +1,23 @@
+Presentation-rate observation during E3-B02
+===========================================
+
+Classification: separate transport/performance follow-up; no E3-B02 source
+change touched the connected frame path.
+
+Before the counted active detach, the operator reported fewer visible frames
+than the prior day's tests. The managed child's final report objectively showed:
+
+  received_fps=61
+  submitted_fps=61
+  presented_fps=4
+  dropped_fps=56
+  drop_percent=92.0149
+  submit_us_avg=201101
+  submit_us_p95=1000000
+
+In the later post-qualification trackpad diagnostic, the fresh child reported
+15 presented FPS over 12.32 seconds, with 61 received/submitted FPS and 73.77%
+drops. This confirms variability and a real presentation bottleneck, but not a
+causal link to the root-port recovery monitor. The monitor is armed only after
+GUD disconnect and is cancelled on normal GUD probe; it does no frame-path work
+while the display is connected.

@@ -1,0 +1,57 @@
+Post-qualification old/new GUD module trackpad A/B
+==================================================
+
+Purpose
+-------
+
+Determine whether the E3-B02 root-port monitor caused the operator-observed
+stale Virtual Trackpad mode. This A/B is diagnostic and is not counted as an
+E3-B02 qualification cycle.
+
+Controls
+--------
+
+- A clean phone reboot preceded each module half.
+- The same current MirGUD binary was used in both halves:
+  sha256=0051a0b304c6bcfa842f4c1396024f5a0600dcb6ba3add46ab8beef94c437748
+- xdispd, Lomiri, and the Pi receiver artifacts were unchanged between halves.
+- gud-usb-role-recovery.service was disabled during each detach observation so
+  the userspace role transaction could not influence phone-UI return.
+- Each half activated an external desktop, then physically detached the same
+  hub-to-phone cable.
+
+A: prior GUD module
+-------------------
+
+  artifact: /home/phablet/gud.xdisp-e2-direct-rgb565-1843200-4a2eb91.ko
+  sha256: 439fad16551e2a66c922abad6791dd3e38f8fbe202b5aa0ca12e4147b10a1ad7
+  srcversion: 780A954B1169DD84C8B65E7
+  active child: 4313
+  detach: 2026-08-25 17:59:57 -05
+  child outcome: same Mir connection-release hang; forced SIGKILL after 3.013 s
+  operator observation: normal phone UI returned after about 10 seconds
+  presented rate observed in this run: about 6 FPS
+
+B: E3-B02 port-monitor module
+-----------------------------
+
+  artifact: /home/phablet/gud.xdisp-e3-b02-portmon-a2d93ca.ko
+  sha256: a2d93ca07ae4d25552e2bc0c837fc1cdac969469f043726363c217ddb7abf94f
+  srcversion: 2E765CCD9E93DFD432A30C4
+  active child: 4372
+  detach: 2026-08-25 18:05:50 -05
+  child outcome: same Mir connection-release hang; forced SIGKILL after 3.409 s
+  operator observation: normal phone UI returned after about 5 seconds
+  presented rate observed in this run: about 8 FPS
+
+Conclusion
+----------
+
+Both old and new modules returned the phone from Virtual Trackpad mode to the
+normal UI after active detach. The new module was not worse in this controlled
+test and is excluded as a deterministic cause of the earlier stale session.
+The common forced Mir disconnect boundary may still merit a separate lifecycle
+investigation if the stale UI state recurs, but it does not block E3-B02.
+
+The low/variable presented rate is also common to both halves and is therefore
+not attributable to the root-port monitor's connected-path behavior.

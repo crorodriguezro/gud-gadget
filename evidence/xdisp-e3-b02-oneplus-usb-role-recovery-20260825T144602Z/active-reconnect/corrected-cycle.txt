@@ -1,0 +1,80 @@
+Corrected candidate active reconnect/reactivation cycle
+=======================================================
+
+Verdict: PASS
+
+Baseline
+--------
+
+Normal D-Bus Activate produced State=active, ActivationRequested=true,
+ChildPid=10408, LastError="", and a live 1280x720 direct RGB565+LZ4 stream.
+The operator visually confirmed the external desktop.
+
+Detach
+------
+
+At 15:18:13 the operator disconnected only the hub-to-phone USB cable.
+
+  xdispd State=unavailable
+  ActivationRequested=true
+  GudDevice=""
+  ConnectorId=0
+  ChildPid=0
+  LastError=""
+  containment duration=3501 ms
+  helper consumed one removal and waited for the tagged kernel signal
+
+The phone remained responsive. xdispd PID 4241, helper PID 7719, and Pi
+gud-userspace PID 4488 survived with NRestarts=0.
+
+Reconnect and autonomous recovery
+---------------------------------
+
+The operator physically reconnected the cable. No manual role write, service
+restart, UDC reset, or reboot occurred.
+
+  15:19:29 kernel-confirmed tagged root-port reattach accepted
+  15:19:31 one-shot recovery started
+  15:20:00 result=recovered
+  teardown_observed=true
+  host_ready=true
+  elapsed=29.599 seconds
+
+Final enumeration gates:
+
+  GUD=1-1.3 1d50:614d speed=480
+  DRM=/dev/dri/card1
+  xdispd discovered connector 25
+  helper PID=7719 NRestarts=0
+  xdispd PID=4241 NRestarts=0
+  Pi service PID=4488 NRestarts=0
+  Pi UDC=configured
+
+Reactivation
+------------
+
+The retained pre-detach ActivationRequested flag caused existing xdispd
+behavior to start transient child 10879 as soon as GUD returned. No automatic
+desktop policy was added by E3-B02. To establish the requested explicit gate,
+normal D-Bus Deactivate was called and reached:
+
+  State=available
+  ActivationRequested=false
+  ChildPid=0
+  LastError=""
+
+Normal D-Bus Activate was then called explicitly. It produced fresh child PID
+11187, State=active, ActivationRequested=true, and LastError="". Phone and Pi
+logs proved successful frames with transport_format=rgb565, source=1280x720,
+and compression=1. The operator visually confirmed the restored desktop.
+
+Cumulative qualification counts after this cycle:
+
+  kernel stable-reattach signals=4
+  helper starts=4
+  helper successful results=4
+  manual role operations during counted cycles=0
+  phone reboots during counted cycles=0
+  service restarts during counted cycles=0
+
+The formal E3-T02 10-cycle qualification was not run.

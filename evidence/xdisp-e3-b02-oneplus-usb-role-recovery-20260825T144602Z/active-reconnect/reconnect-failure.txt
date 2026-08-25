@@ -1,0 +1,111 @@
+E3-B02 active reconnect: reconnect failure
+===========================================
+
+Verdict: FAIL
+
+Operator action
+---------------
+
+After the old FunctionFS epoch had terminally retired, the operator reconnected
+only the hub-to-phone USB cable.  No role write, service restart, UDC reset, or
+reboot was performed.
+
+Post-reconnect state
+--------------------
+
+At 2026-08-25 10:46:58 -05, the OnePlus controller reported host but exposed
+only its two xHCI root hubs:
+
+  usb1 1d6b:0002 at 480 Mbit/s
+  usb2 1d6b:0003 at 5000 Mbit/s
+
+The hub, GUD, and Ethernet device were all absent.  GUD did not probe and no
+DRM node appeared.  xdispd remained unavailable with ChildPid=0 and
+ActivationRequested=true.  The helper remained PID 101040 with NRestarts=0.
+There were four cumulative one-shot starts/results: three inactive cycles and
+the premature active-detach transaction.  No second transaction ran for the
+operator's real reconnect because the one-shot had already been consumed.
+
+At the same time the Pi service remained active/running at PID 2855 with
+NRestarts=0 and UDC state not attached.  Its kernel logged repeated:
+
+  dwc2 3f980000.usb: new device is full-speed
+
+This occurred approximately once per second after the physical reconnect,
+showing electrical host activity without successful enumeration.
+
+Pi gadget-binding correction
+----------------------------
+
+An initial diagnostic queried the stale/non-owning configfs path
+`/sys/kernel/config/usb_gadget/gud/UDC` and saw an empty value.  That path is not
+the running gadget and must not be used to classify this failure.
+
+The real production gadget is:
+
+  /sys/kernel/config/usb_gadget/usb-gadget0
+
+It remained correctly bound:
+
+  UDC=3f980000.usb
+  USB_UDC_DRIVER=usb-gadget0
+  c.1/ffs.usb-gadget0-0 -> functions/ffs.usb-gadget0-0
+
+Therefore `UDC state=not attached` is the expected gadget-waiting-for-host
+state already documented in E3-B01, not evidence of a Pi unbind or service
+stall.  The reconnect failure remains on the OnePlus host/controller path.
+
+Invalid positive-presence signal
+--------------------------------
+
+With the cable physically reconnected, `/sys/class/power_supply/usb/uevent`
+reported the internally contradictory state:
+
+  POWER_SUPPLY_PRESENT=1
+  POWER_SUPPLY_ONLINE=0
+  POWER_SUPPLY_TYPEC_MODE=Nothing attached
+  POWER_SUPPLY_HW_DETECT=0
+  POWER_SUPPLY_REAL_TYPE=Unknown
+
+The same PRESENT transition had occurred while the cable was still physically
+unplugged.  `POWER_SUPPLY_PRESENT` is therefore not a reliable positive
+physical-reattach gate in OnePlus host mode.  The current helper incorrectly
+uses it as sufficient evidence and consumed recovery before the real attach.
+
+Phone controller state
+----------------------
+
+The Qualcomm xHCI platform child and both root hubs existed, but root port 1
+had no enumerated child and exported only `connect_type=unknown`.  The phone
+kernel repeatedly logged:
+
+  msm-dwc3 a600000.ssusb: could not transition HS PHY to L2
+
+This is consistent with the stale DWC3/xHCI/PHY reconnect state seen in the
+original E3-B02 failure.
+
+Gate checks
+-----------
+
+Physical reconnect performed:              yes
+Manual role operation:                      0
+Phone/Pi/xdispd service restarts:            0
+Phone host mode:                            yes
+Pi gadget still correctly bound:            yes
+GUD VID/PID:                                FAIL
+GUD probe:                                  FAIL (not reached)
+DRM node:                                   FAIL
+xdispd available:                           FAIL
+ChildPid before explicit reactivate:        0
+Autonomous host-role recovery:              FAIL
+Reliable physical-reattach gating:          FAIL
+Active cycle final verdict:                 FAIL
+
+Next action
+-----------
+
+Do not repeat qualification with the same helper.  Replace the invalid
+`POWER_SUPPLY_PRESENT` positive gate with a proven physical host-port attach
+signal, or move the correction into the Qualcomm DWC3/PHY state machine if no
+reliable userspace signal is exposed.  Preserve the one-shot/no-retry policy
+and all FunctionFS ownership semantics.

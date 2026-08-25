@@ -1,0 +1,8 @@
+Captured local phone time: 2026-08-25T09:46:01-05:00
+Kernel: 4.9.112-g6b190d86b #1 SMP PREEMPT Thu Mar 12 00:01:48 UTC 2026 aarch64
+Controller mode: host
+USB devices: root hubs only (1d6b:0002 at 480; 1d6b:0003 at 5000)
+GUD 1d50:614d: absent
+Recovery helper: active, MainPID=99509, NRestarts=0
+Helper active since: Tue 2026-08-25 08:29:58 -05
+Platform devices present: a600000.ssusb, a600000.dwc3, xhci-hcd.0.auto

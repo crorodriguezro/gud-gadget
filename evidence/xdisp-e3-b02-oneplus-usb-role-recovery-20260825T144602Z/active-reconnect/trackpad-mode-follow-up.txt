@@ -1,0 +1,76 @@
+Post-qualification trackpad-mode disconnect follow-up
+=====================================================
+
+Classification: non-deterministic stale Lomiri session; controlled A/B excludes
+the E3-B02 GUD root-port monitor as a deterministic cause. This diagnostic is
+not counted as a qualification cycle.
+
+Procedure
+---------
+
+1. From the restored available/ChildPid=0 state, normal D-Bus Activate was
+   called once.
+2. xdispd reached State=active with fresh mirgud child PID 11715.
+3. The operator disconnected only the hub-to-phone USB cable.
+4. The operator reported that the phone remained in Virtual Trackpad mode.
+5. While still detached, normal D-Bus Deactivate was called to clear the
+   retained request. ActivationRequested changed true -> false, but the
+   operator reported that the phone still remained in trackpad mode.
+6. The operator reconnected the hub-to-phone cable. The extra autonomous
+   recovery completed successfully in 29.604 seconds; GUD returned at 480
+   Mbit/s, DRM card1 returned, and xdispd settled available/ChildPid=0 with no
+   service restart.
+7. The operator confirmed that the phone still remained in trackpad mode after
+   the successful reconnect.
+
+Detached software state
+-----------------------
+
+  State=unavailable
+  ActivationRequested=true before explicit Deactivate, false afterward
+  GudDevice=""
+  ConnectorId=0
+  ChildPid=0
+  LastError=""
+  xdispd PID=4241 NRestarts=0
+
+Teardown boundary
+-----------------
+
+The child completed:
+
+  CAPTURE_LOOP_EXIT
+  PRESENTER_STOP_COMPLETE
+  KMS_TEARDOWN_COMPLETE
+  SCREENCAST_RELEASE_COMPLETE
+
+It then emitted MIR_CONNECTION_RELEASE_BEGIN but never emitted
+MIR_CONNECTION_RELEASE_COMPLETE. xdispd enforced its existing bounded
+containment deadline and sent SIGKILL after 3294 ms.
+
+Conclusion
+----------
+
+Clearing ActivationRequested after the child was gone did not exit trackpad
+mode, excluding the sticky xdispd request as the direct cause. The run is
+consistent with the known blocking Mir 1.8 client/server Disconnect boundary,
+but that boundary also occurred in earlier runs where the operator reported a
+successful VirtualTouchPad -> phone UI transition. It therefore cannot explain
+the regression by itself.
+
+The current xdispd binary is byte-identical to the prior deployment and its
+source was not changed. The current MirGUD binary is the later E4 artifact
+(`0051a0b3...`), not the older E2 UX-qualified artifact (`3369872b...`).
+
+A controlled A/B was subsequently run from a clean phone reboot for each half,
+using the same current MirGUD (`0051a0b3...`), xdispd, and Pi artifacts. With
+the old GUD module (`780A954B1169DD84C8B65E7`), normal phone UI returned in
+about 10 seconds after active detach. With the new port-monitor module
+(`2E765CCD9E93DFD432A30C4`), it returned in about 5 seconds. Both halves showed
+the same bounded Mir connection-release hang and forced child containment.
+Therefore the added kernel monitor is excluded as a deterministic regression.
+
+No USB-role policy, FunctionFS safety, transport, Mir, or Lomiri source change
+was made during this diagnostic. The controlled A/B result closes the reopened
+E3-B02 verdict as PASS. The one stale session remains evidence for a separate,
+non-blocking Mir/Lomiri lifecycle investigation if it recurs.

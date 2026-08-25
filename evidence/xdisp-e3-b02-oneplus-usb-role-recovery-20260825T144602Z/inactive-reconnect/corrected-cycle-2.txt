@@ -1,0 +1,52 @@
+Corrected candidate inactive reconnect cycle 2
+==============================================
+
+Verdict: PASS
+
+Operator disconnected/reconnected only the hub-to-phone cable. No manual role
+write, service restart, UDC reset, or reboot occurred during the cycle.
+
+Timeline
+--------
+
+  15:12:04 helper consumed one GUD removal
+  kernel cumulative arms advanced from 1 to 2
+  kernel signals remained at 1 while physically detached
+  15:12:40 kernel-confirmed tagged reattach event accepted
+  15:12:42 one-shot recovery started
+  15:13:11 one-shot result=recovered
+
+Transaction:
+
+  teardown_observed=true
+  host_ready=true
+  elapsed=29.658 seconds
+
+Final gates
+-----------
+
+  GUD=1-1.3 1d50:614d speed=480
+  DRM card1 present with settled video-group permissions
+  xdispd State=available
+  xdispd ActivationRequested=false
+  xdispd ChildPid=0
+  xdispd LastError=""
+  helper PID=7719 NRestarts=0
+  xdispd PID=4241 NRestarts=0
+  Pi service PID=4488 NRestarts=0
+  Pi UDC=configured
+
+Cumulative one-shot counts:
+
+  kernel arms=2
+  kernel stable-reattach signals=2
+  helper starts=2
+  helper results=2
+
+xdispd resources remained stable:
+
+  VmRSS=7352 kB
+  Threads=4
+  FDs=9
+
+Cycle 2 verdict: PASS

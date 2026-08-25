@@ -1,0 +1,16 @@
+Deployed local phone time: 2026-08-25 09:56:21 -05
+Lab daemon path: /home/phablet/gud-usb-role-recovery.py
+Lab policy path: /home/phablet/usb_role_recovery_policy.py
+Systemd unit: gud-usb-role-recovery.service
+MainPID after deployment: 101040
+NRestarts: 0
+Controller mode after helper start: host
+Visible devices after helper start: root hubs only
+
+Initial-absence safety result: PASS.  Starting the helper while GUD was absent
+logged only the monitoring message and performed no role action.
+
+The repository service remains package-correct at
+/usr/libexec/lomiri-xdisp/gud-usb-role-recovery.py.  The writable home paths
+are selected only by the already documented lab drop-in because the phone's
+/usr filesystem is immutable.

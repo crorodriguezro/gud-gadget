@@ -1,0 +1,19 @@
+E3-B02 repository heads after implementation and qualification
+===============================================================
+
+gud
+  branch: pixel-format-benchmark
+  HEAD: 3e3361d (usb: signal stable GUD root-port reattach)
+
+gud-gadget
+  branch: pixel-format-benchmark
+  HEAD before committing this self-referential evidence bundle:
+    1cd654fd345d4ec773e5c47414a86ae19b3cecc3
+
+mir-android2-platform-gud
+  branch: pixel-format-benchmark
+  HEAD: 1fbc01d (usb-role: recover GUD host after tagged reattach)
+
+The evidence bundle is committed separately after this file is generated.
+No commit was pushed. Existing unrelated dirty work and evidence were
+preserved.

@@ -1,0 +1,100 @@
+E3-B02 active reconnect baseline
+================================
+
+Explicit Activate
+-----------------
+
+At 2026-08-25 10:10:52 -05, the normal org.lomiri.XDisp1.Activate D-Bus
+method was called once.  No service or process was restarted.
+
+Phone state at 2026-08-25 10:10:57 -05
+----------------------------------------
+
+xdispd State:         active
+xdispd Enabled:       true
+ActivationRequested:  true
+GudDevice:            /dev/dri/card1
+ConnectorId:          25
+ChildPid:             102116
+LastError:            empty
+
+Fresh managed child command:
+
+  /home/phablet/mirgud-direct-rgb565-13818a0.bin
+    --managed
+    --gud-fd 3
+    --gud-connector 25
+    --status-fd 4
+    --source-mode extend
+    --pixel-format rgb565
+    --source-pixel-format rgb565
+    --mir-socket-file /run/mir_socket
+    --size 1280 720
+
+Recovery helper: active/running, PID 101040, NRestarts=0
+
+Pi state at 2026-08-25 16:11:24 +01
+-------------------------------------
+
+gud-userspace.service: active/running, PID 2855, NRestarts=0
+UDC state:             configured
+
+Live frame samples 300374 through 300378 showed:
+
+  transfer_format=rgb565
+  gud_format=0x40
+  source=1280x720
+  scaled=false
+  compression=1 (LZ4)
+  output_bytes=1843200
+  transfer_bytes=1062393
+  ratio=1.73
+  recv_ms=28..31
+  decompress_ms=5..6
+
+Software baseline verdict: PASS
+Physical external-desktop confirmation: operator reported not working after
+disconnecting and reconnecting the monitor; this first baseline was excluded
+before the active USB reconnect cycle began.
+
+Excluded monitor reconnect event
+--------------------------------
+
+The operator disconnected and reconnected the monitor after the first
+Activate.  At 2026-08-25 10:13:39 -05, managed child 102116 exited on SIGHUP:
+
+  xdispd: child exit unexpected-signal:1 stop_duration_ms=0
+  xdispd: active -> recoverable_error: unexpected-signal:1
+
+There was no phone USB/GUD disconnect.  The phone remained in host mode with
+GUD at 1-1.3, the role helper remained PID 101040 with NRestarts=0, the Pi
+service remained PID 2855 with NRestarts=0 and UDC configured, and the Pi HDMI
+connector reported connected/enabled.  This operator monitor action occurred
+before the qualifying active USB detach and does not affect the completed
+inactive reconnect cycles.
+
+Replacement active baseline
+---------------------------
+
+At 2026-08-25 10:15:27 -05, normal xdispd Deactivate was called.  It reached:
+
+  State=available
+  ActivationRequested=false
+  ChildPid=0
+  LastError=empty
+
+Normal Activate was then called once.  At 2026-08-25 10:15:34 -05:
+
+  State=active
+  ActivationRequested=true
+  ChildPid=103230
+  LastError=empty
+
+Fresh child 103230 used the same direct RGB565 1280x720 command line.  Pi frame
+samples 302441 through 302445 showed transfer_format=rgb565, compression=1,
+scaled=false, and live USB receives.  Pi HDMI remained connected/enabled; the
+Pi service and phone role-helper PID/restart invariants remained unchanged.
+
+Replacement software baseline verdict: PASS
+Replacement physical confirmation: PASS; operator confirmed the external
+desktop was working before the qualifying active USB detach.

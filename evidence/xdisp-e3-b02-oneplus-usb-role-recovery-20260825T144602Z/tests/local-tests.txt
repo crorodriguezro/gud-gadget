@@ -1,0 +1,41 @@
+Command: python3 tests/unit-tests/xdisp/test_usb_role_recovery_policy.py
+Result: PASS
+Tests: 12
+
+Covered:
+- real host removal waits for stable physical reattach;
+- duplicate detach cannot arm a second recovery;
+- physical presence bounce restarts the stability window;
+- peripheral/none/unknown modes do not trigger recovery;
+- service initial GUD absence never arms recovery;
+- normal GUD re-add cancels pending recovery and re-arms a later removal;
+- successful transaction waits for xHCI teardown and role settle;
+- non-host mode performs no writes;
+- device-write failure performs no host write;
+- teardown timeout performs one bounded host rollback;
+- host-write failure is terminal;
+- host-readiness timeout does not retry.
+
+Command: python3 -m py_compile src/xdisp/gud-usb-role-recovery.py src/xdisp/usb_role_recovery_policy.py
+Result: PASS
+
+Final review rerun
+------------------
+
+Command: python3 tests/unit-tests/xdisp/test_usb_role_recovery_policy.py
+Result: 12/12 PASS
+
+Command: python3 -m py_compile src/xdisp/gud-usb-role-recovery.py src/xdisp/usb_role_recovery_policy.py
+Result: PASS
+
+Commands:
+  backport-4.9/tests/test-xdisp-lz4.sh
+  backport-4.9/tests/test-xdisp-lz4-contract.sh
+  backport-4.9/tests/test-gud-transfer-retry.sh
+Results:
+  xdisp-lz4 tests: 0 failures
+  xdisp-lz4-contract tests: 0 failures
+  gud transfer retry tests: PASS
+
+Command: git diff --check
+Result: PASS

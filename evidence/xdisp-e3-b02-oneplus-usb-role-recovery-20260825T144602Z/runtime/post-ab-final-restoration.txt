@@ -1,0 +1,42 @@
+E3-B02 post-A/B final candidate restoration
+============================================
+
+All actions here occurred after qualification and are excluded from counted
+cycles.
+
+After the controlled new-module A/B, the final module remained loaded but the
+diagnostic helper was intentionally inactive. Reconnect initially left the Pi
+UDC `not attached`; phone xHCI enumerated the hub and other downstream devices
+but timed out reading the Pi gadget descriptor on port 1-1.3.
+
+The Pi receiver's last telemetry proved `aggregate_state=Idle`,
+`aio_state=Idle`, `currently_owned=false`, `processing_failed=0`, and
+`unsafe_teardown_suppressed=0`. The Pi gadget service was therefore safely
+restarted once as excluded lab restoration. It returned active as PID 5623,
+NRestarts=0, with UDC state `configured`. The phone then enumerated GUD as
+1-1.3 `1d50:614d` at 480 Mbit/s and recreated `/dev/dri/card1` without another
+phone role write.
+
+The final candidate helper was enabled and started as PID 5756, NRestarts=0.
+The retained A/B ActivationRequested flag had automatically launched a child
+when card1 returned, so normal `org.lomiri.XDisp1.Deactivate` was called once.
+
+Final state
+-----------
+
+  GUD module srcversion: 2E765CCD9E93DFD432A30C4
+  GUD USB identity: 1d50:614d at 480 Mbit/s
+  DRM: /dev/dri/card0 and /dev/dri/card1
+  xdispd PID: 4251, NRestarts=0
+  xdispd State: available
+  xdispd ActivationRequested: false
+  xdispd ChildPid: 0
+  xdispd GudDevice: /dev/dri/card1
+  xdispd ConnectorId: 25
+  xdispd LastError: ""
+  recovery helper PID: 5756, NRestarts=0, active
+  Pi gud-userspace PID: 5623, NRestarts=0, active
+  Pi UDC: configured
+
+No action in this restoration changes the 3/3 inactive and 1/1 active counted
+qualification result.

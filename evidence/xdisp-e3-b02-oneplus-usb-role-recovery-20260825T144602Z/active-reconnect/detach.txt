@@ -1,0 +1,72 @@
+E3-B02 active reconnect: detached phase
+========================================
+
+Operator action
+---------------
+
+With replacement baseline child 103230 actively streaming and the external
+desktop physically confirmed, the operator unplugged only the hub-to-phone USB
+cable and left it disconnected.  The monitor/HDMI cable was not touched.
+
+xdispd containment
+------------------
+
+At 2026-08-25 10:19:43 -05:
+
+  State=unavailable
+  ActivationRequested=true
+  GudDevice=empty
+  ChildPid=0
+  LastError=empty
+  LastChildExit=forced-sigkill:signal:9
+  LastStopDurationMs=2832
+  ForcedStopCount=7
+
+The phone remained responsive.  The role helper remained active/running at PID
+101040 with NRestarts=0.
+
+FunctionFS retirement
+---------------------
+
+The physical detach intersected accepted transaction 304345 in USB epoch 5.
+The Pi preserved the ambiguous accepted operation as Poisoned, then used the
+source-proven FunctionFS disable/disconnect boundary to harvest and retire it:
+
+  epoch_retire_complete
+  epoch_id=5
+  transaction_seq=304345
+  disposition=ABORTED_BY_SESSION_DESTRUCTION
+  currently_owned=false
+
+The Pi service remained active/running at PID 2855 with NRestarts=0.  UDC state
+was not attached.  FunctionFS ownership safety was not weakened or reset.
+
+Premature physical-presence trigger
+-----------------------------------
+
+Although the operator had not yet reconnected the cable, the OnePlus
+power_supply/usb signal changed back to present=True:
+
+  2026-08-25 10:18:52 GUD removal consumed
+  2026-08-25 10:18:53 present=False, detached
+  2026-08-25 10:18:57 present=True, reattach
+  2026-08-25 10:18:59 one-shot recovery started
+  2026-08-25 10:19:30 result=recovered, elapsed=30.856s
+
+At 10:20:24, with the cable still physically disconnected, only the xHCI root
+hubs existed and GUD was absent.  The helper therefore consumed its one-shot
+transaction on a false physical-reattach indication.  There was no retry or
+role oscillation, but this is a gating/safety qualification concern and must be
+included in the final verdict even if the freshly reset host controller later
+enumerates GUD when the operator performs the real reconnect.
+
+Detached phase checks
+---------------------
+
+xdispd unavailable:                 PASS
+ChildPid=0:                         PASS
+Phone responsive:                  PASS
+Pi old epoch terminally retired:   PASS
+Pi ownership released:             PASS
+Phone/Pi service restart count:    0
+Reliable physical-reattach gating: FAIL (false present=True while unplugged)

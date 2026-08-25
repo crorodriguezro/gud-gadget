@@ -1,0 +1,113 @@
+E3-B02 inactive reconnect cycle 3
+================================
+
+Verdict: PASS
+
+Operator action
+---------------
+
+The operator unplugged only the hub-to-phone cable, waited, and reconnected it.
+The Pi remained powered and attached to the hub.  There was no manual role
+write, service restart, UDC reset, or reboot during the cycle.
+
+Phone helper timeline (America/Bogota)
+--------------------------------------
+
+2026-08-25 10:08:26 GUD removal consumed; waiting for stable physical reattach
+2026-08-25 10:08:27 USB power present=False; transition=detached
+2026-08-25 10:08:32 USB power present=True; transition=reattach
+2026-08-25 10:08:34 one-shot host recovery started after stable reattach
+2026-08-25 10:09:05 result=recovered teardown_observed=True host_ready=True
+                    elapsed=30.814s
+
+The cumulative strict-test journal counts were three recovery starts and three
+recovery results.  Cycle 3 was therefore one new transaction with no duplicate
+transaction or retry.
+
+Kernel observations
+-------------------
+
+149960.126804 GUD USB disconnect
+149960.127156 GUD DRM disconnect
+149965.660846 physical USB attach indication
+149967.405219 xHCI removal began
+149970.984386 transient power detach during synchronous teardown
+149974.876159 transient power reattach during synchronous teardown
+149969.711093 through 149998.127730 root-port enable/enumeration failures
+149998.134649 old USB bus 1 deregistered
+149998.145693 DWC3 entered low-power mode
+149998.151420 DWC3 exited low-power mode
+149998.153177 xHCI host controller recreated
+149998.989207 GUD 1d50:614d enumerated at high speed
+149999.004778 GUD probe completed
+
+The transient power bounce happened after the policy had consumed its one-shot
+deadline.  It did not produce another role sequence.  As in cycles 1 and 2,
+nearly all transaction time was the synchronous mode sysfs write waiting for
+the deployed kernel's stale root-port enumeration attempt to finish.
+
+Post-cycle phone state at 2026-08-25 10:09:10 -05
+------------------------------------------------
+
+USB controller mode: host
+Hub:                  1a40:0101 at 480 Mbit/s
+GUD:                  1d50:614d at 480 Mbit/s, path 1-1.3
+Ethernet:             0bda:8152 at 480 Mbit/s
+Recovery helper:      active/running, PID 101040, NRestarts=0
+xdispd State:         available
+xdispd Enabled:       true
+ActivationRequested:  false
+GudDevice:            /dev/dri/card1
+ChildPid:             0
+LastError:            empty
+
+Post-cycle Pi state at 2026-08-25 16:09:29 +01
+------------------------------------------------
+
+gud-userspace.service: active/running, PID 2855, NRestarts=0
+UDC state:             configured
+FunctionFS lifecycle:  suspend -> disable/disconnect -> enable
+Receiver ownership at lifecycle events:
+  aggregate_state=Idle
+  aio_state=Idle
+  currently_owned=false
+
+Resource and duplication snapshot
+---------------------------------
+
+xdispd instances: 1
+xdispd PID:       82680
+xdispd RSS:       7364 kB
+xdispd threads:   4
+xdispd FDs:       9
+helper PID:       101040
+helper RSS:       12436 kB
+helper threads:   1
+helper FDs:       4
+GUD DRM devices:  exactly one, /dev/dri/card1
+
+Acceptance checks
+-----------------
+
+Autonomous host recovery:               PASS
+Helper rearmed after previous cycle:     PASS
+No manual role operation during cycle:  PASS
+Exactly one recovery transaction:       PASS
+GUD VID/PID returned:                    PASS
+GUD probe and DRM node returned:         PASS
+xdispd remained inactive/available:      PASS
+ChildPid remained 0:                     PASS
+Phone helper PID/restart invariant:      PASS
+Pi service PID/restart invariant:        PASS
+FunctionFS fresh-session enable:         PASS
+Duplicate GUD DRM devices:               0
+Role oscillations/recovery retries:      0
+
+Inactive reconnect gate
+-----------------------
+
+Cycles passed / total: 3 / 3
+Manual role flips:     0
+Phone reboots:         0
+Pi service restarts:   0
+xdispd restarts:       0

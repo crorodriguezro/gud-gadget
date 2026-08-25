@@ -1,0 +1,29 @@
+E3-B02 owned source paths committed after qualification
+=======================================================
+
+gud commit 3e3361d
+  backport-4.9/Kbuild
+  backport-4.9/gud_drv.c
+  backport-4.9/variants/xdisp-lz4-12800-pmtest/Kbuild
+  backport-4.9/variants/xdisp-lz4-12800/Kbuild
+
+new files in gud commit 3e3361d
+  backport-4.9/gud_reconnect.c
+  backport-4.9/gud_reconnect.h
+  backport-4.9/variants/xdisp-lz4-12800-pmtest/variant_reconnect.c
+  backport-4.9/variants/xdisp-lz4-12800/variant_reconnect.c
+
+mir-android2-platform-gud commit 1fbc01d
+  debian/control
+  src/xdisp/CMakeLists.txt
+  tests/unit-tests/xdisp/CMakeLists.txt
+
+new files in mir-android2-platform-gud commit 1fbc01d
+  data/gud-usb-role-recovery.service
+  src/xdisp/gud-usb-role-recovery.py
+  src/xdisp/usb_role_recovery_policy.py
+  tests/unit-tests/xdisp/test_usb_role_recovery_policy.py
+
+gud-gadget
+  this E3-B02 evidence directory is untracked alongside substantial preserved
+  pre-existing evidence. No unrelated path was staged, reset, or removed.

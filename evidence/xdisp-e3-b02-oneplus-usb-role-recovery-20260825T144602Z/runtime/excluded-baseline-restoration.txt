@@ -1,0 +1,19 @@
+Authorized setup-only action at phone local time 2026-08-25T09:57:36-05:00:
+
+1. wrote `device` once to the Qualcomm DWC3 mode node;
+2. waited 2 seconds;
+3. wrote `host` once;
+4. bounded-poll result: GUD present at 1-1.3, speed 480 Mbit/s.
+
+This administrative role cycle restored the already-stale lab after the first
+failed prototype.  It is explicitly excluded from E3-B02 qualification.
+
+Restored baseline before strict inactive cycle 1:
+- phone mode: host;
+- GUD: /dev/dri/card1, 1d50:614d at 1-1.3, 480 Mbit/s;
+- recovery helper: MainPID=101040, NRestarts=0;
+- Pi gud-userspace.service: MainPID=2855, NRestarts=0, UDC configured;
+- xdispd was explicitly deactivated through org.lomiri.XDisp1.Deactivate;
+- xdispd settled at State=available, ActivationRequested=false, ChildPid=0;
+- no service restart, phone reboot, Pi reboot, or role action occurred after
+  the excluded baseline restoration.

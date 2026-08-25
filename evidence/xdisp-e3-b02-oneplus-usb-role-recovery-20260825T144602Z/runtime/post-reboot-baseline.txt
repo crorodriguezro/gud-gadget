@@ -1,0 +1,30 @@
+E3-B02 corrected candidate post-reboot baseline
+================================================
+
+Status: ready for fresh corrected inactive cycle 1
+Captured: 2026-08-25 15:07 -05 / 21:07 +01
+
+The intervening phone reboot invalidated the first physical disconnect. The
+correct candidate module was present after boot, but the enabled helper had
+not been started automatically. As excluded setup, the helper was started,
+the cable was reconnected, one phone device -> host reset restored the stale
+xHCI controller, and the persisted active xdispd request was cleared through
+the normal Deactivate method.
+
+Final baseline:
+
+  phone mode=host
+  GUD=1-1.3 1d50:614d speed=480
+  DRM card1 present
+  candidate module srcversion=2E765CCD9E93DFD432A30C4
+  recovery helper PID=7719 NRestarts=0
+  xdispd PID=4241 NRestarts=0
+  xdispd State=available
+  xdispd ActivationRequested=false
+  xdispd ChildPid=0
+  xdispd LastError=""
+  Pi gud-userspace PID=4488 NRestarts=0
+  Pi UDC=configured
+
+All restoration operations are excluded. Qualification counters restart from
+zero at this baseline.

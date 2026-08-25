@@ -1,0 +1,8 @@
+Captured UTC: 2026-08-25T14:46:02Z
+
+gud: 276312b56ddef5e8cf581d5fa378fb133d7874bd
+gud-gadget: 1cd654fd345d4ec773e5c47414a86ae19b3cecc3
+mir-android2-platform-gud: 991a8cdeb537ccd8ee1ef04804e216a4accbf8c0
+
+All repositories already contained unrelated or historical untracked work.
+That work is preserved and excluded from E3-B02.

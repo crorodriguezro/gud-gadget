@@ -1,0 +1,33 @@
+E3-B02 final runtime state
+==========================
+
+Captured after the controlled trackpad A/B and excluded lab restoration.
+
+Phone
+  GUD module srcversion: 2E765CCD9E93DFD432A30C4
+  module sha256: a2d93ca07ae4d25552e2bc0c837fc1cdac969469f043726363c217ddb7abf94f
+  xdisp_payload_limit: 12800
+  GUD: 1-1.3 1d50:614d at 480 Mbit/s
+  DRM: /dev/dri/card0 and /dev/dri/card1
+  xdispd: PID 4251, active service, NRestarts=0
+  xdispd State: available
+  ActivationRequested: false
+  ChildPid: 0
+  GudDevice: /dev/dri/card1
+  ConnectorId: 25
+  LastError: ""
+  recovery helper: PID 5756, active/enabled, NRestarts=0
+
+Pi
+  gud-userspace.service: PID 5623, active, NRestarts=0
+  UDC 3f980000.usb: configured
+  the Pi restart used to restore the post-A/B lab state is excluded from all
+  qualification counts
+
+Qualification result
+  inactive reconnect: 3/3 PASS
+  active reconnect/reactivation: 1/1 PASS
+  manual role writes during counted cycles: 0
+  phone/Pi/xdispd service restarts during counted cycles: 0
+  E3-B02: PASS
+  E3-T02: READY TO RERUN, not executed

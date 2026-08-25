@@ -1,0 +1,32 @@
+Corrected candidate inactive cycle 1: INVALID PRECONDITION
+==========================================================
+
+Verdict: excluded; not a qualification attempt
+
+At operator disconnect observation time 2026-08-25 15:03 -05, the phone had
+booted at 11:59:46 -05. This reboot occurred after the corrected baseline was
+captured at approximately 11:23 -05 and before the attempted cycle.
+
+The candidate GUD module survived/reloaded correctly:
+
+  srcversion=2E765CCD9E93DFD432A30C4
+
+However, gud-usb-role-recovery.service had not been started during that boot:
+
+  ActiveState=inactive
+  Result=success
+  MainPID=0
+  current-boot journal entries=0
+
+xdispd was a new boot instance (PID 4241 rather than baseline PID 82680). The
+kernel monitor/helper pair therefore did not have a proven armed baseline for
+the disconnect. No recovery was attempted, and this physical action cannot be
+counted as cycle 1.
+
+The helper was started as excluded setup after diagnosis:
+
+  MainPID=7719
+  NRestarts=0
+
+A new baseline must be established after physical reconnect before corrected
+cycle 1 is attempted again.

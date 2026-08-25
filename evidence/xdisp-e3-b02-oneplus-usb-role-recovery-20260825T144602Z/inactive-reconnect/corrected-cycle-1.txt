@@ -1,0 +1,86 @@
+Corrected candidate inactive reconnect cycle 1
+==============================================
+
+Verdict: PASS
+
+Operator actions
+----------------
+
+The operator disconnected and reconnected only the hub-to-phone USB cable.
+The Pi-to-hub cable and HDMI remained connected. No manual role write, service
+restart, UDC reset, or reboot occurred during this cycle.
+
+Detach gate
+-----------
+
+At 2026-08-25 15:07:37 -05:
+
+  kernel monitor armed root port 1 exactly once
+  helper consumed one GUD removal
+  xdispd State=unavailable
+  xdispd ActivationRequested=false
+  xdispd ChildPid=0
+  xdispd LastError=""
+
+Autonomous recovery timeline
+----------------------------
+
+  15:08:18 kernel: root port 1 reattached stably; emitted tagged uevent
+  15:08:18 helper: tagged event accepted, port=1
+  15:08:20 helper: one-shot host recovery started
+  15:08:49 helper: result=recovered
+
+Transaction result:
+
+  teardown_observed=true
+  host_ready=true
+  elapsed=29.617 seconds
+
+The delay remained the known synchronous xHCI teardown/enumeration drain. The
+helper performed one device write and one host rollback write, with no retry.
+
+Final state
+-----------
+
+  phone mode=host
+  external hub=1-1 1a40:0101 speed=480
+  GUD=1-1.3 1d50:614d speed=480
+  Ethernet=1-1.4 0bda:8152 speed=480
+  DRM card1 present
+  xdispd State=available
+  xdispd ActivationRequested=false
+  xdispd ChildPid=0
+  xdispd LastError=""
+  recovery helper PID=7719 NRestarts=0
+  xdispd PID=4241 NRestarts=0
+  Pi gud-userspace PID=4488 NRestarts=0
+  Pi UDC=configured
+
+One-shot counts since the post-reboot baseline:
+
+  kernel monitor arms=1
+  kernel stable-reattach signals=1
+  helper transaction starts=1
+  helper transaction results=1
+
+xdispd resource snapshot:
+
+  VmRSS=7352 kB
+  Threads=4
+  FDs=9
+
+Safety gates
+------------
+
+  GUD VID/PID and 480 Mbit/s: PASS
+  exactly one DRM GUD card: PASS
+  xdispd stayed inactive/ChildPid=0: PASS
+  one kernel signal and one helper transaction: PASS
+  phone/helper/xdispd/Pi service restarts: 0
+  manual recovery operations during cycle: 0
+  FunctionFS ownership weakening: 0
+
+The initial 90-second observer used find without following sysfs device
+symlinks and therefore did not stop when idProduct appeared. Its wait counter
+is invalid and is not used as timing evidence. Kernel topology and timestamps
+show GUD enumerated immediately after the autonomous rebuild.

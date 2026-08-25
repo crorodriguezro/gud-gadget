@@ -1,0 +1,15 @@
+E3-B02 verdict
+==============
+
+PASS
+
+The corrected event-driven recovery passed the required 3 inactive physical
+reconnect cycles followed by one active detach/reconnect/explicit-reactivation
+cycle. No counted cycle used a manual role write, phone reboot, xdispd restart,
+Pi service restart, or unsafe FunctionFS reset.
+
+The post-qualification old/new module A/B excludes the root-port monitor as a
+deterministic cause of the one observed stale trackpad session. No E3-B02
+blocker remains.
+
+E3-T02 is READY TO RERUN. It was deliberately not executed in this task.

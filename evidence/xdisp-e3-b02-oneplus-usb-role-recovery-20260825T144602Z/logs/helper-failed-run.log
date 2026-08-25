@@ -1,0 +1,5 @@
+Aug 25 08:05:28 ubuntu-phablet python3[91956]: gud-usb-role-recovery: restarting stale host controller after GUD removal
+Aug 25 08:05:28 ubuntu-phablet python3[91956]: gud-usb-role-recovery: host controller restart requested once
+
+The helper PID remained alive.  This log predates the later one-second-settle
+prototype and corresponds to the original back-to-back role writes.

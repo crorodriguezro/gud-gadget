@@ -1,0 +1,83 @@
+E3-B02 bounded root-port signal deployment
+==========================================
+
+Status: deployed; hardware qualification pending
+Deployment time: 2026-08-25 11:08:57 -05
+
+Design ownership
+----------------
+
+The phone GUD kernel module now owns only physical root-port observation. On
+GUD disconnect it retains the USB HCD, requires the affected xHCI root port to
+be observed disconnected, then requires USB_PORT_STAT_CONNECTION to remain set
+for 15 polls at 100 ms. It emits one KOBJ_CHANGE uevent containing:
+
+  GUD_HOST_REATTACH=1
+  GUD_ROOT_PORT=<port>
+
+The monitor is cancelled by normal GUD re-enumeration and expires after 6000
+polls (10 minutes). It cannot write the DWC3 role and has no retry path.
+
+The phone-side mir-android2-platform-gud helper remains the sole owner of the
+bounded device -> host transaction. It no longer treats power_supply PRESENT
+or ordinary USB add/change events as reattach evidence. Only the tagged kernel
+uevent can start its existing 1.5-second gate. GUD re-enumeration cancels a
+pending transaction.
+
+Source preservation
+-------------------
+
+The previously loaded artifact was:
+
+  /home/phablet/gud.xdisp-e2-direct-rgb565-1843200-4a2eb91.ko
+  srcversion=780A954B1169DD84C8B65E7
+  xdisp_payload_limit=12800
+
+git diff 4a2eb91..276312b -- backport-4.9 was empty before the recovery
+changes. Therefore the newly built module uses the same RGB565/LZ4 transport
+source as the prior artifact and adds only the root-port monitor/module
+lifecycle integration.
+
+New module:
+
+  /home/phablet/gud.xdisp-e3-b02-portmon-a2d93ca.ko
+  sha256=a2d93ca07ae4d25552e2bc0c837fc1cdac969469f043726363c217ddb7abf94f
+  srcversion=2E765CCD9E93DFD432A30C4
+  vermagic=4.9.112-g6b190d86b SMP preempt mod_unload modversions aarch64
+  xdisp_payload_limit=12800
+
+Helper deployment:
+
+  /home/phablet/gud-usb-role-recovery.py
+  sha256=682f18c7ad0b2da907e75ca8ec3d1fc5e221763c546fb71f16755b3421b9a8ec
+
+  /home/phablet/usb_role_recovery_policy.py
+  sha256=d60f69c1b4a2958a5851897136a6e3f10b299dc5cbfc5e45200fb10ed2d627d3
+
+The first userspace implementation was preserved beside these files with the
+suffix userspace-v1.py.
+
+Verification before deployment
+------------------------------
+
+  Python policy tests: 12/12 PASS
+  Python byte compilation: PASS locally and on phone
+  ARM64 LZ4 module compile/link/modpost: PASS
+  Module unresolved LZ4 dependency: none
+  Module global upstream LZ4 symbol: none
+  tests/test-xdisp-lz4.sh: PASS
+  tests/test-xdisp-lz4-contract.sh: PASS
+  tests/test-gud-transfer-retry.sh: PASS
+
+Post-deployment state
+---------------------
+
+  module loaded with expected srcversion and payload limit
+  gud-usb-role-recovery.service active, PID 104815, NRestarts=0
+  only xHCI root hubs usb1/usb2 present
+  no GUD or DRM card1
+  no helper transaction and no role write occurred during deployment
+
+One excluded manual device -> host transaction is required to clear the stale
+controller state and establish the pre-qualification GUD baseline. It has not
+been performed as part of this deployment.

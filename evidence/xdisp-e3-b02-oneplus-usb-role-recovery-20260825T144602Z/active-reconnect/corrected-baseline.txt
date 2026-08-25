@@ -1,0 +1,48 @@
+Corrected candidate active reconnect baseline
+=============================================
+
+Status: PASS; the operator visually confirmed the external desktop before the
+counted active detach.
+
+Activation
+----------
+
+  15:17:20 org.lomiri.XDisp1.Activate called through the normal D-Bus API
+  State=active
+  Enabled=true
+  ActivationRequested=true
+  GudDevice=/dev/dri/card1
+  ConnectorId=25
+  ChildPid=10408
+  LastError=""
+
+Child process:
+
+  /home/phablet/mirgud-direct-rgb565-13818a0.bin
+    --managed
+    --source-mode extend
+    --pixel-format rgb565
+    --source-pixel-format rgb565
+    --size 1280 720
+
+Live transport proof
+--------------------
+
+Phone logs showed continuing source_ready, submit, drop/latest-frame-wins,
+kms_present_start, and successful kms_present_end/worker_end events.
+
+Pi logs showed continuing accepted SET_BUFFER transactions and frame_stats:
+
+  transfer_format=rgb565
+  source=1280x720
+  compression=1 (LZ4 path)
+  processing_failed=0
+  poisoned_transactions=0
+  timed_out_transactions=0
+
+Infrastructure remained stable:
+
+  helper PID=7719 NRestarts=0
+  xdispd PID=4241 NRestarts=0
+  Pi service PID=4488 NRestarts=0
+  Pi UDC=configured
