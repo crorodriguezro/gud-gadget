@@ -22,3 +22,21 @@ At 2026-08-24T23:38:14Z the phone was healthy but disconnected, with xdispd
 `unavailable`, `ChildPid=0`, only `/dev/dri/card0`, LightDM PID 72466, and
 lomiri-system-compositor PID 72473. The task is therefore BLOCKED on the required
 one-cycle hardware proof; E3-T02 remains blocked.
+
+## Physical extension — 2026-08-25
+
+Physical access later became available. Direct RGB565+LZ4 was active and
+visually confirmed before detach. The detach was contained from proven Idle
+ownership with transaction 1791 complete, an empty exact-AIO queue, and no
+poison/timeouts. The same Pi service process (PID 1462) survived.
+
+The strict reconnect gate failed: after reconnect the OnePlus controller
+reported `host` for the complete 30-second poll but exposed only its two root
+hubs. Applying the documented `device -> host` controller recovery immediately
+restored `1d50:614d` at 480 Mbit/s. GUD reprobed, `/dev/dri/card1` returned, the
+Pi advanced from USB epoch 1 to 2, RGB565+LZ4 streaming resumed, and the
+operator confirmed the display was visible.
+
+The implementation's epoch recovery therefore passed on hardware after fresh
+enumeration, but E3-B01 remains a strict **FAIL** because administrative USB
+role recovery was required. See `physical-extension-20260825T051154Z/README.md`.

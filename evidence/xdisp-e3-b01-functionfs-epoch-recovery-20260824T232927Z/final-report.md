@@ -143,3 +143,29 @@
 71. exact remaining blocker if any: physical access is required to perform the mandatory one clean active USB detach -> reconnect -> fresh GUD probe -> explicit Activate cycle and the follow-on dead-epoch service-stop check. Offline tests cannot prove DWC2/FunctionFS runtime ordering on the actual cable path.
 
 72. exact next recommendation: when physically present, leave the deployed Pi service and xdispd running, connect to establish a fresh Idle epoch, activate direct RGB565+LZ4, perform exactly one physical active detach/reconnect without any administrative recovery, capture the prescribed phone/Pi timeline, explicitly Activate, and require display restoration. If it passes, run the small inactive reprobe set and dead-epoch service-stop test; only then mark E3-B01 PASS and make E3-T02 ready to rerun.
+
+## Physical extension — 2026-08-25
+
+73. active pre-detach display: **PASS**, operator-confirmed, direct Mir RGB565 + LZ4 at 1280x720.
+
+74. physical detach containment: **PASS**. Transaction 1791 completed before FunctionFS SUSPEND; ownership and exact AIO were Idle, the AIO queue was empty, and poisoned/timed-out/failed transaction counts were zero.
+
+75. definitive terminal boundary: **PASS**, `functionfs-disable-disconnect` at `2026-08-25T05:16:40.367147Z`.
+
+76. service continuity: **PASS**, Pi `gud-userspace.service` retained PID 1462.
+
+77. autonomous reconnect: **FAIL**. The phone remained in `host` mode but exposed only root hubs throughout the complete 30-second VID/PID poll; Pi UDC was `not attached`.
+
+78. administrative recovery required: **YES**. The runbook-prescribed OnePlus `device -> host` role cycle was applied only after recording the strict failure.
+
+79. post-recovery enumeration: **PASS**, `1d50:614d` at dynamic path `1-1.3`, 480 Mbit/s.
+
+80. post-recovery GUD/DRM: **PASS**, fresh probe and `/dev/dri/card1`.
+
+81. epoch recovery: **PASS**, same Pi service advanced `usb_epoch=1 -> 2` and completed new RGB565+LZ4 frames with zero poison, timeout, or processing failure.
+
+82. managed child/display restoration: **PASS**, MirGUD PID 88186 and operator-confirmed visible external desktop.
+
+83. final strict E3-B01 verdict: **FAIL**, because USB-role forcing was required after reconnect. This does not indicate a failure of the implemented FunctionFS epoch retirement; it identifies the independently documented stale OnePlus host-controller state.
+
+84. extension evidence: `physical-extension-20260825T051154Z/README.md`.
