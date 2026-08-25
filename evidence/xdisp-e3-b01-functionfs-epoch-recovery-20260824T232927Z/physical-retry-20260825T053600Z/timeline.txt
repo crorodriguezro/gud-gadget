@@ -1,0 +1,13 @@
+2026-08-25T05:36:04Z  B01 Pi service started, PID 2737, NRestarts=0, UDC configured.
+2026-08-25T05:36:05Z  Fresh FunctionFS ENABLE observed; explicit Activate produced active child PID 89408.
+2026-08-25T05:38:28.261902Z  FunctionFS SUSPEND preserved the live epoch while transaction 1021 was InFlight.
+2026-08-25T05:38:29.457915Z  Transaction 1021 reached missing-completion timeout and was contained.
+2026-08-25T05:38:34.278980Z  FunctionFS DISABLE boundary observed; old endpoint generation marked destroyed.
+2026-08-25T05:38:34.279261Z  Epoch 1 transaction 1021 retired as ABORTED_BY_SESSION_DESTRUCTION.
+2026-08-25T05:39:34Z  Bounded phone VID/PID poll ended with only 1d6b:0002 and 1d6b:0003.
+2026-08-25T05:40:32.617753Z  SIGTERM received for required dead-epoch service-stop check.
+2026-08-25T05:40:32.664822Z  Shutdown ownership gate proven Idle.
+2026-08-25T05:40:32.674150Z  USB gadget unbound; service inactive, no forced kill.
+After 2026-08-25T05:40:32Z  B01 service started once for lab restoration, PID 2855.
+After 2026-08-25T05:40:32Z  Troubleshooting-guide device -> host role cycle applied after strict failure.
+After 2026-08-25T05:40:32Z  1d50:614d found at 1-1.3, speed 480; card1 and active xdispd child returned.

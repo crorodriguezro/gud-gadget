@@ -1,0 +1,9 @@
+Post-failure lab restoration (excluded from strict B01 result):
+
+- Pi B01 service: active, PID 2855, NRestarts=0, UDC configured.
+- OnePlus controller recovery: device -> host, per oneplus6-usb-host-gud-troubleshooting.md.
+- Dynamic USB identity: 1d50:614d at /sys/bus/usb/devices/1-1.3, speed 480.
+- Phone DRM: /dev/dri/card1 present.
+- xdispd: active, ChildPid=89868.
+- Post-recovery frames: RGB565 + LZ4; Pi aggregate/exact-AIO Idle with zero
+  poison, timeout, and processing-failure counters in the observed samples.

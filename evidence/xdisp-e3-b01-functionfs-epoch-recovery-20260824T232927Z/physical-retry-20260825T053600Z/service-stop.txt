@@ -1,0 +1,19 @@
+Required dead-epoch service-stop check: PASS
+
+Before:
+- gud-userspace.service: active
+- MainPID: 2737
+- NRestarts: 0
+- UDC state: not attached
+
+Observed shutdown markers:
+- Shutdown requested; waiting for the event loop ownership gate
+- Shutdown ownership gate is proven Idle
+- USB gadget unbound from UDC
+
+After:
+- gud-userspace.service: inactive
+- MainPID: 0
+- NRestarts: 0
+- UDC state: not attached
+- forced kill: none

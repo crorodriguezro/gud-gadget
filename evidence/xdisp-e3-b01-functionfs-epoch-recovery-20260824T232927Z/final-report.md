@@ -169,3 +169,20 @@
 83. final strict E3-B01 verdict: **FAIL**, because USB-role forcing was required after reconnect. This does not indicate a failure of the implemented FunctionFS epoch retirement; it identifies the independently documented stale OnePlus host-controller state.
 
 84. extension evidence: `physical-extension-20260825T051154Z/README.md`.
+
+## Physical retry — 2026-08-25T053600Z
+
+85. B01 retry strict active detach/reconnect: **FAIL**; the phone exposed only
+root hubs through the bounded 30-second poll after reconnect.
+
+86. B01 failure-path epoch retirement: **PASS**; transaction 1021 was retired
+as `ABORTED_BY_SESSION_DESTRUCTION` after FunctionFS DISABLE and AIO harvest.
+
+87. dead-epoch service-stop check: **PASS**; the proven-Idle gate completed,
+the gadget unbound, and the service stopped without forced kill.
+
+88. recovery after strict failure: the documented phone `device -> host` role
+cycle restored `1d50:614d` at `1-1.3`, 480 Mbit/s, `/dev/dri/card1`, and active
+RGB565+LZ4 streaming. This recovery is excluded from the strict B01 verdict.
+
+89. retry evidence: `physical-retry-20260825T053600Z/README.md`.
