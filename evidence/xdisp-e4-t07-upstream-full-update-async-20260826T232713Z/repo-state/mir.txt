@@ -1,0 +1,4 @@
+branch=pixel-format-benchmark
+head=1fbc01d7c8ea5e5da61efb1e11f8e874e23e49c1
+canonical_upstream=https://gitlab.com/ubports/development/core/hybris-support/mir-android2-platform.git
+worktree_dirty_before_and_after=true

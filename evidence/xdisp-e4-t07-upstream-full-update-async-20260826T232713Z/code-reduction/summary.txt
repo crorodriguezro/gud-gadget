@@ -1,0 +1,10 @@
+task_start_production_update_loc=1999
+task_end_production_update_loc=1514
+net_production_update_loc=-485
+cleanup_diff_insertions=398
+cleanup_diff_deletions=876
+cleanup_diff_net=-478
+removed_policy_symbols=xdisp_payload_limit,xdisp_target_policy,xdisp_ratio_cache,xdisp_bounded_discovery,xdisp_predictive_bounded,gud_xdisp_plan_chunk,row_hint,predictive_rows
+removed_files=backport-4.9/variants/xdisp-lz4-12800/gud_xdisp_lz4.c,backport-4.9/variants/xdisp-lz4-12800-pmtest/variant_lz4.c
+retained_oneplus=usb_alloc_coherent,explicit_urb,URB_NO_TRANSFER_DMA_MAP,exact_completion,timeout
+retained_e1=serialized_logical_payload,bounded_prebulk_SET_BUFFER_BUSY_retry,no_accepted_IO_retry,disconnect_containment

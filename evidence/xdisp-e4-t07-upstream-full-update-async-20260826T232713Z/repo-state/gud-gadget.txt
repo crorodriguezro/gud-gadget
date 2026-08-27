@@ -1,0 +1,4 @@
+branch=pixel-format-benchmark
+head=001a5da9e39ecdd3200bbe3a68ed313ff26adb2f
+origin=git@github.com:crorodriguezro/gud-gadget.git
+worktree_dirty_before_and_after=true

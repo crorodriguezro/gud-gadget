@@ -1,0 +1,5 @@
+workload,frames,producer_fps,commit_avg_ms,commit_p50_ms,commit_p95_ms,commit_min_ms,commit_max_ms,pending_bound,kernel_faults
+direct-kms-noise-final,100,380.688,0.297,0.212,0.842,0.196,1.245,1,0
+direct-kms-noise-earlier,100,395.587,0.271,not-recorded,not-recorded,0.200,1.177,1,0
+direct-kms-noise-stall-3500ms,100,409.615,0.285,not-recorded,not-recorded,0.204,1.280,1,0
+direct-kms-noise-detach,1000,439.973,0.221,not-recorded,not-recorded,0.194,1.423,1,0
