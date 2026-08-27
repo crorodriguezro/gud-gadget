@@ -1848,40 +1848,57 @@ fn render_waiting_screen(
     Ok(())
 }
 
-fn present_waiting_screen<B: ScanoutBackend>(
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum VisibleSurface {
+    Content,
+    WaitingStartup,
+    WaitingSuspended,
+    WaitingDisconnected,
+}
+
+impl VisibleSurface {
+    fn is_waiting(self) -> bool {
+        !matches!(self, Self::Content)
+    }
+}
+
+fn surface_after_suspend(surface: VisibleSurface) -> VisibleSurface {
+    match surface {
+        VisibleSurface::Content => VisibleSurface::WaitingSuspended,
+        waiting => waiting,
+    }
+}
+
+fn surface_after_resume(surface: VisibleSurface) -> VisibleSurface {
+    match surface {
+        VisibleSurface::WaitingSuspended => VisibleSurface::Content,
+        waiting => waiting,
+    }
+}
+
+fn present_waiting_surface<B: ScanoutBackend>(
     backend: &mut B,
-    active: &mut StableMappedActive<'_, B>,
-    dump_path: Option<&Path>,
-    dump_raw_path: Option<&Path>,
+    scanout_runtime: &mut ScanoutRuntime<'_, B>,
+    active: &StableMappedActive<'_, B>,
     format: TransferFormat,
 ) -> anyhow::Result<()> {
+    let recreated = scanout_runtime.ensure_waiting_mode(
+        backend,
+        active.mode(),
+        |buffer, pitch, width, height| render_waiting_screen(buffer, pitch, width, height, format),
+    )?;
+    if recreated {
+        tracing::debug!(mode = ?active.mode(), "Recreated waiting scanout for physical mode");
+    }
+    let waiting_framebuffer = scanout_runtime.waiting_framebuffer()?;
+    backend
+        .set_crtc(waiting_framebuffer, active.mode())
+        .context("present waiting scanout")?;
     let (width, height) = active.size();
-    let pitch = active.pitch() as usize;
-    for index in 0..2 {
-        render_waiting_screen(active.buffer_mut(index), pitch, width, height, format)?;
+    match backend.dirty_framebuffer(waiting_framebuffer, 0, 0, width as u16, height as u16) {
+        Ok(()) => tracing::debug!("Waiting scanout flushed"),
+        Err(err) => tracing::debug!("dirty_framebuffer for waiting scanout failed: {}", err),
     }
-
-    match backend.dirty_framebuffer(
-        active.front_framebuffer(),
-        0,
-        0,
-        width as u16,
-        height as u16,
-    ) {
-        Ok(()) => tracing::debug!("Waiting screen flushed"),
-        Err(err) => tracing::debug!("dirty_framebuffer for waiting screen failed: {}", err),
-    }
-
-    dump_framebuffer_if_enabled(
-        dump_path,
-        active.front_buffer_mut(),
-        pitch,
-        width,
-        height,
-        format,
-    );
-    dump_framebuffer_raw_if_enabled(dump_raw_path, active.front_buffer_mut());
-
     Ok(())
 }
 
@@ -3199,6 +3216,14 @@ fn main() -> anyhow::Result<()> {
     };
     let mut scanout_manager =
         ScanoutManager::new_baseline(&mut backend, mode).context("create baseline scanout")?;
+    scanout_manager
+        .create_waiting(&mut backend, mode)
+        .context("create dedicated waiting scanout")?;
+    scanout_manager
+        .render_waiting(&mut backend, |buffer, pitch, width, height| {
+            render_waiting_screen(buffer, pitch, width, height, transfer_format)
+        })
+        .context("render dedicated waiting scanout")?;
     let baseline_timing = physical_catalog_modes
         .iter()
         .find(|physical| physical.mode == mode)
@@ -3241,8 +3266,15 @@ fn main() -> anyhow::Result<()> {
             .context("map baseline scanout")?,
     );
 
+    let startup_framebuffer = if matches!(pattern_mode, PatternMode::Off) {
+        scanout_runtime
+            .waiting_framebuffer()
+            .context("get startup waiting framebuffer")?
+    } else {
+        active.front_framebuffer()
+    };
     for attempt in 1..=CRTC_SET_RETRIES {
-        match backend.set_crtc(active.front_framebuffer(), mode) {
+        match backend.set_crtc(startup_framebuffer, mode) {
             Ok(()) => break,
             Err(err) if attempt < CRTC_SET_RETRIES => {
                 warn!(
@@ -3263,9 +3295,9 @@ fn main() -> anyhow::Result<()> {
     let width = panel_width;
     let height = panel_height;
 
-    for index in 0..2 {
-        let fb_data = active.buffer_mut(index);
-        if pattern_mode.uses_startup_pattern() {
+    if pattern_mode.uses_startup_pattern() {
+        for index in 0..2 {
+            let fb_data = active.buffer_mut(index);
             fill_diagnostic_pattern_rect(
                 fb_data,
                 pitch as usize,
@@ -3277,26 +3309,22 @@ fn main() -> anyhow::Result<()> {
                 height,
                 transfer_format,
             )?;
-        } else {
-            render_waiting_screen(fb_data, pitch as usize, width, height, transfer_format)?;
         }
     }
     if pattern_mode.uses_startup_pattern() {
         info!("Filled both framebuffers with diagnostic startup pattern");
     } else {
-        info!("Filled both framebuffers with waiting screen");
+        info!("Dedicated waiting scanout is ready");
     }
-    let mut waiting_screen_visible = matches!(pattern_mode, PatternMode::Off);
+    let mut visible_surface = if matches!(pattern_mode, PatternMode::Off) {
+        VisibleSurface::WaitingStartup
+    } else {
+        VisibleSurface::Content
+    };
 
-    match backend.dirty_framebuffer(
-        active.front_framebuffer(),
-        0,
-        0,
-        width as u16,
-        height as u16,
-    ) {
-        Ok(()) => info!("Test pattern flushed to display"),
-        Err(err) => warn!("Failed to flush test pattern: {}", err),
+    match backend.dirty_framebuffer(startup_framebuffer, 0, 0, width as u16, height as u16) {
+        Ok(()) => info!("Startup scanout flushed to display"),
+        Err(err) => warn!("Failed to flush startup scanout: {}", err),
     }
     if frame_dump_mode.permits_startup_dump() {
         dump_framebuffer_if_enabled(
@@ -3511,7 +3539,7 @@ fn main() -> anyhow::Result<()> {
                     tracing::info!("Control endpoint read cancelled for shutdown");
                     break 'event_loop;
                 }
-                if waiting_screen_visible || !matches!(pattern_mode, PatternMode::Off) {
+                if visible_surface.is_waiting() || !matches!(pattern_mode, PatternMode::Off) {
                     continue;
                 }
                 tracing::debug!(
@@ -3578,6 +3606,57 @@ fn main() -> anyhow::Result<()> {
                         },
                         &mut receive_telemetry,
                     );
+                    if matches!(pattern_mode, PatternMode::Off) {
+                        let next_surface = match *reason {
+                            ProtocolInvalidationReason::Suspend => {
+                                Some(surface_after_suspend(visible_surface))
+                            }
+                            ProtocolInvalidationReason::Enable
+                            | ProtocolInvalidationReason::Bind => {
+                                Some(VisibleSurface::WaitingStartup)
+                            }
+                            ProtocolInvalidationReason::Disconnected => {
+                                Some(VisibleSurface::WaitingDisconnected)
+                            }
+                            _ => None,
+                        };
+                        if let Some(next_surface) = next_surface {
+                            if let Err(err) = present_waiting_surface(
+                                &mut backend,
+                                &mut scanout_runtime,
+                                &active,
+                                transfer_format,
+                            ) {
+                                tracing::error!(
+                                    ?reason,
+                                    error = %format_args!("{err:#}"),
+                                    "Failed to present waiting scanout for lifecycle transition"
+                                );
+                            } else {
+                                tracing::info!(
+                                    ?reason,
+                                    from = ?visible_surface,
+                                    to = ?next_surface,
+                                    "Presented dedicated waiting scanout"
+                                );
+                                visible_surface = next_surface;
+                            }
+                        } else if *reason == ProtocolInvalidationReason::Resume
+                            && surface_after_resume(visible_surface) != visible_surface
+                        {
+                            let restored_surface = surface_after_resume(visible_surface);
+                            backend
+                                .set_crtc(active.front_framebuffer(), active.mode())
+                                .context("restore preserved content scanout after resume")?;
+                            tracing::info!(
+                                ?reason,
+                                from = ?visible_surface,
+                                to = ?restored_surface,
+                                "Restored preserved content scanout after resume"
+                            );
+                            visible_surface = restored_surface;
+                        }
+                    }
                     match lifecycle_result {
                         UsbLifecycleResult::Continue(_) => {
                             if *reason == ProtocolInvalidationReason::Enable {
@@ -4295,6 +4374,15 @@ fn main() -> anyhow::Result<()> {
                                 None,
                             )?;
                         }
+                        if matches!(pattern_mode, PatternMode::Off) && visible_surface.is_waiting()
+                        {
+                            present_waiting_surface(
+                                &mut backend,
+                                &mut scanout_runtime,
+                                &active,
+                                transfer_format,
+                            )?;
+                        }
                         if mode_switch_ms > 250 {
                             tracing::warn!(
                                 generation = snapshot.generation,
@@ -4505,22 +4593,6 @@ fn main() -> anyhow::Result<()> {
                             }
                         }
                         tracing::info!(?generation, had_host_session, "Host disconnected");
-                        if matches!(pattern_mode, PatternMode::Off) {
-                            if let Err(err) = present_waiting_screen(
-                                &mut backend,
-                                &mut active,
-                                dump_path.as_deref(),
-                                dump_raw_path.as_deref(),
-                                transfer_format,
-                            ) {
-                                tracing::error!(
-                                    "Failed to render waiting screen after disconnect: {}",
-                                    err
-                                );
-                            } else {
-                                waiting_screen_visible = true;
-                            }
-                        }
                     }
                     Event::Buffer(info) => {
                         // Completion processing is re-dispatched as Buffer; only EP0 input is
@@ -4698,6 +4770,30 @@ fn main() -> anyhow::Result<()> {
                                 "STATUS_ON_SET diagnostic prearmed FunctionFS payload completed; leaving the event loop before another SET_BUFFER"
                             );
                             break 'event_loop;
+                        }
+
+                        if matches!(pattern_mode, PatternMode::Off) {
+                            let recreated = scanout_runtime.ensure_waiting_mode(
+                                &mut backend,
+                                active.mode(),
+                                |buffer, pitch, width, height| {
+                                    render_waiting_screen(
+                                        buffer,
+                                        pitch,
+                                        width,
+                                        height,
+                                        transfer_format,
+                                    )
+                                },
+                            )?;
+                            if recreated && visible_surface.is_waiting() {
+                                present_waiting_surface(
+                                    &mut backend,
+                                    &mut scanout_runtime,
+                                    &active,
+                                    transfer_format,
+                                )?;
+                            }
                         }
 
                         let active_state = gud_gadget::active_scanout_state();
@@ -5004,6 +5100,19 @@ fn main() -> anyhow::Result<()> {
                             tracing::debug!("Framebuffer unchanged for current buffer event");
                         }
 
+                        if matches!(pattern_mode, PatternMode::Off) && visible_surface.is_waiting()
+                        {
+                            backend
+                                .set_crtc(active.front_framebuffer(), active.mode())
+                                .context("present first valid content frame")?;
+                            tracing::info!(
+                                from = ?visible_surface,
+                                to = ?VisibleSurface::Content,
+                                "Presented first valid content frame for USB session"
+                            );
+                            visible_surface = VisibleSurface::Content;
+                        }
+
                         let total_ms = frame_start.elapsed().as_millis();
                         let compression_ratio = if payload_stats.transfer_bytes > 0 {
                             payload_stats.output_bytes as f64 / payload_stats.transfer_bytes as f64
@@ -5169,10 +5278,6 @@ fn main() -> anyhow::Result<()> {
                                 frame_start.elapsed().as_millis();
                             receive_telemetry.emit(&bulk_receive_session, &gud_data);
                         }
-
-                        if matches!(pattern_mode, PatternMode::Off) {
-                            waiting_screen_visible = false;
-                        }
                     }
                 }
             }
@@ -5322,12 +5427,13 @@ mod tests {
         parse_test_dynamic_mode_match, parse_test_max_buffer_size, parse_test_output_mode,
         parse_test_prearm_once_bytes, parse_test_row_crc_trace, parse_test_status_on_set_bytes,
         parse_test_status_on_set_two_transactions_bytes, read_pixel, record_host_activity,
-        render_waiting_screen, row_crc32, scale_to_fit, validate_test_mode_policy,
-        waiting_scene_glyph, write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode,
-        GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind,
-        ProvenIdleGate, ScaledLayout, ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity,
-        StatusOnSetCleanupDrain, StatusOnSetCleanupObservation, StatusOnSetCleanupPhase,
-        TestOutputMode, TransferFormat, UsbLifecycleInput, UsbLifecycleResult, UsbSessionState,
+        render_waiting_screen, row_crc32, scale_to_fit, surface_after_resume,
+        surface_after_suspend, validate_test_mode_policy, waiting_scene_glyph, write_pixel,
+        BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind,
+        GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind, ProvenIdleGate, ScaledLayout,
+        ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, StatusOnSetCleanupDrain,
+        StatusOnSetCleanupObservation, StatusOnSetCleanupPhase, TestOutputMode, TransferFormat,
+        UsbLifecycleInput, UsbLifecycleResult, UsbSessionState, VisibleSurface,
         BULK_RECEIVE_DEADLINE, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN,
         COLOR_LIGHT_GRAY, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, RGB565_GREEN,
         RGB565_WHITE, STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE,
@@ -6671,6 +6777,30 @@ mod tests {
         assert!(has_black);
         assert!(has_white);
         assert!(has_green);
+    }
+
+    #[test]
+    fn presentation_lifecycle_preserves_content_until_resume_or_first_frame() {
+        assert_eq!(
+            surface_after_suspend(VisibleSurface::Content),
+            VisibleSurface::WaitingSuspended
+        );
+        assert_eq!(
+            surface_after_resume(VisibleSurface::WaitingSuspended),
+            VisibleSurface::Content
+        );
+        assert_eq!(
+            surface_after_suspend(VisibleSurface::WaitingStartup),
+            VisibleSurface::WaitingStartup
+        );
+        assert_eq!(
+            surface_after_resume(VisibleSurface::WaitingStartup),
+            VisibleSurface::WaitingStartup
+        );
+        assert_eq!(
+            surface_after_resume(VisibleSurface::WaitingDisconnected),
+            VisibleSurface::WaitingDisconnected
+        );
     }
 
     #[test]

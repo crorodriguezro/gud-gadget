@@ -504,6 +504,169 @@ impl<B: ScanoutBackend> ScanoutAllocation<B> {
     }
 }
 
+pub(crate) struct WaitingScanout<B: ScanoutBackend> {
+    mode: B::Mode,
+    width: u32,
+    height: u32,
+    buffer: Option<B::Buffer>,
+    framebuffer: Option<B::Framebuffer>,
+    pitch: u32,
+    mapping_len: usize,
+    live_bytes: usize,
+    released: bool,
+}
+
+impl<B: ScanoutBackend> WaitingScanout<B> {
+    pub(crate) fn create(
+        backend: &mut B,
+        mode: B::Mode,
+        counters: &ScanoutCounters,
+    ) -> anyhow::Result<Self> {
+        let (width, height) = backend.mode_size(mode);
+        ensure!(
+            width > 0 && height > 0,
+            "waiting scanout dimensions must be non-zero"
+        );
+
+        let mut waiting = Self {
+            mode,
+            width,
+            height,
+            buffer: None,
+            framebuffer: None,
+            pitch: 0,
+            mapping_len: 0,
+            live_bytes: 0,
+            released: false,
+        };
+
+        let result = (|| {
+            let buffer = backend
+                .create_buffer(width, height)
+                .context("create waiting dumb buffer")?;
+            waiting.pitch = backend.buffer_pitch(&buffer);
+            waiting.buffer = Some(buffer);
+            waiting.framebuffer = Some(
+                backend
+                    .add_framebuffer(
+                        waiting
+                            .buffer
+                            .as_ref()
+                            .expect("waiting buffer was just inserted"),
+                    )
+                    .context("create waiting framebuffer")?,
+            );
+
+            let mapping = backend
+                .map_buffer(
+                    waiting
+                        .buffer
+                        .as_mut()
+                        .context("waiting dumb buffer is not available")?,
+                )
+                .context("probe waiting scanout mapping")?;
+            counters.map();
+            let mut mapping: TrackedMapping<'_, B> = TrackedMapping {
+                mapping,
+                counters: counters.clone(),
+            };
+            waiting.mapping_len = mapping.as_mut().len();
+            mapping.as_mut().fill(0);
+            waiting.live_bytes = waiting.mapping_len;
+            Ok(())
+        })();
+
+        if let Err(err) = result {
+            let cleanup = waiting.release(backend, counters);
+            return match cleanup {
+                Ok(()) => Err(err),
+                Err(cleanup_err) => Err(err.context(format!(
+                    "partial waiting scanout cleanup also failed: {cleanup_err:#}"
+                ))),
+            };
+        }
+
+        counters.allocation();
+        Ok(waiting)
+    }
+
+    pub(crate) fn mode(&self) -> B::Mode {
+        self.mode
+    }
+
+    pub(crate) fn framebuffer(&self) -> B::Framebuffer {
+        self.framebuffer
+            .expect("waiting framebuffer is not available")
+    }
+
+    pub(crate) fn live_bytes(&self) -> usize {
+        self.live_bytes
+    }
+
+    pub(crate) fn render<F>(
+        &mut self,
+        backend: &mut B,
+        counters: &ScanoutCounters,
+        render: F,
+    ) -> anyhow::Result<()>
+    where
+        F: FnOnce(&mut [u8], usize, u32, u32) -> anyhow::Result<()>,
+    {
+        ensure!(!self.released, "cannot render a released waiting scanout");
+        let mapping = backend
+            .map_buffer(
+                self.buffer
+                    .as_mut()
+                    .context("waiting dumb buffer is not available")?,
+            )
+            .context("map waiting scanout")?;
+        counters.map();
+        let mut mapping: TrackedMapping<'_, B> = TrackedMapping {
+            mapping,
+            counters: counters.clone(),
+        };
+        render(
+            mapping.as_mut(),
+            self.pitch as usize,
+            self.width,
+            self.height,
+        )
+    }
+
+    pub(crate) fn release(
+        &mut self,
+        backend: &mut B,
+        counters: &ScanoutCounters,
+    ) -> anyhow::Result<()> {
+        if self.released {
+            return Ok(());
+        }
+        self.released = true;
+        let mut errors = Vec::new();
+
+        if let Some(framebuffer) = self.framebuffer.take() {
+            match backend.remove_framebuffer(framebuffer) {
+                Ok(()) => counters.framebuffer_remove(),
+                Err(err) => errors.push(format!("remove waiting framebuffer: {err:#}")),
+            }
+        }
+        if let Some(buffer) = self.buffer.take() {
+            match backend.destroy_buffer(buffer) {
+                Ok(()) => counters.dumb_buffer_destroy(),
+                Err(err) => errors.push(format!("destroy waiting dumb buffer: {err:#}")),
+            }
+        }
+        counters.release();
+        self.live_bytes = 0;
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            anyhow::bail!("{}", errors.join("; "))
+        }
+    }
+}
+
 pub(crate) struct MappedActive<'a, B: ScanoutBackend + 'a> {
     mappings: [TrackedMapping<'a, B>; BUFFERS_PER_SCANOUT],
     framebuffers: [B::Framebuffer; BUFFERS_PER_SCANOUT],
@@ -787,6 +950,7 @@ impl<B: ScanoutBackend> ScanoutPool<B> {
 
 pub(crate) struct ScanoutManager<B: ScanoutBackend> {
     pool: ScanoutPool<B>,
+    waiting: Option<Box<WaitingScanout<B>>>,
     counters: ScanoutCounters,
     current_live_bytes: usize,
     observed_peak_live_bytes: usize,
@@ -807,11 +971,43 @@ impl<B: ScanoutBackend> ScanoutManager<B> {
         }
         Ok(Self {
             pool: ScanoutPool::with_baseline(allocation),
+            waiting: None,
             counters,
             current_live_bytes: live_bytes,
             observed_peak_live_bytes: live_bytes,
             dynamic_routes: None,
         })
+    }
+
+    pub(crate) fn create_waiting(&mut self, backend: &mut B, mode: B::Mode) -> anyhow::Result<()> {
+        ensure!(
+            self.waiting.is_none(),
+            "waiting scanout is already allocated"
+        );
+        let waiting = WaitingScanout::create(backend, mode, &self.counters)?;
+        let waiting_bytes = waiting.live_bytes();
+        let new_live_bytes = match checked_add_live_bytes(self.current_live_bytes, waiting_bytes) {
+            Ok(bytes) => bytes,
+            Err(err) => {
+                let mut waiting = waiting;
+                waiting.release(backend, &self.counters)?;
+                return Err(err);
+            }
+        };
+        self.waiting = Some(Box::new(waiting));
+        self.current_live_bytes = new_live_bytes;
+        self.observed_peak_live_bytes = self.observed_peak_live_bytes.max(new_live_bytes);
+        Ok(())
+    }
+
+    pub(crate) fn render_waiting<F>(&mut self, backend: &mut B, render: F) -> anyhow::Result<()>
+    where
+        F: FnOnce(&mut [u8], usize, u32, u32) -> anyhow::Result<()>,
+    {
+        self.waiting
+            .as_deref_mut()
+            .context("waiting scanout is not allocated")?
+            .render(backend, &self.counters, render)
     }
 
     pub(crate) fn initialize_dynamic_routes(
@@ -834,6 +1030,7 @@ impl<B: ScanoutBackend> ScanoutManager<B> {
     ) {
         let Self {
             pool,
+            waiting,
             counters,
             current_live_bytes,
             observed_peak_live_bytes,
@@ -844,6 +1041,7 @@ impl<B: ScanoutBackend> ScanoutManager<B> {
             slots,
             ScanoutRuntime {
                 roles,
+                waiting,
                 counters: counters.clone(),
                 current_live_bytes,
                 observed_peak_live_bytes,
@@ -950,14 +1148,27 @@ impl<B: ScanoutBackend> ScanoutManager<B> {
     }
 
     pub(crate) fn release_all(&mut self, backend: &mut B) -> anyhow::Result<()> {
-        let result = self.pool.release_all(backend, &self.counters);
+        let mut errors = Vec::new();
+        if let Some(mut waiting) = self.waiting.take() {
+            if let Err(err) = waiting.release(backend, &self.counters) {
+                errors.push(format!("release waiting scanout: {err:#}"));
+            }
+        }
+        if let Err(err) = self.pool.release_all(backend, &self.counters) {
+            errors.push(format!("release scanout pool: {err:#}"));
+        }
         self.current_live_bytes = 0;
-        result
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            anyhow::bail!("{}", errors.join("; "))
+        }
     }
 }
 
 pub(crate) struct ScanoutRuntime<'a, B: ScanoutBackend> {
     roles: &'a mut ScanoutRoles,
+    waiting: &'a mut Option<Box<WaitingScanout<B>>>,
     counters: ScanoutCounters,
     current_live_bytes: &'a mut usize,
     observed_peak_live_bytes: &'a mut usize,
@@ -979,6 +1190,71 @@ impl<B: ScanoutBackend> ScanoutRuntime<'_, B> {
 
     pub(crate) fn observed_peak_live_bytes(&self) -> usize {
         *self.observed_peak_live_bytes
+    }
+
+    pub(crate) fn waiting_framebuffer(&self) -> anyhow::Result<B::Framebuffer> {
+        self.waiting
+            .as_deref()
+            .map(WaitingScanout::framebuffer)
+            .context("waiting scanout is not allocated")
+    }
+
+    pub(crate) fn ensure_waiting_mode<F>(
+        &mut self,
+        backend: &mut B,
+        mode: B::Mode,
+        render: F,
+    ) -> anyhow::Result<bool>
+    where
+        F: FnOnce(&mut [u8], usize, u32, u32) -> anyhow::Result<()>,
+    {
+        if self
+            .waiting
+            .as_deref()
+            .is_some_and(|waiting| waiting.mode() == mode)
+        {
+            return Ok(false);
+        }
+
+        let mut replacement = WaitingScanout::create(backend, mode, &self.counters)?;
+        if let Err(err) = replacement.render(backend, &self.counters, render) {
+            let cleanup = replacement.release(backend, &self.counters);
+            return match cleanup {
+                Ok(()) => Err(err),
+                Err(cleanup_err) => Err(err.context(format!(
+                    "waiting scanout render cleanup also failed: {cleanup_err:#}"
+                ))),
+            };
+        }
+        let replacement_bytes = replacement.live_bytes();
+        let old_bytes = self
+            .waiting
+            .as_deref()
+            .map_or(0, WaitingScanout::live_bytes);
+        let retained_live_bytes = self
+            .current_live_bytes
+            .checked_sub(old_bytes)
+            .context("waiting scanout live-byte accounting underflow")?;
+        let new_live_bytes = match checked_add_live_bytes(retained_live_bytes, replacement_bytes) {
+            Ok(bytes) => bytes,
+            Err(err) => {
+                replacement.release(backend, &self.counters)?;
+                return Err(err);
+            }
+        };
+
+        let old_waiting = self.waiting.take();
+        if let Some(mut old_waiting) = old_waiting {
+            if let Err(err) = old_waiting.release(backend, &self.counters) {
+                let _ = replacement.release(backend, &self.counters);
+                *self.waiting = Some(old_waiting);
+                return Err(err).context("release replaced waiting scanout");
+            }
+        }
+        *self.waiting = Some(Box::new(replacement));
+        *self.current_live_bytes = new_live_bytes;
+        *self.observed_peak_live_bytes = (*self.observed_peak_live_bytes).max(new_live_bytes);
+        Ok(true)
     }
 
     pub(crate) fn dynamic_routes(&self) -> anyhow::Result<&DynamicRouteState<B::Mode>> {
@@ -1119,7 +1395,7 @@ mod tests {
 
     use super::{
         checked_add_live_bytes, logical_memory_estimate, MappedTransition, ScanoutAllocation,
-        ScanoutBackend, ScanoutCounters, ScanoutManager, BUFFERS_PER_SCANOUT,
+        ScanoutBackend, ScanoutCounters, ScanoutManager, WaitingScanout, BUFFERS_PER_SCANOUT,
     };
 
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -1349,6 +1625,69 @@ mod tests {
         assert_eq!(snapshot.releases, 1);
         assert_eq!(snapshot.framebuffer_removes, 2);
         assert_eq!(snapshot.dumb_buffer_destroys, 2);
+    }
+
+    #[test]
+    fn dedicated_waiting_scanout_does_not_mutate_content_and_replaces_boundedly() {
+        let mut backend = MockBackend::default();
+        let mut manager = ScanoutManager::new_baseline(&mut backend, (64, 32)).unwrap();
+        manager.create_waiting(&mut backend, (64, 32)).unwrap();
+        let counters = manager.counters();
+
+        {
+            let mut active = manager.active_mut().map(&mut backend, &counters).unwrap();
+            active.front_buffer_mut().fill(0x11);
+        }
+        manager
+            .render_waiting(&mut backend, |buffer, _, _, _| {
+                buffer.fill(0xee);
+                Ok(())
+            })
+            .unwrap();
+        {
+            let mut active = manager.active_mut().map(&mut backend, &counters).unwrap();
+            assert!(active.front_buffer_mut().iter().all(|byte| *byte == 0x11));
+        }
+        assert_eq!(backend.live_buffers.len(), BUFFERS_PER_SCANOUT + 1);
+        assert_eq!(backend.live_framebuffers.len(), BUFFERS_PER_SCANOUT + 1);
+
+        let baseline_bytes = 2 * (64 * 32 * 2);
+        let waiting_bytes = 64 * 32 * 2;
+        assert_eq!(manager.current_live_bytes(), baseline_bytes + waiting_bytes);
+
+        let (_, mut runtime) = manager.split_runtime();
+        assert!(runtime
+            .ensure_waiting_mode(&mut backend, (80, 40), |buffer, _, _, _| {
+                buffer.fill(0xdd);
+                Ok(())
+            })
+            .unwrap());
+        assert_eq!(backend.live_buffers.len(), BUFFERS_PER_SCANOUT + 1);
+        assert_eq!(backend.live_framebuffers.len(), BUFFERS_PER_SCANOUT + 1);
+        drop(runtime);
+
+        manager.release_all(&mut backend).unwrap();
+        assert!(backend.live_buffers.is_empty());
+        assert!(backend.live_framebuffers.is_empty());
+        let snapshot = counters.snapshot();
+        assert_eq!(snapshot.allocations, 3);
+        assert_eq!(snapshot.releases, 3);
+        assert_eq!(snapshot.maps, snapshot.unmaps);
+    }
+
+    #[test]
+    fn waiting_scanout_partial_construction_releases_every_resource() {
+        for (operation, occurrence) in [
+            (Operation::CreateBuffer, 1),
+            (Operation::AddFramebuffer, 1),
+            (Operation::MapBuffer, 1),
+        ] {
+            let mut backend = MockBackend::with_failure(operation, occurrence);
+            let counters = ScanoutCounters::default();
+            assert!(WaitingScanout::create(&mut backend, (64, 32), &counters).is_err());
+            assert!(backend.live_buffers.is_empty());
+            assert!(backend.live_framebuffers.is_empty());
+        }
     }
 
     #[test]
