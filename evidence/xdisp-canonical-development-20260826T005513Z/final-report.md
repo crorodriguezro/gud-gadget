@@ -1,6 +1,7 @@
 # Final report
 
-Branch reconciliation: PASS (default GitHub branch metadata not changed).
+Branch reconciliation: PASS. GitHub default branches are now `development`
+for all three repositories.
 
 `gud/development` is `cde24e9` (PASS-B tip `76afa07` plus branch policy
 documentation) and `gud-gadget/development` is `ffc0293`. Both are pushed and
