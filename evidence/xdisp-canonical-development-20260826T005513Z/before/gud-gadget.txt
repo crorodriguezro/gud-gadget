@@ -1,0 +1,176 @@
+pwd=/home/cristianr/Projects/linux-mobile/gud-gadget
+pixel-format-benchmark
+ffc02933f31acc550f5626776e6d1a78cf259430
+?? SHA256SUMS
+?? evidence/functionfs-corrected-hs-enumeration-20260802T165737Z/
+?? evidence/functionfs-ep1-xfercompl-trace-build-20260817T052840Z/
+?? evidence/functionfs-ep1-xfercompl-trace-hs-20260817T051256Z/
+?? evidence/functionfs-ep1-xfersize-trace-build-20260802T193118Z/
+?? evidence/functionfs-ep1-xfersize-trace-deploy-20260817T035222Z/
+?? evidence/functionfs-ep1-xfersize-trace-hs-20260817T040328Z/
+?? evidence/functionfs-ep1-xfersize-trace-hs-20260817T042916Z/
+?? evidence/functionfs-exact-read-dwc2-irq-boundary-20260801T042000Z/
+?? evidence/functionfs-exact-read-irqtrace-hs-20260802T170000Z/
+?? evidence/functionfs-exact-read-irqtrace-hs-powered-20260802T184408Z/
+?? evidence/functionfs-exact-read-irqtrace-hs-powered-20260802T190207Z/
+?? evidence/functionfs-exact-read-irqtrace-hs-reconnect-20260802T173529Z/
+?? evidence/functionfs-exact-read-kernel-boundary-20260731T194900Z/
+?? evidence/functionfs-exact-read-kernel-boundary-20260801T032750Z/
+?? evidence/functionfs-exact-read-kernel-boundary-20260801T033723Z/
+?? evidence/functionfs-exact-read-lifecycle-20260731T175900Z/
+?? evidence/functionfs-full-speed-descriptor-enumeration-20260802T160127Z/
+?? evidence/functionfs-invalid-completion-confirmation-20260731T165738Z/
+?? evidence/functionfs-invalid-completion-confirmation-20260731T170000Z/
+?? evidence/functionfs-prearm-once-build-20260817T054732Z/
+?? evidence/functionfs-prearm-once-hs-20260817T055453Z/
+?? evidence/functionfs-status-on-set-build-20260817T151039Z/
+?? evidence/functionfs-status-on-set-e1-t01-20260817T182822Z/
+?? evidence/functionfs-status-on-set-e1-t01-hs-20260817T185502Z/phone-kernel-full.log
+?? evidence/functionfs-status-on-set-e1-t01-hs-20260817T185502Z/pi-kernel-full.log
+?? evidence/functionfs-status-on-set-e1-t01-hs-20260817T185502Z/pi-userspace-full.log
+?? evidence/functionfs-status-on-set-e1-t02-hs-20260817T190832Z/
+?? evidence/functionfs-status-on-set-e1-t02-hs-corrected-20260817T192939Z/host-run/
+?? evidence/functionfs-status-on-set-e1-t02-hs-corrected-20260817T192939Z/phone-kernel-full.log
+?? evidence/functionfs-status-on-set-e1-t02-hs-corrected-20260817T192939Z/pi-kernel-full.log
+?? evidence/functionfs-status-on-set-e1-t02-hs-corrected-20260817T192939Z/pi-userspace-full.log
+?? evidence/functionfs-status-on-set-e1-t05-idle-role-power-diagnosis-20260818T041030Z/
+?? evidence/functionfs-status-on-set-e1-t05-normal-reconnect-20260818T033000Z/
+?? evidence/functionfs-status-on-set-e1-t05-normal-reconnect-retry-20260818T034100Z/
+?? evidence/functionfs-status-on-set-e1-t05-topology-validation-20260818T042317Z/
+?? evidence/functionfs-status-on-set-e1-t06-soak-20260820T012100Z/
+?? evidence/functionfs-status-on-set-hs-20260817T164614Z/
+?? evidence/functionfs-status-on-set-hs-20260817T165632Z/phone-dmesg-live.log
+?? evidence/functionfs-status-on-set-hs-20260817T165632Z/phone-final-state.txt
+?? evidence/functionfs-status-on-set-hs-20260817T165632Z/phone-kernel-full.log
+?? evidence/functionfs-status-on-set-hs-20260817T165632Z/pi-final-state.txt
+?? evidence/functionfs-status-on-set-hs-20260817T165632Z/pi-kernel-full.log
+?? evidence/functionfs-status-on-set-hs-20260817T165632Z/pi-kernel-live.log
+?? evidence/functionfs-status-on-set-hs-20260817T165632Z/pi-userspace-full.log
+?? evidence/functionfs-status-on-set-hs-20260817T165632Z/pi-userspace-live.log
+?? evidence/irqtrace-high-speed-regression-20260802T185406Z/
+?? evidence/oneplus-qualified-module-recovery-20260802T161300Z/
+?? evidence/xdisp-canonical-development-20260826T005513Z/
+?? evidence/xdisp-e1-functionfs-large-aio-20260823T200646Z/
+?? evidence/xdisp-e1-large-payload-scaling-20260823T181500Z/
+?? evidence/xdisp-e1-payload-requalification-20260823T172037Z/
+?? evidence/xdisp-e2-alternating-fb-20260821T180244Z/
+?? evidence/xdisp-e2-aug18-build-20260821T045934Z/
+?? evidence/xdisp-e2-aug18-deploy-20260821T050508Z/
+?? evidence/xdisp-e2-aug18-rgb565-old-clients-20260821T132858Z/
+?? evidence/xdisp-e2-correlated-visual-20260820T213702Z/
+?? evidence/xdisp-e2-current-rgb565-controlled-20260821T135153Z/
+?? evidence/xdisp-e2-direct-mir-rgb565-20260824T010040Z/runtime/mirgud-direct-rgb565-managed-wrapper
+?? evidence/xdisp-e2-final-presentation-debug-20260821T182231Z/
+?? evidence/xdisp-e2-historical-regression-20260821T004843Z/
+?? evidence/xdisp-e2-initial-black-fb-switch-20260821T175110Z/
+?? evidence/xdisp-e2-managed-throughput-20260821T192857Z/
+?? evidence/xdisp-e2-pattern-ab-20260820T235107Z/
+?? evidence/xdisp-e2-rgb565-content-presentation-20260821T172520Z/
+?? evidence/xdisp-e2-t01-20260820T035130Z/baseline.txt
+?? evidence/xdisp-e2-t01-20260820T035130Z/compositor-pid.txt
+?? evidence/xdisp-e2-t01-20260820T035130Z/extension-20260820T033101Z/
+?? evidence/xdisp-e2-t01-20260820T035130Z/extension-20260820T033304Z/
+?? evidence/xdisp-e2-t01-20260820T035130Z/extension-manifest.json
+?? evidence/xdisp-e2-t01-20260820T035130Z/extension-root.txt
+?? evidence/xdisp-e2-t01-20260820T035130Z/final.txt
+?? evidence/xdisp-e2-t01-20260820T035130Z/fresh-baseline.txt
+?? evidence/xdisp-e2-t01-20260820T035130Z/fresh-compositor-pid.txt
+?? evidence/xdisp-e2-t01-20260820T035130Z/fresh-extension-20260820T034629Z/
+?? evidence/xdisp-e2-t01-20260820T035130Z/fresh-extension-20260820T035129Z/
+?? evidence/xdisp-e2-t01-20260820T035130Z/fresh-journal-scan.txt
+?? evidence/xdisp-e2-t01-20260820T035130Z/fresh-mirout-final.txt
+?? evidence/xdisp-e2-t01-20260820T035130Z/fresh-process-state.txt
+?? evidence/xdisp-e2-t01-20260820T035130Z/fresh-pstore.txt
+?? evidence/xdisp-e2-t01-20260820T035130Z/fresh-service-state.txt
+?? evidence/xdisp-e2-t02-20260820T040644Z-root/
+?? evidence/xdisp-e2-t02-20260820T101238Z-investigation/
+?? evidence/xdisp-e2-t02-closure-20260820T161814Z/
+?? evidence/xdisp-e2-t04-rgb565-lz4-native-soak-20260824T020019Z/
+?? evidence/xdisp-e2-t04-rgb565-lz4-soak-20260824T033632Z/
+?? evidence/xdisp-e3-b04-pi-disconnect-scanout-lifecycle-20260825T164000Z/
+?? evidence/xdisp-e3-b05-oneplus-host-link-diagnosis-20260826T025808Z/
+?? evidence/xdisp-e3-hotplug-reconnect-20260824T172613Z/
+?? evidence/xdisp-e3-t02-autonomous-reconnect-20260825T232418Z/
+?? evidence/xdisp-e3-t02-autonomous-reconnect-20260826T020421Z/
+?? evidence/xdisp-e3-t02-autonomous-reconnect-20260826T020957Z/
+?? evidence/xdisp-e3-t02-autonomous-reconnect-20260826T021934Z/
+?? evidence/xdisp-e4-t06-minimal-mir-integration-20260826T175315Z/
+?? evidence/xdisp-managed-lz4-admission-20260821T203443Z/
+  ls                     5554f4a proper pixel format handling
+  main                   5554f4a [origin/main] proper pixel format handling
+  pi-otg                 a42d109 [origin/pi-otg: ahead 38] gud-gadget: trace framebuffer bulk receive
+* pixel-format-benchmark ffc0293 [origin/pixel-format-benchmark] evidence: retain E4-T07 full-update qualification
+  ls
+  main
+  pi-otg
+* pixel-format-benchmark
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/main
+  remotes/origin/pi-otg
+  remotes/origin/pixel-format-benchmark
+origin	git@github.com:crorodriguezro/gud-gadget.git (fetch)
+origin	git@github.com:crorodriguezro/gud-gadget.git (push)
+* ffc0293 (HEAD -> pixel-format-benchmark, origin/pixel-format-benchmark) evidence: retain E4-T07 full-update qualification
+* 001a5da evidence: qualify OnePlus autonomous USB role recovery
+* 1cd654f evidence: record E3-B01 reconnect retry
+* 562922f evidence: record E3-B01 physical reconnect result
+* 86c884e gud: correlate committed modes with physical scanout
+* 170c575 evidence: document E3-B01 offline validation
+* b9fc4ef functionfs: retire dead USB epochs safely
+* 5145620 evidence: complete E2-T05 B C E qualification
+* b57e460 evidence: record E2-T05 B C E continuation
+* b53217f docs: finalize E2-T05 report metadata
+* c5abd03 docs: record E2-T05 shutdown qualification
+* 3ebc950 (tag: xdisp-e2-direct-mir-rgb565-20260824, tag: working-direct-mir-rgb565) evidence: block T04 on display geometry
+* 73670e9 evidence: record selected RGB565 transport qualification
+* 0af1ae3 (tag: working-direct-mir-rgb565-v1) gud-gadget: package xdisp qualification evidence
+* 46d5e6f gud-gadget: record full-frame RAW qualification
+* dbc8284 fix: service EP0 events during exact receive
+* 837be79 fix: preserve exact receive across later statuses
+* 62652a1 evidence: record visual output continuation
+* ca23cd6 evidence: record blocked visual output gate
+* 94eeb34 evidence: record partial E2-T03 matrix
+* 155093f evidence: record blocked E2-T03 preflight
+* 63a2c9f evidence: record E2-T02 modeset timeout investigation
+* e1c038d evidence: record E2-T02 closure run
+* 2882652 evidence: record xdisp E2-T02 managed smoke
+* 4441f30 evidence: refresh E2-T01 checksum index
+* fc71a37 evidence: record fresh E2-T01 qualification run
+* 43931e5 evidence: record E2-T01 source probes
+* ab1c7b3 docs: align T06 summary with E2 architecture
+* 0b9f8af docs: accept E1-T06 for v1
+* bd12881 docs: comprehensive E1 completion documentation
+* 519fe28 docs: record E1-T06 transport soak completion
+* 9e147f5 E1-T06: Apply T05 restart-policy correction
+* f17d418 docs: retain T05 implementation handoff
+* 0ce3366 docs: close T05 v1 qualification
+* 4e7cc57 docs: record T05 F6 PM result and F7 evidence
+* 01de4ba docs: record T05 N1 and F2 evidence
+* 3e8f6dd test: extend F2 manual deadline
+* 2a348b2 test: extend F2 inflight window
+* 3fba138 test: configure F2 inflight window
+* 259253f gadget: add debug F2 inflight deadline
+worktree /home/cristianr/Projects/linux-mobile/gud-gadget
+HEAD ffc02933f31acc550f5626776e6d1a78cf259430
+branch refs/heads/pixel-format-benchmark
+
+worktree /tmp/linux-mobile-aug18/gud-gadget
+HEAD 01de4bae75facc30c97c38438d00776ff086837b
+detached
+prunable gitdir file points to non-existent location
+
+worktree /tmp/linux-mobile-known-good/gud-gadget
+HEAD 6d12f379889afaf042eb607ba10da7a63e7ec761
+detached
+prunable gitdir file points to non-existent location
+
+worktree /tmp/opencode/gud-gadget-e1-t04-clean
+HEAD 6aea5e73865f3a4cb449c0f817cadf752d721f65
+detached
+prunable gitdir file points to non-existent location
+
+worktree /tmp/opencode/gud-gadget-e1-t05-clean
+HEAD ea052ec4706ac1e101a33247061cbd41244fd235
+detached
+prunable gitdir file points to non-existent location
+

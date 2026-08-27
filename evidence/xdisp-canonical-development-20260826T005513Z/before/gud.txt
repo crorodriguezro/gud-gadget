@@ -1,0 +1,105 @@
+pwd=/home/cristianr/Projects/linux-mobile/gud
+pixel-format-benchmark
+76afa07cb9d77b263e50999446019627069e8f48
+?? backport-4.9/.gud_pipe.o.d
+?? backport-4.9/tests/gud-kms-fill-aarch64
+?? backport-4.9/tests/gud-kms-fill-ab-aarch64
+?? backport-4.9/tests/gud-kms-smoke
+?? backport-4.9/tests/gud-kms-stage
+  linux-4.9-backport        438c09f [origin/linux-4.9-backport: ahead 62] gud: trace framebuffer bulk transactions
+  master                    cf9ad5b [origin/master: ahead 92, behind 92] gadget: Fix -Woverflow warning
+* pixel-format-benchmark    76afa07 [origin/pixel-format-benchmark] docs: record E4-T07 PASS-B architecture
++ rgb565-benchmark-worktree 27bf43b (/home/cristianr/Projects/linux-mobile/gud-benchmark) [origin/rgb565-benchmark-worktree] bench: restore Pi gpu_mem to its original 64 MB value
+  linux-4.9-backport
+  master
+* pixel-format-benchmark
++ rgb565-benchmark-worktree
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/kernel-6.16-gud-gadget-fixes
+  remotes/origin/linux-4.9-backport
+  remotes/origin/master
+  remotes/origin/pixel-format-benchmark
+  remotes/origin/rgb565-benchmark-worktree
+  remotes/origin/xdisp-oneplus-12800
+origin	git@github.com:crorodriguezro/gud.git (fetch)
+origin	git@github.com:crorodriguezro/gud.git (push)
+* 76afa07 (HEAD -> pixel-format-benchmark, origin/pixel-format-benchmark) docs: record E4-T07 PASS-B architecture
+* a4c0a15 test: cover full-payload and async GUD semantics
+* 6e799ed gud: restore upstream-style full updates and async flush
+* 639a57e docs: close codec benchmark and select RGB565+LZ4
+*   1109cab merge: close full-frame codec benchmark
+|\  
+| * 27bf43b (origin/rgb565-benchmark-worktree, rgb565-benchmark-worktree) bench: restore Pi gpu_mem to its original 64 MB value
+| * a5cd628 docs: record final codec transport findings and architecture
+| * f700724 bench: add quality evaluation and aggregate final-codec results
+| * 126eb14 bench: add real Pi Zero 2 W LZ4 decode and hardware JPEG decode benchmarks
+| * 6e804a4 bench: add real OnePlus 6 sender benchmark and recaptured RGBA corpus
+| * c77c36d bench: add real USB2 bulk payload throughput sweep
+| * 6f97663 docs: record pre-benchmark OP6/Pi hardware verification
+| * f8cedd9 docs: record next-phase commit hashes in summary-next-phase.md
+| * 124001b bench: run narrowed finalists + temporal policy on real Pi Zero 2 W
+| * 2068f09 bench: preserve broad results, add real Lomiri capture + temporal policy
+| * eab17e9 bench: add RGB565 codec benchmark harness
+|/  
+* 3e3361d usb: signal stable GUD root-port reattach
+* 276312b docs: close E2 external presentation milestone
+* 0690785 (tag: xdisp-e2-direct-mir-rgb565-20260824, tag: working-direct-mir-rgb565) docs: block T04 on display geometry
+* 3025e95 docs: record selected RGB565 LZ4 candidate
+* 4a2eb91 (tag: working-direct-mir-rgb565-v1) gud: correct xdisp probe payload help range
+* 77ffef6 xdisp: qualify large RAW payload transport
+* 60c0963 test: add XRGB8888 GUD color bars
+* 1ab564b docs: accept E2-T03 for v1
+* 6c23bc9 docs: accept E2-T02 for v1
+* 69250a0 Mark E2-T02 back in progress
+* dab1d24 docs: mark E2-T02 verified
+* 0e527c2 docs: restore E2-T02 in progress
+* 67972f5 docs: mark E2-T02 verified
+* 1d3615a docs: mark E2-T01 verified
+* f7d148b docs: reframe E2-T01 source/render gate
+* b02ca0c docs: accept E1-T06 and reframe E2-T01
+* 09cf63e docs: defer T05 F6 runtime resume
+* db8ee75 gud: add test-only F6 runtime PM variant
+* 7e75222 gud: extend F2 host pause
+* a461d8c gud: add bounded F2 pre-bulk pause
+* f5eb86b docs: track T05 hardware block
+* 84e7d6b docs: verify clean T04 rerun
+* bde330d gud: align T04 stage format
+* 436d8c3 docs: qualify T04 reproducibility status
+worktree /home/cristianr/Projects/linux-mobile/gud
+HEAD 76afa07cb9d77b263e50999446019627069e8f48
+branch refs/heads/pixel-format-benchmark
+
+worktree /home/cristianr/Projects/linux-mobile/gud-benchmark
+HEAD 27bf43b342f1968d3fca492b42294951a4830dbd
+branch refs/heads/rgb565-benchmark-worktree
+
+worktree /tmp/linux-mobile-aug18/gud
+HEAD 7e7522224f034718a8a9f3f807802395d7515e6b
+detached
+prunable gitdir file points to non-existent location
+
+worktree /tmp/linux-mobile-known-good/gud
+HEAD 775df7af4b3c8105f658587204c9e3ee656043e8
+detached
+prunable gitdir file points to non-existent location
+
+worktree /tmp/opencode/gud-e1-t04-clean
+HEAD 6468a4301af8ccd8b1c423283697d3889c126ab1
+detached
+prunable gitdir file points to non-existent location
+
+worktree /tmp/opencode/gud-e1-t04-clean-fixed
+HEAD bde330da2c5133c80d8be36fdf3e88c5a5386bb8
+detached
+prunable gitdir file points to non-existent location
+
+worktree /tmp/opencode/gud-e1-t05-clean
+HEAD f5eb86be0b3844d126143cfccb2da6cb49d37dab
+detached
+prunable gitdir file points to non-existent location
+
+worktree /tmp/opencode/gud-xdisp-oneplus-v1
+HEAD 2a8f59ba84120f6b6f821b83a02c4d6a9459b32a
+detached
+prunable gitdir file points to non-existent location
+

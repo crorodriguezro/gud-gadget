@@ -1,0 +1,86 @@
+pwd=/home/cristianr/Projects/linux-mobile/mir-android2-platform-gud
+pixel-format-benchmark
+1d2fc98ca6ccd203c4bfac35e69454e173359aba
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/invalid/
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/preliminary/
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/raw/
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/sessions/
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/source-format-preflight/
+?? doc/benchmarks/2026-07-30-rgb565-vs-xrgb8888/validation/
++ e4-t06-minimal-mir-integration 72f96d2 (/home/cristianr/Projects/linux-mobile/.worktrees/e4-t06-minimal-mir-integration) [origin/main] Merge branch 'mariogrip-main-patch-4adf' into 'main'
+  gud-external-output-poc        f01b803 [github/gud-external-output-poc] docs: record managed teardown boundary
+  main                           72f96d2 [origin/main] Merge branch 'mariogrip-main-patch-4adf' into 'main'
+* pixel-format-benchmark         1d2fc98 [github/pixel-format-benchmark] mirgud: add optional direct presentation mode
++ e4-t06-minimal-mir-integration
+  gud-external-output-poc
+  main
+* pixel-format-benchmark
+  remotes/github/HEAD -> github/gud-external-output-poc
+  remotes/github/gud-external-output-poc
+  remotes/github/mir-main-baseline
+  remotes/github/pixel-format-benchmark
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/main
+  remotes/origin/personal/notkit/tertiary-display
+  remotes/origin/ubports/24.04-1.x
+  remotes/origin/ubports/24.04-2.x
+  remotes/origin/ubports/focal
+  remotes/origin/ubports/focal_-_foldable
+  remotes/origin/ubports/xenial
+github	git@github.com:crorodriguezro/mir-android2-platform-gud.git (fetch)
+github	git@github.com:crorodriguezro/mir-android2-platform-gud.git (push)
+origin	https://gitlab.com/ubports/development/core/hybris-support/mir-android2-platform.git (fetch)
+origin	https://gitlab.com/ubports/development/core/hybris-support/mir-android2-platform.git (push)
+* 1d2fc98 (HEAD -> pixel-format-benchmark, github/pixel-format-benchmark) mirgud: add optional direct presentation mode
+* 1fbc01d usb-role: recover GUD host after tagged reattach
+* 991a8cd evidence: qualify E4-T01 mode contract on hardware
+* 11fa003 xdisp: define the end-to-end mode contract
+* 7eec63e xdisp: require explicit reactivation after hotplug
+* e133547 docs: record E2 v1 closure transport decision
+* 0cd8f5b xdisp: add deterministic pre-bulk failure hook
+* eedf520 xdisp: add safe pre-ownership shutdown stall hook
+* ecfbd5c (tag: xdisp-e2-direct-mir-rgb565-20260824, tag: working-direct-mir-rgb565) docs: select direct RGB565 LZ4 transport
+* 13818a0 (tag: working-direct-mir-rgb565-v1) xdisp: bound activation timeout with diagnostic override
+* 5f7f790 xdisp: add managed throughput tracing
+* 58d62ce xdisp: measure producer enqueue latency
+* e7250c8 xdisp: enforce KMS teardown before Mir ownership
+* a18cf66 Reorder mirgud teardown before release
+* 6e4d8c5 xdisp: record presenter bounds telemetry
+* 3eeaa79 xdisp: gate detailed KMS logging to modeset
+* 786032e xdisp: pin managed modeset to xrgb8888
+* 4c4763c tools: add XDISP payload scaling parser
+* 1823c33 docs: record E2 architecture decision
+* 2898bb2 tools: classify FunctionFS DWC2 completion traces
+* d473850 xdisp-bench: report endpoint descriptor diagnostics
+* 65908ec xdisp-bench: classify FunctionFS transport failures
+* dd72dbe xdisp-bench: classify blocked stage b sessions
+* 8a1c61c xdisp-bench: separate shutdown cancellation
+* f095e8f xdisp-bench: update stage b module hash
+* 2338625 xdisp-bench: add stage b motion matrix
+* d940c99 xdisp-bench: record live reset boundary
+* 6865d22 xdisp-bench: permit durable service log
+* b00eff1 xdisp-bench: allow empty durable session directory
+* 16ceb0b xdisp-bench: require idle before format switch
+* 2be0e10 xdisp-bench: collect phone kernel with sudo
+* 5ef9ae6 xdisp-bench: add resumable hardware runner
+* 2ad6cd7 xdisp-bench: add measured warmup boundary
+* ecb3732 docs: classify native xdisp benchmark retries
+* ccfe524 docs: correct xdisp transport benchmark interpretation
+* 430794c xdisp-bench: select Mir source format explicitly
+* a74625f xdisp-bench: correct timing histogram expectations
+* dbb696b xdisp-bench: complete compatibility cleanup
+* 7959feb xdisp-bench: complete benchmark instrumentation
+* 4cc0ec2 docs: clarify pixel-format hardware qualification state
+worktree /home/cristianr/Projects/linux-mobile/mir-android2-platform-gud
+HEAD 1d2fc98ca6ccd203c4bfac35e69454e173359aba
+branch refs/heads/pixel-format-benchmark
+
+worktree /home/cristianr/Projects/linux-mobile/.worktrees/e4-t06-minimal-mir-integration
+HEAD 72f96d2f69adcd1856295c36ee55ac03ad2860c5
+branch refs/heads/e4-t06-minimal-mir-integration
+
+worktree /tmp/linux-mobile-known-good/mir
+HEAD a74625fc0314447df23da210c9d461500f0991f9
+detached
+prunable gitdir file points to non-existent location
+
