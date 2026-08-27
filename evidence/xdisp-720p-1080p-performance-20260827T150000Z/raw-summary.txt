@@ -1,0 +1,26 @@
+Run set: 2026-08-27, 10 s warmup plus approximately 60 s measured interval.
+Path: Mir extend capture -> mirgud -> LatestFramePresenter -> GUD -> USB -> Pi FunctionFS -> VC4.
+
+720p production DirectExact, repetitions 1/2/3:
+source/presenter/presentation FPS = 61/28/28, 61/21/21, 61/21/21.
+LZ4 hit = 100% for retained host records. Payload p50/p95 = 559031/883523,
+633319/633319, 633319/633319 bytes. LZ4 p50/p95 = 18.643/25.666,
+25.300/30.301, 26.453/30.809 ms. Bulk p50/p95 = 13.737/21.663,
+15.497/15.944, 15.513/15.886 ms. Host record retention for r1 was tail-limited.
+
+1080p production DirectExact, repetitions 1/2/3:
+source/presenter/presentation FPS = 61/20/20, 61/20/20, 61/19/19.
+LZ4 hit = 100%. Payload mean/p50/p95 = 645375/645375/645375 bytes in all
+three runs. LZ4 p50/p95 = 27.635/32.756, 27.665/33.496, 28.148/33.736 ms.
+Bulk p50/p95 = 15.822/16.151, 15.829/16.104, 15.834/16.191 ms.
+Bulk-only throughput was 40.66, 40.67, and 40.62 MB/s; sustained wire rate
+was 12.99, 12.93, and 12.83 MB/s.
+
+Presenter max pending/in-flight = 1/1 in every run. Phone capture,
+conversion, release, submit, and lifecycle failures = 0. Pi poisoned,
+timeout, short-read, and processing-failure counts = 0. Pi throttling = 0x0.
+
+The deterministic synthetic generator was not used for this task because the
+task explicitly requires the Mir production path. The deployed benchmark has
+no Mir-path deterministic desktop-animation injection; the desktop was held
+stable, so the result is representative but not reproducible scene content.

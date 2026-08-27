@@ -1,0 +1,11 @@
+poisoned=0
+timeouts=0
+short_reads=0
+pi_processing_failures=0
+phone_gud_usb_kernel_faults=none observed
+pi_dwc2_faults=none observed
+pi_vc4_faults=none observed
+phone_throttling=not applicable; no thermal fault observed
+pi_throttling=0x0
+latest_frame_presenter_max_pending=1
+latest_frame_presenter_max_inflight=1

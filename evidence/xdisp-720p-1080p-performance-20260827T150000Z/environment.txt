@@ -1,0 +1,15 @@
+phone_kernel=4.9.112-g6b190d86b
+phone_usb_role=host
+phone_usb_identity=1d50:614d dynamic path 1-1.3
+phone_gud_card=/dev/dri/card1
+phone_cpu_governor=schedutil
+phone_host_payload_timing=Y
+pi_kernel=6.12.47+rpt-rpi-v8-ffs-xfercompltrace
+pi_cpu_governor=ondemand
+pi_gud_userspace=active
+pi_udc=configured
+pi_throttled=0x0
+pi_temperature_final=44.0'C
+route_720p=DirectExact exact 1280x720 RGB565 scaler=0
+route_1080p=DirectExact exact 1920x1080 RGB565 scaler=0
+page_flip_completion=unavailable; page-flip submission only

@@ -1,0 +1,7 @@
+mode,workload,repetition,measured_seconds,source_frames,source_fps,presenter_frames,presenter_fps,presenter_replacements,usb_frames,usb_fps,pi_received_frames,pi_receive_fps,presented_frames,presentation_fps,lz4_hit_percent,raw_fallback_percent,payload_mean_bytes,payload_p50_bytes,payload_p95_bytes,lz4_p50_ms,lz4_p95_ms,bulk_p50_ms,bulk_p95_ms,sustained_wire_MBps,bulk_only_MBps,poisoned,timeouts,processing_failures,throttled
+1280x720,representative-stable-desktop,1,64.807,3993,61,1855,28,2138,1855,28,1855,28,1855,28,100,0,521128,559031,883523,18.643,25.666,13.737,21.663,14.92,40.40,0,0,0,0x0
+1280x720,representative-stable-desktop,2,64.842,3995,61,1415,21,2579,1415,21,1415,21,1415,21,100,0,633319,633319,633319,25.300,30.301,15.497,15.944,13.82,40.71,0,0,0,0x0
+1280x720,representative-stable-desktop,3,64.784,3991,61,1388,21,2602,1388,21,1388,21,1388,21,100,0,633319,633319,633319,26.453,30.809,15.513,15.886,13.57,40.69,0,0,0,0x0
+1920x1080,representative-stable-desktop,1,64.713,3981,61,1303,20,2678,1303,20,1303,20,1303,20,100,0,645375,645375,645375,27.635,32.756,15.822,16.151,12.99,40.66,0,0,0,0x0
+1920x1080,representative-stable-desktop,2,64.813,3983,61,1298,20,2685,1298,20,1298,20,1298,20,100,0,645375,645375,645375,27.665,33.496,15.829,16.104,12.93,40.67,0,0,0,0x0
+1920x1080,representative-stable-desktop,3,64.773,3982,61,1287,19,2694,1287,19,1287,19,1287,19,100,0,645375,645375,645375,28.148,33.736,15.834,16.191,12.83,40.62,0,0,0,0x0
