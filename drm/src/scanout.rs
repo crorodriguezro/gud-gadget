@@ -10,6 +10,7 @@ use crate::modes::ModeKey;
 
 pub(crate) const SCANOUT_SLOT_COUNT: usize = 3;
 pub(crate) const BUFFERS_PER_SCANOUT: usize = 2;
+const WAITING_BUFFERS: usize = 1;
 
 pub(crate) type ScanoutSlot<B> = Option<Box<ScanoutAllocation<B>>>;
 
@@ -126,6 +127,11 @@ pub(crate) fn logical_memory_estimate(
     let scanout_bytes = largest_physical
         .checked_mul(BUFFERS_PER_SCANOUT)
         .and_then(|bytes| bytes.checked_mul(SCANOUT_SLOT_COUNT))
+        .and_then(|bytes| {
+            largest_physical
+                .checked_mul(WAITING_BUFFERS)
+                .and_then(|waiting| bytes.checked_add(waiting))
+        })
         .context("logical scanout memory estimate overflow")?;
     let peak_bytes = scanout_bytes
         .checked_add(max_shadow_bytes)
@@ -612,6 +618,18 @@ impl<B: ScanoutBackend> WaitingScanout<B> {
     where
         F: FnOnce(&mut [u8], usize, u32, u32) -> anyhow::Result<()>,
     {
+        self.with_mapped(backend, counters, render)
+    }
+
+    fn with_mapped<F>(
+        &mut self,
+        backend: &mut B,
+        counters: &ScanoutCounters,
+        callback: F,
+    ) -> anyhow::Result<()>
+    where
+        F: FnOnce(&mut [u8], usize, u32, u32) -> anyhow::Result<()>,
+    {
         ensure!(!self.released, "cannot render a released waiting scanout");
         let mapping = backend
             .map_buffer(
@@ -625,7 +643,7 @@ impl<B: ScanoutBackend> WaitingScanout<B> {
             mapping,
             counters: counters.clone(),
         };
-        render(
+        callback(
             mapping.as_mut(),
             self.pitch as usize,
             self.width,
@@ -1235,6 +1253,14 @@ impl<B: ScanoutBackend> ScanoutRuntime<'_, B> {
             .current_live_bytes
             .checked_sub(old_bytes)
             .context("waiting scanout live-byte accounting underflow")?;
+        let transient_live_bytes =
+            match checked_add_live_bytes(*self.current_live_bytes, replacement_bytes) {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    replacement.release(backend, &self.counters)?;
+                    return Err(err);
+                }
+            };
         let new_live_bytes = match checked_add_live_bytes(retained_live_bytes, replacement_bytes) {
             Ok(bytes) => bytes,
             Err(err) => {
@@ -1243,18 +1269,38 @@ impl<B: ScanoutBackend> ScanoutRuntime<'_, B> {
             }
         };
 
-        let old_waiting = self.waiting.take();
-        if let Some(mut old_waiting) = old_waiting {
-            if let Err(err) = old_waiting.release(backend, &self.counters) {
-                let _ = replacement.release(backend, &self.counters);
-                *self.waiting = Some(old_waiting);
-                return Err(err).context("release replaced waiting scanout");
-            }
-        }
+        let old_cleanup_error = self.waiting.take().and_then(|mut old_waiting| {
+            old_waiting
+                .release(backend, &self.counters)
+                .err()
+                .map(|err| anyhow::anyhow!("release replaced waiting scanout: {err:#}"))
+        });
         *self.waiting = Some(Box::new(replacement));
         *self.current_live_bytes = new_live_bytes;
-        *self.observed_peak_live_bytes = (*self.observed_peak_live_bytes).max(new_live_bytes);
+        *self.observed_peak_live_bytes = (*self.observed_peak_live_bytes).max(transient_live_bytes);
+        if let Some(err) = old_cleanup_error {
+            tracing::error!(
+                error = %format_args!("{err:#}"),
+                "Installed the replacement waiting scanout, but old-resource cleanup failed"
+            );
+        }
         Ok(true)
+    }
+
+    pub(crate) fn with_waiting_buffer<F>(
+        &mut self,
+        backend: &mut B,
+        callback: F,
+    ) -> anyhow::Result<()>
+    where
+        F: FnOnce(&[u8], usize, u32, u32) -> anyhow::Result<()>,
+    {
+        self.waiting
+            .as_deref_mut()
+            .context("waiting scanout is not allocated")?
+            .with_mapped(backend, &self.counters, |buffer, pitch, width, height| {
+                callback(buffer, pitch, width, height)
+            })
     }
 
     pub(crate) fn dynamic_routes(&self) -> anyhow::Result<&DynamicRouteState<B::Mode>> {
@@ -1662,6 +1708,11 @@ mod tests {
                 Ok(())
             })
             .unwrap());
+        let replacement_bytes = 80 * 40 * 2;
+        assert_eq!(
+            runtime.observed_peak_live_bytes(),
+            baseline_bytes + waiting_bytes + replacement_bytes
+        );
         assert_eq!(backend.live_buffers.len(), BUFFERS_PER_SCANOUT + 1);
         assert_eq!(backend.live_framebuffers.len(), BUFFERS_PER_SCANOUT + 1);
         drop(runtime);
@@ -1687,6 +1738,33 @@ mod tests {
             assert!(WaitingScanout::create(&mut backend, (64, 32), &counters).is_err());
             assert!(backend.live_buffers.is_empty());
             assert!(backend.live_framebuffers.is_empty());
+        }
+    }
+
+    #[test]
+    fn waiting_mode_cleanup_failure_keeps_replacement_usable() {
+        for operation in [Operation::RemoveFramebuffer, Operation::DestroyBuffer] {
+            let mut backend = MockBackend::default();
+            let mut manager = ScanoutManager::new_baseline(&mut backend, (64, 32)).unwrap();
+            manager.create_waiting(&mut backend, (64, 32)).unwrap();
+            backend.failure = Some(Failure {
+                operation,
+                occurrence: 1,
+            });
+
+            let (_, mut runtime) = manager.split_runtime();
+            assert!(runtime
+                .ensure_waiting_mode(&mut backend, (80, 40), |buffer, _, _, _| {
+                    buffer.fill(0xdd);
+                    Ok(())
+                })
+                .is_ok());
+            assert!(runtime.waiting_framebuffer().is_ok());
+            assert_eq!(
+                runtime.current_live_bytes(),
+                2 * (64 * 32 * 2) + 80 * 40 * 2
+            );
+            drop(runtime);
         }
     }
 
@@ -1919,7 +1997,7 @@ mod tests {
                 .unwrap();
 
         assert_eq!(estimate.max_shadow_bytes, 3840 * 2160 * 2);
-        assert_eq!(estimate.scanout_bytes, 3 * 2 * 1920 * 1080 * 2);
+        assert_eq!(estimate.scanout_bytes, (3 * 2 + 1) * 1920 * 1080 * 2);
         assert_eq!(
             estimate.peak_bytes,
             estimate.scanout_bytes + estimate.max_shadow_bytes

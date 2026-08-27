@@ -1876,6 +1876,10 @@ fn surface_after_resume(surface: VisibleSurface) -> VisibleSurface {
     }
 }
 
+fn is_full_frame_update(info: &gud_gadget::SetBuffer, width: u32, height: u32) -> bool {
+    info.x == 0 && info.y == 0 && info.width == width && info.height == height
+}
+
 fn present_waiting_surface<B: ScanoutBackend>(
     backend: &mut B,
     scanout_runtime: &mut ScanoutRuntime<'_, B>,
@@ -3327,15 +3331,35 @@ fn main() -> anyhow::Result<()> {
         Err(err) => warn!("Failed to flush startup scanout: {}", err),
     }
     if frame_dump_mode.permits_startup_dump() {
-        dump_framebuffer_if_enabled(
-            dump_path.as_deref(),
-            active.front_buffer_mut(),
-            pitch as usize,
-            width,
-            height,
-            transfer_format,
-        );
-        dump_framebuffer_raw_if_enabled(dump_raw_path.as_deref(), active.front_buffer_mut());
+        if matches!(pattern_mode, PatternMode::Off) {
+            scanout_runtime
+                .with_waiting_buffer(
+                    &mut backend,
+                    |buffer, waiting_pitch, waiting_width, waiting_height| {
+                        dump_framebuffer_if_enabled(
+                            dump_path.as_deref(),
+                            buffer,
+                            waiting_pitch,
+                            waiting_width,
+                            waiting_height,
+                            transfer_format,
+                        );
+                        dump_framebuffer_raw_if_enabled(dump_raw_path.as_deref(), buffer);
+                        Ok(())
+                    },
+                )
+                .context("dump startup waiting scanout")?;
+        } else {
+            dump_framebuffer_if_enabled(
+                dump_path.as_deref(),
+                active.front_buffer_mut(),
+                pitch as usize,
+                width,
+                height,
+                transfer_format,
+            );
+            dump_framebuffer_raw_if_enabled(dump_raw_path.as_deref(), active.front_buffer_mut());
+        }
     }
 
     // Keep the USB gadget disconnected until DRM has a working CRTC and the
@@ -3645,16 +3669,24 @@ fn main() -> anyhow::Result<()> {
                             && surface_after_resume(visible_surface) != visible_surface
                         {
                             let restored_surface = surface_after_resume(visible_surface);
-                            backend
-                                .set_crtc(active.front_framebuffer(), active.mode())
-                                .context("restore preserved content scanout after resume")?;
-                            tracing::info!(
-                                ?reason,
-                                from = ?visible_surface,
-                                to = ?restored_surface,
-                                "Restored preserved content scanout after resume"
-                            );
-                            visible_surface = restored_surface;
+                            match backend.set_crtc(active.front_framebuffer(), active.mode()) {
+                                Ok(()) => {
+                                    tracing::info!(
+                                        ?reason,
+                                        from = ?visible_surface,
+                                        to = ?restored_surface,
+                                        "Restored preserved content scanout after resume"
+                                    );
+                                    visible_surface = restored_surface;
+                                }
+                                Err(err) => {
+                                    tracing::error!(
+                                        ?reason,
+                                        error = %format_args!("{err:#}"),
+                                        "Could not restore preserved content after resume; keeping waiting scanout visible"
+                                    );
+                                }
+                            }
                         }
                     }
                     match lifecycle_result {
@@ -4773,7 +4805,7 @@ fn main() -> anyhow::Result<()> {
                         }
 
                         if matches!(pattern_mode, PatternMode::Off) {
-                            let recreated = scanout_runtime.ensure_waiting_mode(
+                            let recreated = match scanout_runtime.ensure_waiting_mode(
                                 &mut backend,
                                 active.mode(),
                                 |buffer, pitch, width, height| {
@@ -4785,14 +4817,51 @@ fn main() -> anyhow::Result<()> {
                                         transfer_format,
                                     )
                                 },
-                            )?;
+                            ) {
+                                Ok(recreated) => recreated,
+                                Err(err) => {
+                                    if aio_mode {
+                                        gud_data.poison_exact_payload_aio(
+                                            "waiting scanout preparation failed during processing",
+                                        );
+                                        bulk_receive_session.poison();
+                                        receive_telemetry.processing_failed += 1;
+                                        receive_telemetry.poisoned += 1;
+                                    }
+                                    tracing::error!(
+                                        error = %format_args!("{err:#}"),
+                                        "Failed to prepare waiting scanout"
+                                    );
+                                    if aio_mode {
+                                        continue;
+                                    }
+                                    return Err(err).context("prepare waiting scanout");
+                                }
+                            };
                             if recreated && visible_surface.is_waiting() {
-                                present_waiting_surface(
+                                if let Err(err) = present_waiting_surface(
                                     &mut backend,
                                     &mut scanout_runtime,
                                     &active,
                                     transfer_format,
-                                )?;
+                                ) {
+                                    if aio_mode {
+                                        gud_data.poison_exact_payload_aio(
+                                            "waiting scanout presentation failed during processing",
+                                        );
+                                        bulk_receive_session.poison();
+                                        receive_telemetry.processing_failed += 1;
+                                        receive_telemetry.poisoned += 1;
+                                    }
+                                    tracing::error!(
+                                        error = %format_args!("{err:#}"),
+                                        "Failed to present recreated waiting scanout"
+                                    );
+                                    if aio_mode {
+                                        continue;
+                                    }
+                                    return Err(err).context("present recreated waiting scanout");
+                                }
                             }
                         }
 
@@ -4805,8 +4874,30 @@ fn main() -> anyhow::Result<()> {
                         let (physical_width, physical_height) = active.size();
                         let physical_pitch = active.pitch();
                         let scaled_mode = if dynamic_mode_match {
+                            let presentation_route = match scanout_runtime.dynamic_routes() {
+                                Ok(routes) => routes.presentation_route,
+                                Err(err) => {
+                                    if aio_mode {
+                                        gud_data.poison_exact_payload_aio(
+                                            "dynamic route lookup failed during processing",
+                                        );
+                                        bulk_receive_session.poison();
+                                        receive_telemetry.processing_failed += 1;
+                                        receive_telemetry.poisoned += 1;
+                                    }
+                                    tracing::error!(
+                                        error = %format_args!("{err:#}"),
+                                        "Failed to inspect dynamic presentation route"
+                                    );
+                                    if !aio_mode {
+                                        return Err(err)
+                                            .context("inspect dynamic presentation route");
+                                    }
+                                    continue;
+                                }
+                            };
                             matches!(
-                                scanout_runtime.dynamic_routes()?.presentation_route,
+                                presentation_route,
                                 Some(
                                     PresentationRoute::ScaledBaseline { .. }
                                         | PresentationRoute::ScaledCurrentAfterFailure { .. }
@@ -4825,12 +4916,26 @@ fn main() -> anyhow::Result<()> {
                                         height: source_height,
                                         format: transfer_format.gud_pixel_format(),
                                     };
-                                    if dynamic_mode_match {
-                                        ensure!(
-                                            shadow.is_active(identity),
-                                            "dynamic scaled route shadow identity changed outside \
-                                             STATE_COMMIT"
+                                    if dynamic_mode_match && !shadow.is_active(identity) {
+                                        let err = anyhow::anyhow!(
+                                            "dynamic scaled route shadow identity changed outside STATE_COMMIT"
                                         );
+                                        if aio_mode {
+                                            gud_data.poison_exact_payload_aio(
+                                                "dynamic shadow identity changed during processing",
+                                            );
+                                            bulk_receive_session.poison();
+                                            receive_telemetry.processing_failed += 1;
+                                            receive_telemetry.poisoned += 1;
+                                        }
+                                        tracing::error!(
+                                            error = %format_args!("{err:#}"),
+                                            "Dynamic scaled route shadow identity is invalid"
+                                        );
+                                        if !aio_mode {
+                                            return Err(err);
+                                        }
+                                        continue;
                                     } else if let Err(err) = shadow.ensure_size(identity) {
                                         if aio_mode {
                                             gud_data.poison_exact_payload_aio(
@@ -5102,15 +5207,56 @@ fn main() -> anyhow::Result<()> {
 
                         if matches!(pattern_mode, PatternMode::Off) && visible_surface.is_waiting()
                         {
-                            backend
-                                .set_crtc(active.front_framebuffer(), active.mode())
-                                .context("present first valid content frame")?;
-                            tracing::info!(
-                                from = ?visible_surface,
-                                to = ?VisibleSurface::Content,
-                                "Presented first valid content frame for USB session"
-                            );
-                            visible_surface = VisibleSurface::Content;
+                            // Terminal USB boundaries intentionally retain the content buffers.
+                            // Do not expose their stale regions when a new session starts with a
+                            // legal partial update; require one complete logical frame first.
+                            if !is_full_frame_update(&info, source_width, source_height) {
+                                tracing::info!(
+                                    rect = ?clip,
+                                    source_width,
+                                    source_height,
+                                    "Keeping waiting scanout visible until a full-frame content update arrives"
+                                );
+                            } else {
+                                let present_result = backend
+                                    .page_flip(active.front_framebuffer())
+                                    .or_else(|page_flip_err| {
+                                        tracing::warn!(
+                                            "First-content page flip failed ({}), falling back to set_crtc",
+                                            page_flip_err
+                                        );
+                                        backend.set_crtc(active.front_framebuffer(), active.mode())
+                                    });
+                                match present_result {
+                                    Ok(()) => {
+                                        tracing::info!(
+                                            from = ?visible_surface,
+                                            to = ?VisibleSurface::Content,
+                                            "Presented first valid content frame for USB session"
+                                        );
+                                        visible_surface = VisibleSurface::Content;
+                                    }
+                                    Err(err) => {
+                                        if aio_mode {
+                                            gud_data.poison_exact_payload_aio(
+                                                "content presentation failed during processing",
+                                            );
+                                            bulk_receive_session.poison();
+                                            receive_telemetry.processing_failed += 1;
+                                            receive_telemetry.poisoned += 1;
+                                        }
+                                        tracing::error!(
+                                            error = %format_args!("{err:#}"),
+                                            "Failed to present first valid content frame"
+                                        );
+                                        if aio_mode {
+                                            continue;
+                                        }
+                                        return Err(err)
+                                            .context("present first valid content frame");
+                                    }
+                                }
+                            }
                         }
 
                         let total_ms = frame_start.elapsed().as_millis();
@@ -5423,20 +5569,20 @@ mod tests {
         advertised_preferred_mode_index, classify_usb_lifecycle, compute_scaled_layout,
         conflicts_with_owned_exact_receive, derive_mode_from_native, diagnostic_pattern_color,
         dump_pixel_buffer_ppm, event_timeout_for_ready_payload, fill_diagnostic_pattern_rect,
-        parse_e1_t05_inflight_deadline, parse_functionfs_read_size, parse_test_compression,
-        parse_test_dynamic_mode_match, parse_test_max_buffer_size, parse_test_output_mode,
-        parse_test_prearm_once_bytes, parse_test_row_crc_trace, parse_test_status_on_set_bytes,
-        parse_test_status_on_set_two_transactions_bytes, read_pixel, record_host_activity,
-        render_waiting_screen, row_crc32, scale_to_fit, surface_after_resume,
-        surface_after_suspend, validate_test_mode_policy, waiting_scene_glyph, write_pixel,
-        BulkReceiveSession, BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind,
-        GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind, ProvenIdleGate, ScaledLayout,
-        ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, StatusOnSetCleanupDrain,
-        StatusOnSetCleanupObservation, StatusOnSetCleanupPhase, TestOutputMode, TransferFormat,
-        UsbLifecycleInput, UsbLifecycleResult, UsbSessionState, VisibleSurface,
-        BULK_RECEIVE_DEADLINE, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN,
-        COLOR_LIGHT_GRAY, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, RGB565_GREEN,
-        RGB565_WHITE, STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE,
+        is_full_frame_update, parse_e1_t05_inflight_deadline, parse_functionfs_read_size,
+        parse_test_compression, parse_test_dynamic_mode_match, parse_test_max_buffer_size,
+        parse_test_output_mode, parse_test_prearm_once_bytes, parse_test_row_crc_trace,
+        parse_test_status_on_set_bytes, parse_test_status_on_set_two_transactions_bytes,
+        read_pixel, record_host_activity, render_waiting_screen, row_crc32, scale_to_fit,
+        surface_after_resume, surface_after_suspend, validate_test_mode_policy,
+        waiting_scene_glyph, write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode,
+        GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind,
+        ProvenIdleGate, ScaledLayout, ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity,
+        StatusOnSetCleanupDrain, StatusOnSetCleanupObservation, StatusOnSetCleanupPhase,
+        TestOutputMode, TransferFormat, UsbLifecycleInput, UsbLifecycleResult, UsbSessionState,
+        VisibleSurface, BULK_RECEIVE_DEADLINE, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN,
+        COLOR_DARK_GRAY, COLOR_GREEN, COLOR_LIGHT_GRAY, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE,
+        COLOR_YELLOW, RGB565_GREEN, RGB565_WHITE, STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
@@ -6801,6 +6947,23 @@ mod tests {
             surface_after_resume(VisibleSurface::WaitingDisconnected),
             VisibleSurface::WaitingDisconnected
         );
+    }
+
+    #[test]
+    fn first_content_presentation_requires_a_full_frame_update() {
+        let full = SetBuffer {
+            x: 0,
+            y: 0,
+            width: 64,
+            height: 32,
+            length: 64 * 32 * 2,
+            compression: 0,
+            compressed_length: 0,
+        };
+        assert!(is_full_frame_update(&full, 64, 32));
+
+        let partial = SetBuffer { width: 63, ..full };
+        assert!(!is_full_frame_update(&partial, 64, 32));
     }
 
     #[test]
