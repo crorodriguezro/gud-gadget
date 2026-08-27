@@ -1,0 +1,12 @@
+phone_kernel=4.9.112-g6b190d86b
+phone_usb_role=host
+phone_gud_card=/dev/dri/card1
+phone_xdisp_payload_timing=Y
+phone_xdisp_frame_stats=Y
+pi_kernel=6.12.47+rpt-rpi-v8-ffs-xfercompltrace
+pi_gud_userspace=active
+pi_udc=configured
+pi_throttled=0x0
+pi_temperature=44.0'C
+usb_identity=1d50:614d at dynamic path 1-1.3
+page_flip_completion=not instrumented; page_flip submission only

@@ -1,0 +1,3 @@
+mode,telemetry,elapsed_s,submitted_fps,presented_fps,drop_pct,notes
+720p-motion,disabled,15.0,30,29,0,15-second sanity control
+720p-motion,enabled,15.0,29,29,0,15-second sanity control
