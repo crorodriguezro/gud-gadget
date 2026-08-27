@@ -1,0 +1,6 @@
+branch: development
+HEAD: d3cb0248e4c819902770b5a88ea680fda322bf6f
+tracked T03 changes: drm/src/main.rs, drm/src/modes.rs, drm/src/scanout.rs,
+docs/DEPLOY.md, docs/XDISP-P2.1-DYNAMIC-MODE-MATCHING-TEST.md,
+systemd/test-only/50-xdisp-p2.1-dynamic-mode-match.conf
+pre-existing untracked evidence/build outputs preserved; no commit, reset, or push

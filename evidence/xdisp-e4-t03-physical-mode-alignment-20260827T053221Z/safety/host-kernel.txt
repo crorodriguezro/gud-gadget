@@ -1,0 +1,8 @@
+OnePlus 6: Linux 4.9.112-g6b190d86b
+USB path: /sys/bus/usb/devices/1-1.3, 1d50:614d, 480 Mbit/s
+deployed module: /home/phablet/gud.ko
+module SHA-256: 249b9591e47702cb65aa0b18567047e6c57fd3fd82739e49204b65c050f47809
+GET_CONNECTOR_MODES count=28
+Final xdisp.service: active; phone uptime 4h29m and responsive.
+Tail fault scan: no BUG, Oops, panic, use-after-free, xHCI fault, GUD timeout,
+short-read, poison, or error match.

@@ -1,0 +1,6 @@
+docs/XDISP-P2.1-DYNAMIC-MODE-MATCHING-TEST.md now identifies historical
+12,800-byte and 16 KiB statements as superseded snapshots.
+docs/DEPLOY.md states the current negotiated full-frame logical model:
+1280x720 RGB565 = 1,843,200 bytes; 16 KiB is internal FunctionFS/DWC2 chunking.
+The dynamic-mode environment flag is documented as an obsolete compatibility
+no-op, not a production deployment requirement.

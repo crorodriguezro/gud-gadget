@@ -1,0 +1,3 @@
+gud/PROJECT-ROADMAP.md E4-T03 changed from in progress to verified and now
+states the C-aligned exact complete-timing lookup, VC4 modeset/direct scanout,
+and synthetic-only scaled fallback policy. E4-T04 and E4-T05 remain planned.

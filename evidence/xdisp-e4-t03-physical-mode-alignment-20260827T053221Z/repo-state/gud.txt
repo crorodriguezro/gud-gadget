@@ -1,0 +1,4 @@
+branch: development
+HEAD: cde24e9a60c8233262cbd508c16418a4e44b1e7b
+tracked T03 changes: backport-4.9/gud_connector.c, backport-4.9/gud_protocol.h, PROJECT-ROADMAP.md
+pre-existing untracked build outputs preserved; no branch switch, commit, reset, or push

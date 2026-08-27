@@ -1,0 +1,7 @@
+Raspberry Pi: Linux 6.12.47+rpt-rpi-v8-ffs-xfercompltrace
+UDC 3f980000.usb: configured
+final service: active
+final binary SHA-256: cdf83d37cf4994fa951d72c0dc54ae340aba126f399ec1373f9ca850ebb7cd21
+Pi uptime 12h58m and responsive.
+Kernel scan since gate start: no BUG, Oops, panic, use-after-free, DWC2 fault,
+VC4 fault, or error match.

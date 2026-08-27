@@ -48,6 +48,7 @@ const BULK_RECEIVE_DEADLINE: Duration = Duration::from_millis(1_000);
 const STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE: Duration = Duration::from_millis(1_000);
 const STATUS_ON_SET_CLEANUP_STATUS_COUNT: u8 = 2;
 const STATUS_ON_SET_DIAGNOSTIC_TRANSACTION_LIMIT: u8 = 2;
+const SYNTHETIC_PORTRAIT_SIZES: [(u16, u16); 3] = [(900, 1900), (810, 1710), (720, 1520)];
 const E1_T05_PROCESSING_BARRIER_DEADLINE: Duration = Duration::from_secs(30);
 const E1_T05_INFLIGHT_DEADLINE_MAX: Duration = Duration::from_secs(120);
 
@@ -2330,6 +2331,10 @@ fn parse_test_dynamic_mode_match(raw: Option<&OsStr>) -> anyhow::Result<bool> {
     Ok(true)
 }
 
+fn physical_mode_routing_enabled() -> bool {
+    true
+}
+
 fn parse_test_row_crc_trace(raw: Option<&OsStr>) -> anyhow::Result<bool> {
     let Some(raw) = raw else {
         return Ok(false);
@@ -2407,17 +2412,6 @@ fn select_output_mode(
                 requested.width, requested.height
             )
         })
-}
-
-fn validate_test_mode_policy(
-    dynamic_mode_match: bool,
-    test_output_mode: Option<TestOutputMode>,
-) -> anyhow::Result<()> {
-    ensure!(
-        !(dynamic_mode_match && test_output_mode.is_some()),
-        "GUD_TEST_DYNAMIC_MODE_MATCH and GUD_TEST_OUTPUT_MODE are mutually exclusive"
-    );
-    Ok(())
 }
 
 fn release_dynamic_candidate_in_available_slots<B: ScanoutBackend>(
@@ -2756,6 +2750,15 @@ fn record_committed_route<B: ScanoutBackend>(
     route: PresentationRoute,
     new_physical_key: Option<ModeKey>,
 ) -> anyhow::Result<()> {
+    let route_changed = runtime.dynamic_routes()?.presentation_route != Some(route);
+    if route_changed {
+        runtime.counters().route_changed();
+    }
+    let new_physical_key = committed_physical_key(
+        route,
+        new_physical_key,
+        runtime.dynamic_routes()?.baseline_physical_key,
+    );
     let routes = runtime.dynamic_routes_mut()?;
     routes.committed_snapshot = Some(snapshot);
     routes.presentation_route = Some(route);
@@ -2764,6 +2767,17 @@ fn record_committed_route<B: ScanoutBackend>(
     }
     routes.candidate_key = None;
     Ok(())
+}
+
+fn committed_physical_key(
+    route: PresentationRoute,
+    requested: Option<ModeKey>,
+    baseline: ModeKey,
+) -> Option<ModeKey> {
+    match route {
+        PresentationRoute::ScaledBaseline { .. } => Some(baseline),
+        _ => requested,
+    }
 }
 
 fn take_matching_pending_plan<M>(
@@ -2831,8 +2845,12 @@ fn main() -> anyhow::Result<()> {
         0
     };
     let test_output_mode = parse_test_output_mode(test_output_mode_raw.as_deref())?;
-    let dynamic_mode_match = parse_test_dynamic_mode_match(test_dynamic_mode_match_raw.as_deref())?;
-    validate_test_mode_policy(dynamic_mode_match, test_output_mode)?;
+    let legacy_dynamic_mode_match_requested =
+        parse_test_dynamic_mode_match(test_dynamic_mode_match_raw.as_deref())?;
+    // Exact complete-timing routing is production behavior. Keep accepting the
+    // historical test flag so old drop-ins do not prevent startup, but it no
+    // longer changes mode advertisement or scanout behavior.
+    let dynamic_mode_match = physical_mode_routing_enabled();
     if let Some(prearm_bytes) = test_prearm_once_bytes {
         ensure!(
             descriptor_max_buffer_size == Some(prearm_bytes as u32),
@@ -2975,10 +2993,10 @@ fn main() -> anyhow::Result<()> {
              when GUD_TEST_OUTPUT_MODE is absent"
         );
     }
-    if dynamic_mode_match {
+    if legacy_dynamic_mode_match_requested {
         warn!(
-            "TEST-ONLY dynamic physical-mode matching enabled; this is not normal/default \
-             behavior and requires the XDISP-P2.1 hardware gates before promotion"
+            "GUD_TEST_DYNAMIC_MODE_MATCH is obsolete; exact complete-timing physical-mode \
+             routing is enabled in normal runtime"
         );
     }
     info!("Opening DRM device: {}", card_path);
@@ -3039,15 +3057,33 @@ fn main() -> anyhow::Result<()> {
             max_height = height
         }
     }
+    for (width, height) in SYNTHETIC_PORTRAIT_SIZES {
+        min_width = min_width.min(width.into());
+        max_width = max_width.max(width.into());
+        min_height = min_height.min(height.into());
+        max_height = max_height.max(height.into());
+    }
 
     min_width = min_width.min(640);
     min_height = min_height.min(480);
     max_width = max_width.max(1920);
     max_height = max_height.max(1080);
+    let largest_advertised_pixels = connector_modes
+        .iter()
+        .map(|mode| {
+            let (width, height) = mode.size();
+            u32::from(width) * u32::from(height)
+        })
+        .chain(
+            SYNTHETIC_PORTRAIT_SIZES
+                .into_iter()
+                .map(|(width, height)| u32::from(width) * u32::from(height)),
+        )
+        .max()
+        .context("serialized descriptor mode catalog is empty")?;
     let serialized_max_buffer_size = descriptor_max_buffer_size.unwrap_or(
-        max_width
-            .checked_mul(max_height)
-            .and_then(|pixels| pixels.checked_mul(4))
+        largest_advertised_pixels
+            .checked_mul(transfer_format.bytes_per_pixel() as u32)
             .context("serialized descriptor maximum buffer size overflow")?,
     );
     let descriptor_flags = if aio_mode {
@@ -3129,13 +3165,8 @@ fn main() -> anyhow::Result<()> {
 
     let native_mode = physical_catalog_modes[preferred_mode_index].timing.clone();
 
-    let portrait_modes = [
-        (900_u16, 1900_u16),
-        (810_u16, 1710_u16),
-        (720_u16, 1520_u16),
-    ];
     let mut synthetic_modes = Vec::new();
-    for (w, h) in portrait_modes {
+    for (w, h) in SYNTHETIC_PORTRAIT_SIZES {
         if !physical_catalog_modes
             .iter()
             .any(|candidate| candidate.timing.hdisplay == w && candidate.timing.vdisplay == h)
@@ -4055,6 +4086,7 @@ fn main() -> anyhow::Result<()> {
                             PendingPlanKind::ExactActiveNoOp => {
                                 shadow.invalidate_content();
                                 scanout_runtime.counters().no_op();
+                                scanout_runtime.counters().same_mode_noop();
                                 PresentationRoute::DirectExact {
                                     logical: logical_key,
                                     physical: old_physical_key,
@@ -5566,23 +5598,24 @@ fn main() -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::{
-        advertised_preferred_mode_index, classify_usb_lifecycle, compute_scaled_layout,
-        conflicts_with_owned_exact_receive, derive_mode_from_native, diagnostic_pattern_color,
-        dump_pixel_buffer_ppm, event_timeout_for_ready_payload, fill_diagnostic_pattern_rect,
-        is_full_frame_update, parse_e1_t05_inflight_deadline, parse_functionfs_read_size,
-        parse_test_compression, parse_test_dynamic_mode_match, parse_test_max_buffer_size,
-        parse_test_output_mode, parse_test_prearm_once_bytes, parse_test_row_crc_trace,
-        parse_test_status_on_set_bytes, parse_test_status_on_set_two_transactions_bytes,
-        read_pixel, record_host_activity, render_waiting_screen, row_crc32, scale_to_fit,
-        surface_after_resume, surface_after_suspend, validate_test_mode_policy,
-        waiting_scene_glyph, write_pixel, BulkReceiveSession, BulkReceiveState, DisplayMode,
-        GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey, PendingPlan, PendingPlanKind,
-        ProvenIdleGate, ScaledLayout, ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity,
-        StatusOnSetCleanupDrain, StatusOnSetCleanupObservation, StatusOnSetCleanupPhase,
-        TestOutputMode, TransferFormat, UsbLifecycleInput, UsbLifecycleResult, UsbSessionState,
-        VisibleSurface, BULK_RECEIVE_DEADLINE, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN,
-        COLOR_DARK_GRAY, COLOR_GREEN, COLOR_LIGHT_GRAY, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE,
-        COLOR_YELLOW, RGB565_GREEN, RGB565_WHITE, STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE,
+        advertised_preferred_mode_index, classify_usb_lifecycle, committed_physical_key,
+        compute_scaled_layout, conflicts_with_owned_exact_receive, derive_mode_from_native,
+        diagnostic_pattern_color, dump_pixel_buffer_ppm, event_timeout_for_ready_payload,
+        fill_diagnostic_pattern_rect, is_full_frame_update, parse_e1_t05_inflight_deadline,
+        parse_functionfs_read_size, parse_test_compression, parse_test_dynamic_mode_match,
+        parse_test_max_buffer_size, parse_test_output_mode, parse_test_prearm_once_bytes,
+        parse_test_row_crc_trace, parse_test_status_on_set_bytes,
+        parse_test_status_on_set_two_transactions_bytes, physical_mode_routing_enabled, read_pixel,
+        record_host_activity, render_waiting_screen, row_crc32, scale_to_fit, surface_after_resume,
+        surface_after_suspend, waiting_scene_glyph, write_pixel, BulkReceiveSession,
+        BulkReceiveState, DisplayMode, GadgetShutdown, GadgetUnbind, GadgetUnbindOutcome, ModeKey,
+        PendingPlan, PendingPlanKind, PresentationRoute, ProvenIdleGate, ScaledLayout,
+        ShadowActivation, ShadowFramebuffer, ShadowRasterIdentity, StatusOnSetCleanupDrain,
+        StatusOnSetCleanupObservation, StatusOnSetCleanupPhase, TestOutputMode, TransferFormat,
+        UsbLifecycleInput, UsbLifecycleResult, UsbSessionState, VisibleSurface,
+        BULK_RECEIVE_DEADLINE, COLOR_BLACK, COLOR_BLUE, COLOR_CYAN, COLOR_DARK_GRAY, COLOR_GREEN,
+        COLOR_LIGHT_GRAY, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE, COLOR_YELLOW, RGB565_GREEN,
+        RGB565_WHITE, STATUS_ON_SET_CLEANUP_DRAIN_DEADLINE,
     };
     use drm::control::ModeTypeFlags;
     use gud_gadget::{
@@ -5608,6 +5641,35 @@ mod tests {
             16_384
         );
         assert!(parse_functionfs_read_size(Some(OsStr::new("not-a-size"))).is_err());
+    }
+
+    #[test]
+    fn scaled_baseline_commit_restores_baseline_physical_identity() {
+        let baseline = ModeKey::new(0, &native_mode());
+        let mut exact_mode = native_mode();
+        exact_mode.clock += 1;
+        let exact = ModeKey::new(0, &exact_mode);
+        let logical = ModeKey::new(0, &derive_mode_from_native(&native_mode(), 720, 1520));
+
+        assert_eq!(
+            committed_physical_key(
+                PresentationRoute::ScaledBaseline { logical },
+                None,
+                baseline,
+            ),
+            Some(baseline)
+        );
+        assert_eq!(
+            committed_physical_key(
+                PresentationRoute::DirectExact {
+                    logical: exact,
+                    physical: exact,
+                },
+                Some(exact),
+                baseline,
+            ),
+            Some(exact)
+        );
     }
 
     #[test]
@@ -5969,25 +6031,8 @@ mod tests {
     }
 
     #[test]
-    fn dynamic_and_fixed_output_test_policies_are_mutually_exclusive() {
-        assert!(validate_test_mode_policy(false, None).is_ok());
-        assert!(validate_test_mode_policy(
-            false,
-            Some(TestOutputMode {
-                width: 1280,
-                height: 720,
-            })
-        )
-        .is_ok());
-        assert!(validate_test_mode_policy(true, None).is_ok());
-        assert!(validate_test_mode_policy(
-            true,
-            Some(TestOutputMode {
-                width: 1280,
-                height: 720,
-            })
-        )
-        .is_err());
+    fn exact_physical_mode_routing_is_enabled_by_default() {
+        assert!(physical_mode_routing_enabled());
     }
 
     #[test]

@@ -1,0 +1,2 @@
+VC4 HDMI-A-1 exact 1080p60:
+clock=148500 hdisplay=1920 hsync_start=2008 hsync_end=2052 htotal=2200 vdisplay=1080 vsync_start=1084 vsync_end=1089 vtotal=1125 flags=phsync,pvsync (0x5) type=driver

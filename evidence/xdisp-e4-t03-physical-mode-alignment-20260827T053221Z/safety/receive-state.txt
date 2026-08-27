@@ -1,0 +1,12 @@
+Final corrected controlled sequence:
+accepted_transactions=2 aio_accepted=2 aio_completed=2
+processing_started=2 processing_completed=2 processing_failed=0
+poisoned_transactions=0 timed_out_transactions=0
+aggregate_state=Idle aio_state=Idle currently_owned=false
+
+Longer pre-correction qualification sequence:
+accepted_transactions=16 aio_completed=16 processing_completed=16
+processing_failed=0 poisoned_transactions=0 timed_out_transactions=0
+
+One AIO request/logical update; no logical payload pipeline; FunctionFS 16384
+bytes remains only an internal request/chunking ceiling.

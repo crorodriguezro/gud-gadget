@@ -1,0 +1,12 @@
+behavior,c_reference,rust_equivalent,equivalent_before_t03,action
+connector_probe,gud_gadget_probe_connector/get fill_modes,get_connector startup,PARTIAL,retain startup and document missing live reprobe
+mode_enumeration,connector modes list,connector_modes to PhysicalCatalogMode,YES,none
+edid_exposure,edid_blob_ptr and GET_CONNECTOR_EDID,no physical EDID response,NO,separate follow-up boundary
+preferred_mode,gud_from_display_mode mode flags,PREFERRED scan with index-0 fallback,YES,retain
+gud_conversion,gud_from_display_mode,copy every complete libdrm timing,YES,retain
+set_state_lookup,gud_to_display_mode,complete ModeKey lookup,PARTIAL,promote normal runtime
+framebuffer_allocation,mode dimensions and format,exact scanout dimensions and negotiated backend format,YES,retain
+modeset_check,drm_client_modeset_check,catalog/allocation validation without test commit,PARTIAL,retain non-destructive preparation
+modeset_commit,drm_client_modeset_commit,set_crtc original libdrm Mode,PARTIAL,promote normal runtime
+same_mode,buffer reuse but modeset commit,ExactActiveNoOp,YES_project_stricter,retain
+hotplug,drm client hotplug callback,startup-only catalog,NO,document remaining boundary

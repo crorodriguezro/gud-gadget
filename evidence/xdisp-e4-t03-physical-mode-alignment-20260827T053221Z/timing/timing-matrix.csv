@@ -1,0 +1,15 @@
+mode,layer,connector,clock_khz,hdisplay,hsync_start,hsync_end,htotal,vdisplay,vsync_start,vsync_end,vtotal,user_flags,status
+720p60,Pi_VC4_physical,0,74250,1280,1390,1430,1650,720,725,730,750,0x5,captured
+720p60,Rust_PhysicalCatalogMode,0,74250,1280,1390,1430,1650,720,725,730,750,0x5,source_mapping_proven
+720p60,GUD_advertised,0,74250,1280,1390,1430,1650,720,725,730,750,0x5,source_mapping_proven
+720p60,host_visible,0,74250,1280,1390,1430,1650,720,725,730,750,0x5,live_captured
+720p60,SET_STATE_selected,0,74250,1280,1390,1430,1650,720,725,730,750,0x5,live_captured
+720p60,ModeKey_lookup,0,74250,1280,1390,1430,1650,720,725,730,750,0x5,live_exact
+720p60,selected_Pi_mode,0,74250,1280,1390,1430,1650,720,725,730,750,0x5,live_exact
+1080p60,Pi_VC4_physical,0,148500,1920,2008,2052,2200,1080,1084,1089,1125,0x5,captured
+1080p60,Rust_PhysicalCatalogMode,0,148500,1920,2008,2052,2200,1080,1084,1089,1125,0x5,source_mapping_proven
+1080p60,GUD_advertised,0,148500,1920,2008,2052,2200,1080,1084,1089,1125,0x5_plus_private_preferred,source_mapping_proven
+1080p60,host_visible,0,148500,1920,2008,2052,2200,1080,1084,1089,1125,0x5,live_captured
+1080p60,SET_STATE_selected,0,148500,1920,2008,2052,2200,1080,1084,1089,1125,0x5,live_captured
+1080p60,ModeKey_lookup,0,148500,1920,2008,2052,2200,1080,1084,1089,1125,0x5,live_exact
+1080p60,selected_Pi_mode,0,148500,1920,2008,2052,2200,1080,1084,1089,1125,0x5,live_exact

@@ -1,0 +1,13 @@
+selected synthetic key: 78214:720:753:769:824:1520:1525:1532:1582:0x0
+classification: ScaledFallback in RouteCatalog
+mode_check: ScaledBaseline { switch_required: true }
+mode_commit: ScaledBaseline
+logical size: 720x1520
+physical baseline after corrected commit: exact 1920x1080 preferred VC4 timing
+active physical framebuffer: 1920x1080 RGB565, pitch 3840
+frame_stats: source=720x1520 scaled=true output_bytes=2188800 read_calls=1 scale_ms=153
+
+The first live run exposed stale current_physical telemetry on return to the
+baseline. Production state now retains baseline_physical_key explicitly; a
+focused regression test and corrected live rerun prove key, allocation, and
+VC4 CRTC all agree on 1920x1080.

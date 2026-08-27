@@ -1,0 +1,6 @@
+dimensions: 1280x720
+format: packed RGB565 (GUD 0x40, 16 bpp)
+pitch: 2560
+mapping lengths: 1843200,1843200
+logical source bytes/frame: 1843200
+frame_stats: source=1280x720 scaled=false output_bytes=1843200 read_calls=1

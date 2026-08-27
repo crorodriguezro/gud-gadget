@@ -1,0 +1,17 @@
+Captured 2026-08-27 UTC before E4-T03 deployment.
+
+kernel: Linux raspberrypi 6.12.47+rpt-rpi-v8-ffs-xfercompltrace #2 SMP PREEMPT Sun Aug 16 23:57:59 -05 2026 aarch64
+service: active
+UDC: configured before phone role recovery; suspended/Idle after recovery detach
+binary: /home/cristian/gud-drm-e3-b01-functionfs-epoch
+binary_sha256: 3ad1b77a3e814020c0dfb7201b5c676c21a8fd50ad9cd6a07d7d1da74c103e2a
+connector: card0-HDMI-A-1 connected
+active_fb_mode_before_deploy: 1920x1080 (fb0)
+physical_mode_count_modetest: 25
+drm_preferred_flags_present: NO
+advertisement_preferred_fallback: physical connector index 0, exact 1920x1080 148500 kHz timing
+deployed_catalog: 25 Exact + 3 ScaledFallback = 28 entries
+deployed_logical_max_buffer: 1843200 bytes
+deployed_transfer_format: RGB565
+deployed_dynamic_mode_match: false
+receive_state_at_last recorded suspend: Idle

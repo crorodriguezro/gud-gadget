@@ -1,0 +1,8 @@
+selected logical key: 74250:1280:1390:1430:1650:720:725:730:750:0x5
+mode_check: ExactCandidate
+mode_commit route: DirectExact
+old physical: 148500:1920:2008:2052:2200:1080:1084:1089:1125:0x5
+new physical: 74250:1280:1390:1430:1650:720:725:730:750:0x5
+active slot: 1
+modeset_commits after first transition: 1
+route_changes after first transition: 1

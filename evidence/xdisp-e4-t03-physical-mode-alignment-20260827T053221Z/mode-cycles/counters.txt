@@ -1,0 +1,7 @@
+After five round trips and the first same-mode 720p transition:
+modeset_commits=13 route_changes=13 framebuffer_allocations=42
+Repeated 720p commit 1: modeset_commits=13 route_changes=13 framebuffer_allocations=42 same_mode_noops=1 mode_switch_ms=0
+Repeated 720p commit 2: modeset_commits=13 route_changes=13 framebuffer_allocations=42 same_mode_noops=2 mode_switch_ms=0
+
+Expected idempotence held: repeated identical complete timing and format did not
+allocate, modeset, or change route.

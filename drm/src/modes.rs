@@ -308,6 +308,46 @@ mod tests {
     }
 
     #[test]
+    fn physical_mode_beats_an_identical_synthetic_timing() {
+        let timing = mode(74_250, 1280, 720, 0x5);
+        let catalog = RouteCatalog::build(
+            0,
+            &[physical(17, timing.clone())],
+            0,
+            std::slice::from_ref(&timing),
+        )
+        .unwrap();
+
+        assert_eq!(catalog.entries().len(), 1);
+        assert_eq!(
+            catalog.entry_for_mode(&timing).unwrap().route,
+            CatalogRoute::Exact(17)
+        );
+    }
+
+    #[test]
+    fn route_lookups_do_not_change_advertised_mode_order_or_preference() {
+        let preferred = mode(148_500, 1920, 1080, 0x5);
+        let second = mode(74_250, 1280, 720, 0x5);
+        let synthetic = mode(103_000, 900, 1900, 0);
+        let catalog = RouteCatalog::build(
+            0,
+            &[physical(1, preferred.clone()), physical(2, second.clone())],
+            0,
+            std::slice::from_ref(&synthetic),
+        )
+        .unwrap();
+        let before = catalog.advertised_modes();
+
+        assert!(catalog.entry_for_mode(&second).is_some());
+        assert!(catalog.entry_for_mode(&synthetic).is_some());
+        assert!(catalog.entry_for_mode(&preferred).is_some());
+
+        assert_eq!(catalog.advertised_modes(), before);
+        assert_eq!(catalog.preferred_entry().advertised_mode, before[0]);
+    }
+
+    #[test]
     fn host_masked_echo_matches_the_catalog_entry() {
         let mut physical_mode = mode(74_250, 1280, 720, 0x21);
         physical_mode.flags |= (1 << 31) | GUD_DISPLAY_MODE_FLAG_PREFERRED;

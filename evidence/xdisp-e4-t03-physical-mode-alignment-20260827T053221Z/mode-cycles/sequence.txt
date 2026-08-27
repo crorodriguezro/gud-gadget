@@ -1,0 +1,6 @@
+USB session remained configured throughout.
+Initial gates: 720p, 1080p.
+Five full round trips: 720p -> 1080p repeated 5 times (10 transitions).
+All 10 mode runner invocations exited 0.
+Same-mode sequence: 720p -> 720p -> 720p.
+Synthetic regression sequence after corrected deploy: exact 720p -> synthetic 720x1520.

@@ -464,6 +464,20 @@ Activation and rollback must follow
 FunctionFS receive state is `Idle`, and only then stop/install/start the
 service. The host must explicitly commit the matching 1280x720 GUD mode.
 
+### Exact physical modes in normal runtime
+
+The gadget advertises the connected DRM connector's complete physical timings.
+When the host commits one of those modes, normal runtime uses an exact timing
+lookup and modesets the connector to the original physical DRM mode. Synthetic
+portrait modes remain on the scaled fallback path. Do not install
+`systemd/test-only/50-xdisp-p2.1-dynamic-mode-match.conf` in production;
+`GUD_TEST_DYNAMIC_MODE_MATCH=1` is obsolete and accepted only so an old drop-in
+does not prevent startup.
+
+Transport remains one negotiated logical update at a time. For 1280x720
+RGB565 the full logical payload is 1,843,200 bytes. A 16 KiB FunctionFS/DWC2
+request size is only internal request chunking, not a logical GUD limit.
+
 The subsequent stock-preserving `g_dma=0` one-shot kernel also failed on the
 first 16,274-byte normal laptop payload. The host completed the entire URB,
 but FunctionFS returned only 3,986 bytes and DWC2 retained a matching

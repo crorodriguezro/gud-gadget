@@ -1,0 +1,11 @@
+OnePlus host-visible list count: 28
+mode 0: 148500:1920:2008:2052:2200:1080:1084:1089:1125:0x5
+mode 4: 122240:900:941:961:1030:1900:1907:1915:1978:0x0 (synthetic)
+mode 7: 99003:810:847:865:927:1710:1716:1723:1780:0x0 (synthetic)
+mode 11: 78214:720:753:769:824:1520:1525:1532:1582:0x0 (synthetic)
+mode 14: 74250:1280:1390:1430:1650:720:725:730:750:0x5
+
+The remaining entries preserve the physical connector order after the DRM
+mode-list ordering rules. The phone's GET_CONNECTOR_MODES log reports count=28.
+Host-visible list SHA-256 before switches: d169c3d69a598ee991c1fbfeef5d169fa2f970ec5f5df63828150f85a03b3cc7
+Host-visible list SHA-256 after switches:  d169c3d69a598ee991c1fbfeef5d169fa2f970ec5f5df63828150f85a03b3cc7

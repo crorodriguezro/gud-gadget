@@ -1,0 +1,7 @@
+VC4 modetest reports all 25 HDMI-A-1 modes as type=driver and none as preferred.
+Rust advertised_preferred_mode_index therefore applies its documented connector
+index-0 fallback. The resulting preferred complete timing is:
+
+clock=148500,hdisplay=1920,hsync_start=2008,hsync_end=2052,htotal=2200,vdisplay=1080,vsync_start=1084,vsync_end=1089,vtotal=1125,flags=0x5
+
+Only the advertised GUD copy adds the private preferred bit; ModeKey masks it.

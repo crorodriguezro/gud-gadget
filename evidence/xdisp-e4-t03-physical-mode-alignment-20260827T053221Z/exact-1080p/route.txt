@@ -1,0 +1,5 @@
+selected logical key: 148500:1920:2008:2052:2200:1080:1084:1089:1125:0x5
+mode_check: ExactCandidate
+mode_commit route: DirectExact
+new physical: 148500:1920:2008:2052:2200:1080:1084:1089:1125:0x5
+frame_stats: source=1920x1080 scaled=false read_calls=1

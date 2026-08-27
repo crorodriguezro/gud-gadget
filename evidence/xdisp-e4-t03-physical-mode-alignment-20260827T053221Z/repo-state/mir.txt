@@ -1,0 +1,5 @@
+canonical clean worktree: /home/cristianr/Projects/linux-mobile/.worktrees/e4-t06-minimal-mir-integration
+branch: development
+HEAD: eb7d70cbaae8570124f3db569f05b9adcbc68428
+T03 changes: none
+The separate historical dirty checkout was preserved and not modified.

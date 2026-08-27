@@ -1,0 +1,21 @@
+Scope: gud-gadget/drm/src and gud-gadget/gadget/src production plus tests
+
+Production classifications:
+- drm/src/main.rs max_width.max(1920), max_height.max(1080): E, conservative
+  GUD descriptor geometry floor; not a physical connector selection policy.
+- drm/src/main.rs portrait tuple 720x1520: A, intentional synthetic product
+  mode; RouteCatalog assigns ScaledFallback unless a complete physical timing
+  already owns the key.
+- drm/src/main.rs diagnostic 12800 parsers: A, bounded historical test-only
+  transport diagnostics; not the production logical payload architecture.
+
+All remaining 1920/1080/1280/720 occurrences in drm/src and gadget/src are B,
+unit-test fixtures and expected values. Documentation occurrences are outside
+this source audit and are classified D unless explicitly marked historical.
+
+Conclusion:
+- production width/height-only physical matching: NO
+- hard-coded 1920x1080 physical selection: NO
+- hard-coded 1280x720 physical selection: NO
+- test-only GUD_TEST_OUTPUT_MODE width/height selection: YES, intentional and
+  isolated from normal exact complete-timing route lookup

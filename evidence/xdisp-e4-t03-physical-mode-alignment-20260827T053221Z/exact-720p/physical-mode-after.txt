@@ -1,0 +1,4 @@
+VC4 active timing captured live:
+clock=74250 hdisplay=1280 hsync_start=1390 hsync_end=1430 htotal=1650
+vdisplay=720 vsync_start=725 vsync_end=730 vtotal=750 flags=0x5
+This is identical to the selected GUD and PhysicalCatalogMode key.

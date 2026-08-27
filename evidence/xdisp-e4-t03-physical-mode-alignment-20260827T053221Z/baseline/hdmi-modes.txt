@@ -1,0 +1,10 @@
+VC4 device: /dev/dri/card0
+connector: HDMI-A-1, connected, LG FULL HD EDID
+physical modes: 25
+DRM PREFERRED flags: none
+preferred advertisement fallback: connector mode index 0
+preferred exact key: 148500:1920:2008:2052:2200:1080:1084:1089:1125:0x5
+exact 720 key: 74250:1280:1390:1430:1650:720:725:730:750:0x5
+
+All 25 physical modes were read from connector_modes. The deployed catalog
+reported exact_routes=25 and scaled_routes=3.

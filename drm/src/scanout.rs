@@ -69,6 +69,7 @@ pub(crate) struct DynamicRouteState<M> {
     pub(crate) failed_routes: HashSet<FailedRouteKey>,
     pub(crate) committed_snapshot: Option<DisplayStateSnapshot>,
     pub(crate) presentation_route: Option<PresentationRoute>,
+    pub(crate) baseline_physical_key: ModeKey,
     pub(crate) current_physical_key: ModeKey,
     pub(crate) candidate_key: Option<ModeKey>,
 }
@@ -80,6 +81,7 @@ impl<M> DynamicRouteState<M> {
             failed_routes: HashSet::new(),
             committed_snapshot: None,
             presentation_route: None,
+            baseline_physical_key,
             current_physical_key: baseline_physical_key,
             candidate_key: None,
         }
@@ -195,6 +197,10 @@ pub(crate) struct ScanoutCounterSnapshot {
     pub(crate) switches: u64,
     pub(crate) no_ops: u64,
     pub(crate) fallbacks: u64,
+    pub(crate) framebuffer_allocations: u64,
+    pub(crate) modeset_commits: u64,
+    pub(crate) route_changes: u64,
+    pub(crate) same_mode_noops: u64,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -207,6 +213,10 @@ impl ScanoutCounters {
 
     fn allocation(&self) {
         self.0.borrow_mut().allocations += 1;
+    }
+
+    fn framebuffer_allocation(&self) {
+        self.0.borrow_mut().framebuffer_allocations += 1;
     }
 
     fn release(&self) {
@@ -230,7 +240,9 @@ impl ScanoutCounters {
     }
 
     pub(crate) fn switched(&self) {
-        self.0.borrow_mut().switches += 1;
+        let mut counters = self.0.borrow_mut();
+        counters.switches += 1;
+        counters.modeset_commits += 1;
     }
 
     pub(crate) fn no_op(&self) {
@@ -239,6 +251,14 @@ impl ScanoutCounters {
 
     pub(crate) fn fallback(&self) {
         self.0.borrow_mut().fallbacks += 1;
+    }
+
+    pub(crate) fn route_changed(&self) {
+        self.0.borrow_mut().route_changes += 1;
+    }
+
+    pub(crate) fn same_mode_noop(&self) {
+        self.0.borrow_mut().same_mode_noops += 1;
     }
 }
 
@@ -327,6 +347,7 @@ impl<B: ScanoutBackend> ScanoutAllocation<B> {
                             .expect("buffer was just inserted"),
                     )
                     .with_context(|| format!("create framebuffer {index}"))?;
+                counters.framebuffer_allocation();
                 allocation.buffers[index].framebuffer = Some(framebuffer);
             }
 
@@ -562,6 +583,7 @@ impl<B: ScanoutBackend> WaitingScanout<B> {
                     )
                     .context("create waiting framebuffer")?,
             );
+            counters.framebuffer_allocation();
 
             let mapping = backend
                 .map_buffer(
@@ -1833,12 +1855,27 @@ mod tests {
         assert_eq!(backend.count(Operation::SetCrtc), sets_before + 1);
         assert_eq!(counters.snapshot().maps, maps_after_switch);
         assert_eq!(counters.snapshot().switches, 1);
+        assert_eq!(counters.snapshot().modeset_commits, 1);
         assert_eq!(counters.snapshot().no_ops, 10);
 
         drop(active);
         old.release(&mut backend, &counters).unwrap();
         target.release(&mut backend, &counters).unwrap();
         assert_eq!(counters.snapshot().maps, counters.snapshot().unmaps);
+    }
+
+    #[test]
+    fn production_mode_routing_counters_name_idempotence_invariants() {
+        let counters = ScanoutCounters::default();
+        counters.route_changed();
+        counters.same_mode_noop();
+        counters.same_mode_noop();
+
+        let snapshot = counters.snapshot();
+        assert_eq!(snapshot.route_changes, 1);
+        assert_eq!(snapshot.same_mode_noops, 2);
+        assert_eq!(snapshot.modeset_commits, 0);
+        assert_eq!(snapshot.framebuffer_allocations, 0);
     }
 
     #[test]

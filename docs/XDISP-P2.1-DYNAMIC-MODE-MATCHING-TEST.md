@@ -2,9 +2,12 @@
 
 ## Status
 
-This is the planned component procedure for the dynamic physical-mode
-implementation. Do not deploy it until the implementation commits, offline
-tests, release artifact, and SHA-256 are recorded in this document.
+This is a historical P2.1 gate procedure. E4-T03 supersedes its transport and
+deployment assumptions: exact complete-timing physical routing is normal
+runtime behavior and no longer requires `GUD_TEST_DYNAMIC_MODE_MATCH=1`.
+The historical commands and recorded evidence below remain snapshots; do not
+use their 12,800-byte descriptor cap or 16 KiB FunctionFS request size as a
+logical GUD transaction limit.
 
 Canonical design and plan:
 
@@ -16,11 +19,7 @@ all of `XDISP-P2.1`.
 
 ## Intended behavior
 
-With the temporary test policy enabled:
-
-```text
-GUD_TEST_DYNAMIC_MODE_MATCH=1
-```
+In current normal runtime:
 
 - an exact full-timing connector match uses a matching physical DRM mode and
   direct rectangle copy;
@@ -30,17 +29,20 @@ GUD_TEST_DYNAMIC_MODE_MATCH=1
 - USB advertised mode ordering/preference never changes when physical output
   changes.
 
-`GUD_TEST_DYNAMIC_MODE_MATCH` and `GUD_TEST_OUTPUT_MODE` must never be active
-together. The first implementation stays test-only until every gate below
-passes.
+The obsolete `GUD_TEST_DYNAMIC_MODE_MATCH=1` value is accepted for deployment
+compatibility but has no enabling effect. `GUD_TEST_OUTPUT_MODE` remains a
+test-only startup/fallback selection override and does not alter the advertised
+physical catalog.
 
 ## Standing safety boundary
 
 Keep unchanged:
 
 - separately preserved OnePlus adaptive-LZ4 diagnostic module;
-- actual OnePlus bulk payload cap: 12,800 bytes;
-- Pi FunctionFS read ceiling: 16,384 bytes;
+- one negotiated logical full-frame update per production transaction;
+- current 1280x720 RGB565 logical payload: 1,843,200 bytes;
+- Pi/DWC2/FunctionFS request chunking is an internal implementation detail,
+  not a logical GUD payload limit;
 - normal OnePlus `/home/phablet/gud.ko`;
 - both installed kernels; and
 - Mir/Lomiri.
