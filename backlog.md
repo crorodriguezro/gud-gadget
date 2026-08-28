@@ -3,6 +3,10 @@
 The cross-repository product scope, epic hierarchy, and priority order live in
 `../gud/PROJECT-ROADMAP.md`. This file lists Pi gadget work only.
 
+H.264 display-transport research is **closed / deferred** as of 2026-08-28.
+It is not an active backlog item; the selected project direction is GUD. See
+`H264-POC-CLOSURE.md` and `DISPLAY_PATH_FINDINGS.md` for the archived decision.
+
 ## P0 — Productionize protocol-native FunctionFS receives
 
 The original generic `usb-gadget` Linux-AIO queue accepted 16 speculative

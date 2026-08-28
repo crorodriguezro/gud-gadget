@@ -3,6 +3,11 @@
 Date: 2026-08-28
 Hardware: OnePlus 6, Fedora Asahi KDE laptop, Raspberry Pi Zero 2 W, 1920x1080 HDMI display
 
+**Project status:** H.264 investigation is **CLOSED / DEFERRED**. The primary
+active implementation is **GUD**. The H.264 results below remain an archived,
+technically viable POC, not the next project task. See
+[H264-POC-CLOSURE.md](H264-POC-CLOSURE.md).
+
 This document consolidates the implemented approaches, tests, benchmarks,
 failures, and current conclusions for displaying either the Lomiri desktop or
 the laptop desktop through the Pi. It covers both USB GUD and H.264 transport.
@@ -789,7 +794,10 @@ GUD deployment and status procedures remain in
 [docs/PERFORMANCE_INSTRUMENTATION.md](docs/PERFORMANCE_INSTRUMENTATION.md),
 and the scripts under [`scripts/`](scripts/).
 
-## Open work
+## Deferred H.264 revisit conditions
+
+The items below are not active work. They record what would be needed if a
+future product requirement justifies reopening the archived POC:
 
 1. Run a controlled laptop GUD/USB versus laptop H.264/Wi-Fi A/B using the
    same deterministic coding and motion scenes.
@@ -821,7 +829,9 @@ and the scripts under [`scripts/`](scripts/).
   performance claim.
 - **Proxy:** software timestamp that does not measure physical scanout.
 
-The authoritative raw evidence remains in this repository's `evidence/` tree
-and the sibling `mir-android2-platform-gud/evidence/` tree. This document is a
-cross-project index and interpretation; if a number conflicts with a retained
-CSV or final report, the scoped source artifact takes precedence.
+Concise authoritative evidence remains in this repository's `evidence/` tree
+and the sibling `mir-android2-platform-gud/evidence/` tree. Bulky raw evidence
+was moved to the local closure archive described in
+[H264-POC-CLOSURE.md](H264-POC-CLOSURE.md). This document is a cross-project
+index and interpretation; if a number conflicts with a retained CSV or final
+report, the scoped source artifact takes precedence.
