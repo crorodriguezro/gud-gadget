@@ -1,0 +1,16 @@
+Safety checks
+
+Presenter contract retained: max pending <= 1; max in-flight <= 1.
+Transport redesign: NO.
+Mir core changes: NO.
+Android2 GUD backend changes: NO.
+HWC2 GUD proxy changes: NO.
+DRM card hard-code in xdispd selection: NO.
+
+Validation performed:
+sh -n mir-android2-platform-gud/tools/xdisp-status: PASS
+warnings-as-errors C++ syntax check for xdispd/lifecycle/child termination: PASS
+standalone lifecycle transition assertion harness: PASS
+git diff --check in all three repositories: PASS
+full Mir build: NOT RUN; configure is blocked by missing Boost headers and
+libandroid-properties in this workstation image.

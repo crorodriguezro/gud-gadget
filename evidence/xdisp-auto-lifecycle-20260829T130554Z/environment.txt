@@ -1,0 +1,20 @@
+Automatic GUD lifecycle evidence bundle
+Captured: 2026-08-29T13:05:54Z
+
+Target phone: OnePlus 6, Ubuntu Touch/Lomiri, Linux 4.9.112-g6b190d86b,
+aarch64.
+Target Pi: Raspberry Pi Zero 2 W, Linux 6.12.47+rpt-rpi-v8-ffs-xfercompltrace.
+Phone controller baseline: mode=host.
+Phone USB baseline: only xHCI root hubs (1d6b:0002 and 1d6b:0003); the
+validated Pi identity 1d50:614d was not present during this capture.
+Phone DRM baseline: card0 only (msm_drm); no GUD card was present.
+Pi baseline: gud-userspace.service active, UDC 3f980000.usb, state=not attached.
+
+The OnePlus troubleshooting guide was applied: this is a below-GUD attachment
+baseline, not evidence against xdispd. The dynamic VID/PID acceptance gate must
+pass before a KMS/display run.
+
+Repository heads at capture:
+gud 2eceb5d6ac7f5dd0482c89474cc87774f6f8e0f7
+gud-gadget f723678ef5b277a2e1d5731e6fec3ddc7bf5e942
+mir-android2-platform-gud 4127d7179fbf1986b7069f326e57e73710529f15

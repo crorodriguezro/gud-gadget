@@ -1,0 +1,15 @@
+Idle resource disposition
+
+New automatic lifecycle binary deployed: NO (build environment lacks the
+Android/Boost packages required by the complete Mir CMake configure).
+Source design while GUD is absent:
+xdispd running: YES, event-blocked main loop
+xdispd periodic polling: NO
+mirgud running: NO
+virtual output: NO
+capture: NO
+LZ4 activity: NO
+GUD USB traffic: NO
+
+No CPU/RSS number is claimed for the new binary because it was not deployed.
+The existing design has no timer or frame worker in the absent state.

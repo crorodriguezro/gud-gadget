@@ -1,0 +1,23 @@
+Automatic lifecycle matrix
+
+Offline source/lifecycle check: PASS
+- bounded initial scan is performed after the udev monitor is armed;
+- add processing is idempotent;
+- remove invalidates the selected identity and stops the sole child;
+- re-add during containment waits for the old child, then starts a fresh child;
+- explicit Deactivate clears automatic reactivation intent;
+- the inherited DRM fd is checked by device number and udev sysfs identity.
+
+Current hardware baseline: GATED
+- connect-after-login: not run with the new artifact;
+- present-before-session: startup reconciliation is implemented, not hardware-rerun;
+- active disconnect: existing E3-B02 evidence passed with the earlier explicit
+  activation behavior; automatic new-binary qualification is pending;
+- same-boot reconnect: lower-level OnePlus/Qualcomm host-controller behavior is
+  a known platform blocker when the Pi does not re-enumerate;
+- changing card number: selection is identity/driver based, never card number;
+- duplicate events: covered by the offline lifecycle check and existing unit
+  coverage; no second child/output is admitted.
+
+No manual DRM enumeration, xdispd launch, mirgud launch, compositor restart, or
+Lomiri rescan is part of the new design.
