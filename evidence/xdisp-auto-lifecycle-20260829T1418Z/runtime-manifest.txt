@@ -1,0 +1,21 @@
+Shipped package paths (lomiri-xdisp):
+  /usr/libexec/lomiri-xdisp/xdispd
+  /usr/libexec/lomiri-xdisp/mirgud
+  /usr/bin/xdisp-status
+  /usr/lib/systemd/system/xdisp.service
+  D-Bus activation and policy for org.lomiri.XDisp1
+
+Qualification staging paths on immutable phone image:
+  /home/phablet/xdispd-e3-current
+  /home/phablet/mirgud-e3-current
+  /home/phablet/xdisp-status
+  /etc/systemd/system/xdisp.service.d/zzzzzz-e3-current.conf
+
+Pi runtime:
+  gud-userspace.service
+  configfs gadget identity 1d50:614d
+  UDC binding 3f980000.usb
+  VC4/HDMI sink required for gud-drm startup
+
+The package paths are the product layout. Staging was used only because the
+test phone's root filesystem and dpkg database are read-only.

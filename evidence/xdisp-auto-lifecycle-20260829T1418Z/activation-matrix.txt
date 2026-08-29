@@ -1,0 +1,18 @@
+E3 activation matrix (2026-08-29)
+
+Case                                      Result     Evidence boundary
+Pi present at service restart             PASS       startup scan -> active, first frame
+Pi connected after login                  PASS       dynamic add -> active, first frame
+Disconnect while active                  PASS       unavailable, no child, phone healthy
+Same-boot reconnect                       PASS*      new USB path/probe -> active, first frame
+Pi absent at service restart              PASS       resident idle, no child/output/traffic
+Duplicate add/re-add containment          PASS       existing unit tests; one owner
+Card-number change                        PARTIAL    identity-safe source; not forced live
+Ten connect/disconnect cycles              OPEN       not run in this session
+Pi service restart with cable attached    OPEN       HDMI sink was disconnected at cleanup
+
+* Reconnect reached bridge active with child PID 40015 and
+  /dev/dri/card1 at the time of status capture. Its second Mir topology
+  snapshot reported the virtual output disconnected, so qtmir/Lomiri
+  reconnect propagation is conservatively PARTIAL pending a fresh observer
+  capture. First activation reported the virtual output connected.

@@ -1,0 +1,15 @@
+Before the new staged artifact was deployed, the phone service was an older
+staged xdispd binary selected by five accumulated xdisp.service drop-ins:
+override.conf, zz-final-activation45.conf, zzz-throughput-trace.conf,
+zzzz-working-direct-mir-rgb565.conf, and zzzzz-e3-t02-xdispd.conf.
+
+The phone image has a read-only dpkg database, so no package installation was
+possible on that image. xdisp-status was not installed. The pre-existing path
+therefore depended on legacy service overrides and separately prepared host
+mode/USB enumeration. This is the baseline that the resident lifecycle service
+was intended to replace, not a clean product-image installation.
+
+The troubleshooting gate used for the session was: force controller mode to
+host; dynamically poll for 1d50:614d; verify Pi service active and UDC
+configured; require a fresh GUD probe and /dev/dri/card1. USB topology paths
+were treated as dynamic and never as identifiers.

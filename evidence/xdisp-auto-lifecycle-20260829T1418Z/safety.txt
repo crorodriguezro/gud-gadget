@@ -1,0 +1,15 @@
+Safety observations:
+
+- Phone xdispd remained resident through removal; no managed mirgud child or
+  stale DRM identity remained in the absent state.
+- Removal during the known Mir 1.8.3 release-stall boundary used bounded
+  containment and forced SIGKILL when needed; this is the accepted E2 v1
+  containment behavior, not graceful Mir shutdown.
+- The phone remained responsive and healthy during disconnect/reconnect tests.
+- The Pi accepted-IO poison transition on an in-flight disconnect was recorded
+  as expected transport ownership handling; no retry of ambiguous accepted I/O
+  was introduced.
+- The captured phone interval contained no BUG, Oops, WARNING, lockdep,
+  use-after-free, or hung-task signature.
+- The final Pi restart failure was `no connected connectors found` with
+  HDMI-A-1 physically disconnected; it is an external test-rig condition.

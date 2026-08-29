@@ -1,0 +1,16 @@
+The selected production design is one resident xdispd systemd service. It arms
+a libudev DRM monitor, performs one bounded startup scan, and owns one managed
+mirgud child only while an exact live GUD DRM instance is usable.
+
+Discovery selects primary cardN nodes by DRM driver identity (gud), connected
+1280x720 capability, udev sysfs identity, and device number. Before spawn the
+node is reopened and both device number and sysfs identity are revalidated.
+Card numbering is diagnostic only.
+
+Removal invalidates the exact instance, stops the child, releases presenter/KMS
+and Mir resources, and applies bounded containment for the known Mir release
+stall. Re-add creates a fresh fd and child. Duplicate events are idempotent.
+The resident service remains idle without GUD. xdisp-status exposes presence,
+identity, bridge/child/output/presenter state, lifecycle state, and the last
+event. D-Bus Enable/Disable/Activate/Deactivate and poison controls remain
+available; automatic activation is enabled by default.

@@ -1,0 +1,17 @@
+E3 automatic lifecycle qualification
+Run date: 2026-08-29
+Phone: OnePlus 6, phablet@192.168.1.120, Linux 4.9.112-g6b190d86b aarch64
+Pi: Raspberry Pi, cristian@192.168.1.110, Linux 6.12.47+rpt-rpi-v8-ffs-xfercompltrace aarch64
+GUD USB identity: 1d50:614d
+Pi UDC: 3f980000.usb
+Source heads:
+  gud 7dd55c96 (development)
+  gud-gadget 441bb82f (development)
+  mir-android2-platform-gud fc1a6d5 (development)
+Build image: mir-android2-platform-gud-p02-build:ubuntu24.04-noble
+Build output: /tmp/mir-android2-platform-gud-e3-packages-20260829
+Package build: passed 5/5 Debian test targets, 0 failures; xdisp suite 53 tests
+Hardware result: startup/add/remove/reconnect exercised; full ten-cycle and
+forced-card-number matrix not run.
+Cleanup caveat: final Pi service restart was blocked by physically disconnected
+HDMI-A-1; the phone was left healthy in host mode with GUD absent.

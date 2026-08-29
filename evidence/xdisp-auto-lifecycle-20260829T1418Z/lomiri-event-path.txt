@@ -1,0 +1,20 @@
+The implemented path is:
+
+DRM/udev startup or add -> xdispd identity validation -> managed mirgud ->
+mir_connect_sync(/run/mir_socket) -> public Mir screencast/virtual-output API
+-> virtual output configuration -> qtmir/Lomiri display observation.
+
+Fresh first-activation service lines included:
+  xdispd: unavailable -> available: GUD sink available
+  xdispd: available -> connecting: activation requested
+  mirgud: xdisp topology phase=before-screencast ... id=3 connected=0
+  mirgud: xdisp topology phase=after-screencast ... id=3 connected=1 mode=1280x720
+  mirgud: Stage B virtual/screencast source enabled 1280x720 requested_format=7
+  xdispd: connecting -> active: first frame presented
+
+On same-boot reconnect, the new USB path was 1-1.3, the fresh GUD probe was
+observed, and xdisp-status reported active presenter/virtual output. However,
+the reconnect after-screencast topology line reported id=3 disconnected. No
+fresh qtmir-specific observer log was captured during this run, so the
+reconnect Mir->qtmir->Lomiri propagation claim remains PARTIAL. No compositor,
+Mir, rescan, or manual display-refresh command was used.
